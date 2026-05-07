@@ -116,9 +116,15 @@ describe('ClusterService', () => {
       mockFindMutualMatchIds.mockResolvedValue(['p2'])
       mockFindAllWithLocation.mockResolvedValue(posts)
 
-      await service.buildIndex('viewer-1')
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
 
-      const { features } = service.getClusters('viewer-1', [16.0, 47.0, 20.0, 49.0], 12)
+      const { features } = service.getClusters(
+        'viewer-1',
+        [16.0, 47.0, 20.0, 49.0],
+        12,
+        [],
+        ['profile', 'post']
+      )
       expect(features).toHaveLength(4)
 
       const isPoint = (f: any): f is PointFeature => f.type === 'point'
@@ -144,9 +150,15 @@ describe('ClusterService', () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
       mockFindMutualMatchIds.mockResolvedValue([])
 
-      await service.buildIndex('viewer-1')
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
 
-      const { tags } = service.getClusters('viewer-1', [16.0, 47.0, 20.0, 49.0], 12)
+      const { tags } = service.getClusters(
+        'viewer-1',
+        [16.0, 47.0, 20.0, 49.0],
+        12,
+        [],
+        ['profile', 'post']
+      )
       expect(tags).toHaveLength(2)
       expect(tags.map((t) => t.id).sort()).toEqual(['tag-p1', 'tag-p2'])
     })
@@ -156,9 +168,15 @@ describe('ClusterService', () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
       mockFindMutualMatchIds.mockResolvedValue([])
 
-      await service.buildIndex('viewer-1')
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
 
-      const { features } = service.getClusters('viewer-1', [-180, -90, 180, 90], 2)
+      const { features } = service.getClusters(
+        'viewer-1',
+        [-180, -90, 180, 90],
+        2,
+        [],
+        ['profile', 'post']
+      )
       const clusters = features.filter((f) => f.type === 'cluster')
       expect(clusters.length).toBeGreaterThanOrEqual(1)
 
@@ -173,7 +191,13 @@ describe('ClusterService', () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue([])
       mockFindMutualMatchIds.mockResolvedValue([])
 
-      const { features, tags } = await service.getOrBuildClusters('viewer-1', [0, 0, 10, 10], 5)
+      const { features, tags } = await service.getOrBuildClusters(
+        'viewer-1',
+        [0, 0, 10, 10],
+        5,
+        [],
+        ['profile', 'post']
+      )
       expect(features).toEqual([])
       expect(tags).toEqual([])
       expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledWith('viewer-1', [])
@@ -186,12 +210,18 @@ describe('ClusterService', () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
       mockFindMutualMatchIds.mockResolvedValue([])
 
-      await service.buildIndex('viewer-1')
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
 
-      const { features } = service.getClusters('viewer-1', [-180, -90, 180, 90], 2)
+      const { features } = service.getClusters(
+        'viewer-1',
+        [-180, -90, 180, 90],
+        2,
+        [],
+        ['profile', 'post']
+      )
       const cluster = features.find((f) => f.type === 'cluster')
       if (cluster) {
-        const zoom = service.getExpansionZoom('viewer-1', cluster.id)
+        const zoom = service.getExpansionZoom('viewer-1', cluster.id, [], ['profile', 'post'])
         expect(zoom).toBeGreaterThan(2)
       }
     })
@@ -203,12 +233,18 @@ describe('ClusterService', () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
       mockFindMutualMatchIds.mockResolvedValue([])
 
-      await service.buildIndex('viewer-1')
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
 
-      const { features } = service.getClusters('viewer-1', [-180, -90, 180, 90], 2)
+      const { features } = service.getClusters(
+        'viewer-1',
+        [-180, -90, 180, 90],
+        2,
+        [],
+        ['profile', 'post']
+      )
       const cluster = features.find((f) => f.type === 'cluster')
       if (cluster) {
-        const leaves = service.getLeaves('viewer-1', cluster.id)
+        const leaves = service.getLeaves('viewer-1', cluster.id, [], ['profile', 'post'])
         expect(leaves).toHaveLength(2)
         expect(leaves.every((l) => l.type === 'point')).toBe(true)
         expect(leaves.every((l) => l.kind === 'profile')).toBe(true)
@@ -222,12 +258,18 @@ describe('ClusterService', () => {
       mockFindMutualMatchIds.mockResolvedValue([])
       mockFindAllWithLocation.mockResolvedValue(posts)
 
-      await service.buildIndex('viewer-1')
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
 
-      const { features } = service.getClusters('viewer-1', [-180, -90, 180, 90], 2)
+      const { features } = service.getClusters(
+        'viewer-1',
+        [-180, -90, 180, 90],
+        2,
+        [],
+        ['profile', 'post']
+      )
       const cluster = features.find((f) => f.type === 'cluster')
       if (cluster) {
-        const leaves = service.getLeaves('viewer-1', cluster.id)
+        const leaves = service.getLeaves('viewer-1', cluster.id, [], ['profile', 'post'])
         expect(leaves).toHaveLength(2)
         const kinds = leaves.map((l) => l.kind).sort()
         expect(kinds).toEqual(['post', 'profile'])
@@ -243,8 +285,14 @@ describe('ClusterService', () => {
       mockFindMutualMatchIds.mockResolvedValue([])
       mockFindAllWithLocation.mockResolvedValue(posts)
 
-      await service.buildIndex('viewer-1')
-      const { features } = service.getClusters('viewer-1', [16.0, 47.0, 20.0, 49.0], 12)
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+      const { features } = service.getClusters(
+        'viewer-1',
+        [16.0, 47.0, 20.0, 49.0],
+        12,
+        [],
+        ['profile', 'post']
+      )
 
       const isPoint = (f: any): f is PointFeature => f.type === 'point'
       const points = features.filter(isPoint)
@@ -260,8 +308,14 @@ describe('ClusterService', () => {
       mockFindMutualMatchIds.mockResolvedValue([])
       mockFindAllWithLocation.mockResolvedValue(posts)
 
-      await service.buildIndex('viewer-1')
-      const { features } = service.getClusters('viewer-1', [16.0, 47.0, 21.0, 49.0], 12)
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+      const { features } = service.getClusters(
+        'viewer-1',
+        [16.0, 47.0, 21.0, 49.0],
+        12,
+        [],
+        ['profile', 'post']
+      )
 
       const isPoint = (f: any): f is PointFeature => f.type === 'point'
       const profilePoints = features.filter(isPoint).filter((f) => f.kind === 'profile')
@@ -278,12 +332,98 @@ describe('ClusterService', () => {
       mockFindMutualMatchIds.mockResolvedValue([])
       mockFindAllWithLocation.mockResolvedValue(posts)
 
-      await service.buildIndex('viewer-1')
-      const { features } = service.getClusters('viewer-1', [16.0, 47.0, 20.0, 49.0], 12)
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+      const { features } = service.getClusters(
+        'viewer-1',
+        [16.0, 47.0, 20.0, 49.0],
+        12,
+        [],
+        ['profile', 'post']
+      )
 
       const isPoint = (f: any): f is PointFeature => f.type === 'point'
       const postPoints = features.filter(isPoint).filter((f) => f.kind === 'post')
       expect(postPoints).toHaveLength(1)
+    })
+  })
+
+  describe('layer kinds', () => {
+    it('builds a separate cache entry for each kinds selection', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([])
+
+      await service.buildIndex('viewer-1', [], ['profile'])
+
+      // Building one kinds selection must not satisfy a different selection.
+      expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(true)
+      expect(service.hasIndex('viewer-1', [], ['post'])).toBe(false)
+      expect(service.hasIndex('viewer-1', [], ['profile', 'post'])).toBe(false)
+
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+
+      expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(true)
+      expect(service.hasIndex('viewer-1', [], ['profile', 'post'])).toBe(true)
+    })
+
+    it('skips post fetch when kinds is profile-only', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([])
+
+      await service.buildIndex('viewer-1', [], ['profile'])
+
+      expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledTimes(1)
+      expect(mockFindAllWithLocation).not.toHaveBeenCalled()
+    })
+
+    it('skips profile and match-id fetches when kinds is post-only', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([makePost('post1', 47.5, 19.0, 'author1')])
+
+      await service.buildIndex('viewer-1', [], ['post'])
+
+      expect(mockFindSocialProfilesWithLocation).not.toHaveBeenCalled()
+      expect(mockFindMutualMatchIds).not.toHaveBeenCalled()
+      expect(mockFindAllWithLocation).toHaveBeenCalledTimes(1)
+    })
+
+    it('produces only post features when kinds is post-only', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([makePost('post1', 47.5, 19.0, 'author1')])
+
+      await service.buildIndex('viewer-1', [], ['post'])
+      const { features } = service.getClusters(
+        'viewer-1',
+        [16.0, 47.0, 20.0, 49.0],
+        12,
+        [],
+        ['post']
+      )
+      const points = features.filter((f) => f.type === 'point')
+      expect(points).toHaveLength(1)
+      expect(points[0]).toMatchObject({ kind: 'post' })
+    })
+
+    it('evict clears entries with both : and | separators for the profile', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([])
+
+      // Build with no tags (key shape: viewer-1|profile)
+      await service.buildIndex('viewer-1', [], ['profile'])
+      // Build with tags (key shape: viewer-1:tagA|profile)
+      await service.buildIndex('viewer-1', ['tagA'], ['profile'])
+
+      expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(true)
+      expect(service.hasIndex('viewer-1', ['tagA'], ['profile'])).toBe(true)
+
+      service.evict('viewer-1')
+
+      expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(false)
+      expect(service.hasIndex('viewer-1', ['tagA'], ['profile'])).toBe(false)
     })
   })
 
@@ -292,25 +432,29 @@ describe('ClusterService', () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
       mockFindMutualMatchIds.mockResolvedValue([])
 
-      await service.buildIndex('viewer-1')
-      expect(service.getClusters('viewer-1', [-180, -90, 180, 90], 5).features).toHaveLength(1)
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+      expect(
+        service.getClusters('viewer-1', [-180, -90, 180, 90], 5, [], ['profile', 'post']).features
+      ).toHaveLength(1)
 
       service.evict('viewer-1')
-      expect(service.getClusters('viewer-1', [-180, -90, 180, 90], 5).features).toEqual([])
+      expect(
+        service.getClusters('viewer-1', [-180, -90, 180, 90], 5, [], ['profile', 'post']).features
+      ).toEqual([])
     })
 
     it('evictAll clears all cached indexes', async () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
       mockFindMutualMatchIds.mockResolvedValue([])
 
-      await service.buildIndex('viewer-1')
-      await service.buildIndex('viewer-2')
-      expect(service.hasIndex('viewer-1')).toBe(true)
-      expect(service.hasIndex('viewer-2')).toBe(true)
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+      await service.buildIndex('viewer-2', [], ['profile', 'post'])
+      expect(service.hasIndex('viewer-1', [], ['profile', 'post'])).toBe(true)
+      expect(service.hasIndex('viewer-2', [], ['profile', 'post'])).toBe(true)
 
       service.evictAll()
-      expect(service.hasIndex('viewer-1')).toBe(false)
-      expect(service.hasIndex('viewer-2')).toBe(false)
+      expect(service.hasIndex('viewer-1', [], ['profile', 'post'])).toBe(false)
+      expect(service.hasIndex('viewer-2', [], ['profile', 'post'])).toBe(false)
     })
   })
 })

@@ -1,6 +1,7 @@
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { nextTick, ref, computed } from 'vue'
+import { setActivePinia, createPinia } from 'pinia'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const toastInfo = vi.fn()
@@ -80,6 +81,10 @@ vi.mock('../../components/SearchBar.vue', () => ({
   },
 }))
 
+vi.mock('@/features/map/components/MapLayerControl.vue', () => ({
+  default: { name: 'MapLayerControl', template: '<div class="map-layer-control-stub" />' },
+}))
+
 vi.mock('@/features/browse/stores/searchStore', () => ({
   useSearchStore: () => ({
     selectedTagIds: ref<string[]>([]),
@@ -113,13 +118,9 @@ vi.mock('../../composables/useBrowseViewModel', () => ({
   useBrowseViewModel: () => vmState,
 }))
 
-vi.mock('@/features/browse/stores/findProfileStore', () => ({
-  useFindProfileStore: () => ({
-    refetchBounds: vi.fn(),
-    lastMapBounds: null,
-    fetchBounds: vi.fn(),
-  }),
-}))
+// findProfileStore is real (so storeToRefs works); spies attach in beforeEach.
+import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
+let mockRefetchBounds: ReturnType<typeof vi.spyOn>
 
 const mockPostSummaries = ref<any[]>([])
 vi.mock('@/features/posts/stores/postStore', () => ({
@@ -189,6 +190,10 @@ import { MAP_DEFAULT_CENTER } from '@shared/maps'
 
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
+    const findProfileStore = useFindProfileStore()
+    mockRefetchBounds = vi.spyOn(findProfileStore, 'refetchBounds').mockResolvedValue(undefined)
+    vi.spyOn(findProfileStore, 'fetchBounds').mockResolvedValue(undefined)
     vmState.isNoOneAround.value = false
     vmState.viewerProfile.value = {
       isSocialActive: true,
@@ -317,5 +322,17 @@ describe('BrowseProfiles view', () => {
       name: 'PublicPost',
       params: { postId: 'post-42' },
     })
+  })
+
+  it('refetches bounds when findProfileStore.selectedLayers changes', async () => {
+    mountComponent()
+    await flushPromises()
+
+    const findProfileStore = useFindProfileStore()
+    mockRefetchBounds.mockClear()
+    findProfileStore.selectedLayers = ['post']
+    await nextTick()
+
+    expect(mockRefetchBounds).toHaveBeenCalledTimes(1)
   })
 })

@@ -5,7 +5,7 @@ import { PostService } from './post.service'
 import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
-import { MAP_MAX_ZOOM } from '@shared/maps'
+import { MAP_MAX_ZOOM, type UserContentKind } from '@shared/maps'
 const CLUSTER_RADIUS = 40
 const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
@@ -28,13 +28,15 @@ interface CachedIndex {
 }
 
 /**
- * Builds a deterministic cache key from profileId and the current tag
- * filter selection. Sorting guarantees the same set of IDs always produces
- * the same key regardless of the order they were selected.
+ * Deterministic cache key from profileId, tag selection, and layer kinds.
+ * Sorting both arrays guarantees the same set always produces the same key.
+ * The `|kinds` segment uses a different separator than `:tags` so the two
+ * segments never collide.
  */
-function buildCacheKey(profileId: string, tagIds: string[]): string {
-  if (tagIds.length === 0) return profileId
-  return `${profileId}:${[...tagIds].sort().join(',')}`
+function buildCacheKey(profileId: string, tagIds: string[], kinds: UserContentKind[]): string {
+  const tagPart = tagIds.length === 0 ? '' : `:${[...tagIds].sort().join(',')}`
+  const kindPart = `|${[...kinds].sort().join(',')}`
+  return `${profileId}${tagPart}${kindPart}`
 }
 
 export class ClusterService {
@@ -50,14 +52,25 @@ export class ClusterService {
     return ClusterService.instance
   }
 
-  async buildIndex(profileId: string, tagIds: string[] = []): Promise<void> {
+  async buildIndex(profileId: string, tagIds: string[], kinds: UserContentKind[]): Promise<void> {
     const profileMatchService = ProfileMatchService.getInstance()
     const postService = PostService.getInstance()
 
+    const wantProfiles = kinds.includes('profile')
+    const wantPosts = kinds.includes('post')
+
     const [profiles, matchIds, posts] = await Promise.all([
-      profileMatchService.findSocialProfilesWithLocation(profileId, tagIds),
-      profileMatchService.findMutualMatchIds(profileId),
-      postService.findAllWithLocation(profileId),
+      wantProfiles
+        ? profileMatchService.findSocialProfilesWithLocation(profileId, tagIds)
+        : Promise.resolve(
+            [] as Awaited<ReturnType<typeof profileMatchService.findSocialProfilesWithLocation>>
+          ),
+      wantProfiles
+        ? profileMatchService.findMutualMatchIds(profileId)
+        : Promise.resolve([] as string[]),
+      wantPosts
+        ? postService.findAllWithLocation(profileId)
+        : Promise.resolve([] as Awaited<ReturnType<typeof postService.findAllWithLocation>>),
     ])
 
     const matchSet = new Set(matchIds)
@@ -139,7 +152,7 @@ export class ClusterService {
     })
 
     index.load([...profileFeatures, ...postFeatures])
-    this.indexes.set(buildCacheKey(profileId, tagIds), {
+    this.indexes.set(buildCacheKey(profileId, tagIds, kinds), {
       index,
       tags: Array.from(tagMap.values()),
       updatedAt: new Date(),
@@ -150,9 +163,10 @@ export class ClusterService {
     profileId: string,
     bbox: [number, number, number, number],
     zoom: number,
-    tagIds: string[] = []
+    tagIds: string[],
+    kinds: UserContentKind[]
   ): { features: MapFeature[]; tags: TagWithTranslations[] } {
-    const key = buildCacheKey(profileId, tagIds)
+    const key = buildCacheKey(profileId, tagIds, kinds)
     const cached = this.indexes.get(key)
     if (!cached) return { features: [], tags: [] }
 
@@ -167,24 +181,35 @@ export class ClusterService {
     profileId: string,
     bbox: [number, number, number, number],
     zoom: number,
-    tagIds: string[] = []
+    tagIds: string[],
+    kinds: UserContentKind[]
   ): Promise<{ features: MapFeature[]; tags: TagWithTranslations[] }> {
     this.pruneIndexes()
-    const key = buildCacheKey(profileId, tagIds)
+    const key = buildCacheKey(profileId, tagIds, kinds)
     if (!this.indexes.has(key)) {
-      await this.buildIndex(profileId, tagIds)
+      await this.buildIndex(profileId, tagIds, kinds)
     }
-    return this.getClusters(profileId, bbox, zoom, tagIds)
+    return this.getClusters(profileId, bbox, zoom, tagIds, kinds)
   }
 
-  getExpansionZoom(profileId: string, clusterId: number, tagIds: string[] = []): number {
-    const cached = this.indexes.get(buildCacheKey(profileId, tagIds))
+  getExpansionZoom(
+    profileId: string,
+    clusterId: number,
+    tagIds: string[],
+    kinds: UserContentKind[]
+  ): number {
+    const cached = this.indexes.get(buildCacheKey(profileId, tagIds, kinds))
     if (!cached) return MAP_MAX_ZOOM
     return cached.index.getClusterExpansionZoom(clusterId)
   }
 
-  getLeaves(profileId: string, clusterId: number, tagIds: string[] = []): PointFeature[] {
-    const cacheKey = buildCacheKey(profileId, tagIds)
+  getLeaves(
+    profileId: string,
+    clusterId: number,
+    tagIds: string[],
+    kinds: UserContentKind[]
+  ): PointFeature[] {
+    const cacheKey = buildCacheKey(profileId, tagIds, kinds)
     const cached = this.indexes.get(cacheKey)
     if (!cached) return []
 
@@ -200,7 +225,7 @@ export class ClusterService {
    */
   evict(profileId: string): void {
     for (const key of this.indexes.keys()) {
-      if (key === profileId || key.startsWith(`${profileId}:`)) {
+      if (key === profileId || key.startsWith(`${profileId}:`) || key.startsWith(`${profileId}|`)) {
         this.indexes.delete(key)
       }
     }
@@ -214,8 +239,8 @@ export class ClusterService {
     this.indexes.clear()
   }
 
-  hasIndex(profileId: string, tagIds: string[] = []): boolean {
-    return this.indexes.has(buildCacheKey(profileId, tagIds))
+  hasIndex(profileId: string, tagIds: string[], kinds: UserContentKind[]): boolean {
+    return this.indexes.has(buildCacheKey(profileId, tagIds, kinds))
   }
 
   private pruneIndexes(): void {

@@ -16,6 +16,7 @@ import { useDetailRouteState } from '@/features/shared/composables/useDetailRout
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
+import MapLayerControl from '@/features/map/components/MapLayerControl.vue'
 import MapPlaceholder from '@/features/shared/components/MapPlaceholder.vue'
 import SearchBar from '../components/SearchBar.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
@@ -56,6 +57,13 @@ const findProfileStore = useFindProfileStore()
 const searchStore = useSearchStore()
 const { selectedTagIds } = storeToRefs(searchStore)
 watch(selectedTagIds, () => {
+  findProfileStore.refetchBounds()
+})
+
+// Server-side layer filtering: toggling a layer changes the `kinds` query
+// param sent on cluster fetches. Invalidate the bounds cache and refetch.
+const { selectedLayers } = storeToRefs(findProfileStore)
+watch(selectedLayers, () => {
   findProfileStore.refetchBounds()
 })
 
@@ -212,7 +220,7 @@ onMounted(async () => {
       class="search-bar-wrapper position-absolute w-100 top-0 end-0 d-flex align-items-start justify-content-end gap-2 p-2 pb-5"
       style="z-index: 1010"
     >
-      <div class="flex-grow-1">
+      <div class="flex-grow-1 d-flex">
         <SearchBar
           :viewer-profile="viewerProfile"
           :available-tags="availableTags"
@@ -220,7 +228,12 @@ onMounted(async () => {
           @profile:select="handleProfileSelect"
           @post:select="handlePostSelect"
         />
+        <MapLayerControl
+          v-model="selectedLayers"
+          class="ms-2"
+        />
       </div>
+
       <div class="flex-shrink-0 flex-grow-0">
         <OwnerDrawerControls
           @open:inbox="openInboxDrawer()"

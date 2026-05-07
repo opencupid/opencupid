@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
 
 import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
+import { KindsSchema } from '@shared/zod/map/cluster.dto'
 
 import { sendError, sendForbiddenError } from '../helpers'
 
@@ -28,11 +29,13 @@ const TagIdsSchema = z
 const ClusterQuerySchema = BoundsQuerySchema.extend({
   zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
   tagIds: TagIdsSchema,
+  kinds: KindsSchema,
 })
 
 const LeavesQuerySchema = z.object({
   clusterId: z.coerce.number().int(),
   tagIds: TagIdsSchema,
+  kinds: KindsSchema,
 })
 
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -48,6 +51,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} east - Bounding box east longitude
    * @query {number} zoom - Map zoom level (0–12)
    * @query {string} [tagIds] - Optional comma-separated tag IDs
+   * @query {string} kinds - Comma-separated layer kinds (e.g., 'profile,post'). At least one required.
    * @returns {{ success: true, features: MapFeature[], tags: PublicTag[] }}
    */
   fastify.get('/clusters', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -60,7 +64,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 400, 'Missing or invalid query parameters')
     }
 
-    const { south, north, west, east, zoom, tagIds } = parsed.data
+    const { south, north, west, east, zoom, tagIds, kinds } = parsed.data
     const bbox: [number, number, number, number] = [west, south, east, north]
 
     try {
@@ -68,7 +72,8 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
         req.session.profileId,
         bbox,
         zoom,
-        tagIds
+        tagIds,
+        kinds
       )
       const tags = mapProfileTagsTranslated(rawTags, req.session.lang)
       return reply.code(200).send({ success: true, features, tags })
@@ -80,11 +85,15 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /cluster-leaves
-   * Returns the individual profile points that make up a cluster.
+   * Returns the individual point features (profiles and/or posts, scoped by
+   * the requested `kinds`) that make up a cluster.
    * The `tagIds` param must match the selection used when fetching the
    * cluster itself — each tag combination has its own cached index.
+   * Likewise, `kinds` MUST match the value used when fetching the cluster —
+   * each `(tags, kinds)` combination is its own cached index.
    * @query {number} clusterId - The cluster ID to expand
    * @query {string} [tagIds] - Optional comma-separated tag IDs
+   * @query {string} kinds - Comma-separated content kinds (e.g., 'profile,post'). At least one required.
    * @returns {{ success: true, features: PointFeature[] }}
    */
   fastify.get('/cluster-leaves', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -97,8 +106,8 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 400, 'Missing or invalid query parameters')
     }
 
-    const { clusterId, tagIds } = parsed.data
-    const features = clusterService.getLeaves(req.session.profileId, clusterId, tagIds)
+    const { clusterId, tagIds, kinds } = parsed.data
+    const features = clusterService.getLeaves(req.session.profileId, clusterId, tagIds, kinds)
     return reply.code(200).send({ success: true, features })
   })
 

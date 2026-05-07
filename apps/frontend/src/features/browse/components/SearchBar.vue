@@ -122,7 +122,7 @@ watch(haveResults, () => {
 
 <template>
   <div
-    class="search-bar position-relative col-12 col-md-8 col-lg-6"
+    class="search-bar position-relative"
     :class="{ 'search-bar--open': panelOpen }"
     @click.stop
   >
@@ -278,6 +278,18 @@ $panels-max: calc(100dvh - 6rem);
     border: none;
     background: transparent;
     box-shadow: none;
+  }
+}
+.search-bar {
+  width: 80%;
+  @include media-breakpoint-up(sm) {
+    width: 100%;
+  }
+  @include media-breakpoint-up(md) {
+    width: 80%;
+  }
+  @include media-breakpoint-up(lg) {
+    width: 50%;
   }
 }
 </style>

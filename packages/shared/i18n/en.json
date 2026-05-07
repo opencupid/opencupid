@@ -179,6 +179,13 @@
     "you_matched_with": "{name} smiled back!",
     "you_received_like": "Someone smiled at you!"
   },
+  "map": {
+    "layer_control": {
+      "people": "People",
+      "posts": "Posts",
+      "aria_label": "Map layers"
+    }
+  },
   "messaging": {
     "already_sent_waiting": "You have already sent them a message. Once they answer, you can continue the conversation.",
     "block_member": "Block member",

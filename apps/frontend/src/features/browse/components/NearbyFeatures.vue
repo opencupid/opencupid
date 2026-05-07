@@ -45,6 +45,7 @@ const isVisible = computed(() => props.posts.length > 0)
     header-class="py-1"
     class="nearby-features-panel"
     :class="{ expanded: isExpanded }"
+    style="z-index:1005"
   >
     <template #header>
       <div class="d-flex align-items-center justify-content-center w-100">
