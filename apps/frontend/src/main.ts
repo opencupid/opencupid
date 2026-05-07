@@ -3,7 +3,6 @@ import '@/css/bootstrap.scss'
 import '@/css/main.scss'
 
 import registerToast from './lib/toast'
-import { useBootstrap } from './lib/bootstrap'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
 import { initUmami } from './lib/umami'
@@ -25,6 +24,7 @@ import { createBootstrap } from 'bootstrap-vue-next'
 
 import App from './App.vue'
 import router from './router'
+import './lib/auth'
 
 function initOpenReplay() {
   const { OPENREPLAY_PROJECT_KEY, OPENREPLAY_INGEST_POINT } = __APP_CONFIG__
@@ -60,13 +60,9 @@ app.config.warnHandler = (msg, _vm, trace) => {
 app.use(createPinia())
 app.use(router)
 app.use(createBootstrap()) // bootstrap-vue-next
-
-// toasts
-
-registerToast(app)
+registerToast(app) // vue-toastification plugin (used by lazy authenticated UI)
 
 useAuthStore().initialize()
-useBootstrap().bootstrap()
 
 appUseI18n(app)
 
