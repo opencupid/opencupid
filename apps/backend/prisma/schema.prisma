@@ -84,6 +84,11 @@ enum PostType {
   REQUEST
 }
 
+enum ContentKind {
+  post
+  event
+}
+
 enum ActivitySegment {
   new
   returning
@@ -225,7 +230,7 @@ model Profile {
   hiddenBy       HiddenProfile[] @relation("HiddenBy")
 
   // Posts
-  posts Post[]
+  userContent UserContent[]
 
   // Activity tracking
   sessionLogs     ProfileSessionLog[]
@@ -386,30 +391,42 @@ model PushSubscription {
   lastSeen   DateTime?
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  content   String
-  type      PostType
-  isDeleted Boolean  @default(false)
-  isVisible Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Location (optional, pre-filled from profile)
-  country  String?
-  cityName String?
-  lat      Float?
-  lon      Float?
-
-  // Relations
-  postedBy   Profile @relation(fields: [postedById], references: [id], onDelete: Cascade)
+model UserContent {
+  id         String      @id @default(cuid())
+  kind       ContentKind
   postedById String
+  postedBy   Profile     @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  content    String
+  isDeleted  Boolean     @default(false)
+  isVisible  Boolean     @default(true)
+  country    String?
+  cityName   String?
+  lat        Float?
+  lon        Float?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  post  PostExtension?
+  event EventExtension?
 
   @@index([postedById])
-  @@index([type])
+  @@index([kind])
   @@index([createdAt])
-  @@index([isVisible, isDeleted])
+  @@index([kind, isVisible, isDeleted])
   @@index([lat, lon])
+}
+
+model PostExtension {
+  userContentId String      @id
+  userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
+  type          PostType
+}
+
+model EventExtension {
+  userContentId String      @id
+  userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
+  startsAt      DateTime
+  @@index([startsAt])
 }
 
 model ProfileSessionLog {
