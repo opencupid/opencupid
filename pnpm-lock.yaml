@@ -12,6 +12,8 @@ overrides:
   vite-plugin-vue-mcp>@modelcontextprotocol/sdk: 1.22.0
   zod-to-json-schema: 3.24.5
 
+packageExtensionsChecksum: sha256-tEOFXQrGS5fAxPDyfgMZArO9MxxtPlJhR4x6Bn2eP9g=
+
 patchedDependencies:
   vite-plugin-vue-mcp@0.3.2:
     hash: dd13284f0cd754ccb9ad4729b917019774e9fc64a677f6d7c79a03b0fec57ca2
@@ -9925,6 +9927,7 @@ snapshots:
       argparse: 1.0.10
       chalk: 4.1.2
       core-js: 3.29.1
+      long: 4.0.0
       regenerator-runtime: 0.13.11
       yargs: 16.2.0
     transitivePeerDependencies:

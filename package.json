@@ -63,6 +63,13 @@
         "smartcrop-sharp>sharp": "0.34"
       }
     },
+    "packageExtensions": {
+      "@tensorflow/tfjs": {
+        "dependencies": {
+          "long": "4.0.0"
+        }
+      }
+    },
     "onlyBuiltDependencies": [
       "@parcel/watcher",
       "@prisma/client",
