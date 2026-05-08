@@ -2,10 +2,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
-import type {
-  BaseUserContentPayload,
-  ContentKind,
-} from '@shared/zod/userContent/userContent.dto'
+import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
 /**
  * Hard cap for cluster-index hydration. Not pagination — bounds the in-memory
@@ -138,7 +135,11 @@ export class UserContentService {
     viewerProfileId: string
   ): Promise<LeanContentRowWithContext | null> {
     return prisma.userContent.findFirst({
-      where: { id, isDeleted: false },
+      where: {
+        id,
+        isDeleted: false,
+        OR: [{ postedById: viewerProfileId }, { isVisible: true }],
+      },
       include: profileWithContextInclude(viewerProfileId),
     })
   }

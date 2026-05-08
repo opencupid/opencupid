@@ -193,7 +193,7 @@ describe('postStore', () => {
 
       await store.fetchPosts({ limit: 20, offset: 40 })
 
-      expect(mockApi.get).toHaveBeenCalledWith('/content/feed', {
+      expect(mockApi.get).toHaveBeenCalledWith('/content/posts/feed', {
         params: { limit: 20, offset: 40 },
       })
     })
@@ -206,7 +206,7 @@ describe('postStore', () => {
 
       await store.loadPosts('all', { page: 2, pageSize: 20 })
 
-      expect(mockApi.get).toHaveBeenCalledWith('/content/feed', {
+      expect(mockApi.get).toHaveBeenCalledWith('/content/posts/feed', {
         params: { limit: 20, offset: 40 },
       })
     })
@@ -263,7 +263,7 @@ describe('postStore', () => {
       expect(result.success).toBe(true)
       expect(store.postSummaries).toHaveLength(1)
       expect(store.postSummaries[0]!.id).toBe(CUID_1)
-      expect(mockApi.get).toHaveBeenCalledWith('/content/bounds', {
+      expect(mockApi.get).toHaveBeenCalledWith('/content/posts/bounds', {
         params: { south: 47, north: 48, west: 18, east: 20 },
       })
     })

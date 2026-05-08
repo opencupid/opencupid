@@ -16,7 +16,7 @@ export const LeanUserContentSchema = z.object({
   content: z.string(),
   postedBy: ProfileSummarySchema,
   location: LocationSchema.nullable().optional(),
-  createdAt: z.date(),
+  createdAt: z.coerce.date(),
   isOwn: z.boolean().default(false),
 })
 export type LeanUserContent = z.infer<typeof LeanUserContentSchema>
@@ -76,7 +76,7 @@ export const OwnerUserContentOverlaySchema = z.object({
   isDeleted: z.boolean(),
   isVisible: z.boolean(),
   isOwn: z.literal(true),
-  updatedAt: z.date(),
+  updatedAt: z.coerce.date(),
 })
 
 /**

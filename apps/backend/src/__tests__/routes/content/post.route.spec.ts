@@ -18,6 +18,8 @@ vi.mock('@/services/cluster.service', () => ({
 vi.mock('@/api/mappers/post.mappers', () => ({
   mapDbPostToOwner: (row: any) => ({ ...row, _isOwn: true }),
   mapDbPostToDetail: (row: any) => ({ ...row, _isOwn: false }),
+  mapDbPostToPublic: (row: any) => ({ id: row.id, _public: true }),
+  mapPostSummary: (row: any) => ({ id: row.id, _summary: true }),
 }))
 
 import postRoutes from '../../../api/routes/content/post.route'
@@ -52,6 +54,9 @@ beforeEach(async () => {
     softDelete: vi.fn(),
     findByIdHydrated: vi.fn(),
     findByProfileIdHydrated: vi.fn(),
+    findFeedHydrated: vi.fn(),
+    findNearbyHydrated: vi.fn(),
+    findInBoundsHydrated: vi.fn(),
   }
   mockCluster = { evictAll: vi.fn().mockResolvedValue(undefined) }
   await postRoutes(fastify as any, {})
@@ -247,6 +252,81 @@ describe('GET /profile/:profileId', () => {
     expect(reply.payload).toMatchObject({
       success: true,
       posts: [expect.objectContaining({ _isOwn: false })],
+    })
+  })
+})
+
+describe('GET /feed', () => {
+  it('returns posts envelope with public mapper', async () => {
+    const handler = fastify.routes['GET /feed']
+    mockPostService.findFeedHydrated.mockResolvedValue([makeRow(otherProfileId)])
+    await handler(
+      { session: { profileId: ownerProfileId }, query: { limit: 20, offset: 0 } } as any,
+      reply as any
+    )
+    expect(mockPostService.findFeedHydrated).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 20, offset: 0, includeInvisible: false })
+    )
+    expect(reply.payload).toMatchObject({
+      success: true,
+      posts: [expect.objectContaining({ _public: true })],
+    })
+  })
+})
+
+describe('GET /nearby', () => {
+  it('passes lat/lon/radius and returns posts envelope', async () => {
+    const handler = fastify.routes['GET /nearby']
+    mockPostService.findNearbyHydrated.mockResolvedValue([makeRow(otherProfileId)])
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        query: { lat: 47.5, lon: 19, radius: 50, limit: 20, offset: 0 },
+      } as any,
+      reply as any
+    )
+    expect(mockPostService.findNearbyHydrated).toHaveBeenCalledWith(
+      47.5,
+      19,
+      50,
+      expect.objectContaining({ limit: 20, offset: 0, includeInvisible: false })
+    )
+    expect(reply.payload).toMatchObject({
+      success: true,
+      posts: [expect.objectContaining({ _public: true })],
+    })
+  })
+})
+
+describe('GET /bounds', () => {
+  it('returns 400 on invalid bounds', async () => {
+    const handler = fastify.routes['GET /bounds']
+    await handler(
+      { session: { profileId: ownerProfileId }, query: { south: 'nope' } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns posts envelope with summary mapper', async () => {
+    const handler = fastify.routes['GET /bounds']
+    mockPostService.findInBoundsHydrated.mockResolvedValue([makeRow(otherProfileId)])
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        query: { south: 47, north: 48, west: 18, east: 20 },
+      } as any,
+      reply as any
+    )
+    expect(mockPostService.findInBoundsHydrated).toHaveBeenCalledWith({
+      south: 47,
+      north: 48,
+      west: 18,
+      east: 20,
+    })
+    expect(reply.payload).toMatchObject({
+      success: true,
+      posts: [expect.objectContaining({ _summary: true })],
     })
   })
 })

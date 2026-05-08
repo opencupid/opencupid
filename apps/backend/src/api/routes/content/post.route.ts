@@ -5,12 +5,19 @@ import {
   CreatePostPayloadSchema,
   UpdatePostPayloadSchema,
   PostParamsSchema,
+  NearbyPostQuerySchema,
   type CreatePostPayload,
   type UpdatePostPayload,
 } from '@zod/post/post.dto'
 import { PaginationSchema } from '@zod/userContent/userContent.dto'
+import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import { z } from 'zod'
-import { mapDbPostToOwner, mapDbPostToDetail } from '../../mappers/post.mappers'
+import {
+  mapDbPostToOwner,
+  mapDbPostToDetail,
+  mapDbPostToPublic,
+  mapPostSummary,
+} from '../../mappers/post.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
@@ -42,6 +49,48 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  fastify.get('/feed', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const viewerProfileId = req.session.profileId
+    try {
+      const page = PaginationSchema.parse(req.query)
+      const rows = await svc.findFeedHydrated({ ...page, includeInvisible: false })
+      const posts = rows.map((r) => mapDbPostToPublic(r, viewerProfileId))
+      return reply.code(200).send({ success: true, posts })
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch posts')
+    }
+  })
+
+  fastify.get('/nearby', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const viewerProfileId = req.session.profileId
+    try {
+      const q = NearbyPostQuerySchema.parse(req.query)
+      const rows = await svc.findNearbyHydrated(q.lat, q.lon, q.radius, {
+        ...q,
+        includeInvisible: false,
+      })
+      const posts = rows.map((r) => mapDbPostToPublic(r, viewerProfileId))
+      return reply.code(200).send({ success: true, posts })
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch nearby posts')
+    }
+  })
+
+  fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const parsed = BoundsQuerySchema.safeParse(req.query)
+    if (!parsed.success) return sendError(reply, 400, 'Invalid bounds')
+    try {
+      const rows = await svc.findInBoundsHydrated(parsed.data)
+      const posts = rows.map((r) => mapPostSummary({ ...r, kind: 'post' as const, post: r.post! }))
+      return reply.code(200).send({ success: true, posts })
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch posts in bounds')
+    }
+  })
+
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = PostParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
@@ -49,9 +98,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Post not found')
       const isOwner = row.postedById === viewerProfileId
-      const post = isOwner
-        ? mapDbPostToOwner(row as any)
-        : mapDbPostToDetail(row, viewerProfileId)
+      const post = isOwner ? mapDbPostToOwner(row as any) : mapDbPostToDetail(row, viewerProfileId)
       return reply.code(200).send({ success: true, post })
     } catch (err) {
       fastify.log.error(err)

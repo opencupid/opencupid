@@ -12,13 +12,13 @@ const EVENT_KIND = z.literal('event')
 
 export const PublicEventSchema = LeanUserContentSchema.extend({
   kind: EVENT_KIND,
-  startsAt: z.date(),
+  startsAt: z.coerce.date(),
 })
 export type PublicEvent = z.infer<typeof PublicEventSchema>
 
 export const PublicEventDetailSchema = PublicUserContentDetailBaseSchema.extend({
   kind: EVENT_KIND,
-  startsAt: z.date(),
+  startsAt: z.coerce.date(),
 })
 export type PublicEventDetail = z.infer<typeof PublicEventDetailSchema>
 

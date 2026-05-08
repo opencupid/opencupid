@@ -1,6 +1,11 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { UserContentService, type ListOptions } from './userContent.service'
+import {
+  UserContentService,
+  type ListOptions,
+  type BoundsBox,
+  type LeanContentRow,
+} from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
@@ -78,7 +83,12 @@ export class PostService extends UserContentService {
     viewerProfileId: string
   ): Promise<PostWithExtensionAndContext | null> {
     return prisma.userContent.findFirst({
-      where: { id, kind: 'post', isDeleted: false },
+      where: {
+        id,
+        kind: 'post',
+        isDeleted: false,
+        OR: [{ postedById: viewerProfileId }, { isVisible: true }],
+      },
       include: postWithExtensionAndContextInclude(viewerProfileId),
     })
   }
@@ -98,6 +108,43 @@ export class PostService extends UserContentService {
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,
+    })
+  }
+
+  // The list-style finders below delegate filtering/pagination to
+  // UserContentService and reattach the post extension afterwards. EventService
+  // will need the same shape; the duplication is intentional until both sides
+  // exist, at which point the pattern can be lifted into the base class as a
+  // generic `findHydrated(kind, query, extensionInclude)` helper.
+  async findFeedHydrated(opts: ListOptions): Promise<PostWithExtension[]> {
+    const lean = await this.findFeed({ ...opts, kind: 'post' })
+    return this.attachPostExtension(lean)
+  }
+
+  async findNearbyHydrated(
+    lat: number,
+    lon: number,
+    radiusKm: number,
+    opts: ListOptions
+  ): Promise<PostWithExtension[]> {
+    const lean = await this.findNearby(lat, lon, radiusKm, { ...opts, kind: 'post' })
+    return this.attachPostExtension(lean)
+  }
+
+  async findInBoundsHydrated(box: BoundsBox): Promise<PostWithExtension[]> {
+    const lean = (await this.findInBounds(box)).filter((r) => r.kind === 'post')
+    return this.attachPostExtension(lean)
+  }
+
+  private async attachPostExtension(rows: LeanContentRow[]): Promise<PostWithExtension[]> {
+    if (rows.length === 0) return []
+    const extensions = await prisma.postExtension.findMany({
+      where: { userContentId: { in: rows.map((r) => r.id) } },
+    })
+    const byId = new Map(extensions.map((e) => [e.userContentId, e]))
+    return rows.flatMap((r) => {
+      const post = byId.get(r.id)
+      return post ? [{ ...r, post }] : []
     })
   }
 }

@@ -78,7 +78,12 @@ export class EventService extends UserContentService {
     viewerProfileId: string
   ): Promise<EventWithExtensionAndContext | null> {
     return prisma.userContent.findFirst({
-      where: { id, kind: 'event', isDeleted: false },
+      where: {
+        id,
+        kind: 'event',
+        isDeleted: false,
+        OR: [{ postedById: viewerProfileId }, { isVisible: true }],
+      },
       include: eventWithExtensionAndContextInclude(viewerProfileId),
     })
   }
