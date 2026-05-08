@@ -61,7 +61,7 @@ export const usePostStore = defineStore('posts', {
   actions: {
     async createPost(payload: CreatePostPayload): Promise<StorePostResponse> {
       try {
-        const res = await safeApiCall(() => api.post<CreatePostResponse>('/posts', payload))
+        const res = await safeApiCall(() => api.post<CreatePostResponse>('/content/posts', payload))
         const post = OwnerPostSchema.parse(res.data.post)
         this.myPosts.unshift(post)
         return storeSuccess({ post })
@@ -72,7 +72,7 @@ export const usePostStore = defineStore('posts', {
 
     async updatePost(id: string, payload: UpdatePostPayload): Promise<StorePostResponse> {
       try {
-        const res = await safeApiCall(() => api.patch<UpdatePostResponse>(`/posts/${id}`, payload))
+        const res = await safeApiCall(() => api.patch<UpdatePostResponse>(`/content/posts/${id}`, payload))
         const post = OwnerPostSchema.parse(res.data.post)
 
         const index = this.myPosts.findIndex((p) => p.id === id)
@@ -91,7 +91,7 @@ export const usePostStore = defineStore('posts', {
 
     async deletePost(id: string): Promise<StoreResponse<void>> {
       try {
-        await safeApiCall(() => api.delete<DeletePostResponse>(`/posts/${id}`))
+        await safeApiCall(() => api.delete<DeletePostResponse>(`/content/posts/${id}`))
 
         this.myPosts = this.myPosts.filter((post) => post.id !== id)
         this.posts = this.posts.filter((post) => post.id !== id)
@@ -108,7 +108,7 @@ export const usePostStore = defineStore('posts', {
     async setPostVisibility(id: string, isVisible: boolean): Promise<StorePostResponse> {
       try {
         const res = await safeApiCall(() =>
-          api.patch<UpdatePostResponse>(`/posts/${id}`, { isVisible })
+          api.patch<UpdatePostResponse>(`/content/posts/${id}`, { isVisible })
         )
         const post = OwnerPostSchema.parse(res.data.post)
 
@@ -176,7 +176,7 @@ export const usePostStore = defineStore('posts', {
 
     async fetchOwnerPost(id: string): Promise<StorePostResponse> {
       try {
-        const res = await safeApiCall(() => api.get<PostResponse>(`/posts/${id}`))
+        const res = await safeApiCall(() => api.get<PostResponse>(`/content/posts/${id}`))
         const post = OwnerPostSchema.parse(res.data.post)
         this.currentPost = post
         return storeSuccess({ post })
@@ -192,7 +192,7 @@ export const usePostStore = defineStore('posts', {
 
       try {
         const res = await safeApiCall(() =>
-          api.get<PublicPostDetailResponse>(`/posts/${id}`, { signal: controller.signal })
+          api.get<PublicPostDetailResponse>(`/content/posts/${id}`, { signal: controller.signal })
         )
         const post = PublicPostDetailSchema.parse(res.data.post)
         return storeSuccess({ post })
@@ -204,7 +204,7 @@ export const usePostStore = defineStore('posts', {
 
     async fetchPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
       try {
-        const res = await safeApiCall(() => api.get<PostsResponse>('/posts', { params: query }))
+        const res = await safeApiCall(() => api.get<PostsResponse>('/content/feed', { params: query }))
         const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
 
         if (query.offset === 0 || query.offset === undefined) {
@@ -221,7 +221,7 @@ export const usePostStore = defineStore('posts', {
     async fetchNearbyPosts(query: NearbyPostQueryInput): Promise<StorePostsResponse> {
       try {
         const res = await safeApiCall(() =>
-          api.get<PostsResponse>('/posts/nearby', { params: query })
+          api.get<PostsResponse>('/content/nearby', { params: query })
         )
         const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
 
@@ -239,7 +239,7 @@ export const usePostStore = defineStore('posts', {
     async fetchRecentPosts(query: PostQueryInput = {}): Promise<StorePostsResponse> {
       try {
         const res = await safeApiCall(() =>
-          api.get<PostsResponse>('/posts/recent', { params: query })
+          api.get<PostsResponse>('/content/feed', { params: query })
         )
         const posts = PublicPostWithProfileArraySchema.parse(res.data.posts)
 
@@ -257,7 +257,7 @@ export const usePostStore = defineStore('posts', {
     async fetchMyPosts(query: PostQueryInput = {}): Promise<StoreOwnerPostsResponse> {
       try {
         const res = await safeApiCall(() =>
-          api.get<MyPostsResponse>('/posts/profile/me', { params: query })
+          api.get<MyPostsResponse>('/content/posts/me', { params: query })
         )
         const posts = OwnerPostArraySchema.parse(res.data.posts)
 
@@ -275,7 +275,7 @@ export const usePostStore = defineStore('posts', {
     async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostSummariesResponse> {
       try {
         const res = await safeApiCall(() =>
-          api.get<PostSummariesResponse>('/posts/bounds', { params: bounds })
+          api.get<PostSummariesResponse>('/content/bounds', { params: bounds })
         )
         const posts = PostSummaryArraySchema.parse(res.data.posts)
         this.postSummaries = posts

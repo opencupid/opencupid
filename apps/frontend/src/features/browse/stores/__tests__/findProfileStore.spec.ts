@@ -183,7 +183,7 @@ describe('findClustersForMapBounds with layer kinds', () => {
     expect(mockGet).toHaveBeenCalledWith(
       '/find/clusters',
       expect.objectContaining({
-        params: expect.objectContaining({ kinds: 'profile,post' }),
+        params: expect.objectContaining({ kinds: 'profile,post,event' }),
       })
     )
   })
