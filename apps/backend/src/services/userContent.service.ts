@@ -1,6 +1,5 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
@@ -35,22 +34,8 @@ const profileSummaryInclude = {
   postedBy: { include: { profileImages: true } },
 } as const
 
-const profileWithContextInclude = (viewerProfileId: string) =>
-  ({
-    postedBy: {
-      include: {
-        profileImages: true,
-        ...conversationContextInclude(viewerProfileId),
-      },
-    },
-  }) as const
-
 export type LeanContentRow = Prisma.UserContentGetPayload<{
   include: typeof profileSummaryInclude
-}>
-
-export type LeanContentRowWithContext = Prisma.UserContentGetPayload<{
-  include: ReturnType<typeof profileWithContextInclude>
 }>
 
 export class UserContentService {
@@ -130,17 +115,14 @@ export class UserContentService {
     })
   }
 
-  async findByIdLean(
-    id: string,
-    viewerProfileId: string
-  ): Promise<LeanContentRowWithContext | null> {
+  async findByIdLean(id: string, viewerProfileId: string): Promise<LeanContentRow | null> {
     return prisma.userContent.findFirst({
       where: {
         id,
         isDeleted: false,
         OR: [{ postedById: viewerProfileId }, { isVisible: true }],
       },
-      include: profileWithContextInclude(viewerProfileId),
+      include: profileSummaryInclude,
     })
   }
 
