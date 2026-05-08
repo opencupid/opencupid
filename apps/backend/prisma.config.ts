@@ -4,8 +4,10 @@ import { findUpSync } from '../../packages/shared/findUp'
 import { defineConfig, env } from 'prisma/config'
 
 // Prisma 7 removed implicit .env loading — load it explicitly so the
-// CLI can resolve `env("DATABASE_URL")` below.
-const envFile = findUpSync('.env') ?? findUpSync('.env.example')
+// CLI can resolve env('DATABASE_URL') below. If .env is missing,
+// Prisma will fail fast with a clear error rather than silently using
+// an unintended URL.
+const envFile = findUpSync('.env')
 if (envFile) {
   dotenvExpand.expand(dotenv.config({ path: envFile, quiet: true }))
 }
