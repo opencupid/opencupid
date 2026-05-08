@@ -8,8 +8,8 @@ export type ContentKind = z.infer<typeof ContentKindSchema>
 
 /**
  * Metadata shape used by feed/bounds/nearby/search and supercluster.
- * Row-level attributes only — no kind-specific extension payload; consumers
- * branch on `kind` to fetch extensions when they need them.
+ * Row-level attributes only — no kind-specific content payload; consumers
+ * branch on `kind` to fetch the per-kind content when they need it.
  */
 export const UserContentMetadataSchema = z.object({
   id: z.string(),
@@ -82,7 +82,7 @@ export const OwnerUserContentOverlaySchema = z.object({
 
 /**
  * Detail-with-context shape: postedBy carries conversation context for non-owner viewers.
- * Per-kind schemas extend this base and add their own extension fields.
+ * Per-kind schemas extend this base and add their own kind-specific content fields.
  */
 export const PublicUserContentDetailBaseSchema = UserContentMetadataSchema.extend({
   postedBy: ProfileSummarySchema.merge(ConversationContextSchema),

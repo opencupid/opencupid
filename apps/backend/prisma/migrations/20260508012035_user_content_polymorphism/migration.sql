@@ -26,19 +26,19 @@ CREATE TABLE "public"."UserContent" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."PostExtension" (
+CREATE TABLE "public"."PostContent" (
     "userContentId" TEXT NOT NULL,
     "type" "public"."PostType" NOT NULL,
 
-    CONSTRAINT "PostExtension_pkey" PRIMARY KEY ("userContentId")
+    CONSTRAINT "PostContent_pkey" PRIMARY KEY ("userContentId")
 );
 
 -- CreateTable
-CREATE TABLE "public"."EventExtension" (
+CREATE TABLE "public"."EventContent" (
     "userContentId" TEXT NOT NULL,
     "startsAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "EventExtension_pkey" PRIMARY KEY ("userContentId")
+    CONSTRAINT "EventContent_pkey" PRIMARY KEY ("userContentId")
 );
 
 -- CreateIndex
@@ -57,13 +57,13 @@ CREATE INDEX "UserContent_kind_isVisible_isDeleted_idx" ON "public"."UserContent
 CREATE INDEX "UserContent_lat_lon_idx" ON "public"."UserContent"("lat", "lon");
 
 -- CreateIndex
-CREATE INDEX "EventExtension_startsAt_idx" ON "public"."EventExtension"("startsAt");
+CREATE INDEX "EventContent_startsAt_idx" ON "public"."EventContent"("startsAt");
 
 -- AddForeignKey
 ALTER TABLE "public"."UserContent" ADD CONSTRAINT "UserContent_postedById_fkey" FOREIGN KEY ("postedById") REFERENCES "public"."Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."PostExtension" ADD CONSTRAINT "PostExtension_userContentId_fkey" FOREIGN KEY ("userContentId") REFERENCES "public"."UserContent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."PostContent" ADD CONSTRAINT "PostContent_userContentId_fkey" FOREIGN KEY ("userContentId") REFERENCES "public"."UserContent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."EventExtension" ADD CONSTRAINT "EventExtension_userContentId_fkey" FOREIGN KEY ("userContentId") REFERENCES "public"."UserContent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."EventContent" ADD CONSTRAINT "EventContent_userContentId_fkey" FOREIGN KEY ("userContentId") REFERENCES "public"."UserContent"("id") ON DELETE CASCADE ON UPDATE CASCADE;

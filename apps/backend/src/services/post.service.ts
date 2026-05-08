@@ -9,12 +9,12 @@ import {
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
-const postWithExtensionInclude = {
+const postWithMetadataInclude = {
   post: true,
   postedBy: { include: { profileImages: true } },
 } as const
 
-const postWithExtensionAndContextInclude = (viewerProfileId: string) =>
+const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
   ({
     post: true,
     postedBy: {
@@ -25,12 +25,12 @@ const postWithExtensionAndContextInclude = (viewerProfileId: string) =>
     },
   }) as const
 
-export type PostWithExtension = Prisma.UserContentGetPayload<{
-  include: typeof postWithExtensionInclude
+export type PostWithMetadata = Prisma.UserContentGetPayload<{
+  include: typeof postWithMetadataInclude
 }>
 
-export type PostWithExtensionAndContext = Prisma.UserContentGetPayload<{
-  include: ReturnType<typeof postWithExtensionAndContextInclude>
+export type PostWithMetadataAndContext = Prisma.UserContentGetPayload<{
+  include: ReturnType<typeof postWithMetadataAndContextInclude>
 }>
 
 export class PostService extends UserContentService {
@@ -43,7 +43,7 @@ export class PostService extends UserContentService {
     return PostService.postInstance
   }
 
-  async create(profileId: string, data: CreatePostPayload): Promise<PostWithExtension> {
+  async create(profileId: string, data: CreatePostPayload): Promise<PostWithMetadata> {
     return prisma.userContent.create({
       data: {
         ...this.baseCreateData(data),
@@ -51,7 +51,7 @@ export class PostService extends UserContentService {
         postedById: profileId,
         post: { create: { type: data.type } },
       },
-      include: postWithExtensionInclude,
+      include: postWithMetadataInclude,
     })
   }
 
@@ -59,21 +59,21 @@ export class PostService extends UserContentService {
     id: string,
     profileId: string,
     data: UpdatePostPayload
-  ): Promise<PostWithExtension | null> {
+  ): Promise<PostWithMetadata | null> {
     const { type, ...baseFields } = data
 
     return prisma.$transaction(async (tx) => {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'post', baseFields)
       if (!ok) return null
 
-      await tx.postExtension.update({
+      await tx.postContent.update({
         where: { userContentId: id },
         data: { type },
       })
 
       return tx.userContent.findFirst({
         where: { id },
-        include: postWithExtensionInclude,
+        include: postWithMetadataInclude,
       })
     })
   }
@@ -81,7 +81,7 @@ export class PostService extends UserContentService {
   async findByIdHydrated(
     id: string,
     viewerProfileId: string
-  ): Promise<PostWithExtensionAndContext | null> {
+  ): Promise<PostWithMetadataAndContext | null> {
     return prisma.userContent.findFirst({
       where: {
         id,
@@ -89,14 +89,11 @@ export class PostService extends UserContentService {
         isDeleted: false,
         OR: [{ postedById: viewerProfileId }, { isVisible: true }],
       },
-      include: postWithExtensionAndContextInclude(viewerProfileId),
+      include: postWithMetadataAndContextInclude(viewerProfileId),
     })
   }
 
-  async findByProfileIdHydrated(
-    profileId: string,
-    opts: ListOptions
-  ): Promise<PostWithExtension[]> {
+  async findByProfileIdHydrated(profileId: string, opts: ListOptions): Promise<PostWithMetadata[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -104,7 +101,7 @@ export class PostService extends UserContentService {
         isDeleted: false,
         isVisible: opts.includeInvisible ? undefined : true,
       },
-      include: postWithExtensionInclude,
+      include: postWithMetadataInclude,
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,
@@ -112,13 +109,13 @@ export class PostService extends UserContentService {
   }
 
   // The list-style finders below delegate filtering/pagination to
-  // UserContentService and reattach the post extension afterwards. EventService
+  // UserContentService and reattach the post content row afterwards. EventService
   // will need the same shape; the duplication is intentional until both sides
   // exist, at which point the pattern can be lifted into the base class as a
-  // generic `findHydrated(kind, query, extensionInclude)` helper.
-  async findFeedHydrated(opts: ListOptions): Promise<PostWithExtension[]> {
+  // generic `findHydrated(kind, query, contentInclude)` helper.
+  async findFeedHydrated(opts: ListOptions): Promise<PostWithMetadata[]> {
     const metadata = await this.findFeed({ ...opts, kind: 'post' })
-    return this.attachPostExtension(metadata)
+    return this.attachPostContent(metadata)
   }
 
   async findNearbyHydrated(
@@ -126,22 +123,22 @@ export class PostService extends UserContentService {
     lon: number,
     radiusKm: number,
     opts: ListOptions
-  ): Promise<PostWithExtension[]> {
+  ): Promise<PostWithMetadata[]> {
     const metadata = await this.findNearby(lat, lon, radiusKm, { ...opts, kind: 'post' })
-    return this.attachPostExtension(metadata)
+    return this.attachPostContent(metadata)
   }
 
-  async findInBoundsHydrated(box: BoundsBox): Promise<PostWithExtension[]> {
+  async findInBoundsHydrated(box: BoundsBox): Promise<PostWithMetadata[]> {
     const metadata = (await this.findInBounds(box)).filter((r) => r.kind === 'post')
-    return this.attachPostExtension(metadata)
+    return this.attachPostContent(metadata)
   }
 
-  private async attachPostExtension(rows: UserContentMetadataRow[]): Promise<PostWithExtension[]> {
+  private async attachPostContent(rows: UserContentMetadataRow[]): Promise<PostWithMetadata[]> {
     if (rows.length === 0) return []
-    const extensions = await prisma.postExtension.findMany({
+    const contents = await prisma.postContent.findMany({
       where: { userContentId: { in: rows.map((r) => r.id) } },
     })
-    const byId = new Map(extensions.map((e) => [e.userContentId, e]))
+    const byId = new Map(contents.map((c) => [c.userContentId, c]))
     return rows.flatMap((r) => {
       const post = byId.get(r.id)
       return post ? [{ ...r, post }] : []

@@ -4,7 +4,7 @@ import {
   type PublicEventDetail,
   type OwnerEvent,
 } from '@zod/event/event.dto'
-import type { EventWithExtension, EventWithExtensionAndContext } from '@/services/event.service'
+import type { EventWithMetadata, EventWithMetadataAndContext } from '@/services/event.service'
 import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { extractLocation } from './location.mappers'
@@ -16,7 +16,7 @@ import { extractLocation } from './location.mappers'
 // passes context-less rows to `mapDbEventToDetail`, relying on
 // `mapConversationContext` no-op'ing on undefined). Fix lands together
 // with the post-mappers fix.
-export function mapDbEventToPublic(row: EventWithExtension, viewerProfileId: string): PublicEvent {
+export function mapDbEventToPublic(row: EventWithMetadata, viewerProfileId: string): PublicEvent {
   return {
     id: row.id,
     kind: 'event',
@@ -30,7 +30,7 @@ export function mapDbEventToPublic(row: EventWithExtension, viewerProfileId: str
 }
 
 export function mapDbEventToDetail(
-  row: EventWithExtensionAndContext,
+  row: EventWithMetadataAndContext,
   viewerProfileId: string
 ): PublicEventDetail {
   return {
@@ -48,7 +48,7 @@ export function mapDbEventToDetail(
   }
 }
 
-export function mapDbEventToOwner(row: EventWithExtension): OwnerEvent {
+export function mapDbEventToOwner(row: EventWithMetadata): OwnerEvent {
   return OwnerEventSchema.parse({
     id: row.id,
     kind: 'event',

@@ -42,9 +42,9 @@ export const PushSubscriptionScalarFieldEnumSchema = z.enum(['id','userId','endp
 
 export const UserContentScalarFieldEnumSchema = z.enum(['id','kind','postedById','content','isDeleted','isVisible','country','cityName','lat','lon','createdAt','updatedAt']);
 
-export const PostExtensionScalarFieldEnumSchema = z.enum(['userContentId','type']);
+export const PostContentScalarFieldEnumSchema = z.enum(['userContentId','type']);
 
-export const EventExtensionScalarFieldEnumSchema = z.enum(['userContentId','startsAt']);
+export const EventContentScalarFieldEnumSchema = z.enum(['userContentId','startsAt']);
 
 export const ProfileSessionLogScalarFieldEnumSchema = z.enum(['id','profileId','startedAt']);
 
@@ -403,26 +403,26 @@ export const UserContentSchema = z.object({
 export type UserContent = z.infer<typeof UserContentSchema>
 
 /////////////////////////////////////////
-// POST EXTENSION SCHEMA
+// POST CONTENT SCHEMA
 /////////////////////////////////////////
 
-export const PostExtensionSchema = z.object({
+export const PostContentSchema = z.object({
   type: PostTypeSchema,
   userContentId: z.string(),
 })
 
-export type PostExtension = z.infer<typeof PostExtensionSchema>
+export type PostContent = z.infer<typeof PostContentSchema>
 
 /////////////////////////////////////////
-// EVENT EXTENSION SCHEMA
+// EVENT CONTENT SCHEMA
 /////////////////////////////////////////
 
-export const EventExtensionSchema = z.object({
+export const EventContentSchema = z.object({
   userContentId: z.string(),
   startsAt: z.coerce.date(),
 })
 
-export type EventExtension = z.infer<typeof EventExtensionSchema>
+export type EventContent = z.infer<typeof EventContentSchema>
 
 /////////////////////////////////////////
 // PROFILE SESSION LOG SCHEMA
@@ -983,8 +983,8 @@ export const PushSubscriptionSelectSchema: z.ZodType<Prisma.PushSubscriptionSele
 
 export const UserContentIncludeSchema: z.ZodType<Prisma.UserContentInclude> = z.object({
   postedBy: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
-  post: z.union([z.boolean(),z.lazy(() => PostExtensionArgsSchema)]).optional(),
-  event: z.union([z.boolean(),z.lazy(() => EventExtensionArgsSchema)]).optional(),
+  post: z.union([z.boolean(),z.lazy(() => PostContentArgsSchema)]).optional(),
+  event: z.union([z.boolean(),z.lazy(() => EventContentArgsSchema)]).optional(),
 }).strict()
 
 export const UserContentArgsSchema: z.ZodType<Prisma.UserContentDefaultArgs> = z.object({
@@ -1006,41 +1006,41 @@ export const UserContentSelectSchema: z.ZodType<Prisma.UserContentSelect> = z.ob
   createdAt: z.boolean().optional(),
   updatedAt: z.boolean().optional(),
   postedBy: z.union([z.boolean(),z.lazy(() => ProfileArgsSchema)]).optional(),
-  post: z.union([z.boolean(),z.lazy(() => PostExtensionArgsSchema)]).optional(),
-  event: z.union([z.boolean(),z.lazy(() => EventExtensionArgsSchema)]).optional(),
+  post: z.union([z.boolean(),z.lazy(() => PostContentArgsSchema)]).optional(),
+  event: z.union([z.boolean(),z.lazy(() => EventContentArgsSchema)]).optional(),
 }).strict()
 
-// POST EXTENSION
+// POST CONTENT
 //------------------------------------------------------
 
-export const PostExtensionIncludeSchema: z.ZodType<Prisma.PostExtensionInclude> = z.object({
+export const PostContentIncludeSchema: z.ZodType<Prisma.PostContentInclude> = z.object({
   userContent: z.union([z.boolean(),z.lazy(() => UserContentArgsSchema)]).optional(),
 }).strict()
 
-export const PostExtensionArgsSchema: z.ZodType<Prisma.PostExtensionDefaultArgs> = z.object({
-  select: z.lazy(() => PostExtensionSelectSchema).optional(),
-  include: z.lazy(() => PostExtensionIncludeSchema).optional(),
+export const PostContentArgsSchema: z.ZodType<Prisma.PostContentDefaultArgs> = z.object({
+  select: z.lazy(() => PostContentSelectSchema).optional(),
+  include: z.lazy(() => PostContentIncludeSchema).optional(),
 }).strict();
 
-export const PostExtensionSelectSchema: z.ZodType<Prisma.PostExtensionSelect> = z.object({
+export const PostContentSelectSchema: z.ZodType<Prisma.PostContentSelect> = z.object({
   userContentId: z.boolean().optional(),
   type: z.boolean().optional(),
   userContent: z.union([z.boolean(),z.lazy(() => UserContentArgsSchema)]).optional(),
 }).strict()
 
-// EVENT EXTENSION
+// EVENT CONTENT
 //------------------------------------------------------
 
-export const EventExtensionIncludeSchema: z.ZodType<Prisma.EventExtensionInclude> = z.object({
+export const EventContentIncludeSchema: z.ZodType<Prisma.EventContentInclude> = z.object({
   userContent: z.union([z.boolean(),z.lazy(() => UserContentArgsSchema)]).optional(),
 }).strict()
 
-export const EventExtensionArgsSchema: z.ZodType<Prisma.EventExtensionDefaultArgs> = z.object({
-  select: z.lazy(() => EventExtensionSelectSchema).optional(),
-  include: z.lazy(() => EventExtensionIncludeSchema).optional(),
+export const EventContentArgsSchema: z.ZodType<Prisma.EventContentDefaultArgs> = z.object({
+  select: z.lazy(() => EventContentSelectSchema).optional(),
+  include: z.lazy(() => EventContentIncludeSchema).optional(),
 }).strict();
 
-export const EventExtensionSelectSchema: z.ZodType<Prisma.EventExtensionSelect> = z.object({
+export const EventContentSelectSchema: z.ZodType<Prisma.EventContentSelect> = z.object({
   userContentId: z.boolean().optional(),
   startsAt: z.boolean().optional(),
   userContent: z.union([z.boolean(),z.lazy(() => UserContentArgsSchema)]).optional(),
@@ -2583,8 +2583,8 @@ export const UserContentWhereInputSchema: z.ZodType<Prisma.UserContentWhereInput
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   postedBy: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
-  post: z.union([ z.lazy(() => PostExtensionNullableScalarRelationFilterSchema),z.lazy(() => PostExtensionWhereInputSchema) ]).optional().nullable(),
-  event: z.union([ z.lazy(() => EventExtensionNullableScalarRelationFilterSchema),z.lazy(() => EventExtensionWhereInputSchema) ]).optional().nullable(),
+  post: z.union([ z.lazy(() => PostContentNullableScalarRelationFilterSchema),z.lazy(() => PostContentWhereInputSchema) ]).optional().nullable(),
+  event: z.union([ z.lazy(() => EventContentNullableScalarRelationFilterSchema),z.lazy(() => EventContentWhereInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const UserContentOrderByWithRelationInputSchema: z.ZodType<Prisma.UserContentOrderByWithRelationInput> = z.object({
@@ -2601,8 +2601,8 @@ export const UserContentOrderByWithRelationInputSchema: z.ZodType<Prisma.UserCon
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   postedBy: z.lazy(() => ProfileOrderByWithRelationInputSchema).optional(),
-  post: z.lazy(() => PostExtensionOrderByWithRelationInputSchema).optional(),
-  event: z.lazy(() => EventExtensionOrderByWithRelationInputSchema).optional()
+  post: z.lazy(() => PostContentOrderByWithRelationInputSchema).optional(),
+  event: z.lazy(() => EventContentOrderByWithRelationInputSchema).optional()
 }).strict();
 
 export const UserContentWhereUniqueInputSchema: z.ZodType<Prisma.UserContentWhereUniqueInput> = z.object({
@@ -2625,8 +2625,8 @@ export const UserContentWhereUniqueInputSchema: z.ZodType<Prisma.UserContentWher
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   postedBy: z.union([ z.lazy(() => ProfileScalarRelationFilterSchema),z.lazy(() => ProfileWhereInputSchema) ]).optional(),
-  post: z.union([ z.lazy(() => PostExtensionNullableScalarRelationFilterSchema),z.lazy(() => PostExtensionWhereInputSchema) ]).optional().nullable(),
-  event: z.union([ z.lazy(() => EventExtensionNullableScalarRelationFilterSchema),z.lazy(() => EventExtensionWhereInputSchema) ]).optional().nullable(),
+  post: z.union([ z.lazy(() => PostContentNullableScalarRelationFilterSchema),z.lazy(() => PostContentWhereInputSchema) ]).optional().nullable(),
+  event: z.union([ z.lazy(() => EventContentNullableScalarRelationFilterSchema),z.lazy(() => EventContentWhereInputSchema) ]).optional().nullable(),
 }).strict());
 
 export const UserContentOrderByWithAggregationInputSchema: z.ZodType<Prisma.UserContentOrderByWithAggregationInput> = z.object({
@@ -2667,88 +2667,88 @@ export const UserContentScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.U
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
 
-export const PostExtensionWhereInputSchema: z.ZodType<Prisma.PostExtensionWhereInput> = z.object({
-  AND: z.union([ z.lazy(() => PostExtensionWhereInputSchema),z.lazy(() => PostExtensionWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => PostExtensionWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => PostExtensionWhereInputSchema),z.lazy(() => PostExtensionWhereInputSchema).array() ]).optional(),
+export const PostContentWhereInputSchema: z.ZodType<Prisma.PostContentWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => PostContentWhereInputSchema),z.lazy(() => PostContentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => PostContentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => PostContentWhereInputSchema),z.lazy(() => PostContentWhereInputSchema).array() ]).optional(),
   userContentId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   type: z.union([ z.lazy(() => EnumPostTypeFilterSchema),z.lazy(() => PostTypeSchema) ]).optional(),
   userContent: z.union([ z.lazy(() => UserContentScalarRelationFilterSchema),z.lazy(() => UserContentWhereInputSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionOrderByWithRelationInputSchema: z.ZodType<Prisma.PostExtensionOrderByWithRelationInput> = z.object({
+export const PostContentOrderByWithRelationInputSchema: z.ZodType<Prisma.PostContentOrderByWithRelationInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   type: z.lazy(() => SortOrderSchema).optional(),
   userContent: z.lazy(() => UserContentOrderByWithRelationInputSchema).optional()
 }).strict();
 
-export const PostExtensionWhereUniqueInputSchema: z.ZodType<Prisma.PostExtensionWhereUniqueInput> = z.object({
+export const PostContentWhereUniqueInputSchema: z.ZodType<Prisma.PostContentWhereUniqueInput> = z.object({
   userContentId: z.string()
 })
 .and(z.object({
   userContentId: z.string().optional(),
-  AND: z.union([ z.lazy(() => PostExtensionWhereInputSchema),z.lazy(() => PostExtensionWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => PostExtensionWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => PostExtensionWhereInputSchema),z.lazy(() => PostExtensionWhereInputSchema).array() ]).optional(),
+  AND: z.union([ z.lazy(() => PostContentWhereInputSchema),z.lazy(() => PostContentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => PostContentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => PostContentWhereInputSchema),z.lazy(() => PostContentWhereInputSchema).array() ]).optional(),
   type: z.union([ z.lazy(() => EnumPostTypeFilterSchema),z.lazy(() => PostTypeSchema) ]).optional(),
   userContent: z.union([ z.lazy(() => UserContentScalarRelationFilterSchema),z.lazy(() => UserContentWhereInputSchema) ]).optional(),
 }).strict());
 
-export const PostExtensionOrderByWithAggregationInputSchema: z.ZodType<Prisma.PostExtensionOrderByWithAggregationInput> = z.object({
+export const PostContentOrderByWithAggregationInputSchema: z.ZodType<Prisma.PostContentOrderByWithAggregationInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   type: z.lazy(() => SortOrderSchema).optional(),
-  _count: z.lazy(() => PostExtensionCountOrderByAggregateInputSchema).optional(),
-  _max: z.lazy(() => PostExtensionMaxOrderByAggregateInputSchema).optional(),
-  _min: z.lazy(() => PostExtensionMinOrderByAggregateInputSchema).optional()
+  _count: z.lazy(() => PostContentCountOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => PostContentMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => PostContentMinOrderByAggregateInputSchema).optional()
 }).strict();
 
-export const PostExtensionScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.PostExtensionScalarWhereWithAggregatesInput> = z.object({
-  AND: z.union([ z.lazy(() => PostExtensionScalarWhereWithAggregatesInputSchema),z.lazy(() => PostExtensionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
-  OR: z.lazy(() => PostExtensionScalarWhereWithAggregatesInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => PostExtensionScalarWhereWithAggregatesInputSchema),z.lazy(() => PostExtensionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+export const PostContentScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.PostContentScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => PostContentScalarWhereWithAggregatesInputSchema),z.lazy(() => PostContentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => PostContentScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => PostContentScalarWhereWithAggregatesInputSchema),z.lazy(() => PostContentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   userContentId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   type: z.union([ z.lazy(() => EnumPostTypeWithAggregatesFilterSchema),z.lazy(() => PostTypeSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionWhereInputSchema: z.ZodType<Prisma.EventExtensionWhereInput> = z.object({
-  AND: z.union([ z.lazy(() => EventExtensionWhereInputSchema),z.lazy(() => EventExtensionWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => EventExtensionWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => EventExtensionWhereInputSchema),z.lazy(() => EventExtensionWhereInputSchema).array() ]).optional(),
+export const EventContentWhereInputSchema: z.ZodType<Prisma.EventContentWhereInput> = z.object({
+  AND: z.union([ z.lazy(() => EventContentWhereInputSchema),z.lazy(() => EventContentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => EventContentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => EventContentWhereInputSchema),z.lazy(() => EventContentWhereInputSchema).array() ]).optional(),
   userContentId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   userContent: z.union([ z.lazy(() => UserContentScalarRelationFilterSchema),z.lazy(() => UserContentWhereInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionOrderByWithRelationInputSchema: z.ZodType<Prisma.EventExtensionOrderByWithRelationInput> = z.object({
+export const EventContentOrderByWithRelationInputSchema: z.ZodType<Prisma.EventContentOrderByWithRelationInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional(),
   userContent: z.lazy(() => UserContentOrderByWithRelationInputSchema).optional()
 }).strict();
 
-export const EventExtensionWhereUniqueInputSchema: z.ZodType<Prisma.EventExtensionWhereUniqueInput> = z.object({
+export const EventContentWhereUniqueInputSchema: z.ZodType<Prisma.EventContentWhereUniqueInput> = z.object({
   userContentId: z.string()
 })
 .and(z.object({
   userContentId: z.string().optional(),
-  AND: z.union([ z.lazy(() => EventExtensionWhereInputSchema),z.lazy(() => EventExtensionWhereInputSchema).array() ]).optional(),
-  OR: z.lazy(() => EventExtensionWhereInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => EventExtensionWhereInputSchema),z.lazy(() => EventExtensionWhereInputSchema).array() ]).optional(),
+  AND: z.union([ z.lazy(() => EventContentWhereInputSchema),z.lazy(() => EventContentWhereInputSchema).array() ]).optional(),
+  OR: z.lazy(() => EventContentWhereInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => EventContentWhereInputSchema),z.lazy(() => EventContentWhereInputSchema).array() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   userContent: z.union([ z.lazy(() => UserContentScalarRelationFilterSchema),z.lazy(() => UserContentWhereInputSchema) ]).optional(),
 }).strict());
 
-export const EventExtensionOrderByWithAggregationInputSchema: z.ZodType<Prisma.EventExtensionOrderByWithAggregationInput> = z.object({
+export const EventContentOrderByWithAggregationInputSchema: z.ZodType<Prisma.EventContentOrderByWithAggregationInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional(),
-  _count: z.lazy(() => EventExtensionCountOrderByAggregateInputSchema).optional(),
-  _max: z.lazy(() => EventExtensionMaxOrderByAggregateInputSchema).optional(),
-  _min: z.lazy(() => EventExtensionMinOrderByAggregateInputSchema).optional()
+  _count: z.lazy(() => EventContentCountOrderByAggregateInputSchema).optional(),
+  _max: z.lazy(() => EventContentMaxOrderByAggregateInputSchema).optional(),
+  _min: z.lazy(() => EventContentMinOrderByAggregateInputSchema).optional()
 }).strict();
 
-export const EventExtensionScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.EventExtensionScalarWhereWithAggregatesInput> = z.object({
-  AND: z.union([ z.lazy(() => EventExtensionScalarWhereWithAggregatesInputSchema),z.lazy(() => EventExtensionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
-  OR: z.lazy(() => EventExtensionScalarWhereWithAggregatesInputSchema).array().optional(),
-  NOT: z.union([ z.lazy(() => EventExtensionScalarWhereWithAggregatesInputSchema),z.lazy(() => EventExtensionScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+export const EventContentScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.EventContentScalarWhereWithAggregatesInput> = z.object({
+  AND: z.union([ z.lazy(() => EventContentScalarWhereWithAggregatesInputSchema),z.lazy(() => EventContentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
+  OR: z.lazy(() => EventContentScalarWhereWithAggregatesInputSchema).array().optional(),
+  NOT: z.union([ z.lazy(() => EventContentScalarWhereWithAggregatesInputSchema),z.lazy(() => EventContentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   userContentId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
@@ -4367,8 +4367,8 @@ export const UserContentCreateInputSchema: z.ZodType<Prisma.UserContentCreateInp
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   postedBy: z.lazy(() => ProfileCreateNestedOneWithoutUserContentInputSchema),
-  post: z.lazy(() => PostExtensionCreateNestedOneWithoutUserContentInputSchema).optional(),
-  event: z.lazy(() => EventExtensionCreateNestedOneWithoutUserContentInputSchema).optional()
+  post: z.lazy(() => PostContentCreateNestedOneWithoutUserContentInputSchema).optional(),
+  event: z.lazy(() => EventContentCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedCreateInputSchema: z.ZodType<Prisma.UserContentUncheckedCreateInput> = z.object({
@@ -4384,8 +4384,8 @@ export const UserContentUncheckedCreateInputSchema: z.ZodType<Prisma.UserContent
   lon: z.number().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  post: z.lazy(() => PostExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema).optional(),
-  event: z.lazy(() => EventExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
+  post: z.lazy(() => PostContentUncheckedCreateNestedOneWithoutUserContentInputSchema).optional(),
+  event: z.lazy(() => EventContentUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentUpdateInputSchema: z.ZodType<Prisma.UserContentUpdateInput> = z.object({
@@ -4401,8 +4401,8 @@ export const UserContentUpdateInputSchema: z.ZodType<Prisma.UserContentUpdateInp
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   postedBy: z.lazy(() => ProfileUpdateOneRequiredWithoutUserContentNestedInputSchema).optional(),
-  post: z.lazy(() => PostExtensionUpdateOneWithoutUserContentNestedInputSchema).optional(),
-  event: z.lazy(() => EventExtensionUpdateOneWithoutUserContentNestedInputSchema).optional()
+  post: z.lazy(() => PostContentUpdateOneWithoutUserContentNestedInputSchema).optional(),
+  event: z.lazy(() => EventContentUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedUpdateInputSchema: z.ZodType<Prisma.UserContentUncheckedUpdateInput> = z.object({
@@ -4418,8 +4418,8 @@ export const UserContentUncheckedUpdateInputSchema: z.ZodType<Prisma.UserContent
   lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  post: z.lazy(() => PostExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional(),
-  event: z.lazy(() => EventExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
+  post: z.lazy(() => PostContentUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional(),
+  event: z.lazy(() => EventContentUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const UserContentCreateManyInputSchema: z.ZodType<Prisma.UserContentCreateManyInput> = z.object({
@@ -4466,70 +4466,70 @@ export const UserContentUncheckedUpdateManyInputSchema: z.ZodType<Prisma.UserCon
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionCreateInputSchema: z.ZodType<Prisma.PostExtensionCreateInput> = z.object({
+export const PostContentCreateInputSchema: z.ZodType<Prisma.PostContentCreateInput> = z.object({
   type: z.lazy(() => PostTypeSchema),
   userContent: z.lazy(() => UserContentCreateNestedOneWithoutPostInputSchema)
 }).strict();
 
-export const PostExtensionUncheckedCreateInputSchema: z.ZodType<Prisma.PostExtensionUncheckedCreateInput> = z.object({
+export const PostContentUncheckedCreateInputSchema: z.ZodType<Prisma.PostContentUncheckedCreateInput> = z.object({
   userContentId: z.string(),
   type: z.lazy(() => PostTypeSchema)
 }).strict();
 
-export const PostExtensionUpdateInputSchema: z.ZodType<Prisma.PostExtensionUpdateInput> = z.object({
+export const PostContentUpdateInputSchema: z.ZodType<Prisma.PostContentUpdateInput> = z.object({
   type: z.union([ z.lazy(() => PostTypeSchema),z.lazy(() => EnumPostTypeFieldUpdateOperationsInputSchema) ]).optional(),
   userContent: z.lazy(() => UserContentUpdateOneRequiredWithoutPostNestedInputSchema).optional()
 }).strict();
 
-export const PostExtensionUncheckedUpdateInputSchema: z.ZodType<Prisma.PostExtensionUncheckedUpdateInput> = z.object({
+export const PostContentUncheckedUpdateInputSchema: z.ZodType<Prisma.PostContentUncheckedUpdateInput> = z.object({
   userContentId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   type: z.union([ z.lazy(() => PostTypeSchema),z.lazy(() => EnumPostTypeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionCreateManyInputSchema: z.ZodType<Prisma.PostExtensionCreateManyInput> = z.object({
+export const PostContentCreateManyInputSchema: z.ZodType<Prisma.PostContentCreateManyInput> = z.object({
   userContentId: z.string(),
   type: z.lazy(() => PostTypeSchema)
 }).strict();
 
-export const PostExtensionUpdateManyMutationInputSchema: z.ZodType<Prisma.PostExtensionUpdateManyMutationInput> = z.object({
+export const PostContentUpdateManyMutationInputSchema: z.ZodType<Prisma.PostContentUpdateManyMutationInput> = z.object({
   type: z.union([ z.lazy(() => PostTypeSchema),z.lazy(() => EnumPostTypeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionUncheckedUpdateManyInputSchema: z.ZodType<Prisma.PostExtensionUncheckedUpdateManyInput> = z.object({
+export const PostContentUncheckedUpdateManyInputSchema: z.ZodType<Prisma.PostContentUncheckedUpdateManyInput> = z.object({
   userContentId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   type: z.union([ z.lazy(() => PostTypeSchema),z.lazy(() => EnumPostTypeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionCreateInputSchema: z.ZodType<Prisma.EventExtensionCreateInput> = z.object({
+export const EventContentCreateInputSchema: z.ZodType<Prisma.EventContentCreateInput> = z.object({
   startsAt: z.coerce.date(),
   userContent: z.lazy(() => UserContentCreateNestedOneWithoutEventInputSchema)
 }).strict();
 
-export const EventExtensionUncheckedCreateInputSchema: z.ZodType<Prisma.EventExtensionUncheckedCreateInput> = z.object({
+export const EventContentUncheckedCreateInputSchema: z.ZodType<Prisma.EventContentUncheckedCreateInput> = z.object({
   userContentId: z.string(),
   startsAt: z.coerce.date()
 }).strict();
 
-export const EventExtensionUpdateInputSchema: z.ZodType<Prisma.EventExtensionUpdateInput> = z.object({
+export const EventContentUpdateInputSchema: z.ZodType<Prisma.EventContentUpdateInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   userContent: z.lazy(() => UserContentUpdateOneRequiredWithoutEventNestedInputSchema).optional()
 }).strict();
 
-export const EventExtensionUncheckedUpdateInputSchema: z.ZodType<Prisma.EventExtensionUncheckedUpdateInput> = z.object({
+export const EventContentUncheckedUpdateInputSchema: z.ZodType<Prisma.EventContentUncheckedUpdateInput> = z.object({
   userContentId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionCreateManyInputSchema: z.ZodType<Prisma.EventExtensionCreateManyInput> = z.object({
+export const EventContentCreateManyInputSchema: z.ZodType<Prisma.EventContentCreateManyInput> = z.object({
   userContentId: z.string(),
   startsAt: z.coerce.date()
 }).strict();
 
-export const EventExtensionUpdateManyMutationInputSchema: z.ZodType<Prisma.EventExtensionUpdateManyMutationInput> = z.object({
+export const EventContentUpdateManyMutationInputSchema: z.ZodType<Prisma.EventContentUpdateManyMutationInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionUncheckedUpdateManyInputSchema: z.ZodType<Prisma.EventExtensionUncheckedUpdateManyInput> = z.object({
+export const EventContentUncheckedUpdateManyInputSchema: z.ZodType<Prisma.EventContentUncheckedUpdateManyInput> = z.object({
   userContentId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -5963,14 +5963,14 @@ export const EnumContentKindFilterSchema: z.ZodType<Prisma.EnumContentKindFilter
   not: z.union([ z.lazy(() => ContentKindSchema),z.lazy(() => NestedEnumContentKindFilterSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionNullableScalarRelationFilterSchema: z.ZodType<Prisma.PostExtensionNullableScalarRelationFilter> = z.object({
-  is: z.lazy(() => PostExtensionWhereInputSchema).optional().nullable(),
-  isNot: z.lazy(() => PostExtensionWhereInputSchema).optional().nullable()
+export const PostContentNullableScalarRelationFilterSchema: z.ZodType<Prisma.PostContentNullableScalarRelationFilter> = z.object({
+  is: z.lazy(() => PostContentWhereInputSchema).optional().nullable(),
+  isNot: z.lazy(() => PostContentWhereInputSchema).optional().nullable()
 }).strict();
 
-export const EventExtensionNullableScalarRelationFilterSchema: z.ZodType<Prisma.EventExtensionNullableScalarRelationFilter> = z.object({
-  is: z.lazy(() => EventExtensionWhereInputSchema).optional().nullable(),
-  isNot: z.lazy(() => EventExtensionWhereInputSchema).optional().nullable()
+export const EventContentNullableScalarRelationFilterSchema: z.ZodType<Prisma.EventContentNullableScalarRelationFilter> = z.object({
+  is: z.lazy(() => EventContentWhereInputSchema).optional().nullable(),
+  isNot: z.lazy(() => EventContentWhereInputSchema).optional().nullable()
 }).strict();
 
 export const UserContentCountOrderByAggregateInputSchema: z.ZodType<Prisma.UserContentCountOrderByAggregateInput> = z.object({
@@ -6050,17 +6050,17 @@ export const UserContentScalarRelationFilterSchema: z.ZodType<Prisma.UserContent
   isNot: z.lazy(() => UserContentWhereInputSchema).optional()
 }).strict();
 
-export const PostExtensionCountOrderByAggregateInputSchema: z.ZodType<Prisma.PostExtensionCountOrderByAggregateInput> = z.object({
+export const PostContentCountOrderByAggregateInputSchema: z.ZodType<Prisma.PostContentCountOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   type: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const PostExtensionMaxOrderByAggregateInputSchema: z.ZodType<Prisma.PostExtensionMaxOrderByAggregateInput> = z.object({
+export const PostContentMaxOrderByAggregateInputSchema: z.ZodType<Prisma.PostContentMaxOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   type: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const PostExtensionMinOrderByAggregateInputSchema: z.ZodType<Prisma.PostExtensionMinOrderByAggregateInput> = z.object({
+export const PostContentMinOrderByAggregateInputSchema: z.ZodType<Prisma.PostContentMinOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   type: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -6075,17 +6075,17 @@ export const EnumPostTypeWithAggregatesFilterSchema: z.ZodType<Prisma.EnumPostTy
   _max: z.lazy(() => NestedEnumPostTypeFilterSchema).optional()
 }).strict();
 
-export const EventExtensionCountOrderByAggregateInputSchema: z.ZodType<Prisma.EventExtensionCountOrderByAggregateInput> = z.object({
+export const EventContentCountOrderByAggregateInputSchema: z.ZodType<Prisma.EventContentCountOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const EventExtensionMaxOrderByAggregateInputSchema: z.ZodType<Prisma.EventExtensionMaxOrderByAggregateInput> = z.object({
+export const EventContentMaxOrderByAggregateInputSchema: z.ZodType<Prisma.EventContentMaxOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
-export const EventExtensionMinOrderByAggregateInputSchema: z.ZodType<Prisma.EventExtensionMinOrderByAggregateInput> = z.object({
+export const EventContentMinOrderByAggregateInputSchema: z.ZodType<Prisma.EventContentMinOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional()
 }).strict();
@@ -7795,28 +7795,28 @@ export const ProfileCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Pris
   connect: z.lazy(() => ProfileWhereUniqueInputSchema).optional()
 }).strict();
 
-export const PostExtensionCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionCreateNestedOneWithoutUserContentInput> = z.object({
-  create: z.union([ z.lazy(() => PostExtensionCreateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => PostExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  connect: z.lazy(() => PostExtensionWhereUniqueInputSchema).optional()
+export const PostContentCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentCreateNestedOneWithoutUserContentInput> = z.object({
+  create: z.union([ z.lazy(() => PostContentCreateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => PostContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  connect: z.lazy(() => PostContentWhereUniqueInputSchema).optional()
 }).strict();
 
-export const EventExtensionCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionCreateNestedOneWithoutUserContentInput> = z.object({
-  create: z.union([ z.lazy(() => EventExtensionCreateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => EventExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  connect: z.lazy(() => EventExtensionWhereUniqueInputSchema).optional()
+export const EventContentCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentCreateNestedOneWithoutUserContentInput> = z.object({
+  create: z.union([ z.lazy(() => EventContentCreateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => EventContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  connect: z.lazy(() => EventContentWhereUniqueInputSchema).optional()
 }).strict();
 
-export const PostExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionUncheckedCreateNestedOneWithoutUserContentInput> = z.object({
-  create: z.union([ z.lazy(() => PostExtensionCreateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => PostExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  connect: z.lazy(() => PostExtensionWhereUniqueInputSchema).optional()
+export const PostContentUncheckedCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentUncheckedCreateNestedOneWithoutUserContentInput> = z.object({
+  create: z.union([ z.lazy(() => PostContentCreateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => PostContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  connect: z.lazy(() => PostContentWhereUniqueInputSchema).optional()
 }).strict();
 
-export const EventExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionUncheckedCreateNestedOneWithoutUserContentInput> = z.object({
-  create: z.union([ z.lazy(() => EventExtensionCreateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => EventExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  connect: z.lazy(() => EventExtensionWhereUniqueInputSchema).optional()
+export const EventContentUncheckedCreateNestedOneWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUncheckedCreateNestedOneWithoutUserContentInput> = z.object({
+  create: z.union([ z.lazy(() => EventContentCreateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => EventContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  connect: z.lazy(() => EventContentWhereUniqueInputSchema).optional()
 }).strict();
 
 export const EnumContentKindFieldUpdateOperationsInputSchema: z.ZodType<Prisma.EnumContentKindFieldUpdateOperationsInput> = z.object({
@@ -7831,44 +7831,44 @@ export const ProfileUpdateOneRequiredWithoutUserContentNestedInputSchema: z.ZodT
   update: z.union([ z.lazy(() => ProfileUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => ProfileUpdateWithoutUserContentInputSchema),z.lazy(() => ProfileUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.PostExtensionUpdateOneWithoutUserContentNestedInput> = z.object({
-  create: z.union([ z.lazy(() => PostExtensionCreateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => PostExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  upsert: z.lazy(() => PostExtensionUpsertWithoutUserContentInputSchema).optional(),
-  disconnect: z.union([ z.boolean(),z.lazy(() => PostExtensionWhereInputSchema) ]).optional(),
-  delete: z.union([ z.boolean(),z.lazy(() => PostExtensionWhereInputSchema) ]).optional(),
-  connect: z.lazy(() => PostExtensionWhereUniqueInputSchema).optional(),
-  update: z.union([ z.lazy(() => PostExtensionUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => PostExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
+export const PostContentUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.PostContentUpdateOneWithoutUserContentNestedInput> = z.object({
+  create: z.union([ z.lazy(() => PostContentCreateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => PostContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  upsert: z.lazy(() => PostContentUpsertWithoutUserContentInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => PostContentWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => PostContentWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => PostContentWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => PostContentUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => PostContentUpdateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.EventExtensionUpdateOneWithoutUserContentNestedInput> = z.object({
-  create: z.union([ z.lazy(() => EventExtensionCreateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => EventExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  upsert: z.lazy(() => EventExtensionUpsertWithoutUserContentInputSchema).optional(),
-  disconnect: z.union([ z.boolean(),z.lazy(() => EventExtensionWhereInputSchema) ]).optional(),
-  delete: z.union([ z.boolean(),z.lazy(() => EventExtensionWhereInputSchema) ]).optional(),
-  connect: z.lazy(() => EventExtensionWhereUniqueInputSchema).optional(),
-  update: z.union([ z.lazy(() => EventExtensionUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => EventExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
+export const EventContentUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.EventContentUpdateOneWithoutUserContentNestedInput> = z.object({
+  create: z.union([ z.lazy(() => EventContentCreateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => EventContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  upsert: z.lazy(() => EventContentUpsertWithoutUserContentInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => EventContentWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => EventContentWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => EventContentWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => EventContentUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => EventContentUpdateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.PostExtensionUncheckedUpdateOneWithoutUserContentNestedInput> = z.object({
-  create: z.union([ z.lazy(() => PostExtensionCreateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => PostExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  upsert: z.lazy(() => PostExtensionUpsertWithoutUserContentInputSchema).optional(),
-  disconnect: z.union([ z.boolean(),z.lazy(() => PostExtensionWhereInputSchema) ]).optional(),
-  delete: z.union([ z.boolean(),z.lazy(() => PostExtensionWhereInputSchema) ]).optional(),
-  connect: z.lazy(() => PostExtensionWhereUniqueInputSchema).optional(),
-  update: z.union([ z.lazy(() => PostExtensionUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => PostExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
+export const PostContentUncheckedUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.PostContentUncheckedUpdateOneWithoutUserContentNestedInput> = z.object({
+  create: z.union([ z.lazy(() => PostContentCreateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => PostContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  upsert: z.lazy(() => PostContentUpsertWithoutUserContentInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => PostContentWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => PostContentWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => PostContentWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => PostContentUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => PostContentUpdateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.EventExtensionUncheckedUpdateOneWithoutUserContentNestedInput> = z.object({
-  create: z.union([ z.lazy(() => EventExtensionCreateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
-  connectOrCreate: z.lazy(() => EventExtensionCreateOrConnectWithoutUserContentInputSchema).optional(),
-  upsert: z.lazy(() => EventExtensionUpsertWithoutUserContentInputSchema).optional(),
-  disconnect: z.union([ z.boolean(),z.lazy(() => EventExtensionWhereInputSchema) ]).optional(),
-  delete: z.union([ z.boolean(),z.lazy(() => EventExtensionWhereInputSchema) ]).optional(),
-  connect: z.lazy(() => EventExtensionWhereUniqueInputSchema).optional(),
-  update: z.union([ z.lazy(() => EventExtensionUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => EventExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
+export const EventContentUncheckedUpdateOneWithoutUserContentNestedInputSchema: z.ZodType<Prisma.EventContentUncheckedUpdateOneWithoutUserContentNestedInput> = z.object({
+  create: z.union([ z.lazy(() => EventContentCreateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedCreateWithoutUserContentInputSchema) ]).optional(),
+  connectOrCreate: z.lazy(() => EventContentCreateOrConnectWithoutUserContentInputSchema).optional(),
+  upsert: z.lazy(() => EventContentUpsertWithoutUserContentInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => EventContentWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => EventContentWhereInputSchema) ]).optional(),
+  connect: z.lazy(() => EventContentWhereUniqueInputSchema).optional(),
+  update: z.union([ z.lazy(() => EventContentUpdateToOneWithWhereWithoutUserContentInputSchema),z.lazy(() => EventContentUpdateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedUpdateWithoutUserContentInputSchema) ]).optional(),
 }).strict();
 
 export const UserContentCreateNestedOneWithoutPostInputSchema: z.ZodType<Prisma.UserContentCreateNestedOneWithoutPostInput> = z.object({
@@ -9968,8 +9968,8 @@ export const UserContentCreateWithoutPostedByInputSchema: z.ZodType<Prisma.UserC
   lon: z.number().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  post: z.lazy(() => PostExtensionCreateNestedOneWithoutUserContentInputSchema).optional(),
-  event: z.lazy(() => EventExtensionCreateNestedOneWithoutUserContentInputSchema).optional()
+  post: z.lazy(() => PostContentCreateNestedOneWithoutUserContentInputSchema).optional(),
+  event: z.lazy(() => EventContentCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedCreateWithoutPostedByInputSchema: z.ZodType<Prisma.UserContentUncheckedCreateWithoutPostedByInput> = z.object({
@@ -9984,8 +9984,8 @@ export const UserContentUncheckedCreateWithoutPostedByInputSchema: z.ZodType<Pri
   lon: z.number().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  post: z.lazy(() => PostExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema).optional(),
-  event: z.lazy(() => EventExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
+  post: z.lazy(() => PostContentUncheckedCreateNestedOneWithoutUserContentInputSchema).optional(),
+  event: z.lazy(() => EventContentUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentCreateOrConnectWithoutPostedByInputSchema: z.ZodType<Prisma.UserContentCreateOrConnectWithoutPostedByInput> = z.object({
@@ -13508,30 +13508,30 @@ export const ProfileCreateOrConnectWithoutUserContentInputSchema: z.ZodType<Pris
   create: z.union([ z.lazy(() => ProfileCreateWithoutUserContentInputSchema),z.lazy(() => ProfileUncheckedCreateWithoutUserContentInputSchema) ]),
 }).strict();
 
-export const PostExtensionCreateWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionCreateWithoutUserContentInput> = z.object({
+export const PostContentCreateWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentCreateWithoutUserContentInput> = z.object({
   type: z.lazy(() => PostTypeSchema)
 }).strict();
 
-export const PostExtensionUncheckedCreateWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionUncheckedCreateWithoutUserContentInput> = z.object({
+export const PostContentUncheckedCreateWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentUncheckedCreateWithoutUserContentInput> = z.object({
   type: z.lazy(() => PostTypeSchema)
 }).strict();
 
-export const PostExtensionCreateOrConnectWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionCreateOrConnectWithoutUserContentInput> = z.object({
-  where: z.lazy(() => PostExtensionWhereUniqueInputSchema),
-  create: z.union([ z.lazy(() => PostExtensionCreateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedCreateWithoutUserContentInputSchema) ]),
+export const PostContentCreateOrConnectWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentCreateOrConnectWithoutUserContentInput> = z.object({
+  where: z.lazy(() => PostContentWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => PostContentCreateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedCreateWithoutUserContentInputSchema) ]),
 }).strict();
 
-export const EventExtensionCreateWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionCreateWithoutUserContentInput> = z.object({
+export const EventContentCreateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentCreateWithoutUserContentInput> = z.object({
   startsAt: z.coerce.date()
 }).strict();
 
-export const EventExtensionUncheckedCreateWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionUncheckedCreateWithoutUserContentInput> = z.object({
+export const EventContentUncheckedCreateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUncheckedCreateWithoutUserContentInput> = z.object({
   startsAt: z.coerce.date()
 }).strict();
 
-export const EventExtensionCreateOrConnectWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionCreateOrConnectWithoutUserContentInput> = z.object({
-  where: z.lazy(() => EventExtensionWhereUniqueInputSchema),
-  create: z.union([ z.lazy(() => EventExtensionCreateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedCreateWithoutUserContentInputSchema) ]),
+export const EventContentCreateOrConnectWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentCreateOrConnectWithoutUserContentInput> = z.object({
+  where: z.lazy(() => EventContentWhereUniqueInputSchema),
+  create: z.union([ z.lazy(() => EventContentCreateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedCreateWithoutUserContentInputSchema) ]),
 }).strict();
 
 export const ProfileUpsertWithoutUserContentInputSchema: z.ZodType<Prisma.ProfileUpsertWithoutUserContentInput> = z.object({
@@ -13641,41 +13641,41 @@ export const ProfileUncheckedUpdateWithoutUserContentInputSchema: z.ZodType<Pris
   trustFlags: z.lazy(() => ProfileTrustFlagUncheckedUpdateManyWithoutProfileNestedInputSchema).optional()
 }).strict();
 
-export const PostExtensionUpsertWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionUpsertWithoutUserContentInput> = z.object({
-  update: z.union([ z.lazy(() => PostExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedUpdateWithoutUserContentInputSchema) ]),
-  create: z.union([ z.lazy(() => PostExtensionCreateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedCreateWithoutUserContentInputSchema) ]),
-  where: z.lazy(() => PostExtensionWhereInputSchema).optional()
+export const PostContentUpsertWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentUpsertWithoutUserContentInput> = z.object({
+  update: z.union([ z.lazy(() => PostContentUpdateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedUpdateWithoutUserContentInputSchema) ]),
+  create: z.union([ z.lazy(() => PostContentCreateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedCreateWithoutUserContentInputSchema) ]),
+  where: z.lazy(() => PostContentWhereInputSchema).optional()
 }).strict();
 
-export const PostExtensionUpdateToOneWithWhereWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionUpdateToOneWithWhereWithoutUserContentInput> = z.object({
-  where: z.lazy(() => PostExtensionWhereInputSchema).optional(),
-  data: z.union([ z.lazy(() => PostExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => PostExtensionUncheckedUpdateWithoutUserContentInputSchema) ]),
+export const PostContentUpdateToOneWithWhereWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentUpdateToOneWithWhereWithoutUserContentInput> = z.object({
+  where: z.lazy(() => PostContentWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => PostContentUpdateWithoutUserContentInputSchema),z.lazy(() => PostContentUncheckedUpdateWithoutUserContentInputSchema) ]),
 }).strict();
 
-export const PostExtensionUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionUpdateWithoutUserContentInput> = z.object({
+export const PostContentUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentUpdateWithoutUserContentInput> = z.object({
   type: z.union([ z.lazy(() => PostTypeSchema),z.lazy(() => EnumPostTypeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const PostExtensionUncheckedUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.PostExtensionUncheckedUpdateWithoutUserContentInput> = z.object({
+export const PostContentUncheckedUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.PostContentUncheckedUpdateWithoutUserContentInput> = z.object({
   type: z.union([ z.lazy(() => PostTypeSchema),z.lazy(() => EnumPostTypeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionUpsertWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionUpsertWithoutUserContentInput> = z.object({
-  update: z.union([ z.lazy(() => EventExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedUpdateWithoutUserContentInputSchema) ]),
-  create: z.union([ z.lazy(() => EventExtensionCreateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedCreateWithoutUserContentInputSchema) ]),
-  where: z.lazy(() => EventExtensionWhereInputSchema).optional()
+export const EventContentUpsertWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUpsertWithoutUserContentInput> = z.object({
+  update: z.union([ z.lazy(() => EventContentUpdateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedUpdateWithoutUserContentInputSchema) ]),
+  create: z.union([ z.lazy(() => EventContentCreateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedCreateWithoutUserContentInputSchema) ]),
+  where: z.lazy(() => EventContentWhereInputSchema).optional()
 }).strict();
 
-export const EventExtensionUpdateToOneWithWhereWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionUpdateToOneWithWhereWithoutUserContentInput> = z.object({
-  where: z.lazy(() => EventExtensionWhereInputSchema).optional(),
-  data: z.union([ z.lazy(() => EventExtensionUpdateWithoutUserContentInputSchema),z.lazy(() => EventExtensionUncheckedUpdateWithoutUserContentInputSchema) ]),
+export const EventContentUpdateToOneWithWhereWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUpdateToOneWithWhereWithoutUserContentInput> = z.object({
+  where: z.lazy(() => EventContentWhereInputSchema).optional(),
+  data: z.union([ z.lazy(() => EventContentUpdateWithoutUserContentInputSchema),z.lazy(() => EventContentUncheckedUpdateWithoutUserContentInputSchema) ]),
 }).strict();
 
-export const EventExtensionUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionUpdateWithoutUserContentInput> = z.object({
+export const EventContentUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUpdateWithoutUserContentInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
-export const EventExtensionUncheckedUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.EventExtensionUncheckedUpdateWithoutUserContentInput> = z.object({
+export const EventContentUncheckedUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUncheckedUpdateWithoutUserContentInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
 
@@ -13692,7 +13692,7 @@ export const UserContentCreateWithoutPostInputSchema: z.ZodType<Prisma.UserConte
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   postedBy: z.lazy(() => ProfileCreateNestedOneWithoutUserContentInputSchema),
-  event: z.lazy(() => EventExtensionCreateNestedOneWithoutUserContentInputSchema).optional()
+  event: z.lazy(() => EventContentCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedCreateWithoutPostInputSchema: z.ZodType<Prisma.UserContentUncheckedCreateWithoutPostInput> = z.object({
@@ -13708,7 +13708,7 @@ export const UserContentUncheckedCreateWithoutPostInputSchema: z.ZodType<Prisma.
   lon: z.number().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  event: z.lazy(() => EventExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
+  event: z.lazy(() => EventContentUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentCreateOrConnectWithoutPostInputSchema: z.ZodType<Prisma.UserContentCreateOrConnectWithoutPostInput> = z.object({
@@ -13740,7 +13740,7 @@ export const UserContentUpdateWithoutPostInputSchema: z.ZodType<Prisma.UserConte
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   postedBy: z.lazy(() => ProfileUpdateOneRequiredWithoutUserContentNestedInputSchema).optional(),
-  event: z.lazy(() => EventExtensionUpdateOneWithoutUserContentNestedInputSchema).optional()
+  event: z.lazy(() => EventContentUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedUpdateWithoutPostInputSchema: z.ZodType<Prisma.UserContentUncheckedUpdateWithoutPostInput> = z.object({
@@ -13756,7 +13756,7 @@ export const UserContentUncheckedUpdateWithoutPostInputSchema: z.ZodType<Prisma.
   lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  event: z.lazy(() => EventExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
+  event: z.lazy(() => EventContentUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const UserContentCreateWithoutEventInputSchema: z.ZodType<Prisma.UserContentCreateWithoutEventInput> = z.object({
@@ -13772,7 +13772,7 @@ export const UserContentCreateWithoutEventInputSchema: z.ZodType<Prisma.UserCont
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   postedBy: z.lazy(() => ProfileCreateNestedOneWithoutUserContentInputSchema),
-  post: z.lazy(() => PostExtensionCreateNestedOneWithoutUserContentInputSchema).optional()
+  post: z.lazy(() => PostContentCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedCreateWithoutEventInputSchema: z.ZodType<Prisma.UserContentUncheckedCreateWithoutEventInput> = z.object({
@@ -13788,7 +13788,7 @@ export const UserContentUncheckedCreateWithoutEventInputSchema: z.ZodType<Prisma
   lon: z.number().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  post: z.lazy(() => PostExtensionUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
+  post: z.lazy(() => PostContentUncheckedCreateNestedOneWithoutUserContentInputSchema).optional()
 }).strict();
 
 export const UserContentCreateOrConnectWithoutEventInputSchema: z.ZodType<Prisma.UserContentCreateOrConnectWithoutEventInput> = z.object({
@@ -13820,7 +13820,7 @@ export const UserContentUpdateWithoutEventInputSchema: z.ZodType<Prisma.UserCont
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   postedBy: z.lazy(() => ProfileUpdateOneRequiredWithoutUserContentNestedInputSchema).optional(),
-  post: z.lazy(() => PostExtensionUpdateOneWithoutUserContentNestedInputSchema).optional()
+  post: z.lazy(() => PostContentUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedUpdateWithoutEventInputSchema: z.ZodType<Prisma.UserContentUncheckedUpdateWithoutEventInput> = z.object({
@@ -13836,7 +13836,7 @@ export const UserContentUncheckedUpdateWithoutEventInputSchema: z.ZodType<Prisma
   lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  post: z.lazy(() => PostExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
+  post: z.lazy(() => PostContentUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const ProfileCreateWithoutSessionLogsInputSchema: z.ZodType<Prisma.ProfileCreateWithoutSessionLogsInput> = z.object({
@@ -15554,8 +15554,8 @@ export const UserContentUpdateWithoutPostedByInputSchema: z.ZodType<Prisma.UserC
   lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  post: z.lazy(() => PostExtensionUpdateOneWithoutUserContentNestedInputSchema).optional(),
-  event: z.lazy(() => EventExtensionUpdateOneWithoutUserContentNestedInputSchema).optional()
+  post: z.lazy(() => PostContentUpdateOneWithoutUserContentNestedInputSchema).optional(),
+  event: z.lazy(() => EventContentUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedUpdateWithoutPostedByInputSchema: z.ZodType<Prisma.UserContentUncheckedUpdateWithoutPostedByInput> = z.object({
@@ -15570,8 +15570,8 @@ export const UserContentUncheckedUpdateWithoutPostedByInputSchema: z.ZodType<Pri
   lon: z.union([ z.number(),z.lazy(() => NullableFloatFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  post: z.lazy(() => PostExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional(),
-  event: z.lazy(() => EventExtensionUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
+  post: z.lazy(() => PostContentUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional(),
+  event: z.lazy(() => EventContentUncheckedUpdateOneWithoutUserContentNestedInputSchema).optional()
 }).strict();
 
 export const UserContentUncheckedUpdateManyWithoutPostedByInputSchema: z.ZodType<Prisma.UserContentUncheckedUpdateManyWithoutPostedByInput> = z.object({
@@ -16637,128 +16637,128 @@ export const UserContentFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.UserConten
   where: UserContentWhereUniqueInputSchema,
 }).strict() ;
 
-export const PostExtensionFindFirstArgsSchema: z.ZodType<Prisma.PostExtensionFindFirstArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  where: PostExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ PostExtensionOrderByWithRelationInputSchema.array(),PostExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: PostExtensionWhereUniqueInputSchema.optional(),
+export const PostContentFindFirstArgsSchema: z.ZodType<Prisma.PostContentFindFirstArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  where: PostContentWhereInputSchema.optional(),
+  orderBy: z.union([ PostContentOrderByWithRelationInputSchema.array(),PostContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: PostContentWhereUniqueInputSchema.optional(),
   take: z.number().optional(),
   skip: z.number().optional(),
-  distinct: z.union([ PostExtensionScalarFieldEnumSchema,PostExtensionScalarFieldEnumSchema.array() ]).optional(),
+  distinct: z.union([ PostContentScalarFieldEnumSchema,PostContentScalarFieldEnumSchema.array() ]).optional(),
 }).strict() ;
 
-export const PostExtensionFindFirstOrThrowArgsSchema: z.ZodType<Prisma.PostExtensionFindFirstOrThrowArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  where: PostExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ PostExtensionOrderByWithRelationInputSchema.array(),PostExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: PostExtensionWhereUniqueInputSchema.optional(),
+export const PostContentFindFirstOrThrowArgsSchema: z.ZodType<Prisma.PostContentFindFirstOrThrowArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  where: PostContentWhereInputSchema.optional(),
+  orderBy: z.union([ PostContentOrderByWithRelationInputSchema.array(),PostContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: PostContentWhereUniqueInputSchema.optional(),
   take: z.number().optional(),
   skip: z.number().optional(),
-  distinct: z.union([ PostExtensionScalarFieldEnumSchema,PostExtensionScalarFieldEnumSchema.array() ]).optional(),
+  distinct: z.union([ PostContentScalarFieldEnumSchema,PostContentScalarFieldEnumSchema.array() ]).optional(),
 }).strict() ;
 
-export const PostExtensionFindManyArgsSchema: z.ZodType<Prisma.PostExtensionFindManyArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  where: PostExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ PostExtensionOrderByWithRelationInputSchema.array(),PostExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: PostExtensionWhereUniqueInputSchema.optional(),
+export const PostContentFindManyArgsSchema: z.ZodType<Prisma.PostContentFindManyArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  where: PostContentWhereInputSchema.optional(),
+  orderBy: z.union([ PostContentOrderByWithRelationInputSchema.array(),PostContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: PostContentWhereUniqueInputSchema.optional(),
   take: z.number().optional(),
   skip: z.number().optional(),
-  distinct: z.union([ PostExtensionScalarFieldEnumSchema,PostExtensionScalarFieldEnumSchema.array() ]).optional(),
+  distinct: z.union([ PostContentScalarFieldEnumSchema,PostContentScalarFieldEnumSchema.array() ]).optional(),
 }).strict() ;
 
-export const PostExtensionAggregateArgsSchema: z.ZodType<Prisma.PostExtensionAggregateArgs> = z.object({
-  where: PostExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ PostExtensionOrderByWithRelationInputSchema.array(),PostExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: PostExtensionWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-}).strict() ;
-
-export const PostExtensionGroupByArgsSchema: z.ZodType<Prisma.PostExtensionGroupByArgs> = z.object({
-  where: PostExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ PostExtensionOrderByWithAggregationInputSchema.array(),PostExtensionOrderByWithAggregationInputSchema ]).optional(),
-  by: PostExtensionScalarFieldEnumSchema.array(),
-  having: PostExtensionScalarWhereWithAggregatesInputSchema.optional(),
+export const PostContentAggregateArgsSchema: z.ZodType<Prisma.PostContentAggregateArgs> = z.object({
+  where: PostContentWhereInputSchema.optional(),
+  orderBy: z.union([ PostContentOrderByWithRelationInputSchema.array(),PostContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: PostContentWhereUniqueInputSchema.optional(),
   take: z.number().optional(),
   skip: z.number().optional(),
 }).strict() ;
 
-export const PostExtensionFindUniqueArgsSchema: z.ZodType<Prisma.PostExtensionFindUniqueArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  where: PostExtensionWhereUniqueInputSchema,
-}).strict() ;
-
-export const PostExtensionFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.PostExtensionFindUniqueOrThrowArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  where: PostExtensionWhereUniqueInputSchema,
-}).strict() ;
-
-export const EventExtensionFindFirstArgsSchema: z.ZodType<Prisma.EventExtensionFindFirstArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  where: EventExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ EventExtensionOrderByWithRelationInputSchema.array(),EventExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: EventExtensionWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ EventExtensionScalarFieldEnumSchema,EventExtensionScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const EventExtensionFindFirstOrThrowArgsSchema: z.ZodType<Prisma.EventExtensionFindFirstOrThrowArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  where: EventExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ EventExtensionOrderByWithRelationInputSchema.array(),EventExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: EventExtensionWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ EventExtensionScalarFieldEnumSchema,EventExtensionScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const EventExtensionFindManyArgsSchema: z.ZodType<Prisma.EventExtensionFindManyArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  where: EventExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ EventExtensionOrderByWithRelationInputSchema.array(),EventExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: EventExtensionWhereUniqueInputSchema.optional(),
-  take: z.number().optional(),
-  skip: z.number().optional(),
-  distinct: z.union([ EventExtensionScalarFieldEnumSchema,EventExtensionScalarFieldEnumSchema.array() ]).optional(),
-}).strict() ;
-
-export const EventExtensionAggregateArgsSchema: z.ZodType<Prisma.EventExtensionAggregateArgs> = z.object({
-  where: EventExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ EventExtensionOrderByWithRelationInputSchema.array(),EventExtensionOrderByWithRelationInputSchema ]).optional(),
-  cursor: EventExtensionWhereUniqueInputSchema.optional(),
+export const PostContentGroupByArgsSchema: z.ZodType<Prisma.PostContentGroupByArgs> = z.object({
+  where: PostContentWhereInputSchema.optional(),
+  orderBy: z.union([ PostContentOrderByWithAggregationInputSchema.array(),PostContentOrderByWithAggregationInputSchema ]).optional(),
+  by: PostContentScalarFieldEnumSchema.array(),
+  having: PostContentScalarWhereWithAggregatesInputSchema.optional(),
   take: z.number().optional(),
   skip: z.number().optional(),
 }).strict() ;
 
-export const EventExtensionGroupByArgsSchema: z.ZodType<Prisma.EventExtensionGroupByArgs> = z.object({
-  where: EventExtensionWhereInputSchema.optional(),
-  orderBy: z.union([ EventExtensionOrderByWithAggregationInputSchema.array(),EventExtensionOrderByWithAggregationInputSchema ]).optional(),
-  by: EventExtensionScalarFieldEnumSchema.array(),
-  having: EventExtensionScalarWhereWithAggregatesInputSchema.optional(),
+export const PostContentFindUniqueArgsSchema: z.ZodType<Prisma.PostContentFindUniqueArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  where: PostContentWhereUniqueInputSchema,
+}).strict() ;
+
+export const PostContentFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.PostContentFindUniqueOrThrowArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  where: PostContentWhereUniqueInputSchema,
+}).strict() ;
+
+export const EventContentFindFirstArgsSchema: z.ZodType<Prisma.EventContentFindFirstArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  where: EventContentWhereInputSchema.optional(),
+  orderBy: z.union([ EventContentOrderByWithRelationInputSchema.array(),EventContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: EventContentWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ EventContentScalarFieldEnumSchema,EventContentScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const EventContentFindFirstOrThrowArgsSchema: z.ZodType<Prisma.EventContentFindFirstOrThrowArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  where: EventContentWhereInputSchema.optional(),
+  orderBy: z.union([ EventContentOrderByWithRelationInputSchema.array(),EventContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: EventContentWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ EventContentScalarFieldEnumSchema,EventContentScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const EventContentFindManyArgsSchema: z.ZodType<Prisma.EventContentFindManyArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  where: EventContentWhereInputSchema.optional(),
+  orderBy: z.union([ EventContentOrderByWithRelationInputSchema.array(),EventContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: EventContentWhereUniqueInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
+  distinct: z.union([ EventContentScalarFieldEnumSchema,EventContentScalarFieldEnumSchema.array() ]).optional(),
+}).strict() ;
+
+export const EventContentAggregateArgsSchema: z.ZodType<Prisma.EventContentAggregateArgs> = z.object({
+  where: EventContentWhereInputSchema.optional(),
+  orderBy: z.union([ EventContentOrderByWithRelationInputSchema.array(),EventContentOrderByWithRelationInputSchema ]).optional(),
+  cursor: EventContentWhereUniqueInputSchema.optional(),
   take: z.number().optional(),
   skip: z.number().optional(),
 }).strict() ;
 
-export const EventExtensionFindUniqueArgsSchema: z.ZodType<Prisma.EventExtensionFindUniqueArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  where: EventExtensionWhereUniqueInputSchema,
+export const EventContentGroupByArgsSchema: z.ZodType<Prisma.EventContentGroupByArgs> = z.object({
+  where: EventContentWhereInputSchema.optional(),
+  orderBy: z.union([ EventContentOrderByWithAggregationInputSchema.array(),EventContentOrderByWithAggregationInputSchema ]).optional(),
+  by: EventContentScalarFieldEnumSchema.array(),
+  having: EventContentScalarWhereWithAggregatesInputSchema.optional(),
+  take: z.number().optional(),
+  skip: z.number().optional(),
 }).strict() ;
 
-export const EventExtensionFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.EventExtensionFindUniqueOrThrowArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  where: EventExtensionWhereUniqueInputSchema,
+export const EventContentFindUniqueArgsSchema: z.ZodType<Prisma.EventContentFindUniqueArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  where: EventContentWhereUniqueInputSchema,
+}).strict() ;
+
+export const EventContentFindUniqueOrThrowArgsSchema: z.ZodType<Prisma.EventContentFindUniqueOrThrowArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  where: EventContentWhereUniqueInputSchema,
 }).strict() ;
 
 export const ProfileSessionLogFindFirstArgsSchema: z.ZodType<Prisma.ProfileSessionLogFindFirstArgs> = z.object({
@@ -17814,111 +17814,111 @@ export const UserContentDeleteManyArgsSchema: z.ZodType<Prisma.UserContentDelete
   limit: z.number().optional(),
 }).strict() ;
 
-export const PostExtensionCreateArgsSchema: z.ZodType<Prisma.PostExtensionCreateArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  data: z.union([ PostExtensionCreateInputSchema,PostExtensionUncheckedCreateInputSchema ]),
+export const PostContentCreateArgsSchema: z.ZodType<Prisma.PostContentCreateArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  data: z.union([ PostContentCreateInputSchema,PostContentUncheckedCreateInputSchema ]),
 }).strict() ;
 
-export const PostExtensionUpsertArgsSchema: z.ZodType<Prisma.PostExtensionUpsertArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  where: PostExtensionWhereUniqueInputSchema,
-  create: z.union([ PostExtensionCreateInputSchema,PostExtensionUncheckedCreateInputSchema ]),
-  update: z.union([ PostExtensionUpdateInputSchema,PostExtensionUncheckedUpdateInputSchema ]),
+export const PostContentUpsertArgsSchema: z.ZodType<Prisma.PostContentUpsertArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  where: PostContentWhereUniqueInputSchema,
+  create: z.union([ PostContentCreateInputSchema,PostContentUncheckedCreateInputSchema ]),
+  update: z.union([ PostContentUpdateInputSchema,PostContentUncheckedUpdateInputSchema ]),
 }).strict() ;
 
-export const PostExtensionCreateManyArgsSchema: z.ZodType<Prisma.PostExtensionCreateManyArgs> = z.object({
-  data: z.union([ PostExtensionCreateManyInputSchema,PostExtensionCreateManyInputSchema.array() ]),
+export const PostContentCreateManyArgsSchema: z.ZodType<Prisma.PostContentCreateManyArgs> = z.object({
+  data: z.union([ PostContentCreateManyInputSchema,PostContentCreateManyInputSchema.array() ]),
   skipDuplicates: z.boolean().optional(),
 }).strict() ;
 
-export const PostExtensionCreateManyAndReturnArgsSchema: z.ZodType<Prisma.PostExtensionCreateManyAndReturnArgs> = z.object({
-  data: z.union([ PostExtensionCreateManyInputSchema,PostExtensionCreateManyInputSchema.array() ]),
+export const PostContentCreateManyAndReturnArgsSchema: z.ZodType<Prisma.PostContentCreateManyAndReturnArgs> = z.object({
+  data: z.union([ PostContentCreateManyInputSchema,PostContentCreateManyInputSchema.array() ]),
   skipDuplicates: z.boolean().optional(),
 }).strict() ;
 
-export const PostExtensionDeleteArgsSchema: z.ZodType<Prisma.PostExtensionDeleteArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  where: PostExtensionWhereUniqueInputSchema,
+export const PostContentDeleteArgsSchema: z.ZodType<Prisma.PostContentDeleteArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  where: PostContentWhereUniqueInputSchema,
 }).strict() ;
 
-export const PostExtensionUpdateArgsSchema: z.ZodType<Prisma.PostExtensionUpdateArgs> = z.object({
-  select: PostExtensionSelectSchema.optional(),
-  include: PostExtensionIncludeSchema.optional(),
-  data: z.union([ PostExtensionUpdateInputSchema,PostExtensionUncheckedUpdateInputSchema ]),
-  where: PostExtensionWhereUniqueInputSchema,
+export const PostContentUpdateArgsSchema: z.ZodType<Prisma.PostContentUpdateArgs> = z.object({
+  select: PostContentSelectSchema.optional(),
+  include: PostContentIncludeSchema.optional(),
+  data: z.union([ PostContentUpdateInputSchema,PostContentUncheckedUpdateInputSchema ]),
+  where: PostContentWhereUniqueInputSchema,
 }).strict() ;
 
-export const PostExtensionUpdateManyArgsSchema: z.ZodType<Prisma.PostExtensionUpdateManyArgs> = z.object({
-  data: z.union([ PostExtensionUpdateManyMutationInputSchema,PostExtensionUncheckedUpdateManyInputSchema ]),
-  where: PostExtensionWhereInputSchema.optional(),
+export const PostContentUpdateManyArgsSchema: z.ZodType<Prisma.PostContentUpdateManyArgs> = z.object({
+  data: z.union([ PostContentUpdateManyMutationInputSchema,PostContentUncheckedUpdateManyInputSchema ]),
+  where: PostContentWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 
-export const PostExtensionUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.PostExtensionUpdateManyAndReturnArgs> = z.object({
-  data: z.union([ PostExtensionUpdateManyMutationInputSchema,PostExtensionUncheckedUpdateManyInputSchema ]),
-  where: PostExtensionWhereInputSchema.optional(),
+export const PostContentUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.PostContentUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ PostContentUpdateManyMutationInputSchema,PostContentUncheckedUpdateManyInputSchema ]),
+  where: PostContentWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 
-export const PostExtensionDeleteManyArgsSchema: z.ZodType<Prisma.PostExtensionDeleteManyArgs> = z.object({
-  where: PostExtensionWhereInputSchema.optional(),
+export const PostContentDeleteManyArgsSchema: z.ZodType<Prisma.PostContentDeleteManyArgs> = z.object({
+  where: PostContentWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 
-export const EventExtensionCreateArgsSchema: z.ZodType<Prisma.EventExtensionCreateArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  data: z.union([ EventExtensionCreateInputSchema,EventExtensionUncheckedCreateInputSchema ]),
+export const EventContentCreateArgsSchema: z.ZodType<Prisma.EventContentCreateArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  data: z.union([ EventContentCreateInputSchema,EventContentUncheckedCreateInputSchema ]),
 }).strict() ;
 
-export const EventExtensionUpsertArgsSchema: z.ZodType<Prisma.EventExtensionUpsertArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  where: EventExtensionWhereUniqueInputSchema,
-  create: z.union([ EventExtensionCreateInputSchema,EventExtensionUncheckedCreateInputSchema ]),
-  update: z.union([ EventExtensionUpdateInputSchema,EventExtensionUncheckedUpdateInputSchema ]),
+export const EventContentUpsertArgsSchema: z.ZodType<Prisma.EventContentUpsertArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  where: EventContentWhereUniqueInputSchema,
+  create: z.union([ EventContentCreateInputSchema,EventContentUncheckedCreateInputSchema ]),
+  update: z.union([ EventContentUpdateInputSchema,EventContentUncheckedUpdateInputSchema ]),
 }).strict() ;
 
-export const EventExtensionCreateManyArgsSchema: z.ZodType<Prisma.EventExtensionCreateManyArgs> = z.object({
-  data: z.union([ EventExtensionCreateManyInputSchema,EventExtensionCreateManyInputSchema.array() ]),
+export const EventContentCreateManyArgsSchema: z.ZodType<Prisma.EventContentCreateManyArgs> = z.object({
+  data: z.union([ EventContentCreateManyInputSchema,EventContentCreateManyInputSchema.array() ]),
   skipDuplicates: z.boolean().optional(),
 }).strict() ;
 
-export const EventExtensionCreateManyAndReturnArgsSchema: z.ZodType<Prisma.EventExtensionCreateManyAndReturnArgs> = z.object({
-  data: z.union([ EventExtensionCreateManyInputSchema,EventExtensionCreateManyInputSchema.array() ]),
+export const EventContentCreateManyAndReturnArgsSchema: z.ZodType<Prisma.EventContentCreateManyAndReturnArgs> = z.object({
+  data: z.union([ EventContentCreateManyInputSchema,EventContentCreateManyInputSchema.array() ]),
   skipDuplicates: z.boolean().optional(),
 }).strict() ;
 
-export const EventExtensionDeleteArgsSchema: z.ZodType<Prisma.EventExtensionDeleteArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  where: EventExtensionWhereUniqueInputSchema,
+export const EventContentDeleteArgsSchema: z.ZodType<Prisma.EventContentDeleteArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  where: EventContentWhereUniqueInputSchema,
 }).strict() ;
 
-export const EventExtensionUpdateArgsSchema: z.ZodType<Prisma.EventExtensionUpdateArgs> = z.object({
-  select: EventExtensionSelectSchema.optional(),
-  include: EventExtensionIncludeSchema.optional(),
-  data: z.union([ EventExtensionUpdateInputSchema,EventExtensionUncheckedUpdateInputSchema ]),
-  where: EventExtensionWhereUniqueInputSchema,
+export const EventContentUpdateArgsSchema: z.ZodType<Prisma.EventContentUpdateArgs> = z.object({
+  select: EventContentSelectSchema.optional(),
+  include: EventContentIncludeSchema.optional(),
+  data: z.union([ EventContentUpdateInputSchema,EventContentUncheckedUpdateInputSchema ]),
+  where: EventContentWhereUniqueInputSchema,
 }).strict() ;
 
-export const EventExtensionUpdateManyArgsSchema: z.ZodType<Prisma.EventExtensionUpdateManyArgs> = z.object({
-  data: z.union([ EventExtensionUpdateManyMutationInputSchema,EventExtensionUncheckedUpdateManyInputSchema ]),
-  where: EventExtensionWhereInputSchema.optional(),
+export const EventContentUpdateManyArgsSchema: z.ZodType<Prisma.EventContentUpdateManyArgs> = z.object({
+  data: z.union([ EventContentUpdateManyMutationInputSchema,EventContentUncheckedUpdateManyInputSchema ]),
+  where: EventContentWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 
-export const EventExtensionUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.EventExtensionUpdateManyAndReturnArgs> = z.object({
-  data: z.union([ EventExtensionUpdateManyMutationInputSchema,EventExtensionUncheckedUpdateManyInputSchema ]),
-  where: EventExtensionWhereInputSchema.optional(),
+export const EventContentUpdateManyAndReturnArgsSchema: z.ZodType<Prisma.EventContentUpdateManyAndReturnArgs> = z.object({
+  data: z.union([ EventContentUpdateManyMutationInputSchema,EventContentUncheckedUpdateManyInputSchema ]),
+  where: EventContentWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 
-export const EventExtensionDeleteManyArgsSchema: z.ZodType<Prisma.EventExtensionDeleteManyArgs> = z.object({
-  where: EventExtensionWhereInputSchema.optional(),
+export const EventContentDeleteManyArgsSchema: z.ZodType<Prisma.EventContentDeleteManyArgs> = z.object({
+  where: EventContentWhereInputSchema.optional(),
   limit: z.number().optional(),
 }).strict() ;
 

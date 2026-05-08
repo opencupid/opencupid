@@ -151,8 +151,8 @@ model User {
   lastLoginAt             DateTime?
   language                String     @default("en")
   originDomain            String
-  newsletterOptIn           Boolean  @default(true)
-  emailNotificationsOptIn   Boolean  @default(true)
+  newsletterOptIn         Boolean    @default(true)
+  emailNotificationsOptIn Boolean    @default(true)
   roles                   UserRole[] @default([user])
 
   // relations
@@ -406,8 +406,8 @@ model UserContent {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
-  post  PostExtension?
-  event EventExtension?
+  post  PostContent?
+  event EventContent?
 
   @@index([postedById])
   @@index([kind])
@@ -416,16 +416,17 @@ model UserContent {
   @@index([lat, lon])
 }
 
-model PostExtension {
+model PostContent {
   userContentId String      @id
   userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
   type          PostType
 }
 
-model EventExtension {
+model EventContent {
   userContentId String      @id
   userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
   startsAt      DateTime
+
   @@index([startsAt])
 }
 

@@ -4,12 +4,12 @@ import { UserContentService, type ListOptions } from './userContent.service'
 import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
-const eventWithExtensionInclude = {
+const eventWithMetadataInclude = {
   event: true,
   postedBy: { include: { profileImages: true } },
 } as const
 
-const eventWithExtensionAndContextInclude = (viewerProfileId: string) =>
+const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
   ({
     event: true,
     postedBy: {
@@ -20,12 +20,12 @@ const eventWithExtensionAndContextInclude = (viewerProfileId: string) =>
     },
   }) as const
 
-export type EventWithExtension = Prisma.UserContentGetPayload<{
-  include: typeof eventWithExtensionInclude
+export type EventWithMetadata = Prisma.UserContentGetPayload<{
+  include: typeof eventWithMetadataInclude
 }>
 
-export type EventWithExtensionAndContext = Prisma.UserContentGetPayload<{
-  include: ReturnType<typeof eventWithExtensionAndContextInclude>
+export type EventWithMetadataAndContext = Prisma.UserContentGetPayload<{
+  include: ReturnType<typeof eventWithMetadataAndContextInclude>
 }>
 
 export class EventService extends UserContentService {
@@ -38,7 +38,7 @@ export class EventService extends UserContentService {
     return EventService.eventInstance
   }
 
-  async create(profileId: string, data: CreateEventPayload): Promise<EventWithExtension> {
+  async create(profileId: string, data: CreateEventPayload): Promise<EventWithMetadata> {
     return prisma.userContent.create({
       data: {
         ...this.baseCreateData(data),
@@ -46,7 +46,7 @@ export class EventService extends UserContentService {
         postedById: profileId,
         event: { create: { startsAt: data.startsAt } },
       },
-      include: eventWithExtensionInclude,
+      include: eventWithMetadataInclude,
     })
   }
 
@@ -54,21 +54,21 @@ export class EventService extends UserContentService {
     id: string,
     profileId: string,
     data: UpdateEventPayload
-  ): Promise<EventWithExtension | null> {
+  ): Promise<EventWithMetadata | null> {
     const { startsAt, ...baseFields } = data
 
     return prisma.$transaction(async (tx) => {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'event', baseFields)
       if (!ok) return null
 
-      await tx.eventExtension.update({
+      await tx.eventContent.update({
         where: { userContentId: id },
         data: { startsAt },
       })
 
       return tx.userContent.findFirst({
         where: { id },
-        include: eventWithExtensionInclude,
+        include: eventWithMetadataInclude,
       })
     })
   }
@@ -76,7 +76,7 @@ export class EventService extends UserContentService {
   async findByIdHydrated(
     id: string,
     viewerProfileId: string
-  ): Promise<EventWithExtensionAndContext | null> {
+  ): Promise<EventWithMetadataAndContext | null> {
     return prisma.userContent.findFirst({
       where: {
         id,
@@ -84,14 +84,14 @@ export class EventService extends UserContentService {
         isDeleted: false,
         OR: [{ postedById: viewerProfileId }, { isVisible: true }],
       },
-      include: eventWithExtensionAndContextInclude(viewerProfileId),
+      include: eventWithMetadataAndContextInclude(viewerProfileId),
     })
   }
 
   async findByProfileIdHydrated(
     profileId: string,
     opts: ListOptions
-  ): Promise<EventWithExtension[]> {
+  ): Promise<EventWithMetadata[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -99,7 +99,7 @@ export class EventService extends UserContentService {
         isDeleted: false,
         isVisible: opts.includeInvisible ? undefined : true,
       },
-      include: eventWithExtensionInclude,
+      include: eventWithMetadataInclude,
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,

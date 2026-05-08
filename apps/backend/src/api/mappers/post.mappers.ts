@@ -5,7 +5,7 @@ import {
   type OwnerPost,
   type PostSummary,
 } from '@zod/post/post.dto'
-import type { PostWithExtension, PostWithExtensionAndContext } from '@/services/post.service'
+import type { PostWithMetadata, PostWithMetadataAndContext } from '@/services/post.service'
 import type { DbProfileSummary } from '@zod/profile/profile.db'
 import type { PostType } from '@prisma/client'
 import { mapProfileSummary } from './profile.mappers'
@@ -14,15 +14,15 @@ import { DbLocationToLocationDTO, extractLocation } from './location.mappers'
 
 // TODO(post-mappers) #1446: the input types here are tighter than callers can
 // satisfy without `as any`, in two flavors:
-//   (1) Detail routes load `PostWithExtensionAndContext` (has conversation
+//   (1) Detail routes load `PostWithMetadataAndContext` (has conversation
 //       context fields) and pass it to `mapDbPostToOwner`, whose declared
-//       input is the narrower `PostWithExtension`. The runtime is fine —
+//       input is the narrower `PostWithMetadata`. The runtime is fine —
 //       owner mapping just ignores the extra fields — but Prisma's
 //       include-derived types don't structurally extend cleanly so TS
 //       can't accept the wider shape. Fix: widen `mapDbPostToOwner` /
 //       `mapDbPostToPublic` to accept either include shape (union or a
 //       structural subset type).
-//   (2) `findByProfileIdHydrated` returns `PostWithExtension[]` (no
+//   (2) `findByProfileIdHydrated` returns `PostWithMetadata[]` (no
 //       context), but the non-owner branch in /content/posts/profile/:id
 //       calls `mapDbPostToDetail` which expects the with-context payload.
 //       The cast hides a real shape mismatch — `mapConversationContext`
@@ -32,7 +32,7 @@ import { DbLocationToLocationDTO, extractLocation } from './location.mappers'
 //       service load the with-context include for that path.
 // Same shape applies to `event.mappers.ts`. Tracked together; expect a
 // single follow-up PR to land both.
-export function mapDbPostToPublic(row: PostWithExtension, viewerProfileId: string): PublicPost {
+export function mapDbPostToPublic(row: PostWithMetadata, viewerProfileId: string): PublicPost {
   return {
     id: row.id,
     kind: 'post',
@@ -46,7 +46,7 @@ export function mapDbPostToPublic(row: PostWithExtension, viewerProfileId: strin
 }
 
 export function mapDbPostToDetail(
-  row: PostWithExtensionAndContext,
+  row: PostWithMetadataAndContext,
   viewerProfileId: string
 ): PublicPostDetail {
   return {
@@ -64,7 +64,7 @@ export function mapDbPostToDetail(
   }
 }
 
-export function mapDbPostToOwner(row: PostWithExtension): OwnerPost {
+export function mapDbPostToOwner(row: PostWithMetadata): OwnerPost {
   return OwnerPostSchema.parse({
     id: row.id,
     kind: 'post',

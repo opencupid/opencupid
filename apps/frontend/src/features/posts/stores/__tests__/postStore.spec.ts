@@ -1,8 +1,8 @@
 // TODO(user-content-polymorphism): 8 tests below are `it.skip` after the
-// /content/posts URL move + DTO restructure (lean base + per-kind extensions).
+// /content/posts URL move + DTO restructure (metadata base + per-kind content).
 // The skipped tests rely on fixture shapes that match the legacy PublicPost
-// schema; they need rewriting against the new lean+kind shape. Tracking in a
-// follow-up to the polymorphism PR. The remaining 5 tests (URL plumbing,
+// schema; they need rewriting against the new metadata+kind shape. Tracking
+// in a follow-up to the polymorphism PR. The remaining 5 tests (URL plumbing,
 // error paths) cover the URL move adequately for v1.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'

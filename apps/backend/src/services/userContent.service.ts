@@ -155,7 +155,7 @@ export class UserContentService {
    * Zod fields produce `string | null | undefined`; Prisma's CreateInput
    * (under exactOptionalPropertyTypes) demands `string | null`, so each
    * nullable field is `?? null`-coerced once here. Subclasses spread the
-   * result and add their own augmentation (kind, postedById, extension).
+   * result and add their own augmentation (kind, postedById, kind-specific content).
    */
   protected baseCreateData(data: BaseUserContentPayload) {
     return {
@@ -170,8 +170,8 @@ export class UserContentService {
   /**
    * Atomically gates a UserContent scalar update on ownership and kind.
    * Used by per-kind services (PostService, EventService) inside a tx that
-   * also writes to the kind-specific extension table. Always bumps
-   * updatedAt so extension-only edits still register on the base row.
+   * also writes to the kind-specific content table. Always bumps
+   * updatedAt so content-only edits still register on the base row.
    * Returns true if the row was matched and updated, false otherwise.
    */
   protected async updateBaseScalars(
