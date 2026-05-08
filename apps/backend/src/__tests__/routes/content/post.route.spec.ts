@@ -203,6 +203,7 @@ describe('GET /me', () => {
     await handler({ session: { profileId: ownerProfileId }, query: {} } as any, reply as any)
     expect(mockPostService.findByProfileIdHydrated).toHaveBeenCalledWith(
       ownerProfileId,
+      ownerProfileId,
       expect.objectContaining({ includeInvisible: true })
     )
     expect(reply.payload).toMatchObject({
@@ -226,6 +227,7 @@ describe('GET /profile/:profileId', () => {
     )
     expect(mockPostService.findByProfileIdHydrated).toHaveBeenCalledWith(
       ownerProfileId,
+      ownerProfileId,
       expect.objectContaining({ includeInvisible: true })
     )
     expect(reply.payload).toMatchObject({
@@ -247,6 +249,7 @@ describe('GET /profile/:profileId', () => {
     )
     expect(mockPostService.findByProfileIdHydrated).toHaveBeenCalledWith(
       otherProfileId,
+      ownerProfileId,
       expect.objectContaining({ includeInvisible: false })
     )
     expect(reply.payload).toMatchObject({

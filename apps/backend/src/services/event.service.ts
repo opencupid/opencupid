@@ -90,8 +90,9 @@ export class EventService extends UserContentService {
 
   async findByProfileIdHydrated(
     profileId: string,
+    viewerProfileId: string,
     opts: ListOptions
-  ): Promise<EventWithMetadata[]> {
+  ): Promise<EventWithMetadataAndContext[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -99,7 +100,7 @@ export class EventService extends UserContentService {
         isDeleted: false,
         isVisible: opts.includeInvisible ? undefined : true,
       },
-      include: eventWithMetadataInclude,
+      include: eventWithMetadataAndContextInclude(viewerProfileId),
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,

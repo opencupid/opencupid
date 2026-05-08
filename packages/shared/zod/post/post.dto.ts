@@ -8,6 +8,8 @@ import {
   UserContentQueryShape,
   NearbyContentQueryShape,
 } from '../userContent/userContent.dto'
+import { LocationSchema } from '@zod/dto/location.dto'
+import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 
 const POST_KIND = z.literal('post')
 
@@ -29,20 +31,13 @@ export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 export const OwnerPostSchema = PublicPostSchema.merge(OwnerUserContentOverlaySchema)
 export type OwnerPost = z.infer<typeof OwnerPostSchema>
 
-// TODO(post-summary-schema) #1446: `location` and `postedBy` are `z.any()` —
-// runtime validation is disabled for the two richest fields. The backend
-// `mapPostSummary` produces concrete shapes (LocationSchema /
-// ProfileSummarySchema), so swapping these in would catch DTO drift.
-// Deferred: mapPostSummary's input includes a partial profile shape that
-// doesn't quite line up with ProfileSummarySchema today; reconciling
-// belongs in the same follow-up that simplifies the mapper-input types.
 export const PostSummarySchema = z.object({
   id: z.string(),
   kind: POST_KIND,
   type: PostTypeSchema,
   content: z.string(),
-  location: z.any(),
-  postedBy: z.any(),
+  location: LocationSchema,
+  postedBy: ProfileSummarySchema,
 })
 export type PostSummary = z.infer<typeof PostSummarySchema>
 

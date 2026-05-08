@@ -60,22 +60,16 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
     if (metadata.kind === 'post') {
       const hydrated = await PostService.getInstance().findByIdHydrated(id, viewerProfileId)
       if (!hydrated) return sendError(reply, 404, 'Content not found')
-      // TODO(mapper-types) #1446: wide→narrow cast on the owner branch — see
-      // post.mappers.ts. The non-owner branch's row type matches the
-      // mapper exactly, no cast needed.
       const item = isOwner
-        ? mapDbPostToOwner(hydrated as any)
+        ? mapDbPostToOwner(hydrated)
         : mapDbPostToDetail(hydrated, viewerProfileId)
       return reply.code(200).send({ success: true, item })
     }
 
     const hydrated = await EventService.getInstance().findByIdHydrated(id, viewerProfileId)
     if (!hydrated) return sendError(reply, 404, 'Content not found')
-    // TODO(mapper-types) #1446: wide→narrow cast on the owner branch — see
-    // event.mappers.ts. The non-owner branch's row type matches the
-    // mapper exactly, no cast needed.
     const item = isOwner
-      ? mapDbEventToOwner(hydrated as any)
+      ? mapDbEventToOwner(hydrated)
       : mapDbEventToDetail(hydrated, viewerProfileId)
     return reply.code(200).send({ success: true, item })
   })

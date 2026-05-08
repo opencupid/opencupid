@@ -98,8 +98,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Post not found')
       const isOwner = row.postedById === viewerProfileId
-      // TODO(mapper-types) #1446: wide→narrow cast — see post.mappers.ts.
-      const post = isOwner ? mapDbPostToOwner(row as any) : mapDbPostToDetail(row, viewerProfileId)
+      const post = isOwner ? mapDbPostToOwner(row) : mapDbPostToDetail(row, viewerProfileId)
       return reply.code(200).send({ success: true, post })
     } catch (err) {
       fastify.log.error(err)
@@ -158,7 +157,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     if (!profileId) return sendError(reply, 401, 'Profile required')
     try {
       const page = PaginationSchema.parse(req.query)
-      const rows = await svc.findByProfileIdHydrated(profileId, {
+      const rows = await svc.findByProfileIdHydrated(profileId, profileId, {
         ...page,
         includeInvisible: true,
       })
@@ -174,17 +173,12 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     const viewerProfileId = req.session.profileId
     try {
       const page = PaginationSchema.parse(req.query)
-      const rows = await svc.findByProfileIdHydrated(profileId, {
+      const rows = await svc.findByProfileIdHydrated(profileId, viewerProfileId, {
         ...page,
         includeInvisible: viewerProfileId === profileId,
       })
-      // TODO(mapper-types) #1446: narrow→wide cast on the non-owner branch — see
-      // post.mappers.ts. Relies on mapConversationContext no-op'ing on
-      // undefined fields.
       const posts = rows.map((r) =>
-        viewerProfileId === profileId
-          ? mapDbPostToOwner(r)
-          : mapDbPostToDetail(r as any, viewerProfileId)
+        viewerProfileId === profileId ? mapDbPostToOwner(r) : mapDbPostToDetail(r, viewerProfileId)
       )
       return reply.code(200).send({ success: true, posts })
     } catch (err) {

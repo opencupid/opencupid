@@ -49,10 +49,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Event not found')
       const isOwner = row.postedById === viewerProfileId
-      // TODO(mapper-types) #1446: wide→narrow cast — see event.mappers.ts.
-      const event = isOwner
-        ? mapDbEventToOwner(row as any)
-        : mapDbEventToDetail(row, viewerProfileId)
+      const event = isOwner ? mapDbEventToOwner(row) : mapDbEventToDetail(row, viewerProfileId)
       return reply.code(200).send({ success: true, event })
     } catch (err) {
       fastify.log.error(err)
@@ -111,7 +108,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     if (!profileId) return sendError(reply, 401, 'Profile required')
     try {
       const page = PaginationSchema.parse(req.query)
-      const rows = await svc.findByProfileIdHydrated(profileId, {
+      const rows = await svc.findByProfileIdHydrated(profileId, profileId, {
         ...page,
         includeInvisible: true,
       })
@@ -127,17 +124,14 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     const viewerProfileId = req.session.profileId
     try {
       const page = PaginationSchema.parse(req.query)
-      const rows = await svc.findByProfileIdHydrated(profileId, {
+      const rows = await svc.findByProfileIdHydrated(profileId, viewerProfileId, {
         ...page,
         includeInvisible: viewerProfileId === profileId,
       })
-      // TODO(mapper-types) #1446: narrow→wide cast on the non-owner branch — see
-      // event.mappers.ts. Relies on mapConversationContext no-op'ing on
-      // undefined fields.
       const events = rows.map((r) =>
         viewerProfileId === profileId
           ? mapDbEventToOwner(r)
-          : mapDbEventToDetail(r as any, viewerProfileId)
+          : mapDbEventToDetail(r, viewerProfileId)
       )
       return reply.code(200).send({ success: true, events })
     } catch (err) {

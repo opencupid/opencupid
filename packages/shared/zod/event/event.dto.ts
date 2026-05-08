@@ -7,6 +7,8 @@ import {
   UserContentQueryShape,
   NearbyContentQueryShape,
 } from '../userContent/userContent.dto'
+import { LocationSchema } from '@zod/dto/location.dto'
+import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 
 const EVENT_KIND = z.literal('event')
 
@@ -44,3 +46,11 @@ export type EventQueryInput = z.input<typeof EventQuerySchema>
 export const NearbyEventQuerySchema = z.object(NearbyContentQueryShape)
 export type NearbyEventQuery = z.infer<typeof NearbyEventQuerySchema>
 export type NearbyEventQueryInput = z.input<typeof NearbyEventQuerySchema>
+
+export const EventSummarySchema = z.object({
+  id: z.string(),
+  kind: EVENT_KIND,
+  content: z.string(),
+  location: LocationSchema,
+  postedBy: ProfileSummarySchema,
+})

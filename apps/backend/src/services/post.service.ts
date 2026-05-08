@@ -93,7 +93,11 @@ export class PostService extends UserContentService {
     })
   }
 
-  async findByProfileIdHydrated(profileId: string, opts: ListOptions): Promise<PostWithMetadata[]> {
+  async findByProfileIdHydrated(
+    profileId: string,
+    viewerProfileId: string,
+    opts: ListOptions
+  ): Promise<PostWithMetadataAndContext[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -101,7 +105,7 @@ export class PostService extends UserContentService {
         isDeleted: false,
         isVisible: opts.includeInvisible ? undefined : true,
       },
-      include: postWithMetadataInclude,
+      include: postWithMetadataAndContextInclude(viewerProfileId),
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,
