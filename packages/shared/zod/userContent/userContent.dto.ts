@@ -44,6 +44,31 @@ export const ContentParamsSchema = z.object({ id: z.string().cuid() })
 export type ContentParams = z.infer<typeof ContentParamsSchema>
 
 /**
+ * Shared write-side fields for create payloads across all content kinds.
+ * Per-kind schemas `.extend()` this with discriminator-bound fields
+ * (e.g. `type` for posts, `startsAt` for events).
+ */
+export const BaseUserContentPayloadSchema = z.object({
+  content: z.string().min(1).max(2000),
+  country: z.string().nullable().optional(),
+  cityName: z.string().nullable().optional(),
+  lat: z.number().nullable().optional(),
+  lon: z.number().nullable().optional(),
+})
+export type BaseUserContentPayload = z.infer<typeof BaseUserContentPayloadSchema>
+
+/**
+ * Owner-only fields layered onto per-kind public schemas to produce owner schemas.
+ * Per-kind owner schemas: `PublicXxxSchema.merge(OwnerUserContentOverlaySchema)`.
+ */
+export const OwnerUserContentOverlaySchema = z.object({
+  isDeleted: z.boolean(),
+  isVisible: z.boolean(),
+  isOwn: z.literal(true),
+  updatedAt: z.date(),
+})
+
+/**
  * Detail-with-context shape: postedBy carries conversation context for non-owner viewers.
  * Per-kind schemas extend this base and add their own extension fields.
  */

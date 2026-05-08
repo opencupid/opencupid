@@ -1,7 +1,9 @@
 import { z } from 'zod'
 import { PostTypeSchema } from '../generated'
 import {
+  BaseUserContentPayloadSchema,
   LeanUserContentSchema,
+  OwnerUserContentOverlaySchema,
   PublicUserContentDetailBaseSchema,
   UserContentQueryShape,
   NearbyContentQueryShape,
@@ -24,12 +26,7 @@ export const PublicPostDetailSchema = PublicUserContentDetailBaseSchema.extend({
 })
 export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 
-export const OwnerPostSchema = PublicPostSchema.extend({
-  isDeleted: z.boolean(),
-  isVisible: z.boolean(),
-  isOwn: z.literal(true),
-  updatedAt: z.date(),
-})
+export const OwnerPostSchema = PublicPostSchema.merge(OwnerUserContentOverlaySchema)
 export type OwnerPost = z.infer<typeof OwnerPostSchema>
 
 export const PostSummarySchema = z.object({
@@ -42,13 +39,8 @@ export const PostSummarySchema = z.object({
 })
 export type PostSummary = z.infer<typeof PostSummarySchema>
 
-export const CreatePostPayloadSchema = z.object({
-  content: z.string().min(1).max(2000),
+export const CreatePostPayloadSchema = BaseUserContentPayloadSchema.extend({
   type: PostTypeSchema,
-  country: z.string().nullable().optional(),
-  cityName: z.string().nullable().optional(),
-  lat: z.number().nullable().optional(),
-  lon: z.number().nullable().optional(),
 })
 export type CreatePostPayload = z.infer<typeof CreatePostPayloadSchema>
 
