@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { defineComponent, h } from 'vue'
+import { mount, type VueWrapper } from '@vue/test-utils'
 
 const mockFetchProfile = vi.fn()
 const mockRouterPush = vi.fn()
@@ -39,8 +41,28 @@ vi.mock('@/features/publicprofile/composables/usePublicProfile', () => ({
 
 import { useMessagingViewModel } from '../useMessagingViewModel'
 
+type Vm = ReturnType<typeof useMessagingViewModel>
+
+let activeWrapper: VueWrapper | null = null
+
+function mountVm(): Vm {
+  let vm!: Vm
+  const Host = defineComponent({
+    setup() {
+      vm = useMessagingViewModel()
+      return () => h('div')
+    },
+  })
+  activeWrapper = mount(Host)
+  return vm
+}
+
 describe('useMessagingViewModel – handleProfileSelect', () => {
   beforeEach(() => {
+    if (activeWrapper) {
+      activeWrapper.unmount()
+      activeWrapper = null
+    }
     setActivePinia(createPinia())
     mockFetchProfile.mockReset()
     mockRouterPush.mockReset()
@@ -50,7 +72,7 @@ describe('useMessagingViewModel – handleProfileSelect', () => {
     const profile = { id: 'prof-1', publicName: 'Alice' }
     mockFetchProfile.mockResolvedValue({ success: true, data: profile })
 
-    const { handleProfileSelect } = useMessagingViewModel()
+    const { handleProfileSelect } = mountVm()
 
     const result = await handleProfileSelect('prof-1')
 
@@ -61,7 +83,7 @@ describe('useMessagingViewModel – handleProfileSelect', () => {
   it('returns null when fetchProfile fails', async () => {
     mockFetchProfile.mockResolvedValue({ success: false })
 
-    const { handleProfileSelect } = useMessagingViewModel()
+    const { handleProfileSelect } = mountVm()
     const result = await handleProfileSelect('prof-x')
 
     expect(result).toBeNull()
@@ -70,13 +92,17 @@ describe('useMessagingViewModel – handleProfileSelect', () => {
 
 describe('useMessagingViewModel – handleMatchSelect', () => {
   beforeEach(() => {
+    if (activeWrapper) {
+      activeWrapper.unmount()
+      activeWrapper = null
+    }
     setActivePinia(createPinia())
     mockFetchProfile.mockReset()
     mockRouterPush.mockReset()
   })
 
   it('navigates to ConversationNew route with the partner profileId', () => {
-    const { handleMatchSelect } = useMessagingViewModel()
+    const { handleMatchSelect } = mountVm()
 
     handleMatchSelect('prof-7')
 
