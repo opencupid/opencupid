@@ -41,13 +41,9 @@ export class EventService extends UserContentService {
   async create(profileId: string, data: CreateEventPayload): Promise<EventWithExtension> {
     return prisma.userContent.create({
       data: {
+        ...this.baseCreateData(data),
         kind: 'event',
         postedById: profileId,
-        content: data.content,
-        country: data.country ?? null,
-        cityName: data.cityName ?? null,
-        lat: data.lat ?? null,
-        lon: data.lon ?? null,
         event: { create: { startsAt: data.startsAt } },
       },
       include: eventWithExtensionInclude,

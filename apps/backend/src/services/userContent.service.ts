@@ -2,7 +2,10 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
-import type { ContentKind } from '@shared/zod/userContent/userContent.dto'
+import type {
+  BaseUserContentPayload,
+  ContentKind,
+} from '@shared/zod/userContent/userContent.dto'
 
 /**
  * Hard cap for cluster-index hydration. Not pagination — bounds the in-memory
@@ -156,6 +159,24 @@ export class UserContentService {
       data: { isVisible },
     })
     return result.count === 1 ? { id } : null
+  }
+
+  /**
+   * Coerces the shared write-side fields from a Zod-parsed payload into the
+   * Prisma `UserContentCreateInput` scalar slice. `.nullable().optional()`
+   * Zod fields produce `string | null | undefined`; Prisma's CreateInput
+   * (under exactOptionalPropertyTypes) demands `string | null`, so each
+   * nullable field is `?? null`-coerced once here. Subclasses spread the
+   * result and add their own augmentation (kind, postedById, extension).
+   */
+  protected baseCreateData(data: BaseUserContentPayload) {
+    return {
+      content: data.content,
+      country: data.country ?? null,
+      cityName: data.cityName ?? null,
+      lat: data.lat ?? null,
+      lon: data.lon ?? null,
+    }
   }
 
   /**

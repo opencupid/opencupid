@@ -41,13 +41,9 @@ export class PostService extends UserContentService {
   async create(profileId: string, data: CreatePostPayload): Promise<PostWithExtension> {
     return prisma.userContent.create({
       data: {
+        ...this.baseCreateData(data),
         kind: 'post',
         postedById: profileId,
-        content: data.content,
-        country: data.country ?? null,
-        cityName: data.cityName ?? null,
-        lat: data.lat ?? null,
-        lon: data.lon ?? null,
         post: { create: { type: data.type } },
       },
       include: postWithExtensionInclude,
