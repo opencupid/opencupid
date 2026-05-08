@@ -1,6 +1,12 @@
 -- CreateEnum
 CREATE TYPE "public"."ContentKind" AS ENUM ('post', 'event');
 
+-- DropForeignKey
+ALTER TABLE "public"."Post" DROP CONSTRAINT "Post_postedById_fkey";
+
+-- DropTable
+DROP TABLE "public"."Post";
+
 -- CreateTable
 CREATE TABLE "public"."UserContent" (
     "id" TEXT NOT NULL,
@@ -61,24 +67,3 @@ ALTER TABLE "public"."PostExtension" ADD CONSTRAINT "PostExtension_userContentId
 
 -- AddForeignKey
 ALTER TABLE "public"."EventExtension" ADD CONSTRAINT "EventExtension_userContentId_fkey" FOREIGN KEY ("userContentId") REFERENCES "public"."UserContent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- Copy existing Post rows into the new base table, preserving id
-INSERT INTO "UserContent" (
-  id, kind, "postedById", content, "isDeleted", "isVisible",
-  country, "cityName", lat, lon, "createdAt", "updatedAt"
-)
-SELECT
-  id, 'post'::"ContentKind", "postedById", content, "isDeleted", "isVisible",
-  country, "cityName", lat, lon, "createdAt", "updatedAt"
-FROM "Post";
-
--- Copy Post.type into PostExtension
-INSERT INTO "PostExtension" ("userContentId", type)
-SELECT id, type
-FROM "Post";
-
--- DropForeignKey
-ALTER TABLE "public"."Post" DROP CONSTRAINT "Post_postedById_fkey";
-
--- DropTable
-DROP TABLE "public"."Post";
