@@ -1,6 +1,6 @@
 import { type ApiError } from '@zod/apiResponse.dto'
 import { AxiosError } from 'axios'
-import { ZodError } from 'zod'
+import { ZodError, z } from 'zod'
 import { bus } from '@/lib/bus'
 
 export type StoreSuccess<T> = {
@@ -34,7 +34,7 @@ export function storeError(error: unknown, fallbackMessage = 'Request failed'): 
   // Handle Zod validation errors
   if (error instanceof ZodError) {
     message = 'Validation failed'
-    const raw = error.flatten().fieldErrors
+    const raw = z.flattenError(error).fieldErrors as Record<string, string[] | undefined>
     fieldErrors = Object.keys(raw).reduce(
       (acc, key) => {
         const val = raw[key]

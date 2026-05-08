@@ -39,10 +39,10 @@ export interface UserContentActionsConfig<
     /** Plural response key, e.g. 'posts'. Used in `{success, [plural]: [...]}`. */
     plural: TPlural
   }
-  publicSchema: z.ZodType<TPublic, z.ZodTypeDef, unknown>
-  ownerSchema: z.ZodType<TOwner, z.ZodTypeDef, unknown>
-  summarySchema: z.ZodType<TSummary, z.ZodTypeDef, unknown>
-  detailSchema: z.ZodType<TDetail, z.ZodTypeDef, unknown>
+  publicSchema: z.ZodType<TPublic, unknown>
+  ownerSchema: z.ZodType<TOwner, unknown>
+  summarySchema: z.ZodType<TSummary, unknown>
+  detailSchema: z.ZodType<TDetail, unknown>
   endpoints: UserContentEndpoints
   /** Resource label for error messages, e.g. 'post' / 'event'. */
   resourceLabel: string
@@ -56,7 +56,9 @@ export interface UserContentActionsState<TPublic, TOwner, TSummary> {
 }
 
 interface PaginatedQueryLike {
-  offset?: number
+  // `offset` is `unknown` rather than `number` because pagination query schemas
+  // use `z.coerce.number()`, whose input type widens to `unknown` in zod 4.
+  offset?: unknown
 }
 
 const joinPath = (base: string, rel: string) =>
@@ -309,7 +311,7 @@ export function useUserContentActions<
 
   async function fetchListInto<T, Q extends PaginatedQueryLike>(
     target: Ref<T[]>,
-    arraySchema: z.ZodType<T[], z.ZodTypeDef, unknown>,
+    arraySchema: z.ZodType<T[], unknown>,
     relPath: string,
     query: Q,
     errMsg: string

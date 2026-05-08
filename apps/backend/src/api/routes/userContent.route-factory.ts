@@ -20,21 +20,17 @@ interface UserContentMappers<TRow, TDetailRow, TBoundsRow, TOwner, TPublic, TDet
 
 /**
  * Schema slots accept any Zod schema whose parse output matches the expected
- * shape. We use `z.ZodType<Output, ZodTypeDef, unknown>` (rather than
- * `ZodSchema<T>` which requires input == output) so schemas with `.default()`,
- * `.coerce`, or other input/output divergences are accepted.
+ * shape. We use `z.ZodType<Output, unknown>` (rather than `ZodSchema<T>` which
+ * requires input == output) so schemas with `.default()`, `.coerce`, or other
+ * input/output divergences are accepted.
  */
 interface UserContentSchemas<TCreatePayload, TUpdatePayload> {
-  create: z.ZodType<TCreatePayload, z.ZodTypeDef, unknown>
-  update: z.ZodType<TUpdatePayload, z.ZodTypeDef, unknown>
-  params: z.ZodType<{ id: string }, z.ZodTypeDef, unknown>
-  profileParams: z.ZodType<{ profileId: string }, z.ZodTypeDef, unknown>
-  listQuery: z.ZodType<ListOptions, z.ZodTypeDef, unknown>
-  nearbyQuery?: z.ZodType<
-    ListOptions & { lat: number; lon: number; radius: number },
-    z.ZodTypeDef,
-    unknown
-  >
+  create: z.ZodType<TCreatePayload, unknown>
+  update: z.ZodType<TUpdatePayload, unknown>
+  params: z.ZodType<{ id: string }, unknown>
+  profileParams: z.ZodType<{ profileId: string }, unknown>
+  listQuery: z.ZodType<ListOptions, unknown>
+  nearbyQuery?: z.ZodType<ListOptions & { lat: number; lon: number; radius: number }, unknown>
 }
 
 export interface UserContentRouteConfig<
