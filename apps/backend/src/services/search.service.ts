@@ -123,16 +123,17 @@ export class SearchService {
     return rows.map((r) => byId.get(r.id)).filter((p): p is (typeof profiles)[number] => Boolean(p))
   }
 
-  // ── Posts (trigram substring on Post.content) ───────────────────────
+  // ── Posts (trigram substring on UserContent.content where kind=post) ──
   private async searchPosts(term: string, myProfileId: string): Promise<DbPostForSummary[]> {
     const pattern = `%${escapeLikePattern(term)}%`
 
     const rows = await prisma.$queryRaw<Array<{ id: string; rank: number }>>`
       SELECT p.id,
              similarity(p."content", ${term}) AS rank
-      FROM "Post" p
+      FROM "UserContent" p
       JOIN "Profile" pr ON pr.id = p."postedById"
-      WHERE p."isVisible" = true
+      WHERE p."kind" = 'post'::"ContentKind"
+        AND p."isVisible" = true
         AND p."isDeleted" = false
         AND p."content" ILIKE ${pattern}
         AND pr."isActive" = true
@@ -153,16 +154,17 @@ export class SearchService {
     // `profileImages` is loaded without `select` so downstream mappers
     // (toPublicProfileImage) receive the full row — they need mimeType,
     // altText, position and blurhash, not just storagePath.
-    const posts = await prisma.post.findMany({
-      where: { id: { in: ids } },
+    const posts = await prisma.userContent.findMany({
+      where: { id: { in: ids }, kind: 'post' },
       select: {
         id: true,
-        type: true,
+        kind: true,
         content: true,
         country: true,
         cityName: true,
         lat: true,
         lon: true,
+        post: { select: { type: true } },
         postedBy: {
           select: {
             id: true,
@@ -174,6 +176,22 @@ export class SearchService {
     })
 
     const byId = new Map(posts.map((p) => [p.id, p]))
-    return rows.map((r) => byId.get(r.id)).filter((p): p is (typeof posts)[number] => Boolean(p))
+    return rows
+      .map((r) => byId.get(r.id))
+      .filter(
+        (p): p is (typeof posts)[number] & { post: { type: DbPostForSummary['post']['type'] } } =>
+          Boolean(p?.post)
+      )
+      .map((p) => ({
+        id: p.id,
+        kind: 'post' as const,
+        content: p.content,
+        country: p.country,
+        cityName: p.cityName,
+        lat: p.lat,
+        lon: p.lon,
+        postedBy: p.postedBy,
+        post: { type: p.post.type },
+      }))
   }
 }
