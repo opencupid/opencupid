@@ -49,6 +49,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Event not found')
       const isOwner = row.postedById === viewerProfileId
+      // TODO(mapper-types) #1446: wide→narrow cast — see event.mappers.ts.
       const event = isOwner
         ? mapDbEventToOwner(row as any)
         : mapDbEventToDetail(row, viewerProfileId)
@@ -130,6 +131,9 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         ...page,
         includeInvisible: viewerProfileId === profileId,
       })
+      // TODO(mapper-types) #1446: narrow→wide cast on the non-owner branch — see
+      // event.mappers.ts. Relies on mapConversationContext no-op'ing on
+      // undefined fields.
       const events = rows.map((r) =>
         viewerProfileId === profileId
           ? mapDbEventToOwner(r)

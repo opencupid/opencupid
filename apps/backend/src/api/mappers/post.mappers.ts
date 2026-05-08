@@ -12,10 +12,27 @@ import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { DbLocationToLocationDTO, extractLocation } from './location.mappers'
 
-export function mapDbPostToPublic(
-  row: PostWithExtension,
-  viewerProfileId: string
-): PublicPost {
+// TODO(post-mappers) #1446: the input types here are tighter than callers can
+// satisfy without `as any`, in two flavors:
+//   (1) Detail routes load `PostWithExtensionAndContext` (has conversation
+//       context fields) and pass it to `mapDbPostToOwner`, whose declared
+//       input is the narrower `PostWithExtension`. The runtime is fine —
+//       owner mapping just ignores the extra fields — but Prisma's
+//       include-derived types don't structurally extend cleanly so TS
+//       can't accept the wider shape. Fix: widen `mapDbPostToOwner` /
+//       `mapDbPostToPublic` to accept either include shape (union or a
+//       structural subset type).
+//   (2) `findByProfileIdHydrated` returns `PostWithExtension[]` (no
+//       context), but the non-owner branch in /content/posts/profile/:id
+//       calls `mapDbPostToDetail` which expects the with-context payload.
+//       The cast hides a real shape mismatch — `mapConversationContext`
+//       happens to no-op on undefined, but that's an implicit contract.
+//       Fix: either route profile-list non-owner views through a
+//       context-less mapper (e.g. `mapDbPostToPublic`), or have the
+//       service load the with-context include for that path.
+// Same shape applies to `event.mappers.ts`. Tracked together; expect a
+// single follow-up PR to land both.
+export function mapDbPostToPublic(row: PostWithExtension, viewerProfileId: string): PublicPost {
   return {
     id: row.id,
     kind: 'post',

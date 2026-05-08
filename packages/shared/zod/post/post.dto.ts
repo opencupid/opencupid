@@ -29,6 +29,13 @@ export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 export const OwnerPostSchema = PublicPostSchema.merge(OwnerUserContentOverlaySchema)
 export type OwnerPost = z.infer<typeof OwnerPostSchema>
 
+// TODO(post-summary-schema) #1446: `location` and `postedBy` are `z.any()` —
+// runtime validation is disabled for the two richest fields. The backend
+// `mapPostSummary` produces concrete shapes (LocationSchema /
+// ProfileSummarySchema), so swapping these in would catch DTO drift.
+// Deferred: mapPostSummary's input includes a partial profile shape that
+// doesn't quite line up with ProfileSummarySchema today; reconciling
+// belongs in the same follow-up that simplifies the mapper-input types.
 export const PostSummarySchema = z.object({
   id: z.string(),
   kind: POST_KIND,

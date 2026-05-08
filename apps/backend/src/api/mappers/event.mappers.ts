@@ -9,10 +9,14 @@ import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { extractLocation } from './location.mappers'
 
-export function mapDbEventToPublic(
-  row: EventWithExtension,
-  viewerProfileId: string
-): PublicEvent {
+// TODO(event-mappers) #1446: same `as any` pattern as post.mappers.ts — see the
+// long-form explanation there. Two flavors of cast at call sites:
+// (1) wide → narrow (detail routes pass with-context payload to
+// `mapDbEventToOwner`), (2) narrow → wide (profile-list non-owner branch
+// passes context-less rows to `mapDbEventToDetail`, relying on
+// `mapConversationContext` no-op'ing on undefined). Fix lands together
+// with the post-mappers fix.
+export function mapDbEventToPublic(row: EventWithExtension, viewerProfileId: string): PublicEvent {
   return {
     id: row.id,
     kind: 'event',

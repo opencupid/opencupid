@@ -98,6 +98,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Post not found')
       const isOwner = row.postedById === viewerProfileId
+      // TODO(mapper-types) #1446: wide→narrow cast — see post.mappers.ts.
       const post = isOwner ? mapDbPostToOwner(row as any) : mapDbPostToDetail(row, viewerProfileId)
       return reply.code(200).send({ success: true, post })
     } catch (err) {
@@ -177,6 +178,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
         ...page,
         includeInvisible: viewerProfileId === profileId,
       })
+      // TODO(mapper-types) #1446: narrow→wide cast on the non-owner branch — see
+      // post.mappers.ts. Relies on mapConversationContext no-op'ing on
+      // undefined fields.
       const posts = rows.map((r) =>
         viewerProfileId === profileId
           ? mapDbPostToOwner(r)
