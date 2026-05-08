@@ -4,6 +4,7 @@ import { loadEnv, type Plugin } from 'vite'
 import mkcert from 'vite-plugin-mkcert'
 import { getPackageVersion } from './version'
 import { findUpSync } from './findUp'
+import { z } from 'zod'
 import { appConfigSchema } from './zod/config/appConfig.schema'
 
 export const hostname = os.hostname()
@@ -112,7 +113,7 @@ export const runtimeConfigPlugin = (mode: string): Plugin => {
   const parseResult = appConfigSchema.safeParse(envSubset)
 
   if (!parseResult.success) {
-    const formatted = parseResult.error.format()
+    const formatted = z.treeifyError(parseResult.error)
     throw new Error(
       `Invalid __APP_CONFIG__: check your .env file.\n${JSON.stringify(formatted, null, 2)}`
     )
