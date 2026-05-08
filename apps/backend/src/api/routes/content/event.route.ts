@@ -8,6 +8,7 @@ import {
   type CreateEventPayload,
   type UpdateEventPayload,
 } from '@zod/event/event.dto'
+import { PaginationSchema } from '@zod/userContent/userContent.dto'
 import { z } from 'zod'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../../mappers/event.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
@@ -108,7 +109,11 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 401, 'Profile required')
     try {
-      const rows = await svc.findByProfileIdHydrated(profileId, { includeInvisible: true })
+      const page = PaginationSchema.parse(req.query)
+      const rows = await svc.findByProfileIdHydrated(profileId, {
+        ...page,
+        includeInvisible: true,
+      })
       return reply.code(200).send({ success: true, events: rows.map(mapDbEventToOwner) })
     } catch (err) {
       fastify.log.error(err)
@@ -120,7 +125,9 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     const { profileId } = ProfileParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
+      const page = PaginationSchema.parse(req.query)
       const rows = await svc.findByProfileIdHydrated(profileId, {
+        ...page,
         includeInvisible: viewerProfileId === profileId,
       })
       const events = rows.map((r) =>

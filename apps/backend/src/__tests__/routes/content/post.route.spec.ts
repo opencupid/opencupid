@@ -195,7 +195,7 @@ describe('GET /me', () => {
   it('returns own posts including invisible', async () => {
     const handler = fastify.routes['GET /me']
     mockPostService.findByProfileIdHydrated.mockResolvedValue([makeRow(ownerProfileId)])
-    await handler({ session: { profileId: ownerProfileId } } as any, reply as any)
+    await handler({ session: { profileId: ownerProfileId }, query: {} } as any, reply as any)
     expect(mockPostService.findByProfileIdHydrated).toHaveBeenCalledWith(
       ownerProfileId,
       expect.objectContaining({ includeInvisible: true })
@@ -215,6 +215,7 @@ describe('GET /profile/:profileId', () => {
       {
         session: { profileId: ownerProfileId },
         params: { profileId: ownerProfileId },
+        query: {},
       } as any,
       reply as any
     )
@@ -235,6 +236,7 @@ describe('GET /profile/:profileId', () => {
       {
         session: { profileId: ownerProfileId },
         params: { profileId: otherProfileId },
+        query: {},
       } as any,
       reply as any
     )

@@ -8,6 +8,7 @@ import {
   type CreatePostPayload,
   type UpdatePostPayload,
 } from '@zod/post/post.dto'
+import { PaginationSchema } from '@zod/userContent/userContent.dto'
 import { z } from 'zod'
 import { mapDbPostToOwner, mapDbPostToDetail } from '../../mappers/post.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
@@ -108,7 +109,11 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 401, 'Profile required')
     try {
-      const rows = await svc.findByProfileIdHydrated(profileId, { includeInvisible: true })
+      const page = PaginationSchema.parse(req.query)
+      const rows = await svc.findByProfileIdHydrated(profileId, {
+        ...page,
+        includeInvisible: true,
+      })
       return reply.code(200).send({ success: true, posts: rows.map(mapDbPostToOwner) })
     } catch (err) {
       fastify.log.error(err)
@@ -120,7 +125,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     const { profileId } = ProfileParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
+      const page = PaginationSchema.parse(req.query)
       const rows = await svc.findByProfileIdHydrated(profileId, {
+        ...page,
         includeInvisible: viewerProfileId === profileId,
       })
       const posts = rows.map((r) =>

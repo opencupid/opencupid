@@ -21,9 +21,20 @@ export const LeanUserContentSchema = z.object({
 })
 export type LeanUserContent = z.infer<typeof LeanUserContentSchema>
 
-export const UserContentQueryShape = {
+/**
+ * Pagination shape shared by every list-style content route. `.default()` on
+ * each field guarantees parsed values are always populated, so service-side
+ * `?? 20` / `?? 0` fallbacks are unnecessary.
+ */
+export const PaginationShape = {
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
+} as const
+export const PaginationSchema = z.object(PaginationShape)
+export type Pagination = z.infer<typeof PaginationSchema>
+
+export const UserContentQueryShape = {
+  ...PaginationShape,
   kind: ContentKindSchema.optional(),
 } as const
 

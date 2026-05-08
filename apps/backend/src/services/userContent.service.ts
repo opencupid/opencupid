@@ -14,15 +14,17 @@ import type {
 const CLUSTER_INDEX_LIMIT = 500
 
 /**
- * Mirrors the post-parse shape of UserContentQuerySchema. `limit` and `offset`
- * are required because Zod's `.default()` guarantees them on the parsed value;
- * filters remain optional.
+ * Required shape for paginated list reads. Every field that drives behavior
+ * is non-optional: `limit`/`offset` come from Zod-defaulted parsed query;
+ * `includeInvisible` forces every call site to declare its visibility intent
+ * (public read = false, owner read = true). `kind` stays optional because
+ * it's a filter, not a behavior switch.
  */
 export interface ListOptions {
   limit: number
   offset: number
+  includeInvisible: boolean
   kind?: ContentKind
-  includeInvisible?: boolean
 }
 
 export interface BoundsBox {

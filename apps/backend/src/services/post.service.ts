@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { UserContentService } from './userContent.service'
+import { UserContentService, type ListOptions } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
@@ -85,19 +85,19 @@ export class PostService extends UserContentService {
 
   async findByProfileIdHydrated(
     profileId: string,
-    opts: { limit?: number; offset?: number; includeInvisible?: boolean }
+    opts: ListOptions
   ): Promise<PostWithExtension[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
         kind: 'post',
         isDeleted: false,
-        ...(opts.includeInvisible ? {} : { isVisible: true }),
+        isVisible: opts.includeInvisible ? undefined : true,
       },
       include: postWithExtensionInclude,
       orderBy: { createdAt: 'desc' },
-      take: opts.limit ?? 20,
-      skip: opts.offset ?? 0,
+      take: opts.limit,
+      skip: opts.offset,
     })
   }
 }

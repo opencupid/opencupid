@@ -18,7 +18,7 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/feed', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const query = UserContentQuerySchema.parse(req.query)
-    const rows = await svc.findFeed(query)
+    const rows = await svc.findFeed({ ...query, includeInvisible: false })
     const items = rows.map((r) => mapLeanContent(r, req.session.profileId))
     return reply.code(200).send({ success: true, items })
   })
@@ -33,7 +33,7 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/nearby', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const q = NearbyContentQuerySchema.parse(req.query)
-    const rows = await svc.findNearby(q.lat, q.lon, q.radius, q)
+    const rows = await svc.findNearby(q.lat, q.lon, q.radius, { ...q, includeInvisible: false })
     const items = rows.map((r) => mapLeanContent(r, req.session.profileId))
     return reply.code(200).send({ success: true, items })
   })
