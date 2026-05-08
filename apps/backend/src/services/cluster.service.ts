@@ -56,9 +56,8 @@ export class ClusterService {
     const userContentService = UserContentService.getInstance()
 
     const wantProfiles = kinds.includes('profile')
-    const wantPosts = kinds.includes('post')
-    const wantEvents = kinds.includes('event')
-    const wantContent = wantPosts || wantEvents
+    const contentKinds = kinds.filter((k): k is 'post' | 'event' => k !== 'profile')
+    const wantContent = contentKinds.length > 0
 
     const [profiles, matchIds, contentRows] = await Promise.all([
       wantProfiles
@@ -70,7 +69,7 @@ export class ClusterService {
         ? profileMatchService.findMutualMatchIds(profileId)
         : Promise.resolve([] as string[]),
       wantContent
-        ? userContentService.findAllWithLocation(profileId)
+        ? userContentService.findAllWithLocation(profileId, { kinds: contentKinds })
         : Promise.resolve([] as Awaited<ReturnType<typeof userContentService.findAllWithLocation>>),
     ])
 
@@ -106,8 +105,6 @@ export class ClusterService {
     const postFeatures: Feature<Point, PointProperties>[] = []
     for (const c of contentRows) {
       if (c.lat == null || c.lon == null) continue
-      if (c.kind === 'post' && !wantPosts) continue
-      if (c.kind === 'event' && !wantEvents) continue
 
       // For posts only: dedup against poster's profile pin
       if (c.kind === 'post') {
