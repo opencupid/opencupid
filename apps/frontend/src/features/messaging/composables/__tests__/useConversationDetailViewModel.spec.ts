@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h, ref } from 'vue'
 import { mount, type VueWrapper } from '@vue/test-utils'
@@ -124,11 +124,14 @@ function makeDraftSummary(partnerId = 'partner-1'): ConversationDraftSummary {
   }
 }
 
-beforeEach(() => {
+afterEach(() => {
   if (activeWrapper) {
     activeWrapper.unmount()
     activeWrapper = null
   }
+})
+
+beforeEach(() => {
   setActivePinia(createPinia())
   vi.clearAllMocks()
   mockMessageStore.activeConversation = null

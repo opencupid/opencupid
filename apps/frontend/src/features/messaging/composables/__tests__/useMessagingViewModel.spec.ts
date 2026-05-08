@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h } from 'vue'
 import { mount, type VueWrapper } from '@vue/test-utils'
@@ -57,12 +57,15 @@ function mountVm(): Vm {
   return vm
 }
 
+afterEach(() => {
+  if (activeWrapper) {
+    activeWrapper.unmount()
+    activeWrapper = null
+  }
+})
+
 describe('useMessagingViewModel – handleProfileSelect', () => {
   beforeEach(() => {
-    if (activeWrapper) {
-      activeWrapper.unmount()
-      activeWrapper = null
-    }
     setActivePinia(createPinia())
     mockFetchProfile.mockReset()
     mockRouterPush.mockReset()
@@ -92,10 +95,6 @@ describe('useMessagingViewModel – handleProfileSelect', () => {
 
 describe('useMessagingViewModel – handleMatchSelect', () => {
   beforeEach(() => {
-    if (activeWrapper) {
-      activeWrapper.unmount()
-      activeWrapper = null
-    }
     setActivePinia(createPinia())
     mockFetchProfile.mockReset()
     mockRouterPush.mockReset()
