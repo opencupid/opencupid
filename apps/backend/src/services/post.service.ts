@@ -3,7 +3,6 @@ import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { prisma } from '@/lib/prisma'
-import type { UserContentService, ListOptions, BoundsBox } from './userContent.service'
 
 const postedByInclude = {
   include: {
@@ -27,19 +26,11 @@ const postedByWithConversationInclude = (viewerProfileId: string) =>
     },
   }) satisfies Prisma.PostFindFirstArgs
 
-export type PostWithProfile = Prisma.PostGetPayload<typeof postedByInclude>
-
 export type PostWithProfileAndContext = Prisma.PostGetPayload<
   ReturnType<typeof postedByWithConversationInclude>
 >
 
-export class PostService implements UserContentService<
-  PostWithProfile,
-  PostWithProfileAndContext,
-  PostWithProfile,
-  CreatePostPayload,
-  UpdatePostPayload
-> {
+export class PostService {
   private static instance: PostService
 
   private constructor() {}
@@ -51,7 +42,7 @@ export class PostService implements UserContentService<
     return PostService.instance
   }
 
-  async create(profileId: string, data: CreatePostPayload): Promise<PostWithProfile> {
+  async create(profileId: string, data: CreatePostPayload) {
     return prisma.post.create({
       data: {
         content: data.content,
@@ -66,7 +57,7 @@ export class PostService implements UserContentService<
     })
   }
 
-  async findById(id: string): Promise<PostWithProfile | null> {
+  async findById(id: string) {
     return prisma.post.findFirst({
       where: { id, isDeleted: false },
       ...postedByInclude,
@@ -92,8 +83,13 @@ export class PostService implements UserContentService<
 
   async findByProfileId(
     profileId: string,
-    options: ListOptions & { includeInvisible?: boolean } = {}
-  ): Promise<PostWithProfile[]> {
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+      includeInvisible?: boolean
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0, includeInvisible = false } = options
 
     return prisma.post.findMany({
@@ -101,7 +97,7 @@ export class PostService implements UserContentService<
         postedById: profileId,
         isDeleted: false,
         ...(includeInvisible ? {} : { isVisible: true }),
-        ...(type ? { type: type as PostType } : {}),
+        ...(type ? { type } : {}),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -110,14 +106,20 @@ export class PostService implements UserContentService<
     })
   }
 
-  async findAll(options: ListOptions = {}): Promise<PostWithProfile[]> {
+  async findAll(
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0 } = options
 
     return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
-        ...(type ? { type: type as PostType } : {}),
+        ...(type ? { type } : {}),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -130,8 +132,12 @@ export class PostService implements UserContentService<
     lat: number,
     lon: number,
     radius: number,
-    options: ListOptions = {}
-  ): Promise<PostWithProfile[]> {
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0 } = options
 
     // Calculate bounding box for efficiency (approximate)
@@ -147,7 +153,7 @@ export class PostService implements UserContentService<
       where: {
         isDeleted: false,
         isVisible: true,
-        ...(type ? { type: type as PostType } : {}),
+        ...(type ? { type } : {}),
         lat: { gte: minLat, lte: maxLat },
         lon: { gte: minLon, lte: maxLon },
       },
@@ -158,21 +164,32 @@ export class PostService implements UserContentService<
     })
   }
 
-  async findInBounds(bounds: BoundsBox): Promise<PostWithProfile[]> {
+  async findInBounds(
+    bounds: { south: number; north: number; west: number; east: number },
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
+    const { type, limit = 100, offset = 0 } = options
+
     return prisma.post.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
+        ...(type ? { type } : {}),
         lat: { gte: bounds.south, lte: bounds.north },
         lon: { gte: bounds.west, lte: bounds.east },
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: limit,
+      skip: offset,
     })
   }
 
-  async findAllWithLocation(viewerProfileId: string, limit = 500): Promise<PostWithProfile[]> {
+  async findAllWithLocation(viewerProfileId: string, limit = 500) {
     return prisma.post.findMany({
       where: {
         isDeleted: false,
@@ -187,7 +204,13 @@ export class PostService implements UserContentService<
     })
   }
 
-  async findRecent(options: ListOptions = {}): Promise<PostWithProfile[]> {
+  async findRecent(
+    options: {
+      type?: PostType
+      limit?: number
+      offset?: number
+    } = {}
+  ) {
     const { type, limit = 20, offset = 0 } = options
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -197,7 +220,7 @@ export class PostService implements UserContentService<
         isDeleted: false,
         isVisible: true,
         createdAt: { gte: oneWeekAgo },
-        ...(type ? { type: type as PostType } : {}),
+        ...(type ? { type } : {}),
       },
       ...postedByInclude,
       orderBy: { createdAt: 'desc' },
@@ -206,11 +229,7 @@ export class PostService implements UserContentService<
     })
   }
 
-  async update(
-    id: string,
-    profileId: string,
-    data: UpdatePostPayload
-  ): Promise<PostWithProfile | null> {
+  async update(id: string, profileId: string, data: UpdatePostPayload) {
     // Only allow owner to update
     const post = await prisma.post.findFirst({
       where: { id, postedById: profileId, isDeleted: false },
@@ -236,7 +255,7 @@ export class PostService implements UserContentService<
     })
   }
 
-  async delete(id: string, profileId: string): Promise<{ id: string } | null> {
+  async delete(id: string, profileId: string) {
     // Only allow owner to delete
     const post = await prisma.post.findFirst({
       where: { id, postedById: profileId, isDeleted: false },

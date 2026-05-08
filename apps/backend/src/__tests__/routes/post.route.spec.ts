@@ -14,14 +14,7 @@ vi.mock('../../services/post.service', () => ({
 vi.mock('../../api/mappers/post.mappers', () => ({
   mapDbPostToOwner: (post: any) => post,
   mapDbPostToPublic: (post: any) => post,
-  mapDbPostToDetail: (post: any) => post,
   mapPostSummary: (post: any) => post,
-}))
-
-// ClusterService is invoked via onMutation in the route factory; mock so
-// tests don't try to talk to a real cluster cache.
-vi.mock('../../services/cluster.service', () => ({
-  ClusterService: { getInstance: () => ({ evictAll: vi.fn() }) },
 }))
 
 beforeEach(async () => {
