@@ -9,8 +9,8 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   }),
 }))
 
-import { mapLeanContent } from '../../api/mappers/userContent.mappers'
-import type { LeanContentRow } from '@/services/userContent.service'
+import { mapUserContentMetadata } from '../../api/mappers/userContent.mappers'
+import type { UserContentMetadataRow } from '@/services/userContent.service'
 
 const baseRow = {
   id: 'cuc00000000000000001',
@@ -30,22 +30,22 @@ const baseRow = {
     publicName: 'X',
     profileImages: [],
   },
-} as unknown as LeanContentRow
+} as unknown as UserContentMetadataRow
 
-describe('mapLeanContent', () => {
+describe('mapUserContentMetadata', () => {
   it('isOwn=true when viewer is poster', () => {
-    const dto = mapLeanContent(baseRow, 'clprofile000000000001')
+    const dto = mapUserContentMetadata(baseRow, 'clprofile000000000001')
     expect(dto.isOwn).toBe(true)
     expect(dto.kind).toBe('post')
   })
 
   it('isOwn=false when viewer is not poster', () => {
-    const dto = mapLeanContent(baseRow, 'someone-else')
+    const dto = mapUserContentMetadata(baseRow, 'someone-else')
     expect(dto.isOwn).toBe(false)
   })
 
   it('extracts location object', () => {
-    const dto = mapLeanContent(baseRow, 'clprofile000000000001')
+    const dto = mapUserContentMetadata(baseRow, 'clprofile000000000001')
     expect(dto.location).toEqual({
       country: 'CZ',
       cityName: 'Prague',

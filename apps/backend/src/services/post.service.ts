@@ -4,7 +4,7 @@ import {
   UserContentService,
   type ListOptions,
   type BoundsBox,
-  type LeanContentRow,
+  type UserContentMetadataRow,
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
@@ -117,8 +117,8 @@ export class PostService extends UserContentService {
   // exist, at which point the pattern can be lifted into the base class as a
   // generic `findHydrated(kind, query, extensionInclude)` helper.
   async findFeedHydrated(opts: ListOptions): Promise<PostWithExtension[]> {
-    const lean = await this.findFeed({ ...opts, kind: 'post' })
-    return this.attachPostExtension(lean)
+    const metadata = await this.findFeed({ ...opts, kind: 'post' })
+    return this.attachPostExtension(metadata)
   }
 
   async findNearbyHydrated(
@@ -127,16 +127,16 @@ export class PostService extends UserContentService {
     radiusKm: number,
     opts: ListOptions
   ): Promise<PostWithExtension[]> {
-    const lean = await this.findNearby(lat, lon, radiusKm, { ...opts, kind: 'post' })
-    return this.attachPostExtension(lean)
+    const metadata = await this.findNearby(lat, lon, radiusKm, { ...opts, kind: 'post' })
+    return this.attachPostExtension(metadata)
   }
 
   async findInBoundsHydrated(box: BoundsBox): Promise<PostWithExtension[]> {
-    const lean = (await this.findInBounds(box)).filter((r) => r.kind === 'post')
-    return this.attachPostExtension(lean)
+    const metadata = (await this.findInBounds(box)).filter((r) => r.kind === 'post')
+    return this.attachPostExtension(metadata)
   }
 
-  private async attachPostExtension(rows: LeanContentRow[]): Promise<PostWithExtension[]> {
+  private async attachPostExtension(rows: UserContentMetadataRow[]): Promise<PostWithExtension[]> {
     if (rows.length === 0) return []
     const extensions = await prisma.postExtension.findMany({
       where: { userContentId: { in: rows.map((r) => r.id) } },

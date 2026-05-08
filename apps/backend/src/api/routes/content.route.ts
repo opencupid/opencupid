@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { UserContentService } from '@/services/userContent.service'
 import { PostService } from '@/services/post.service'
 import { EventService } from '@/services/event.service'
-import { mapLeanContent } from '../mappers/userContent.mappers'
+import { mapUserContentMetadata } from '../mappers/userContent.mappers'
 import { mapDbPostToOwner, mapDbPostToDetail } from '../mappers/post.mappers'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../mappers/event.mappers'
 import {
@@ -19,7 +19,7 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/feed', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const query = UserContentQuerySchema.parse(req.query)
     const rows = await svc.findFeed({ ...query, includeInvisible: false })
-    const items = rows.map((r) => mapLeanContent(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
     return reply.code(200).send({ success: true, items })
   })
 
@@ -27,14 +27,14 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
     const parsed = BoundsQuerySchema.safeParse(req.query)
     if (!parsed.success) return sendError(reply, 400, 'Invalid bounds')
     const rows = await svc.findInBounds(parsed.data)
-    const items = rows.map((r) => mapLeanContent(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
     return reply.code(200).send({ success: true, items })
   })
 
   fastify.get('/nearby', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const q = NearbyContentQuerySchema.parse(req.query)
     const rows = await svc.findNearby(q.lat, q.lon, q.radius, { ...q, includeInvisible: false })
-    const items = rows.map((r) => mapLeanContent(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
     return reply.code(200).send({ success: true, items })
   })
 
@@ -45,19 +45,19 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
       ...q,
       includeInvisible: req.session.profileId === profileId,
     })
-    const items = rows.map((r) => mapLeanContent(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
     return reply.code(200).send({ success: true, items })
   })
 
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = ContentParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
-    const lean = await svc.findByIdLean(id, viewerProfileId)
-    if (!lean) return sendError(reply, 404, 'Content not found')
+    const metadata = await svc.findByIdMetadata(id, viewerProfileId)
+    if (!metadata) return sendError(reply, 404, 'Content not found')
 
-    const isOwner = lean.postedById === viewerProfileId
+    const isOwner = metadata.postedById === viewerProfileId
 
-    if (lean.kind === 'post') {
+    if (metadata.kind === 'post') {
       const hydrated = await PostService.getInstance().findByIdHydrated(id, viewerProfileId)
       if (!hydrated) return sendError(reply, 404, 'Content not found')
       // TODO(mapper-types) #1446: wide→narrow cast on the owner branch — see

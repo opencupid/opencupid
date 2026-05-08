@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import {
   BaseUserContentPayloadSchema,
-  LeanUserContentSchema,
+  UserContentMetadataSchema,
   OwnerUserContentOverlaySchema,
   PublicUserContentDetailBaseSchema,
   UserContentQueryShape,
@@ -10,7 +10,7 @@ import {
 
 const EVENT_KIND = z.literal('event')
 
-export const PublicEventSchema = LeanUserContentSchema.extend({
+export const PublicEventSchema = UserContentMetadataSchema.extend({
   kind: EVENT_KIND,
   startsAt: z.coerce.date(),
 })

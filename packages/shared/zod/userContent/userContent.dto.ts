@@ -7,10 +7,11 @@ export const ContentKindSchema = z.enum(['post', 'event'])
 export type ContentKind = z.infer<typeof ContentKindSchema>
 
 /**
- * Lean shape used by feed/bounds/nearby/search and supercluster.
- * No extension fields; consumers branch on `kind` only when they need them.
+ * Metadata shape used by feed/bounds/nearby/search and supercluster.
+ * Row-level attributes only — no kind-specific extension payload; consumers
+ * branch on `kind` to fetch extensions when they need them.
  */
-export const LeanUserContentSchema = z.object({
+export const UserContentMetadataSchema = z.object({
   id: z.string(),
   kind: ContentKindSchema,
   content: z.string(),
@@ -19,7 +20,7 @@ export const LeanUserContentSchema = z.object({
   createdAt: z.coerce.date(),
   isOwn: z.boolean().default(false),
 })
-export type LeanUserContent = z.infer<typeof LeanUserContentSchema>
+export type UserContentMetadata = z.infer<typeof UserContentMetadataSchema>
 
 /**
  * Pagination shape shared by every list-style content route. `.default()` on
@@ -83,7 +84,7 @@ export const OwnerUserContentOverlaySchema = z.object({
  * Detail-with-context shape: postedBy carries conversation context for non-owner viewers.
  * Per-kind schemas extend this base and add their own extension fields.
  */
-export const PublicUserContentDetailBaseSchema = LeanUserContentSchema.extend({
+export const PublicUserContentDetailBaseSchema = UserContentMetadataSchema.extend({
   postedBy: ProfileSummarySchema.merge(ConversationContextSchema),
 })
 

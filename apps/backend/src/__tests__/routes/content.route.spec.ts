@@ -27,7 +27,7 @@ beforeEach(async () => {
     findInBounds: vi.fn().mockResolvedValue([]),
     findNearby: vi.fn().mockResolvedValue([]),
     findByProfileId: vi.fn().mockResolvedValue([]),
-    findByIdLean: vi.fn().mockResolvedValue(null),
+    findByIdMetadata: vi.fn().mockResolvedValue(null),
   }
   mockPostService = { findByIdHydrated: vi.fn().mockResolvedValue(null) }
   mockEventService = { findByIdHydrated: vi.fn().mockResolvedValue(null) }
@@ -37,7 +37,7 @@ beforeEach(async () => {
 })
 
 describe('GET /feed', () => {
-  it('returns lean items wrapped in success envelope', async () => {
+  it('returns metadata items wrapped in success envelope', async () => {
     const handler = fastify.routes['GET /feed']
     mockUserContentService.findFeed.mockResolvedValue([])
     await handler({ session: { profileId: 'p1' }, query: {} } as any, reply as any)
@@ -123,7 +123,7 @@ describe('GET /profile/:profileId', () => {
 describe('GET /:id (unified detail)', () => {
   it('returns 404 when row not found', async () => {
     const handler = fastify.routes['GET /:id']
-    mockUserContentService.findByIdLean.mockResolvedValue(null)
+    mockUserContentService.findByIdMetadata.mockResolvedValue(null)
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000001' } } as any,
       reply as any
@@ -133,7 +133,7 @@ describe('GET /:id (unified detail)', () => {
 
   it('dispatches to PostService.findByIdHydrated when kind=post', async () => {
     const handler = fastify.routes['GET /:id']
-    mockUserContentService.findByIdLean.mockResolvedValue({
+    mockUserContentService.findByIdMetadata.mockResolvedValue({
       id: 'cuc00000000000000001',
       kind: 'post',
       postedById: 'someone',
@@ -171,7 +171,7 @@ describe('GET /:id (unified detail)', () => {
 
   it('dispatches to EventService.findByIdHydrated when kind=event', async () => {
     const handler = fastify.routes['GET /:id']
-    mockUserContentService.findByIdLean.mockResolvedValue({
+    mockUserContentService.findByIdMetadata.mockResolvedValue({
       id: 'cuc00000000000000002',
       kind: 'event',
       postedById: 'someone',
@@ -208,7 +208,7 @@ describe('GET /:id (unified detail)', () => {
 
   it('uses owner mapper when viewer === postedById', async () => {
     const handler = fastify.routes['GET /:id']
-    mockUserContentService.findByIdLean.mockResolvedValue({
+    mockUserContentService.findByIdMetadata.mockResolvedValue({
       id: 'cuc00000000000000001',
       kind: 'post',
       postedById: 'p1', // same as session

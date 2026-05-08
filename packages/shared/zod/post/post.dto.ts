@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { PostTypeSchema } from '../generated'
 import {
   BaseUserContentPayloadSchema,
-  LeanUserContentSchema,
+  UserContentMetadataSchema,
   OwnerUserContentOverlaySchema,
   PublicUserContentDetailBaseSchema,
   UserContentQueryShape,
@@ -11,7 +11,7 @@ import {
 
 const POST_KIND = z.literal('post')
 
-export const PublicPostSchema = LeanUserContentSchema.extend({
+export const PublicPostSchema = UserContentMetadataSchema.extend({
   kind: POST_KIND,
   type: PostTypeSchema,
 })

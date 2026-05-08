@@ -34,7 +34,7 @@ const profileSummaryInclude = {
   postedBy: { include: { profileImages: true } },
 } as const
 
-export type LeanContentRow = Prisma.UserContentGetPayload<{
+export type UserContentMetadataRow = Prisma.UserContentGetPayload<{
   include: typeof profileSummaryInclude
 }>
 
@@ -50,7 +50,7 @@ export class UserContentService {
     return UserContentService.instance
   }
 
-  async findFeed(opts: ListOptions): Promise<LeanContentRow[]> {
+  async findFeed(opts: ListOptions): Promise<UserContentMetadataRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,
@@ -64,7 +64,7 @@ export class UserContentService {
     })
   }
 
-  async findInBounds(box: BoundsBox): Promise<LeanContentRow[]> {
+  async findInBounds(box: BoundsBox): Promise<UserContentMetadataRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,
@@ -81,7 +81,7 @@ export class UserContentService {
     lon: number,
     radiusKm: number,
     opts: ListOptions
-  ): Promise<LeanContentRow[]> {
+  ): Promise<UserContentMetadataRow[]> {
     // Approximate bounding-box prefilter (1 deg lat ≈ 111 km).
     const dLat = radiusKm / 111
     const dLon = radiusKm / (111 * Math.cos((lat * Math.PI) / 180))
@@ -100,7 +100,7 @@ export class UserContentService {
     })
   }
 
-  async findByProfileId(profileId: string, opts: ListOptions): Promise<LeanContentRow[]> {
+  async findByProfileId(profileId: string, opts: ListOptions): Promise<UserContentMetadataRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -115,7 +115,10 @@ export class UserContentService {
     })
   }
 
-  async findByIdLean(id: string, viewerProfileId: string): Promise<LeanContentRow | null> {
+  async findByIdMetadata(
+    id: string,
+    viewerProfileId: string
+  ): Promise<UserContentMetadataRow | null> {
     return prisma.userContent.findFirst({
       where: {
         id,
@@ -188,7 +191,7 @@ export class UserContentService {
   async findAllWithLocation(
     viewerProfileId: string,
     kinds: ContentKind[]
-  ): Promise<LeanContentRow[]> {
+  ): Promise<UserContentMetadataRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,

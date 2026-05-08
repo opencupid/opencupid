@@ -1,9 +1,12 @@
-import type { LeanContentRow } from '@/services/userContent.service'
+import type { UserContentMetadataRow } from '@/services/userContent.service'
 import { mapProfileSummary } from './profile.mappers'
 import { extractLocation } from './location.mappers'
-import type { LeanUserContent } from '@zod/userContent/userContent.dto'
+import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
 
-export function mapLeanContent(row: LeanContentRow, viewerProfileId: string): LeanUserContent {
+export function mapUserContentMetadata(
+  row: UserContentMetadataRow,
+  viewerProfileId: string
+): UserContentMetadata {
   return {
     id: row.id,
     kind: row.kind,
