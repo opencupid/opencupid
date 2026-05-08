@@ -1,0 +1,113 @@
+import { Prisma } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
+import { UserContentService } from './userContent.service'
+import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dto'
+import { conversationContextInclude } from '@/db/includes/profileIncludes'
+
+const eventWithExtensionInclude = {
+  event: true,
+  postedBy: { include: { profileImages: true } },
+} as const
+
+const eventWithExtensionAndContextInclude = (viewerProfileId: string) =>
+  ({
+    event: true,
+    postedBy: {
+      include: {
+        profileImages: true,
+        ...conversationContextInclude(viewerProfileId),
+      },
+    },
+  }) as const
+
+export type EventWithExtension = Prisma.UserContentGetPayload<{
+  include: typeof eventWithExtensionInclude
+}>
+
+export type EventWithExtensionAndContext = Prisma.UserContentGetPayload<{
+  include: ReturnType<typeof eventWithExtensionAndContextInclude>
+}>
+
+export class EventService extends UserContentService {
+  private static eventInstance: EventService
+
+  static getInstance(): EventService {
+    if (!EventService.eventInstance) {
+      EventService.eventInstance = new EventService()
+    }
+    return EventService.eventInstance
+  }
+
+  async create(profileId: string, data: CreateEventPayload): Promise<EventWithExtension> {
+    return prisma.userContent.create({
+      data: {
+        kind: 'event',
+        postedById: profileId,
+        content: data.content,
+        country: data.country ?? null,
+        cityName: data.cityName ?? null,
+        lat: data.lat ?? null,
+        lon: data.lon ?? null,
+        event: { create: { startsAt: data.startsAt } },
+      },
+      include: eventWithExtensionInclude,
+    })
+  }
+
+  async update(
+    id: string,
+    profileId: string,
+    data: UpdateEventPayload
+  ): Promise<EventWithExtension | null> {
+    const owns = await prisma.userContent.findFirst({
+      where: { id, postedById: profileId, kind: 'event', isDeleted: false },
+      select: { id: true },
+    })
+    if (!owns) return null
+
+    const baseUpdate: Prisma.UserContentUpdateInput = {}
+    if (data.content !== undefined) baseUpdate.content = data.content
+    if (data.country !== undefined) baseUpdate.country = data.country
+    if (data.cityName !== undefined) baseUpdate.cityName = data.cityName
+    if (data.lat !== undefined) baseUpdate.lat = data.lat
+    if (data.lon !== undefined) baseUpdate.lon = data.lon
+    if (data.isVisible !== undefined) baseUpdate.isVisible = data.isVisible
+    if (data.startsAt !== undefined) {
+      baseUpdate.event = { update: { startsAt: data.startsAt } }
+    }
+
+    return prisma.userContent.update({
+      where: { id },
+      data: baseUpdate,
+      include: eventWithExtensionInclude,
+    })
+  }
+
+  async findByIdHydrated(
+    id: string,
+    viewerProfileId: string
+  ): Promise<EventWithExtensionAndContext | null> {
+    return prisma.userContent.findFirst({
+      where: { id, kind: 'event', isDeleted: false },
+      include: eventWithExtensionAndContextInclude(viewerProfileId),
+    })
+  }
+
+  async findByProfileIdHydrated(
+    profileId: string,
+    opts: { limit?: number; offset?: number; includeInvisible?: boolean }
+  ): Promise<EventWithExtension[]> {
+    return prisma.userContent.findMany({
+      where: {
+        postedById: profileId,
+        kind: 'event',
+        isDeleted: false,
+        ...(opts.includeInvisible ? {} : { isVisible: true }),
+      },
+      include: eventWithExtensionInclude,
+      orderBy: { createdAt: 'desc' },
+      take: opts.limit ?? 20,
+      skip: opts.offset ?? 0,
+    })
+  }
+}
