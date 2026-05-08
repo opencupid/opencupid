@@ -1,7 +1,7 @@
 import Supercluster from 'supercluster'
 import type { Feature, Point } from 'geojson'
 import { ProfileMatchService } from './profileMatch.service'
-import { PostService } from './post.service'
+import { UserContentService } from './userContent.service'
 import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
@@ -11,14 +11,13 @@ const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
 
 interface PointProperties {
-  kind: 'profile' | 'post'
+  kind: 'profile' | 'post' | 'event'
   id: string
   publicName: string
   image: { blurhash?: string | null; url?: string } | null
   highlighted: boolean
   hasPost?: boolean
   postContent?: string
-  postType?: string
 }
 
 interface CachedIndex {
@@ -54,12 +53,14 @@ export class ClusterService {
 
   async buildIndex(profileId: string, tagIds: string[], kinds: UserContentKind[]): Promise<void> {
     const profileMatchService = ProfileMatchService.getInstance()
-    const postService = PostService.getInstance()
+    const userContentService = UserContentService.getInstance()
 
     const wantProfiles = kinds.includes('profile')
     const wantPosts = kinds.includes('post')
+    const wantEvents = kinds.includes('event')
+    const wantContent = wantPosts || wantEvents
 
-    const [profiles, matchIds, posts] = await Promise.all([
+    const [profiles, matchIds, contentRows] = await Promise.all([
       wantProfiles
         ? profileMatchService.findSocialProfilesWithLocation(profileId, tagIds)
         : Promise.resolve(
@@ -68,9 +69,9 @@ export class ClusterService {
       wantProfiles
         ? profileMatchService.findMutualMatchIds(profileId)
         : Promise.resolve([] as string[]),
-      wantPosts
-        ? postService.findAllWithLocation(profileId)
-        : Promise.resolve([] as Awaited<ReturnType<typeof postService.findAllWithLocation>>),
+      wantContent
+        ? userContentService.findAllWithLocation(profileId)
+        : Promise.resolve([] as Awaited<ReturnType<typeof userContentService.findAllWithLocation>>),
     ])
 
     const matchSet = new Set(matchIds)
@@ -103,34 +104,40 @@ export class ClusterService {
     profileFeatures.forEach((f, i) => profileIndexById.set(f.properties.id, i))
 
     const postFeatures: Feature<Point, PointProperties>[] = []
-    for (const p of posts) {
-      if (p.lat == null || p.lon == null) continue
-      const profileIdx = profileIndexById.get(p.postedById)
-      if (profileIdx !== undefined && p.postedBy?.lat === p.lat && p.postedBy?.lon === p.lon) {
-        profileFeatures[profileIdx].properties.hasPost = true
-        continue
+    for (const c of contentRows) {
+      if (c.lat == null || c.lon == null) continue
+      if (c.kind === 'post' && !wantPosts) continue
+      if (c.kind === 'event' && !wantEvents) continue
+
+      // For posts only: dedup against poster's profile pin
+      if (c.kind === 'post') {
+        const profileIdx = profileIndexById.get(c.postedById)
+        if (profileIdx !== undefined && c.postedBy?.lat === c.lat && c.postedBy?.lon === c.lon) {
+          profileFeatures[profileIdx].properties.hasPost = true
+          continue
+        }
       }
+
       postFeatures.push({
         type: 'Feature' as const,
         geometry: {
           type: 'Point' as const,
-          coordinates: [p.lon!, p.lat!],
+          coordinates: [c.lon!, c.lat!],
         },
         properties: {
-          kind: 'post' as const,
-          id: p.id,
-          publicName: p.postedBy?.publicName ?? '',
-          image: p.postedBy?.profileImages?.[0]
+          kind: c.kind,
+          id: c.id,
+          publicName: c.postedBy?.publicName ?? '',
+          image: c.postedBy?.profileImages?.[0]
             ? {
-                blurhash: p.postedBy.profileImages[0].blurhash ?? null,
+                blurhash: c.postedBy.profileImages[0].blurhash ?? null,
                 url: imageService
-                  .getImageUrls(p.postedBy.profileImages[0])
+                  .getImageUrls(c.postedBy.profileImages[0])
                   .find((v) => v.size === 'thumb')?.url,
               }
             : null,
           highlighted: false,
-          postContent: p.content?.substring(0, 50),
-          postType: p.type,
+          postContent: c.content?.substring(0, 50),
         },
       })
     }
@@ -298,8 +305,8 @@ export class ClusterService {
       image: props.image,
       highlighted: props.highlighted,
       ...(props.hasPost ? { hasPost: true } : {}),
-      ...(props.kind === 'post'
-        ? { postContent: props.postContent, postType: props.postType }
+      ...(props.kind === 'post' || props.kind === 'event'
+        ? { postContent: props.postContent }
         : {}),
     } satisfies PointFeature
   }

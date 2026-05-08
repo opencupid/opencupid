@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 
 export interface ListOptions {
   limit?: number
@@ -100,10 +101,7 @@ export class UserContentService {
     })
   }
 
-  async findByProfileId(
-    profileId: string,
-    opts: ListOptions = {}
-  ): Promise<LeanContentRow[]> {
+  async findByProfileId(profileId: string, opts: ListOptions = {}): Promise<LeanContentRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -128,10 +126,7 @@ export class UserContentService {
     })
   }
 
-  async softDelete(
-    id: string,
-    profileId: string
-  ): Promise<{ id: string } | null> {
+  async softDelete(id: string, profileId: string): Promise<{ id: string } | null> {
     const result = await prisma.userContent.updateMany({
       where: { id, postedById: profileId, isDeleted: false },
       data: { isDeleted: true },
@@ -149,5 +144,23 @@ export class UserContentService {
       data: { isVisible },
     })
     return result.count === 1 ? { id } : null
+  }
+
+  async findAllWithLocation(
+    viewerProfileId: string,
+    limit: number = 500
+  ): Promise<LeanContentRow[]> {
+    return prisma.userContent.findMany({
+      where: {
+        isDeleted: false,
+        isVisible: true,
+        lat: { not: null },
+        lon: { not: null },
+        postedBy: blocklistWhereClause(viewerProfileId),
+      },
+      include: profileSummaryInclude,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    })
   }
 }

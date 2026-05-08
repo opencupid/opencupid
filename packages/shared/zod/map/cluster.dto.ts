@@ -27,7 +27,6 @@ export const PointFeatureSchema = z.object({
   highlighted: z.boolean(),
   hasPost: z.boolean().optional(),
   postContent: z.string().optional(),
-  postType: z.string().optional(),
 })
 
 export const MapFeatureSchema = z.discriminatedUnion('type', [

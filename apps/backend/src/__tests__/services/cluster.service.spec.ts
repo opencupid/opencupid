@@ -14,8 +14,8 @@ vi.mock('@/services/profileMatch.service', () => ({
 
 const mockFindAllWithLocation = vi.fn()
 
-vi.mock('@/services/post.service', () => ({
-  PostService: {
+vi.mock('@/services/userContent.service', () => ({
+  UserContentService: {
     getInstance: () => ({
       findAllWithLocation: mockFindAllWithLocation,
     }),
@@ -74,11 +74,17 @@ const makePost = (
   content = 'A post'
 ) => ({
   id,
+  kind: 'post' as const,
   content,
-  type: 'OFFER',
   lat,
   lon,
   postedById,
+  isDeleted: false,
+  isVisible: true,
+  country: null,
+  cityName: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
   postedBy: {
     publicName: 'PostAuthor',
     lat: ownerLat ?? null,
@@ -88,6 +94,41 @@ const makePost = (
         id: `post-img-${id}`,
         blurhash: 'LBG^x3',
         storagePath: `images/post-${id}/photo`,
+      },
+    ],
+  },
+})
+
+const makeEvent = (
+  id: string,
+  lat: number,
+  lon: number,
+  postedById: string,
+  ownerLat?: number,
+  ownerLon?: number,
+  content = 'An event'
+) => ({
+  id,
+  kind: 'event' as const,
+  content,
+  lat,
+  lon,
+  postedById,
+  isDeleted: false,
+  isVisible: true,
+  country: null,
+  cityName: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  postedBy: {
+    publicName: 'EventAuthor',
+    lat: ownerLat ?? null,
+    lon: ownerLon ?? null,
+    profileImages: [
+      {
+        id: `event-img-${id}`,
+        blurhash: 'LBG^x3',
+        storagePath: `images/event-${id}/photo`,
       },
     ],
   },
@@ -134,7 +175,6 @@ describe('ClusterService', () => {
       const postPoints = features.filter(isPoint).filter((f) => f.kind === 'post')
       expect(postPoints).toHaveLength(1)
       expect(postPoints[0]!.postContent).toBe('A post')
-      expect(postPoints[0]!.postType).toBe('OFFER')
 
       const bob = profilePoints.find((p) => p.id === 'p2')
       expect(bob).toBeDefined()
@@ -424,6 +464,46 @@ describe('ClusterService', () => {
 
       expect(service.hasIndex('viewer-1', [], ['profile'])).toBe(false)
       expect(service.hasIndex('viewer-1', ['tagA'], ['profile'])).toBe(false)
+    })
+  })
+
+  describe('event kind', () => {
+    it('builds clusters with mixed post + event kinds', async () => {
+      const profiles = [makeProfile('p1', 47.5, 19.0)]
+      const post = makePost('post1', 47.55, 19.05, 'author1')
+      const event = makeEvent('event1', 47.6, 19.1, 'author2')
+      mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([post, event])
+
+      await service.buildIndex('viewer-1', [], ['profile', 'post', 'event'])
+      const { features } = service.getClusters(
+        'viewer-1',
+        [16, 47, 20, 49],
+        12,
+        [],
+        ['profile', 'post', 'event']
+      )
+      const isPoint = (f: any): f is PointFeature => f.type === 'point'
+      const points = features.filter(isPoint)
+      expect(points.filter((f) => f.kind === 'post')).toHaveLength(1)
+      expect(points.filter((f) => f.kind === 'event')).toHaveLength(1)
+    })
+
+    it('skips events when kinds does not include event', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([])
+      mockFindMutualMatchIds.mockResolvedValue([])
+      mockFindAllWithLocation.mockResolvedValue([
+        makePost('post1', 47.5, 19.0, 'author1'),
+        makeEvent('event1', 47.6, 19.1, 'author2'),
+      ])
+
+      await service.buildIndex('viewer-1', [], ['post'])
+      const { features } = service.getClusters('viewer-1', [16, 47, 20, 49], 12, [], ['post'])
+      const isPoint = (f: any): f is PointFeature => f.type === 'point'
+      const points = features.filter(isPoint)
+      expect(points.filter((f) => f.kind === 'post')).toHaveLength(1)
+      expect(points.filter((f) => f.kind === 'event')).toHaveLength(0)
     })
   })
 
