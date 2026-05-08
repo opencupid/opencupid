@@ -4,9 +4,20 @@ import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import type { ContentKind } from '@shared/zod/userContent/userContent.dto'
 
+/**
+ * Hard cap for cluster-index hydration. Not pagination — bounds the in-memory
+ * Supercluster index size, which is rebuilt per (profile, tags, kinds) cache key.
+ */
+const CLUSTER_INDEX_LIMIT = 500
+
+/**
+ * Mirrors the post-parse shape of UserContentQuerySchema. `limit` and `offset`
+ * are required because Zod's `.default()` guarantees them on the parsed value;
+ * filters remain optional.
+ */
 export interface ListOptions {
-  limit?: number
-  offset?: number
+  limit: number
+  offset: number
   kind?: ContentKind
   includeInvisible?: boolean
 }
@@ -52,17 +63,17 @@ export class UserContentService {
     return UserContentService.instance
   }
 
-  async findFeed(opts: ListOptions = {}): Promise<LeanContentRow[]> {
+  async findFeed(opts: ListOptions): Promise<LeanContentRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
-        ...(opts.kind ? { kind: opts.kind } : {}),
+        kind: opts.kind,
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
-      take: opts.limit ?? 20,
-      skip: opts.offset ?? 0,
+      take: opts.limit,
+      skip: opts.offset,
     })
   }
 
@@ -82,7 +93,7 @@ export class UserContentService {
     lat: number,
     lon: number,
     radiusKm: number,
-    opts: ListOptions = {}
+    opts: ListOptions
   ): Promise<LeanContentRow[]> {
     // Approximate bounding-box prefilter (1 deg lat ≈ 111 km).
     const dLat = radiusKm / 111
@@ -91,29 +102,29 @@ export class UserContentService {
       where: {
         isDeleted: false,
         isVisible: true,
-        ...(opts.kind ? { kind: opts.kind } : {}),
+        kind: opts.kind,
         lat: { gte: lat - dLat, lte: lat + dLat },
         lon: { gte: lon - dLon, lte: lon + dLon },
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
-      take: opts.limit ?? 20,
-      skip: opts.offset ?? 0,
+      take: opts.limit,
+      skip: opts.offset,
     })
   }
 
-  async findByProfileId(profileId: string, opts: ListOptions = {}): Promise<LeanContentRow[]> {
+  async findByProfileId(profileId: string, opts: ListOptions): Promise<LeanContentRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
         isDeleted: false,
-        ...(opts.includeInvisible ? {} : { isVisible: true }),
-        ...(opts.kind ? { kind: opts.kind } : {}),
+        isVisible: opts.includeInvisible ? undefined : true,
+        kind: opts.kind,
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
-      take: opts.limit ?? 20,
-      skip: opts.offset ?? 0,
+      take: opts.limit,
+      skip: opts.offset,
     })
   }
 
@@ -149,8 +160,7 @@ export class UserContentService {
 
   async findAllWithLocation(
     viewerProfileId: string,
-    kinds: ContentKind[],
-    limit: number = 500
+    kinds: ContentKind[]
   ): Promise<LeanContentRow[]> {
     return prisma.userContent.findMany({
       where: {
@@ -163,7 +173,7 @@ export class UserContentService {
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
-      take: limit,
+      take: CLUSTER_INDEX_LIMIT,
     })
   }
 }
