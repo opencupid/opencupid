@@ -65,12 +65,10 @@ export class EventService extends UserContentService {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'event', baseFields)
       if (!ok) return null
 
-      if (startsAt !== undefined) {
-        await tx.eventExtension.update({
-          where: { userContentId: id },
-          data: { startsAt },
-        })
-      }
+      await tx.eventExtension.update({
+        where: { userContentId: id },
+        data: { startsAt },
+      })
 
       return tx.userContent.findFirst({
         where: { id },

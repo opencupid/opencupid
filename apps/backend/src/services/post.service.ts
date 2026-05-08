@@ -65,12 +65,10 @@ export class PostService extends UserContentService {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'post', baseFields)
       if (!ok) return null
 
-      if (type !== undefined) {
-        await tx.postExtension.update({
-          where: { userContentId: id },
-          data: { type },
-        })
-      }
+      await tx.postExtension.update({
+        where: { userContentId: id },
+        data: { type },
+      })
 
       return tx.userContent.findFirst({
         where: { id },
