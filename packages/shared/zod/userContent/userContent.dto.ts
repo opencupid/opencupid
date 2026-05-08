@@ -2,6 +2,8 @@ import { z } from 'zod'
 import { ProfileSummarySchema } from '../profile/profile.dto'
 import { ConversationContextSchema } from '../interaction/interactionContext.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
+import { PublicPostSchema, PublicPostDetailSchema } from '../post/post.dto'
+import { PublicEventSchema, PublicEventDetailSchema } from '../event/event.dto'
 
 export const ContentKindSchema = z.enum(['post', 'event'])
 export type ContentKind = z.infer<typeof ContentKindSchema>
@@ -51,3 +53,15 @@ export type ContentParams = z.infer<typeof ContentParamsSchema>
 export const PublicUserContentDetailBaseSchema = LeanUserContentSchema.extend({
   postedBy: ProfileSummarySchema.merge(ConversationContextSchema),
 })
+
+export const PublicUserContentSchema = z.discriminatedUnion('kind', [
+  PublicPostSchema,
+  PublicEventSchema,
+])
+export type PublicUserContent = z.infer<typeof PublicUserContentSchema>
+
+export const PublicUserContentDetailSchema = z.discriminatedUnion('kind', [
+  PublicPostDetailSchema,
+  PublicEventDetailSchema,
+])
+export type PublicUserContentDetail = z.infer<typeof PublicUserContentDetailSchema>
