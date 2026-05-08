@@ -158,6 +158,27 @@ export class UserContentService {
     return result.count === 1 ? { id } : null
   }
 
+  /**
+   * Atomically gates a UserContent scalar update on ownership and kind.
+   * Used by per-kind services (PostService, EventService) inside a tx that
+   * also writes to the kind-specific extension table. Always bumps
+   * updatedAt so extension-only edits still register on the base row.
+   * Returns true if the row was matched and updated, false otherwise.
+   */
+  protected async updateBaseScalars(
+    tx: Prisma.TransactionClient,
+    id: string,
+    profileId: string,
+    kind: ContentKind,
+    scalars: Omit<Prisma.UserContentUpdateInput, 'updatedAt'>
+  ): Promise<boolean> {
+    const result = await tx.userContent.updateMany({
+      where: { id, postedById: profileId, kind, isDeleted: false },
+      data: { ...scalars, updatedAt: new Date() },
+    })
+    return result.count === 1
+  }
+
   async findAllWithLocation(
     viewerProfileId: string,
     kinds: ContentKind[]

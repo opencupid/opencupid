@@ -59,28 +59,23 @@ export class PostService extends UserContentService {
     profileId: string,
     data: UpdatePostPayload
   ): Promise<PostWithExtension | null> {
-    const owns = await prisma.userContent.findFirst({
-      where: { id, postedById: profileId, kind: 'post', isDeleted: false },
-      select: { id: true },
-    })
-    if (!owns) return null
+    const { type, ...baseFields } = data
 
-    const baseUpdate: Prisma.UserContentUpdateInput = {}
-    if (data.content !== undefined) baseUpdate.content = data.content
-    if (data.country !== undefined) baseUpdate.country = data.country
-    if (data.cityName !== undefined) baseUpdate.cityName = data.cityName
-    if (data.lat !== undefined) baseUpdate.lat = data.lat
-    if (data.lon !== undefined) baseUpdate.lon = data.lon
-    if (data.isVisible !== undefined) baseUpdate.isVisible = data.isVisible
+    return prisma.$transaction(async (tx) => {
+      const ok = await this.updateBaseScalars(tx, id, profileId, 'post', baseFields)
+      if (!ok) return null
 
-    if (data.type !== undefined) {
-      baseUpdate.post = { update: { type: data.type } }
-    }
+      if (type !== undefined) {
+        await tx.postExtension.update({
+          where: { userContentId: id },
+          data: { type },
+        })
+      }
 
-    return prisma.userContent.update({
-      where: { id },
-      data: baseUpdate,
-      include: postWithExtensionInclude,
+      return tx.userContent.findFirst({
+        where: { id },
+        include: postWithExtensionInclude,
+      })
     })
   }
 

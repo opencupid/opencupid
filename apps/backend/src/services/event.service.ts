@@ -59,27 +59,23 @@ export class EventService extends UserContentService {
     profileId: string,
     data: UpdateEventPayload
   ): Promise<EventWithExtension | null> {
-    const owns = await prisma.userContent.findFirst({
-      where: { id, postedById: profileId, kind: 'event', isDeleted: false },
-      select: { id: true },
-    })
-    if (!owns) return null
+    const { startsAt, ...baseFields } = data
 
-    const baseUpdate: Prisma.UserContentUpdateInput = {}
-    if (data.content !== undefined) baseUpdate.content = data.content
-    if (data.country !== undefined) baseUpdate.country = data.country
-    if (data.cityName !== undefined) baseUpdate.cityName = data.cityName
-    if (data.lat !== undefined) baseUpdate.lat = data.lat
-    if (data.lon !== undefined) baseUpdate.lon = data.lon
-    if (data.isVisible !== undefined) baseUpdate.isVisible = data.isVisible
-    if (data.startsAt !== undefined) {
-      baseUpdate.event = { update: { startsAt: data.startsAt } }
-    }
+    return prisma.$transaction(async (tx) => {
+      const ok = await this.updateBaseScalars(tx, id, profileId, 'event', baseFields)
+      if (!ok) return null
 
-    return prisma.userContent.update({
-      where: { id },
-      data: baseUpdate,
-      include: eventWithExtensionInclude,
+      if (startsAt !== undefined) {
+        await tx.eventExtension.update({
+          where: { userContentId: id },
+          data: { startsAt },
+        })
+      }
+
+      return tx.userContent.findFirst({
+        where: { id },
+        include: eventWithExtensionInclude,
+      })
     })
   }
 
