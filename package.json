@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@changesets/cli": "^2.29.8",
+    "@changesets/cli": "^2.31.0",
     "@lingual/i18n-check": "^0.8.19",
     "@modelcontextprotocol/server-filesystem": "2026.1.14",
     "@sentry/cli": "1.77.3",
@@ -15,7 +15,7 @@
     "@types/geojson": "7946.0.16",
     "acorn": "8.16.0",
     "dotenv-expand": "12.0.3",
-    "prettier": "3.8.1",
+    "prettier": "3.8.3",
     "turbo": "2.8.10"
   },
   "scripts": {
@@ -41,16 +41,16 @@
   },
   "dependencies": {
     "@types/node": "22.16.1",
-    "extendable-media-recorder": "^9.2.36",
-    "extendable-media-recorder-wav-encoder": "^7.0.136",
-    "rollup": "4.59.0",
+    "extendable-media-recorder": "^9.2.37",
+    "extendable-media-recorder-wav-encoder": "^7.0.137",
+    "rollup": "4.60.3",
     "zod": "3.25.76"
   },
   "pnpm": {
     "overrides": {
       "tsx": "4.21.0",
-      "vue": "3.5.28",
-      "@vue/server-renderer": "3.5.28",
+      "vue": "3.5.34",
+      "@vue/server-renderer": "3.5.34",
       "vite-plugin-vue-mcp": "0.3.2",
       "vite-plugin-vue-mcp>@modelcontextprotocol/sdk": "1.22.0",
       "zod-to-json-schema": "3.24.5"
