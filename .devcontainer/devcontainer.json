@@ -1,5 +1,5 @@
 {
-  "name": "Node.js 22 + Docker DevContainer",
+  "name": "Node.js 24 + Docker DevContainer",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24", // Official Node 24 base
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
