@@ -6,6 +6,7 @@ import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
 import { MAP_MAX_ZOOM, type UserContentKind } from '@shared/maps'
+import type { ContentKind } from '@shared/zod/userContent/userContent.dto'
 const CLUSTER_RADIUS = 40
 const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
@@ -56,7 +57,7 @@ export class ClusterService {
     const userContentService = UserContentService.getInstance()
 
     const wantProfiles = kinds.includes('profile')
-    const contentKinds = kinds.filter((k): k is 'post' | 'event' => k !== 'profile')
+    const contentKinds = kinds.filter((k): k is ContentKind => k !== 'profile')
     const wantContent = contentKinds.length > 0
 
     const [profiles, matchIds, contentRows] = await Promise.all([
@@ -69,7 +70,7 @@ export class ClusterService {
         ? profileMatchService.findMutualMatchIds(profileId)
         : Promise.resolve([] as string[]),
       wantContent
-        ? userContentService.findAllWithLocation(profileId, { kinds: contentKinds })
+        ? userContentService.findAllWithLocation(profileId, contentKinds)
         : Promise.resolve([] as Awaited<ReturnType<typeof userContentService.findAllWithLocation>>),
     ])
 

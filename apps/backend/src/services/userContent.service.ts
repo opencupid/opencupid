@@ -2,11 +2,12 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import type { ContentKind } from '@shared/zod/userContent/userContent.dto'
 
 export interface ListOptions {
   limit?: number
   offset?: number
-  kind?: 'post' | 'event'
+  kind?: ContentKind
   includeInvisible?: boolean
 }
 
@@ -148,7 +149,8 @@ export class UserContentService {
 
   async findAllWithLocation(
     viewerProfileId: string,
-    opts: { kinds?: ('post' | 'event')[]; limit?: number } = {}
+    kinds: ContentKind[] = [],
+    limit: number = 500
   ): Promise<LeanContentRow[]> {
     return prisma.userContent.findMany({
       where: {
@@ -157,11 +159,11 @@ export class UserContentService {
         lat: { not: null },
         lon: { not: null },
         postedBy: blocklistWhereClause(viewerProfileId),
-        ...(opts.kinds && opts.kinds.length > 0 ? { kind: { in: opts.kinds } } : {}),
+        ...(kinds.length > 0 ? { kind: { in: kinds } } : {}),
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
-      take: opts.limit ?? 500,
+      take: limit,
     })
   }
 }

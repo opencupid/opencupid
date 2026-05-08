@@ -490,20 +490,23 @@ describe('ClusterService', () => {
       expect(points.filter((f) => f.kind === 'event')).toHaveLength(1)
     })
 
-    it('skips events when kinds does not include event', async () => {
+    it('passes only schema-level content kinds to the data layer', async () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue([])
       mockFindMutualMatchIds.mockResolvedValue([])
-      mockFindAllWithLocation.mockResolvedValue([
-        makePost('post1', 47.5, 19.0, 'author1'),
-        makeEvent('event1', 47.6, 19.1, 'author2'),
-      ])
+      mockFindAllWithLocation.mockResolvedValue([])
 
-      await service.buildIndex('viewer-1', [], ['post'])
-      const { features } = service.getClusters('viewer-1', [16, 47, 20, 49], 12, [], ['post'])
-      const isPoint = (f: any): f is PointFeature => f.type === 'point'
-      const points = features.filter(isPoint)
-      expect(points.filter((f) => f.kind === 'post')).toHaveLength(1)
-      expect(points.filter((f) => f.kind === 'event')).toHaveLength(0)
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+
+      expect(mockFindAllWithLocation).toHaveBeenCalledWith('viewer-1', ['post'])
+    })
+
+    it('skips the data-layer call when no content kinds are requested', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([])
+      mockFindMutualMatchIds.mockResolvedValue([])
+
+      await service.buildIndex('viewer-1', [], ['profile'])
+
+      expect(mockFindAllWithLocation).not.toHaveBeenCalled()
     })
   })
 
