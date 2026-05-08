@@ -1,4 +1,4 @@
-FROM node:22-trixie AS builder
+FROM node:24-trixie AS builder
 
 WORKDIR /app
 ENV CI=true
@@ -35,7 +35,7 @@ RUN pnpm run prisma:generate && pnpm run build
 # Remove dev dependencies
 RUN pnpm prune --prod
 
-FROM node:22-trixie
+FROM node:24-trixie
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
 
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*

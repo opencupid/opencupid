@@ -1,4 +1,4 @@
-FROM node:22-trixie AS builder
+FROM node:24-trixie AS builder
 WORKDIR /app
 ENV CI=true
 ENV PNPM_UPDATE_NOTIFIER=false
