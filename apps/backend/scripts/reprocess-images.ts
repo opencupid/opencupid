@@ -1,13 +1,11 @@
 import 'dotenv/config'
 import path from 'path'
 import fs from 'fs'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../src/lib/prisma'
 import { ImageService } from '../src/services/image.service'
 import { getMediaRoot, imageBasePath } from '../src/lib/media'
 import { ImageProcessor } from '../src/services/imageprocessor'
 import { syncProfileHasFace } from '../src/services/profile.service'
-
-const prisma = new PrismaClient()
 const imageService = ImageService.getInstance()
 
 async function main() {

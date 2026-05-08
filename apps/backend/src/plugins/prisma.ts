@@ -1,9 +1,7 @@
 // apps/backend/src/plugins/prisma.ts
 import fp from 'fastify-plugin'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '../lib/prisma'
 
-const prisma = new PrismaClient()
-
-export default fp(async fastify => {
+export default fp(async (fastify) => {
   fastify.decorate('prisma', prisma)
 })

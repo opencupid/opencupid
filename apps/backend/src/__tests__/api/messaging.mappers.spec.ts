@@ -5,10 +5,14 @@ import {
   mapAttachmentDTO,
 } from '../../api/mappers/messaging.mappers'
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
-const mockAppConfig: { MEDIA_URL_BASE: string; ADMIN_PROFILE_ID?: string } = {
-  MEDIA_URL_BASE: '/user-content',
-  ADMIN_PROFILE_ID: 'admin-profile',
-}
+vi.mock('@prisma/adapter-pg', () => ({ PrismaPg: class {} }))
+const { mockAppConfig } = vi.hoisted(() => ({
+  mockAppConfig: {
+    MEDIA_URL_BASE: '/user-content',
+    ADMIN_PROFILE_ID: 'admin-profile',
+    DATABASE_URL: 'postgresql://test',
+  } as { MEDIA_URL_BASE: string; ADMIN_PROFILE_ID?: string; DATABASE_URL: string },
+}))
 vi.mock('@/lib/appconfig', () => ({
   get appConfig() {
     return mockAppConfig
