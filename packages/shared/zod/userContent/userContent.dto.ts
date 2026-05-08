@@ -2,8 +2,6 @@ import { z } from 'zod'
 import { ProfileSummarySchema } from '../profile/profile.dto'
 import { ConversationContextSchema } from '../interaction/interactionContext.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
-import { PublicPostSchema, PublicPostDetailSchema } from '../post/post.dto'
-import { PublicEventSchema, PublicEventDetailSchema } from '../event/event.dto'
 
 export const ContentKindSchema = z.enum(['post', 'event'])
 export type ContentKind = z.infer<typeof ContentKindSchema>
@@ -47,21 +45,15 @@ export type ContentParams = z.infer<typeof ContentParamsSchema>
 
 /**
  * Detail-with-context shape: postedBy carries conversation context for non-owner viewers.
- * The discriminated union of `PublicUserContentDetailSchema` is composed in this module
- * after the per-kind DTO files import this base.
+ * Per-kind schemas extend this base and add their own extension fields.
  */
 export const PublicUserContentDetailBaseSchema = LeanUserContentSchema.extend({
   postedBy: ProfileSummarySchema.merge(ConversationContextSchema),
 })
 
-export const PublicUserContentSchema = z.discriminatedUnion('kind', [
-  PublicPostSchema,
-  PublicEventSchema,
-])
-export type PublicUserContent = z.infer<typeof PublicUserContentSchema>
-
-export const PublicUserContentDetailSchema = z.discriminatedUnion('kind', [
-  PublicPostDetailSchema,
-  PublicEventDetailSchema,
-])
-export type PublicUserContentDetail = z.infer<typeof PublicUserContentDetailSchema>
+/**
+ * Discriminated-union schemas that combine post and event kinds.
+ * Imported from @zod/userContent/publicContent.dto to avoid circular imports
+ * (post.dto and event.dto import from this file; they cannot be imported here).
+ */
+export type { PublicUserContent, PublicUserContentDetail } from './publicContent.dto'
