@@ -149,7 +149,7 @@ export class UserContentService {
 
   async findAllWithLocation(
     viewerProfileId: string,
-    kinds: ContentKind[] = [],
+    kinds: ContentKind[],
     limit: number = 500
   ): Promise<LeanContentRow[]> {
     return prisma.userContent.findMany({
@@ -159,7 +159,7 @@ export class UserContentService {
         lat: { not: null },
         lon: { not: null },
         postedBy: blocklistWhereClause(viewerProfileId),
-        ...(kinds.length > 0 ? { kind: { in: kinds } } : {}),
+        kind: { in: kinds },
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
