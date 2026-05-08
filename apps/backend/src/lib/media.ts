@@ -1,7 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 
-import { nanoid } from 'nanoid'
+import cuid from 'cuid'
 import { appConfig } from '@/lib/appconfig'
 
 export function uploadTmpDir() {
@@ -61,8 +61,8 @@ type ImageLocation = {
 }
 
 export async function makeImageLocation(storagePrefix: string): Promise<ImageLocation> {
-  // Generate a short collision-resistant slug for the ProfileImage
-  const base = nanoid(10)
+  // Generate a CUID for the ProfileImage
+  const base = cuid.slug()
 
   const mediaRoot = getMediaRoot()
   // relPath is what gets stored in DB — no images/ prefix

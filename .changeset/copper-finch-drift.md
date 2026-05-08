@@ -1,8 +1,6 @@
 ---
-'@opencupid/backend': patch
 '@opencupid/frontend': patch
 ---
 
-Drop deprecated dependencies: replace `cuid` with `nanoid` for media slug
-generation, and remove the unused `@types/dompurify` (DOMPurify v3 ships its
-own types).
+Remove the deprecated `@types/dompurify` dev dependency. DOMPurify v3 ships
+its own types, so no replacement is needed.
