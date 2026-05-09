@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h, ref } from 'vue'
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
 
 import type { ConversationDraftSummary, ConversationSummary } from '@zod/messaging/messaging.dto'
 
@@ -62,6 +62,22 @@ vi.mock('@/features/videocall/api/calls.api', () => ({
 
 import { useConversationDetailViewModel } from '../useConversationDetailViewModel'
 
+type Vm = ReturnType<typeof useConversationDetailViewModel>
+
+let activeWrapper: VueWrapper | null = null
+
+function mountVm(): Vm {
+  let vm!: Vm
+  const Host = defineComponent({
+    setup() {
+      vm = useConversationDetailViewModel()
+      return () => h('div')
+    },
+  })
+  activeWrapper = mount(Host)
+  return vm
+}
+
 function makePersistedSummary(
   conversationId: string,
   partnerId = 'partner-1'
@@ -108,6 +124,13 @@ function makeDraftSummary(partnerId = 'partner-1'): ConversationDraftSummary {
   }
 }
 
+afterEach(() => {
+  if (activeWrapper) {
+    activeWrapper.unmount()
+    activeWrapper = null
+  }
+})
+
 beforeEach(() => {
   setActivePinia(createPinia())
   vi.clearAllMocks()
@@ -130,7 +153,7 @@ describe('useConversationDetailViewModel — detail mode', () => {
     const partner = { id: 'p1', publicName: 'Partner' }
     mockProfileStore.getPublicProfile.mockResolvedValue({ success: true, data: partner })
 
-    const vm = useConversationDetailViewModel()
+    const vm = mountVm()
     // Flush watchers (immediate: true triggers synchronously, but the async
     // body needs the microtask queue to drain).
     await vi.waitFor(() => {
@@ -155,7 +178,7 @@ describe('useConversationDetailViewModel — draft mode', () => {
     const partner = { id: 'p2', publicName: 'Partner' }
     mockProfileStore.getPublicProfile.mockResolvedValue({ success: true, data: partner })
 
-    const vm = useConversationDetailViewModel()
+    const vm = mountVm()
 
     await vi.waitFor(() =>
       expect(mockMessageStore.resolveConversationByProfile).toHaveBeenCalledWith('p2')
@@ -176,7 +199,7 @@ describe('useConversationDetailViewModel — draft mode', () => {
       data: draft,
     })
 
-    const vm = useConversationDetailViewModel()
+    const vm = mountVm()
     await vi.waitFor(() => expect(vm.isDraft.value).toBe(true))
     expect(vm.myIsCallable.value).toBe(false)
   })
@@ -191,7 +214,7 @@ describe('useConversationDetailViewModel — draft mode', () => {
       data: persisted,
     })
 
-    useConversationDetailViewModel()
+    mountVm()
 
     await vi.waitFor(() =>
       expect(mockMessageStore.setActiveConversation).toHaveBeenCalledWith(persisted)
@@ -213,7 +236,7 @@ describe('useConversationDetailViewModel — onMessageSent draft swap', () => {
       data: draft,
     })
 
-    const vm = useConversationDetailViewModel()
+    const vm = mountVm()
     await vi.waitFor(() => expect(vm.isDraft.value).toBe(true))
 
     // Simulate the store having received the persisted summary from the send response.
@@ -235,7 +258,7 @@ describe('useConversationDetailViewModel — onMessageSent draft swap', () => {
     mockRouteParams.value = { conversationId: 'c1' }
     mockMessageStore.activeConversation = makePersistedSummary('c1')
 
-    const vm = useConversationDetailViewModel()
+    const vm = mountVm()
     await vm.onMessageSent()
     expect(mockRouterReplace).not.toHaveBeenCalled()
   })
