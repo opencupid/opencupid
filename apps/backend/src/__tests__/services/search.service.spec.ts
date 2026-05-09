@@ -23,7 +23,7 @@ function installQueryRawRouter() {
       profileCalls.push([strings, ...values])
       return Promise.resolve(profileResult)
     }
-    if (sql.includes('FROM "Post"')) {
+    if (sql.includes('FROM "UserContent"')) {
       postCalls.push([strings, ...values])
       return Promise.resolve(postResult)
     }
@@ -47,7 +47,7 @@ beforeEach(async () => {
   mockPrisma = createMockPrisma()
   // Raw SQL helper + post table are not in the default mock.
   mockPrisma.$queryRaw = vi.fn().mockResolvedValue([])
-  mockPrisma.post = { findMany: vi.fn().mockResolvedValue([]) }
+  mockPrisma.userContent = { findMany: vi.fn().mockResolvedValue([]) }
 
   mockTagSearch = vi.fn().mockResolvedValue([])
 
@@ -163,17 +163,27 @@ describe('SearchService.search — posts (trigram)', () => {
       { id: 'post-b', rank: 0.9 },
       { id: 'post-a', rank: 0.5 },
     ])
-    mockPrisma.post.findMany.mockResolvedValue([
+    mockPrisma.userContent.findMany.mockResolvedValue([
       {
         id: 'post-a',
-        type: 'OFFER',
+        kind: 'post',
         content: 'hello',
+        country: null,
+        cityName: null,
+        lat: null,
+        lon: null,
+        post: { type: 'OFFER' },
         postedBy: { id: 'p1', publicName: 'Alice', profileImages: [] },
       },
       {
         id: 'post-b',
-        type: 'REQUEST',
+        kind: 'post',
         content: 'world',
+        country: null,
+        cityName: null,
+        lat: null,
+        lon: null,
+        post: { type: 'REQUEST' },
         postedBy: { id: 'p2', publicName: 'Bob', profileImages: [] },
       },
     ])
@@ -190,7 +200,7 @@ describe('SearchService.search — posts (trigram)', () => {
     const result = await service.search('xyzzy', 'en', 'me')
 
     expect(result.posts).toEqual([])
-    const hydrationCalls = mockPrisma.post.findMany.mock.calls.filter(
+    const hydrationCalls = mockPrisma.userContent.findMany.mock.calls.filter(
       ([arg]: [any]) => arg?.where?.id?.in !== undefined
     )
     expect(hydrationCalls).toHaveLength(0)

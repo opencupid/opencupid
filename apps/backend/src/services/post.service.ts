@@ -1,276 +1,151 @@
-import { PostType, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
+import {
+  UserContentService,
+  type ListOptions,
+  type BoundsBox,
+  type UserContentMetadataRow,
+} from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
-import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
-import { prisma } from '@/lib/prisma'
 
-const postedByInclude = {
-  include: {
+const postWithMetadataInclude = {
+  post: true,
+  postedBy: { include: { profileImages: true } },
+} as const
+
+const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
+  ({
+    post: true,
     postedBy: {
       include: {
         profileImages: true,
+        ...conversationContextInclude(viewerProfileId),
       },
     },
-  },
-} satisfies Prisma.PostFindFirstArgs
+  }) as const
 
-const postedByWithConversationInclude = (viewerProfileId: string) =>
-  ({
-    include: {
-      postedBy: {
-        include: {
-          profileImages: true,
-          ...conversationContextInclude(viewerProfileId),
-        },
-      },
-    },
-  }) satisfies Prisma.PostFindFirstArgs
+export type PostWithMetadata = Prisma.UserContentGetPayload<{
+  include: typeof postWithMetadataInclude
+}>
 
-export type PostWithProfileAndContext = Prisma.PostGetPayload<
-  ReturnType<typeof postedByWithConversationInclude>
->
+export type PostWithMetadataAndContext = Prisma.UserContentGetPayload<{
+  include: ReturnType<typeof postWithMetadataAndContextInclude>
+}>
 
-export class PostService {
-  private static instance: PostService
-
-  private constructor() {}
+export class PostService extends UserContentService {
+  private static postInstance: PostService
 
   static getInstance(): PostService {
-    if (!PostService.instance) {
-      PostService.instance = new PostService()
+    if (!PostService.postInstance) {
+      PostService.postInstance = new PostService()
     }
-    return PostService.instance
+    return PostService.postInstance
   }
 
-  async create(profileId: string, data: CreatePostPayload) {
-    return prisma.post.create({
+  async create(profileId: string, data: CreatePostPayload): Promise<PostWithMetadata> {
+    return prisma.userContent.create({
       data: {
-        content: data.content,
-        type: data.type,
+        ...this.baseCreateData(data),
+        kind: 'post',
         postedById: profileId,
-        country: data.country ?? null,
-        cityName: data.cityName ?? null,
-        lat: data.lat ?? null,
-        lon: data.lon ?? null,
+        post: { create: { type: data.type } },
       },
-      ...postedByInclude,
+      include: postWithMetadataInclude,
     })
   }
 
-  async findById(id: string) {
-    return prisma.post.findFirst({
-      where: { id, isDeleted: false },
-      ...postedByInclude,
+  async update(
+    id: string,
+    profileId: string,
+    data: UpdatePostPayload
+  ): Promise<PostWithMetadata | null> {
+    const { type, ...baseFields } = data
+
+    return prisma.$transaction(async (tx) => {
+      const ok = await this.updateBaseScalars(tx, id, profileId, 'post', baseFields)
+      if (!ok) return null
+
+      await tx.postContent.update({
+        where: { userContentId: id },
+        data: { type },
+      })
+
+      return tx.userContent.findFirst({
+        where: { id },
+        include: postWithMetadataInclude,
+      })
     })
   }
 
-  async findByIdWithContext(
+  async findByIdHydrated(
     id: string,
     viewerProfileId: string
-  ): Promise<PostWithProfileAndContext | null> {
-    const post = await prisma.post.findFirst({
-      where: { id, isDeleted: false },
-      ...postedByWithConversationInclude(viewerProfileId),
+  ): Promise<PostWithMetadataAndContext | null> {
+    return prisma.userContent.findFirst({
+      where: {
+        id,
+        kind: 'post',
+        isDeleted: false,
+        OR: [{ postedById: viewerProfileId }, { isVisible: true }],
+      },
+      include: postWithMetadataAndContextInclude(viewerProfileId),
     })
-
-    // Non-owners can only see visible posts
-    if (post && post.postedById !== viewerProfileId && !post.isVisible) {
-      return null
-    }
-
-    return post
   }
 
-  async findByProfileId(
+  async findByProfileIdHydrated(
     profileId: string,
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-      includeInvisible?: boolean
-    } = {}
-  ) {
-    const { type, limit = 20, offset = 0, includeInvisible = false } = options
-
-    return prisma.post.findMany({
+    viewerProfileId: string,
+    opts: ListOptions
+  ): Promise<PostWithMetadataAndContext[]> {
+    return prisma.userContent.findMany({
       where: {
         postedById: profileId,
+        kind: 'post',
         isDeleted: false,
-        ...(includeInvisible ? {} : { isVisible: true }),
-        ...(type ? { type } : {}),
+        isVisible: opts.includeInvisible ? undefined : true,
       },
-      ...postedByInclude,
+      include: postWithMetadataAndContextInclude(viewerProfileId),
       orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
+      take: opts.limit,
+      skip: opts.offset,
     })
   }
 
-  async findAll(
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
-    const { type, limit = 20, offset = 0 } = options
-
-    return prisma.post.findMany({
-      where: {
-        isDeleted: false,
-        isVisible: true,
-        ...(type ? { type } : {}),
-      },
-      ...postedByInclude,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    })
+  // The list-style finders below delegate filtering/pagination to
+  // UserContentService and reattach the post content row afterwards. EventService
+  // will need the same shape; the duplication is intentional until both sides
+  // exist, at which point the pattern can be lifted into the base class as a
+  // generic `findHydrated(kind, query, contentInclude)` helper.
+  async findFeedHydrated(opts: ListOptions): Promise<PostWithMetadata[]> {
+    const metadata = await this.findFeed({ ...opts, kind: 'post' })
+    return this.attachPostContent(metadata)
   }
 
-  async findNearby(
+  async findNearbyHydrated(
     lat: number,
     lon: number,
-    radius: number,
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
-    const { type, limit = 20, offset = 0 } = options
-
-    // Calculate bounding box for efficiency (approximate)
-    const latRange = radius / 111.0 // 1 degree lat ≈ 111 km
-    const lonRange = radius / (111.0 * Math.cos((lat * Math.PI) / 180))
-
-    const minLat = lat - latRange
-    const maxLat = lat + latRange
-    const minLon = lon - lonRange
-    const maxLon = lon + lonRange
-
-    return prisma.post.findMany({
-      where: {
-        isDeleted: false,
-        isVisible: true,
-        ...(type ? { type } : {}),
-        lat: { gte: minLat, lte: maxLat },
-        lon: { gte: minLon, lte: maxLon },
-      },
-      ...postedByInclude,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    })
+    radiusKm: number,
+    opts: ListOptions
+  ): Promise<PostWithMetadata[]> {
+    const metadata = await this.findNearby(lat, lon, radiusKm, { ...opts, kind: 'post' })
+    return this.attachPostContent(metadata)
   }
 
-  async findInBounds(
-    bounds: { south: number; north: number; west: number; east: number },
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
-    const { type, limit = 100, offset = 0 } = options
-
-    return prisma.post.findMany({
-      where: {
-        isDeleted: false,
-        isVisible: true,
-        ...(type ? { type } : {}),
-        lat: { gte: bounds.south, lte: bounds.north },
-        lon: { gte: bounds.west, lte: bounds.east },
-      },
-      ...postedByInclude,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    })
+  async findInBoundsHydrated(box: BoundsBox): Promise<PostWithMetadata[]> {
+    const metadata = (await this.findInBounds(box)).filter((r) => r.kind === 'post')
+    return this.attachPostContent(metadata)
   }
 
-  async findAllWithLocation(viewerProfileId: string, limit = 500) {
-    return prisma.post.findMany({
-      where: {
-        isDeleted: false,
-        isVisible: true,
-        lat: { not: null },
-        lon: { not: null },
-        postedBy: blocklistWhereClause(viewerProfileId),
-      },
-      ...postedByInclude,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
+  private async attachPostContent(rows: UserContentMetadataRow[]): Promise<PostWithMetadata[]> {
+    if (rows.length === 0) return []
+    const contents = await prisma.postContent.findMany({
+      where: { userContentId: { in: rows.map((r) => r.id) } },
     })
-  }
-
-  async findRecent(
-    options: {
-      type?: PostType
-      limit?: number
-      offset?: number
-    } = {}
-  ) {
-    const { type, limit = 20, offset = 0 } = options
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-    return prisma.post.findMany({
-      where: {
-        isDeleted: false,
-        isVisible: true,
-        createdAt: { gte: oneWeekAgo },
-        ...(type ? { type } : {}),
-      },
-      ...postedByInclude,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    })
-  }
-
-  async update(id: string, profileId: string, data: UpdatePostPayload) {
-    // Only allow owner to update
-    const post = await prisma.post.findFirst({
-      where: { id, postedById: profileId, isDeleted: false },
-    })
-
-    if (!post) {
-      return null
-    }
-
-    return prisma.post.update({
-      where: { id },
-      data: {
-        content: data.content,
-        type: data.type,
-        isVisible: data.isVisible,
-        country: data.country,
-        cityName: data.cityName,
-        lat: data.lat,
-        lon: data.lon,
-        updatedAt: new Date(),
-      },
-      ...postedByInclude,
-    })
-  }
-
-  async delete(id: string, profileId: string) {
-    // Only allow owner to delete
-    const post = await prisma.post.findFirst({
-      where: { id, postedById: profileId, isDeleted: false },
-    })
-
-    if (!post) {
-      return null
-    }
-
-    return prisma.post.update({
-      where: { id },
-      data: {
-        isDeleted: true,
-        updatedAt: new Date(),
-      },
+    const byId = new Map(contents.map((c) => [c.userContentId, c]))
+    return rows.flatMap((r) => {
+      const post = byId.get(r.id)
+      return post ? [{ ...r, post }] : []
     })
   }
 }

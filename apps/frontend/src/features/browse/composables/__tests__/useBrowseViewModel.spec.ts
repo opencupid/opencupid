@@ -97,7 +97,6 @@ describe('useBrowseViewModel', () => {
         image: null,
         highlighted: false,
         postContent: 'Cherry harvest',
-        postType: 'OFFER',
       },
     ]
 

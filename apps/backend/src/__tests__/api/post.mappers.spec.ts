@@ -20,8 +20,8 @@ const basePostedBy = {
 
 const baseDbPost: any = {
   id: 'clpost00000000000001',
+  kind: 'post',
   content: 'Test post content',
-  type: 'OFFER',
   isDeleted: false,
   isVisible: true,
   createdAt: new Date('2025-01-01'),
@@ -32,6 +32,10 @@ const baseDbPost: any = {
   lat: 48.2,
   lon: 16.3,
   postedBy: basePostedBy,
+  post: {
+    userContentId: 'clpost00000000000001',
+    type: 'OFFER',
+  },
 }
 
 describe('mapDbPostToPublic', () => {
@@ -40,7 +44,7 @@ describe('mapDbPostToPublic', () => {
 
     expect(result.id).toBe(baseDbPost.id)
     expect(result.content).toBe(baseDbPost.content)
-    expect(result.type).toBe(baseDbPost.type)
+    expect(result.type).toBe(baseDbPost.post.type)
     expect(result.postedBy).toEqual({
       id: basePostedBy.id,
       publicName: basePostedBy.publicName,
@@ -85,11 +89,10 @@ describe('mapDbPostToPublic', () => {
     const result = mapDbPostToPublic(baseDbPost, 'viewer-profile-id')
 
     expect(result).toHaveProperty('id')
+    expect(result).toHaveProperty('kind', 'post')
     expect(result).toHaveProperty('content')
     expect(result).toHaveProperty('type')
     expect(result).toHaveProperty('createdAt')
-    expect(result).toHaveProperty('updatedAt')
-    expect(result).toHaveProperty('postedById')
     expect(result).toHaveProperty('postedBy')
     expect(result).toHaveProperty('location')
   })

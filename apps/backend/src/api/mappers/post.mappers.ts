@@ -1,77 +1,86 @@
 import {
   OwnerPostSchema,
-  PublicPostSchema,
-  type PostWithProfile,
-  type PublicPostWithProfile,
+  type PublicPost,
   type PublicPostDetail,
   type OwnerPost,
   type PostSummary,
 } from '@zod/post/post.dto'
-import type { PostWithProfileAndContext } from '@/services/post.service'
+import type { PostWithMetadata, PostWithMetadataAndContext } from '@/services/post.service'
 import type { DbProfileSummary } from '@zod/profile/profile.db'
 import type { PostType } from '@prisma/client'
 import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { DbLocationToLocationDTO, extractLocation } from './location.mappers'
 
-export function mapDbPostToPublic(
-  post: PostWithProfile,
-  viewerProfileId: string
-): PublicPostWithProfile {
-  const { postedBy, ...rest } = post
+export function mapDbPostToPublic(row: PostWithMetadata, viewerProfileId: string): PublicPost {
   return {
-    ...PublicPostSchema.parse(rest),
-    isOwn: post.postedById === viewerProfileId,
-    postedBy: mapProfileSummary(postedBy),
-    location: extractLocation(rest),
+    id: row.id,
+    kind: 'post',
+    type: row.post!.type,
+    content: row.content,
+    createdAt: row.createdAt,
+    isOwn: row.postedById === viewerProfileId,
+    postedBy: mapProfileSummary(row.postedBy),
+    location: extractLocation(row) ?? undefined,
   }
 }
 
 export function mapDbPostToDetail(
-  post: PostWithProfileAndContext,
+  row: PostWithMetadataAndContext,
   viewerProfileId: string
 ): PublicPostDetail {
-  const { postedBy, ...rest } = post
   return {
-    ...PublicPostSchema.parse(rest),
+    id: row.id,
+    kind: 'post',
+    type: row.post!.type,
+    content: row.content,
+    createdAt: row.createdAt,
     isOwn: false,
     postedBy: {
-      ...mapProfileSummary(postedBy),
-      ...mapConversationContext(postedBy, viewerProfileId),
+      ...mapProfileSummary(row.postedBy),
+      ...mapConversationContext(row.postedBy, viewerProfileId),
     },
-    location: extractLocation(rest),
+    location: extractLocation(row) ?? undefined,
   }
 }
 
-export function mapDbPostToOwner(post: PostWithProfile): OwnerPost {
-  const { postedBy, ...rest } = post
-  const mapped = {
-    ...rest,
-    postedBy: mapProfileSummary(postedBy),
-    location: extractLocation(rest),
-  }
-  return OwnerPostSchema.parse(mapped)
+export function mapDbPostToOwner(row: PostWithMetadata): OwnerPost {
+  return OwnerPostSchema.parse({
+    id: row.id,
+    kind: 'post',
+    type: row.post!.type,
+    content: row.content,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    isDeleted: row.isDeleted,
+    isVisible: row.isVisible,
+    isOwn: true,
+    postedBy: mapProfileSummary(row.postedBy),
+    location: extractLocation(row) ?? undefined,
+  })
 }
 
 /** Input shape for `mapPostSummary` — what the search query hydrates. */
 export type DbPostForSummary = {
   id: string
-  type: PostType
+  kind: 'post'
   content: string
   country: string | null
   cityName: string | null
   lat: number | null
   lon: number | null
   postedBy: DbProfileSummary
+  post: { type: PostType }
 }
 
 /** Lightweight post mapper used by /search omnibox results. */
-export function mapPostSummary(post: DbPostForSummary): PostSummary {
+export function mapPostSummary(row: DbPostForSummary): PostSummary {
   return {
-    id: post.id,
-    type: post.type,
-    content: post.content,
-    location: DbLocationToLocationDTO(post),
-    postedBy: mapProfileSummary(post.postedBy),
+    id: row.id,
+    kind: 'post',
+    type: row.post.type,
+    content: row.content,
+    location: DbLocationToLocationDTO(row),
+    postedBy: mapProfileSummary(row.postedBy),
   }
 }

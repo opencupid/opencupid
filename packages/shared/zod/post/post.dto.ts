@@ -1,69 +1,39 @@
 import { z } from 'zod'
-import { PostSchema, PostTypeSchema } from '../generated'
-import { ProfileSummarySchema } from '../profile/profile.dto'
-import { ConversationContextSchema } from '../interaction/interactionContext.dto'
-import { DbMinimalProfileSchema } from '../profile/profile.db'
+import { PostTypeSchema } from '../generated'
+import {
+  BaseUserContentPayloadSchema,
+  UserContentMetadataSchema,
+  OwnerUserContentOverlaySchema,
+  PublicUserContentDetailBaseSchema,
+  UserContentQueryShape,
+  NearbyContentQueryShape,
+} from '../userContent/userContent.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
+import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 
-// Base fields that are public
-const publicPostFields = {
-  id: true,
-  content: true,
-  type: true,
-  createdAt: true,
-  updatedAt: true,
-  postedById: true,
-  country: true,
-  cityName: true,
-  lat: true,
-  lon: true,
-} as const
+const POST_KIND = z.literal('post')
 
-// Owner fields (includes all public fields)
-const ownerPostFields = {
-  ...publicPostFields,
-  isDeleted: true,
-  isVisible: true,
-} as const
-
-export const PostWithProfileSchema = PostSchema.extend({
-  postedBy: DbMinimalProfileSchema,
+export const PublicPostSchema = UserContentMetadataSchema.extend({
+  kind: POST_KIND,
+  type: PostTypeSchema,
 })
-export type PostWithProfile = z.infer<typeof PostWithProfileSchema>
-
-// Public post schema (what other users see)
-export const PublicPostSchema = PostSchema.pick(publicPostFields).extend({
-  isOwn: z.boolean().optional(),
-})
-
 export type PublicPost = z.infer<typeof PublicPostSchema>
 
-// Owner post schema (what the post creator sees)
-export const OwnerPostSchema = PostSchema.pick(ownerPostFields).extend({
-  postedBy: ProfileSummarySchema,
-  location: LocationSchema.nullable().optional(),
-  isOwn: z.boolean().default(true),
-})
-export type OwnerPost = z.infer<typeof OwnerPostSchema>
+export const PublicPostWithProfileSchema = PublicPostSchema
+export type PublicPostWithProfile = PublicPost
 
-// Extended public post with profile info
-export const PublicPostWithProfileSchema = PublicPostSchema.extend({
-  postedBy: ProfileSummarySchema,
-  location: LocationSchema.nullable().optional(),
-  isOwn: z.boolean().default(false),
-})
-export type PublicPostWithProfile = z.infer<typeof PublicPostWithProfileSchema>
-
-// Detail view for a single post (GET /posts/:id for non-owners)
-// Extends PublicPostWithProfile with conversation context on postedBy
-export const PublicPostDetailSchema = PublicPostWithProfileSchema.extend({
-  postedBy: ProfileSummarySchema.merge(ConversationContextSchema),
+export const PublicPostDetailSchema = PublicUserContentDetailBaseSchema.extend({
+  kind: POST_KIND,
+  type: PostTypeSchema,
 })
 export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 
-// Minimal post shape for omnibox / search-result rendering
+export const OwnerPostSchema = PublicPostSchema.merge(OwnerUserContentOverlaySchema)
+export type OwnerPost = z.infer<typeof OwnerPostSchema>
+
 export const PostSummarySchema = z.object({
   id: z.string(),
+  kind: POST_KIND,
   type: PostTypeSchema,
   content: z.string(),
   location: LocationSchema,
@@ -71,49 +41,29 @@ export const PostSummarySchema = z.object({
 })
 export type PostSummary = z.infer<typeof PostSummarySchema>
 
-// Create post payload (from client to API)
-export const CreatePostPayloadSchema = z.object({
-  content: z.string().min(1).max(2000),
+export const CreatePostPayloadSchema = BaseUserContentPayloadSchema.extend({
   type: PostTypeSchema,
-  country: z.string().optional(),
-  cityName: z.string().optional(),
-  lat: z.number().nullable().optional(),
-  lon: z.number().nullable().optional(),
 })
 export type CreatePostPayload = z.infer<typeof CreatePostPayloadSchema>
 
-// Update post payload
-export const UpdatePostPayloadSchema = z.object({
-  content: z.string().min(1).max(2000).optional(),
-  type: PostTypeSchema.optional(),
+export const UpdatePostPayloadSchema = CreatePostPayloadSchema.partial().extend({
   isVisible: z.boolean().optional(),
-  country: z.string().nullable().optional(),
-  cityName: z.string().nullable().optional(),
-  lat: z.number().nullable().optional(),
-  lon: z.number().nullable().optional(),
 })
 export type UpdatePostPayload = z.infer<typeof UpdatePostPayloadSchema>
 
-// Route params for ID lookups
-export const PostParamsSchema = z.object({
-  id: z.string().cuid(),
-})
+export const PostParamsSchema = z.object({ id: z.string().cuid() })
 export type PostParams = z.infer<typeof PostParamsSchema>
 
-// Query parameters for listing posts
 export const PostQuerySchema = z.object({
+  ...UserContentQueryShape,
   type: PostTypeSchema.optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  offset: z.coerce.number().int().min(0).default(0),
 })
 export type PostQuery = z.infer<typeof PostQuerySchema>
 export type PostQueryInput = z.input<typeof PostQuerySchema>
 
-// Query parameters for nearby posts
-export const NearbyPostQuerySchema = PostQuerySchema.extend({
-  lat: z.coerce.number(),
-  lon: z.coerce.number(),
-  radius: z.coerce.number().int().min(1).max(500).default(50),
+export const NearbyPostQuerySchema = z.object({
+  ...NearbyContentQueryShape,
+  type: PostTypeSchema.optional(),
 })
 export type NearbyPostQuery = z.infer<typeof NearbyPostQuerySchema>
 export type NearbyPostQueryInput = z.input<typeof NearbyPostQuerySchema>

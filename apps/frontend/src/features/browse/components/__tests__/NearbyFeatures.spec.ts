@@ -33,6 +33,7 @@ const stubs = {
 function makePost(id: string, content: string): PostSummary {
   return {
     id,
+    kind: 'post',
     type: 'OFFER',
     content,
     location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
