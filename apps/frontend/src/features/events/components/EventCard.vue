@@ -23,11 +23,15 @@ defineEmits<{
   (e: 'delete', event: PublicEvent | OwnerEvent): void
 }>()
 
-const { d } = useI18n()
+const { locale } = useI18n()
 
 const isVisible = computed(() => !('isVisible' in props.event) || props.event.isVisible !== false)
 const eventLocation = computed(() => props.event.location ?? null)
-const startsAtFormatted = computed(() => d(props.event.startsAt, 'short'))
+const startsAtFormatted = computed(() =>
+  new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(
+    props.event.startsAt
+  )
+)
 
 const GRID_TRUNCATE_LENGTH = 100
 const displayContent = computed(() => {
