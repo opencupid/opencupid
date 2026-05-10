@@ -5,10 +5,8 @@ import type { PublicEvent, OwnerEvent } from '@zod/event/event.dto'
 import OwnerToolbar from '@/features/posts/components/OwnerToolbar.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faCalendar } from '@fortawesome/free-solid-svg-icons'
+import IconCalendar from '@/assets/icons/interface/calendar.svg'
 import { useI18n } from 'vue-i18n'
-
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
   showDetails: boolean
@@ -26,8 +24,19 @@ const { locale } = useI18n()
 
 const isVisible = computed(() => !('isVisible' in props.event) || props.event.isVisible !== false)
 const eventLocation = computed(() => props.event.location ?? null)
-const startsAtFormatted = computed(() =>
-  new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(
+
+const startsAtYear = computed(() => {
+  const eventYear = props.event.startsAt.getFullYear()
+  if (eventYear === new Date().getFullYear()) return ''
+  return new Intl.DateTimeFormat(locale.value, { year: 'numeric' }).format(props.event.startsAt)
+})
+
+const startsAtTime = computed(() =>
+  new Intl.DateTimeFormat(locale.value, { timeStyle: 'short' }).format(props.event.startsAt)
+)
+
+const startsAtMonthAndDay = computed(() =>
+  new Intl.DateTimeFormat(locale.value, { month: 'long', day: 'numeric' }).format(
     props.event.startsAt
   )
 )
@@ -50,19 +59,27 @@ const displayContent = computed(() => {
     }"
   >
     <div
-      class="event-card p-3 rounded border shadow-sm"
+      class="event-card p-3 rounded border shadow-sm bg-subtle"
       :class="{ 'event-card--own': event.isOwn }"
       @click="$emit('click', event)"
     >
-      <div class="d-flex align-items-center mb-2 gap-2">
-        <FontAwesomeIcon
-          :icon="faCalendar"
-          class="text-primary"
-        />
-        <strong>{{ startsAtFormatted }}</strong>
+      <div class="d-flex align-items-top justify-content-start flex-row w-100">
+        <p class="flex-grow-1 flex-shrink-1 min-w-0 me-1 lh-sm small">{{ displayContent }}</p>
+        <div
+          class="small lh-sm flex-grow-0 flex-shrink-0 text-center d-flex align-items-center flex-column"
+        >
+          <IconCalendar class="text-primary d-block svg-icon-lg" />
+          <h6 class="display-6 m-0">{{ startsAtMonthAndDay }}</h6>
+          <div>
+            <strong>{{ startsAtTime }}</strong>
+          </div>
+          <div>{{ startsAtYear }}</div>
+          <LocationLabel
+            v-if="eventLocation"
+            :location="eventLocation"
+          />
+        </div>
       </div>
-
-      <p class="event-content mb-2">{{ displayContent }}</p>
 
       <div
         class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted"
@@ -83,13 +100,6 @@ const displayContent = computed(() => {
             <span>{{ event.postedBy.publicName }}</span>
           </template>
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <LocationLabel
-            v-if="eventLocation"
-            :location="eventLocation"
-          />
-          <LocalizedTimeAgo :time="event.createdAt" />
-        </div>
       </div>
     </div>
   </div>
@@ -98,10 +108,6 @@ const displayContent = computed(() => {
 <style scoped>
 .event-card {
   background-color: var(--bs-body-bg);
-}
-
-.event-content {
-  white-space: pre-line;
 }
 
 .event-wrapper--invisible {

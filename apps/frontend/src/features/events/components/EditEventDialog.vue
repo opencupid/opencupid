@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { z } from 'zod'
 import type { OwnerEvent } from '@zod/event/event.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import { VueDatePicker } from '@vuepic/vue-datepicker'
+import { enGB } from 'date-fns/locale/en-GB'
+import { hu as huLocale } from 'date-fns/locale/hu'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+
+// XXX hardcoded locales - needs attention when adding new locale support to i18n
+const datepickerLocales = { en: enGB, hu: huLocale } as const
 
 const EVENT_CONTENT_MAX_LENGTH = 300
 
@@ -35,6 +41,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
+const { locale } = useI18n()
+const datepickerLocale = computed(
+  () => datepickerLocales[locale.value as keyof typeof datepickerLocales] ?? enGB
+)
 const contentStore = useUserContentStore()
 
 const event = props.event
@@ -90,29 +100,12 @@ function nextHourFromNow(): Date {
 <template>
   <BForm
     @submit.prevent="handleSubmit"
-    class="w-100 p-2 mt-2"
+    class="w-100 p-2 p-md-4 p-lg-5 mt-2"
   >
-    <BFormGroup
-      :label="$t('events.labels.starts_at')"
-      label-for="event-starts-at"
-      class="mb-3"
-    >
-      <VueDatePicker
-        id="event-starts-at"
-        v-model="form.startsAt"
-        :min-date="new Date()"
-        :enable-time-picker="true"
-        :clearable="false"
-        :auto-apply="false"
-        :placeholder="$t('events.placeholders.starts_at')"
-        format="yyyy-MM-dd HH:mm"
-      />
-    </BFormGroup>
-
     <BFormGroup
       :label="$t('events.labels.content')"
       label-for="event-content"
-      class="mb-3"
+      class="mb-2 mb-lg-3"
     >
       <BFormTextarea
         id="event-content"
@@ -125,6 +118,25 @@ function nextHourFromNow(): Date {
       <div class="fs-6 text-end form-text text-muted">
         {{ form.content.length }}/{{ EVENT_CONTENT_MAX_LENGTH }}
       </div>
+    </BFormGroup>
+
+    <BFormGroup
+      :label="$t('events.labels.starts_at')"
+      label-for="event-starts-at"
+      class="mb-3"
+    >
+      <VueDatePicker
+        id="event-starts-at"
+        v-model="form.startsAt"
+        :locale="datepickerLocale"
+        :min-date="new Date()"
+        :enable-time-picker="true"
+        :clearable="false"
+        :auto-apply="false"
+        :placeholder="$t('events.placeholders.starts_at')"
+        :ui="{ navBtnPrev: 'btn btn-outline-primary', navBtnNext: 'btn btn-outline-primary' }"
+        format="yyyy-MM-dd HH:mm"
+      />
     </BFormGroup>
 
     <BFormGroup class="mb-3">
