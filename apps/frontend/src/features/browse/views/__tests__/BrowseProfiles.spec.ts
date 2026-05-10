@@ -123,10 +123,9 @@ import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 let mockRefetchBounds: ReturnType<typeof vi.spyOn>
 
 const mockPostSummaries = ref<any[]>([])
-vi.mock('@/features/posts/stores/postStore', () => ({
-  usePostStore: () => ({
+vi.mock('@/features/userContent/stores/userContentStore', () => ({
+  useUserContentStore: () => ({
     fetchPublicPost: vi.fn().mockResolvedValue({ success: false }),
-    fetchOwnerPost: vi.fn().mockResolvedValue({ success: false }),
     get postSummaries() {
       return mockPostSummaries.value
     },
@@ -291,7 +290,7 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.map-placeholder-stub').exists()).toBe(false)
   })
 
-  it('passes postStore.postSummaries to NearbyFeatures', () => {
+  it('passes contentStore.postSummaries to NearbyFeatures', () => {
     mockPostSummaries.value = [
       {
         id: 'post-1',

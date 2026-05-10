@@ -29,7 +29,7 @@ import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
-import { usePostStore } from '@/features/posts/stores/postStore'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { toGeoPoint, type GeoPoint } from '@zod/dto/location.dto'
 import type { PostSummary } from '@zod/post/post.dto'
 import ShareDialog from '@/features/app/components/ShareDialog.vue'
@@ -95,7 +95,7 @@ const router = useRouter()
 const toast = useToast()
 const { t } = useI18n()
 const ownerProfileStore = useOwnerProfileStore()
-const postStore = usePostStore()
+const contentStore = useUserContentStore()
 
 const { detail } = useDetailRouteState()
 const panel = useDetailPanel()
@@ -125,7 +125,7 @@ watch(
     if (d.type === 'profile') {
       panel.show(PublicProfileView, { profileId: d.id })
     } else if (d.type === 'post') {
-      const result = await postStore.fetchPublicPost(d.id)
+      const result = await contentStore.fetchPublicPost(d.id)
       if (result.success && result.data) {
         panel.show(PostFullView, { post: result.data.post })
       } else {
@@ -270,7 +270,7 @@ onMounted(async () => {
         />
 
         <NearbyFeatures
-          :posts="postStore.postSummaries"
+          :posts="contentStore.postSummaries"
           @post:select="onNearbyPostSelect"
         />
       </div>

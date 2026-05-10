@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useEventStore } from '../stores/eventStore'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { z } from 'zod'
 import type { OwnerEvent } from '@zod/event/event.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
@@ -35,7 +35,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const eventStore = useEventStore()
+const contentStore = useUserContentStore()
 
 const event = props.event
 
@@ -69,8 +69,8 @@ const handleSubmit = async () => {
 
     const result =
       props.isEdit && event
-        ? await eventStore.updateEvent(event.id, { content, isVisible, startsAt, ...location })
-        : await eventStore.createEvent({ content, startsAt, ...location })
+        ? await contentStore.updateEvent(event.id, { content, isVisible, startsAt, ...location })
+        : await contentStore.createEvent({ content, startsAt, ...location })
 
     if (result.success && result.data) {
       emit('saved', result.data.event)

@@ -3,19 +3,19 @@ import { storeToRefs } from 'pinia'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { usePostStore } from '@/features/posts/stores/postStore'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 /**
  * View-model for the browse map. Map POIs (profile + post markers, clusters)
  * derive from findProfileStore cluster features. A single bounds event
  * triggers parallel fetches: cluster features for map markers, and
- * postStore.postSummaries for the NearbyFeatures strip (which BrowseProfiles
- * consumes directly from the store, not via this view-model).
+ * userContentStore.postSummaries for the NearbyFeatures strip (which
+ * BrowseProfiles consumes directly from the store, not via this view-model).
  */
 export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
   const ownerStore = useOwnerProfileStore()
-  const postStore = usePostStore()
+  const contentStore = useUserContentStore()
   const { clusterFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
 
   const viewerProfile = computed(() => ownerStore.profile)
@@ -109,7 +109,7 @@ export function useBrowseViewModel() {
   async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
     await Promise.all([
       findProfileStore.fetchBounds(bounds, zoom),
-      postStore.fetchPostsInBounds(bounds),
+      contentStore.fetchPostsInBounds(bounds),
     ])
   }
 

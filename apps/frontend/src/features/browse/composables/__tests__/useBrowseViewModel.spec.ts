@@ -15,8 +15,8 @@ vi.mock('@/lib/bus', () => ({
 
 const fetchPostsInBounds = vi.fn().mockResolvedValue({ success: true })
 const postSummaries = ref<any[]>([])
-vi.mock('@/features/posts/stores/postStore', () => ({
-  usePostStore: () => ({ fetchPostsInBounds, postSummaries }),
+vi.mock('@/features/userContent/stores/userContentStore', () => ({
+  useUserContentStore: () => ({ fetchPostsInBounds, postSummaries }),
 }))
 
 import { useBrowseViewModel } from '../useBrowseViewModel'

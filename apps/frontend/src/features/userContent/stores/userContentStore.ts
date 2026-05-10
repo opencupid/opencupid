@@ -1,25 +1,66 @@
 import { defineStore } from 'pinia'
+import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
 import { OwnerUserContentSchema } from '@zod/userContent/publicContent.dto'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
-import type { MyContentResponse } from '@zod/apiResponse.dto'
+import {
+  OwnerPostSchema,
+  PostSummarySchema,
+  PublicPostDetailSchema,
+  type CreatePostPayload,
+  type UpdatePostPayload,
+  type OwnerPost,
+  type PostSummary,
+  type PublicPostDetail,
+} from '@zod/post/post.dto'
+import {
+  OwnerEventSchema,
+  type CreateEventPayload,
+  type UpdateEventPayload,
+  type OwnerEvent,
+} from '@zod/event/event.dto'
+import type {
+  MyContentResponse,
+  PostSummariesResponse,
+  PublicPostDetailResponse,
+  CreatePostResponse,
+  UpdatePostResponse,
+  DeletePostResponse,
+  CreateEventResponse,
+  UpdateEventResponse,
+  DeleteEventResponse,
+} from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
+import type { MapBounds } from '@/features/map/types/map.types'
 
 const OwnerUserContentArraySchema = OwnerUserContentSchema.array()
+const PostSummaryArraySchema = PostSummarySchema.array()
+
 type StoreMyContentResponse = StoreResponse<{ items: OwnerUserContent[] }>
+type StorePostResponse = StoreResponse<{ post: OwnerPost }>
+type StoreEventResponse = StoreResponse<{ event: OwnerEvent }>
+type StorePostSummariesResponse = StoreResponse<{ posts: PostSummary[] }>
+
+let publicPostAbortController: AbortController | null = null
 
 /**
- * Owner-scoped store for the unified UserContent list (posts + events
- * mixed, sorted chronologically). Backed by `GET /api/content/me`.
+ * Single store for all user-content state and mutations. Holds the
+ * unified `myContent` list (posts + events mixed chronologically),
+ * the post-only map-bounds summaries, and per-kind CRUD that mirrors
+ * its writes into `myContent` so the unified list stays in sync.
  *
- * Per-kind CRUD continues to live in the per-kind stores
- * (`usePostStore`, `useEventStore`). This store is *only* the owner
- * list; mutations from the kind-specific stores are reflected here via
- * `upsert` / `remove` helpers called by their actions.
+ * Method naming: kind-prefixed for write/detail actions (createPost,
+ * fetchPublicPost, …), unsuffixed for read actions over the unified
+ * list (fetchMyContent, upsert, remove). The `postSummaries` /
+ * `fetchPostsInBounds` pair stays kind-specific while the browse
+ * map's marker UI is post-only.
  */
 export const useUserContentStore = defineStore('userContent', {
   state: () => ({
+    /** Owner-scoped unified list — populated by fetchMyContent. */
     myContent: [] as OwnerUserContent[],
+    /** Map-bounds teasers — populated by fetchPostsInBounds. */
+    postSummaries: [] as PostSummary[],
     isLoading: false,
     isInitialized: false,
   }),
@@ -30,6 +71,7 @@ export const useUserContentStore = defineStore('userContent', {
   },
 
   actions: {
+    // ─── Unified list reads ────────────────────────────────────────────
     async fetchMyContent(
       query: { limit?: number; offset?: number } = {}
     ): Promise<StoreMyContentResponse> {
@@ -54,7 +96,7 @@ export const useUserContentStore = defineStore('userContent', {
       }
     },
 
-    /** Insert or update a single item — called by per-kind stores after create/update. */
+    /** Insert or update a single item. Idempotent. */
     upsert(item: OwnerUserContent) {
       const idx = this.myContent.findIndex((c) => c.id === item.id)
       if (idx === -1) {
@@ -64,9 +106,133 @@ export const useUserContentStore = defineStore('userContent', {
       }
     },
 
-    /** Remove an item by id — called by per-kind stores after delete. */
+    /** Remove an item by id. */
     remove(id: string) {
       this.myContent = this.myContent.filter((c) => c.id !== id)
+    },
+
+    // ─── Post CRUD ────────────────────────────────────────────────────
+    async createPost(payload: CreatePostPayload): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() => api.post<CreatePostResponse>('/content/posts', payload))
+        const post = OwnerPostSchema.parse(res.data.post)
+        this.upsert(post)
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to create post')
+      }
+    },
+
+    async updatePost(id: string, payload: UpdatePostPayload): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.patch<UpdatePostResponse>(`/content/posts/${id}`, payload)
+        )
+        const post = OwnerPostSchema.parse(res.data.post)
+        this.upsert(post)
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to update post')
+      }
+    },
+
+    async deletePost(id: string): Promise<StoreResponse<void>> {
+      try {
+        await safeApiCall(() => api.delete<DeletePostResponse>(`/content/posts/${id}`))
+        this.remove(id)
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to delete post')
+      }
+    },
+
+    async setPostVisibility(id: string, isVisible: boolean): Promise<StorePostResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.patch<UpdatePostResponse>(`/content/posts/${id}`, { isVisible })
+        )
+        const post = OwnerPostSchema.parse(res.data.post)
+        this.upsert(post)
+        return storeSuccess({ post })
+      } catch (error: any) {
+        return storeError(error, 'Failed to update post visibility')
+      }
+    },
+
+    hidePost(id: string) {
+      return this.setPostVisibility(id, false)
+    },
+
+    showPost(id: string) {
+      return this.setPostVisibility(id, true)
+    },
+
+    // ─── Event CRUD ───────────────────────────────────────────────────
+    async createEvent(payload: CreateEventPayload): Promise<StoreEventResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.post<CreateEventResponse>('/content/events', payload)
+        )
+        const event = OwnerEventSchema.parse(res.data.event)
+        this.upsert(event)
+        return storeSuccess({ event })
+      } catch (error: any) {
+        return storeError(error, 'Failed to create event')
+      }
+    },
+
+    async updateEvent(id: string, payload: UpdateEventPayload): Promise<StoreEventResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.patch<UpdateEventResponse>(`/content/events/${id}`, payload)
+        )
+        const event = OwnerEventSchema.parse(res.data.event)
+        this.upsert(event)
+        return storeSuccess({ event })
+      } catch (error: any) {
+        return storeError(error, 'Failed to update event')
+      }
+    },
+
+    async deleteEvent(id: string): Promise<StoreResponse<void>> {
+      try {
+        await safeApiCall(() => api.delete<DeleteEventResponse>(`/content/events/${id}`))
+        this.remove(id)
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to delete event')
+      }
+    },
+
+    // ─── Post-only public reads ───────────────────────────────────────
+    async fetchPublicPost(id: string): Promise<StoreResponse<{ post: PublicPostDetail }>> {
+      if (publicPostAbortController) publicPostAbortController.abort()
+      const controller = new AbortController()
+      publicPostAbortController = controller
+
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PublicPostDetailResponse>(`/content/posts/${id}`, { signal: controller.signal })
+        )
+        const post = PublicPostDetailSchema.parse(res.data.post)
+        return storeSuccess({ post })
+      } catch (error: any) {
+        if (error instanceof CanceledError) return storeSuccess()
+        return storeError(error, 'Failed to fetch post')
+      }
+    },
+
+    async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostSummariesResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PostSummariesResponse>('/content/posts/bounds', { params: bounds })
+        )
+        const posts = PostSummaryArraySchema.parse(res.data.posts)
+        this.postSummaries = posts
+        return storeSuccess({ posts })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch posts in bounds')
+      }
     },
   },
 })

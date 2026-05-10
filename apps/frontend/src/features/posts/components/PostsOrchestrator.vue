@@ -14,8 +14,7 @@ import EditEventDialog from '@/features/events/components/EditEventDialog.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare, faCalendarPlus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { useI18n } from 'vue-i18n'
-import { usePostStore } from '../stores/postStore'
-import { useEventStore } from '@/features/events/stores/eventStore'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 const { t } = useI18n()
 
@@ -29,8 +28,7 @@ const editingPost = ref<OwnerPost | undefined>()
 const editingEvent = ref<OwnerEvent | undefined>()
 const defaultLocation = computed(() => LocationSchema.parse(formData?.location ?? {}))
 
-const postStore = usePostStore()
-const eventStore = useEventStore()
+const contentStore = useUserContentStore()
 
 // Guard against deep-linking to an edit route without a loaded post
 watch(
@@ -83,20 +81,20 @@ function handleEdit(item: OwnerUserContent) {
 async function handleDelete(item: OwnerUserContent) {
   if (!confirm(t('posts.messages.confirm_delete'))) return
   if (item.kind === 'post') {
-    await postStore.deletePost(item.id)
+    await contentStore.deletePost(item.id)
   } else {
-    await eventStore.deleteEvent(item.id)
+    await contentStore.deleteEvent(item.id)
   }
 }
 
 async function handleHide(item: OwnerUserContent) {
   const isVisible = item.isVisible !== false
   if (item.kind === 'post') {
-    if (isVisible) await postStore.hidePost(item.id)
-    else await postStore.showPost(item.id)
+    if (isVisible) await contentStore.hidePost(item.id)
+    else await contentStore.showPost(item.id)
   } else {
     // Events use updateEvent for visibility toggle until a dedicated helper lands.
-    await eventStore.updateEvent(item.id, { isVisible: !isVisible })
+    await contentStore.updateEvent(item.id, { isVisible: !isVisible })
   }
 }
 </script>

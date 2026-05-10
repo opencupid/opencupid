@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { usePostStore } from '../stores/postStore'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { z } from 'zod'
 import type { OwnerPost } from '@zod/post/post.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
@@ -40,7 +40,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 
-const postStore = usePostStore()
+const contentStore = useUserContentStore()
 
 const post = props.post
 
@@ -69,8 +69,8 @@ const handleSubmit = async () => {
 
     const result =
       props.isEdit && post
-        ? await postStore.updatePost(post.id, { content, type, isVisible, ...location })
-        : await postStore.createPost({ content, type, ...location })
+        ? await contentStore.updatePost(post.id, { content, type, isVisible, ...location })
+        : await contentStore.createPost({ content, type, ...location })
 
     if (result.success && result.data) {
       if (!props.isEdit) {
