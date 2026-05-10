@@ -321,6 +321,8 @@
       "create": "Submit",
       "create_cta": "Create post...",
       "create_cta_title": "Post something",
+      "create_advert_cta_title": "Post an advert",
+      "create_event_cta_title": "Post an event",
       "delete": "Delete",
       "edit": "Edit Post",
       "hide": "Hide (but don't delete)",
