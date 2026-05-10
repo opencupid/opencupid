@@ -68,12 +68,12 @@ const displayContent = computed(() => {
         <div
           class="small lh-sm flex-grow-0 flex-shrink-0 text-center d-flex align-items-center flex-column"
         >
-          <IconCalendar class="text-primary d-block svg-icon-lg" />
+          <IconCalendar class="text-primary d-block svg-icon-lg mb-1" />
+          <div class="m-0">{{ startsAtYear }}</div>
           <h6 class="display-6 m-0">{{ startsAtMonthAndDay }}</h6>
           <div>
             <strong>{{ startsAtTime }}</strong>
           </div>
-          <div>{{ startsAtYear }}</div>
           <LocationLabel
             v-if="eventLocation"
             :location="eventLocation"

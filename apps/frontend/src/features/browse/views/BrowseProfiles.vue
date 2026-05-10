@@ -28,6 +28,7 @@ import { renderEventMapIconHtml } from '@/features/events/components/eventMapIco
 
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import EventMapPopup from '@/features/events/components/EventMapPopup.vue'
+import EventFullView from '@/features/events/components/EventFullView.vue'
 
 import type { MapPoi } from '@/features/map/types/map.types'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
@@ -152,6 +153,15 @@ watch(
         panel.close()
         router.replace({ name: 'Browse' })
       }
+    } else if (d.type === 'event') {
+      const result = await contentStore.fetchPublicEvent(d.id)
+      if (result.success && result.data) {
+        panel.show(EventFullView, { event: result.data.event })
+      } else {
+        toast.error(t('events.messages.error_load'))
+        panel.close()
+        router.replace({ name: 'Browse' })
+      }
     }
   },
   { immediate: true }
@@ -178,6 +188,9 @@ function openInboxDrawer() {
 function handlePostSelect(post: { id: string }) {
   router.push({ name: 'PublicPost', params: { postId: post.id } })
 }
+function handleEventSelect(event: { id: string }) {
+  router.push({ name: 'PublicEvent', params: { eventId: event.id } })
+}
 function handleProfileSelect(profile: { id: string }) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
@@ -196,6 +209,7 @@ function handleMarkerSelect(id: string) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
   if (poi.kind === 'post') handlePostSelect({ id })
+  else if (poi.kind === 'event') handleEventSelect({ id })
   else handleProfileSelect({ id })
 }
 

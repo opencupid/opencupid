@@ -45,4 +45,11 @@ describe('useDetailRouteState', () => {
     const { detail } = useDetailRouteState()
     expect(detail.value).toEqual({ type: 'post', id: 'post-99' })
   })
+
+  it('detail returns event type with id on PublicEvent route', () => {
+    mockRouteName.value = 'PublicEvent'
+    mockRouteParams.value = { eventId: 'evt-7' }
+    const { detail } = useDetailRouteState()
+    expect(detail.value).toEqual({ type: 'event', id: 'evt-7' })
+  })
 })

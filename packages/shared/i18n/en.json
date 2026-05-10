@@ -90,6 +90,9 @@
       "starts_at": "When",
       "visibility": "Show this event"
     },
+    "messages": {
+      "error_load": "Failed to load event"
+    },
     "placeholders": {
       "content": "Describe your event…",
       "starts_at": "Pick a date and time"
