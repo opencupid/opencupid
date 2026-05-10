@@ -7,7 +7,6 @@ const props = defineProps<{
   item: OwnerUserContent
   showDetails: boolean
   dimHidden?: boolean
-  showOwnerToolbar?: boolean
 }>()
 
 defineEmits<{
@@ -24,7 +23,6 @@ defineEmits<{
     :post="item"
     :show-details="showDetails"
     :dim-hidden="dimHidden"
-    :show-owner-toolbar="showOwnerToolbar"
     @click="$emit('click', item)"
     @edit="$emit('edit', item)"
     @hide="$emit('hide', item)"
@@ -35,7 +33,6 @@ defineEmits<{
     :event="item"
     :show-details="showDetails"
     :dim-hidden="dimHidden"
-    :show-owner-toolbar="showOwnerToolbar"
     @click="$emit('click', item)"
     @edit="$emit('edit', item)"
     @hide="$emit('hide', item)"

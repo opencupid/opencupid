@@ -18,7 +18,6 @@ const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
   showDetails: boolean
   dimHidden?: boolean
-  showOwnerToolbar?: boolean
 }>()
 
 const ownerProfile = inject<Ref<OwnerProfile | null>>('ownerProfile', ref(null))

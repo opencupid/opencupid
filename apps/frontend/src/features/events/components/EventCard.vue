@@ -13,7 +13,6 @@ const props = defineProps<{
   event: PublicEvent | OwnerEvent
   showDetails: boolean
   dimHidden?: boolean
-  showOwnerToolbar?: boolean
 }>()
 
 defineEmits<{

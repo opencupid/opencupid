@@ -96,7 +96,6 @@ const items = computed(() => myContent.value)
             :item="item"
             :show-details="false"
             :dim-hidden="true"
-            :show-owner-toolbar="true"
             class="clickable"
             @click="emit('intent:fullview', item)"
             @edit="emit('intent:edit', item)"
