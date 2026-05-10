@@ -29,6 +29,7 @@ import type {
 import { type PostTypeType } from '@zod/generated'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 import type { MapBounds } from '@/features/map/types/map.types'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 let publicPostAbortController: AbortController | null = null
 const PublicPostWithProfileArraySchema = PublicPostWithProfileSchema.array()
@@ -64,6 +65,7 @@ export const usePostStore = defineStore('posts', {
         const res = await safeApiCall(() => api.post<CreatePostResponse>('/content/posts', payload))
         const post = OwnerPostSchema.parse(res.data.post)
         this.myPosts.unshift(post)
+        useUserContentStore().upsert(post)
         return storeSuccess({ post })
       } catch (error: any) {
         return storeError(error, 'Failed to create post')
@@ -84,6 +86,7 @@ export const usePostStore = defineStore('posts', {
         if (this.currentPost?.id === id) {
           this.currentPost = post
         }
+        useUserContentStore().upsert(post)
 
         return storeSuccess({ post })
       } catch (error: any) {
@@ -100,6 +103,7 @@ export const usePostStore = defineStore('posts', {
         if (this.currentPost?.id === id) {
           this.currentPost = null
         }
+        useUserContentStore().remove(id)
 
         return storeSuccess()
       } catch (error: any) {
@@ -128,6 +132,7 @@ export const usePostStore = defineStore('posts', {
         if (this.currentPost?.id === id) {
           this.currentPost = post
         }
+        useUserContentStore().upsert(post)
 
         return storeSuccess({ post })
       } catch (error: any) {

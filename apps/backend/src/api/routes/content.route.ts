@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { UserContentService } from '@/services/userContent.service'
 import { PostService } from '@/services/post.service'
 import { EventService } from '@/services/event.service'
-import { mapUserContentMetadata } from '../mappers/userContent.mappers'
+import { mapOwnerUserContent, mapUserContentMetadata } from '../mappers/userContent.mappers'
 import { mapDbPostToOwner, mapDbPostToDetail } from '../mappers/post.mappers'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../mappers/event.mappers'
 import {
@@ -20,6 +20,16 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
     const query = UserContentQuerySchema.parse(req.query)
     const rows = await svc.findFeed({ ...query, includeInvisible: false })
     const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
+    return reply.code(200).send({ success: true, items })
+  })
+
+  fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const query = UserContentQuerySchema.parse(req.query)
+    const rows = await svc.findByProfileIdOwner(req.session.profileId, {
+      ...query,
+      includeInvisible: true,
+    })
+    const items = rows.map(mapOwnerUserContent)
     return reply.code(200).send({ success: true, items })
   })
 

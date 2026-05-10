@@ -34,8 +34,18 @@ const profileSummaryInclude = {
   postedBy: { include: { profileImages: true } },
 } as const
 
+const ownerHydratedInclude = {
+  post: true,
+  event: true,
+  postedBy: { include: { profileImages: true } },
+} as const
+
 export type UserContentMetadataRow = Prisma.UserContentGetPayload<{
   include: typeof profileSummaryInclude
+}>
+
+export type OwnerHydratedRow = Prisma.UserContentGetPayload<{
+  include: typeof ownerHydratedInclude
 }>
 
 export class UserContentService {
@@ -109,6 +119,26 @@ export class UserContentService {
         kind: opts.kind,
       },
       include: profileSummaryInclude,
+      orderBy: { createdAt: 'desc' },
+      take: opts.limit,
+      skip: opts.offset,
+    })
+  }
+
+  /**
+   * Owner-scoped fully-hydrated lookup: includes both kind-specific content
+   * rows (post and event) joined eagerly so callers receive the discriminated
+   * payload in a single query. Used by `GET /api/content/me` for the unified
+   * "my content" list view.
+   */
+  async findByProfileIdOwner(profileId: string, opts: ListOptions): Promise<OwnerHydratedRow[]> {
+    return prisma.userContent.findMany({
+      where: {
+        postedById: profileId,
+        isDeleted: false,
+        kind: opts.kind,
+      },
+      include: ownerHydratedInclude,
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,

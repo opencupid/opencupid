@@ -6,14 +6,16 @@ import { useMyProfileViewModel } from '@/features/myprofile/composables/useMyPro
 import { LocationSchema } from '@zod/dto/location.dto'
 import type { OwnerPost } from '@zod/post/post.dto'
 import type { OwnerEvent } from '@zod/event/event.dto'
+import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 import FloatingButton from '@/features/shared/components/FloatingButton.vue'
-import MyPostList from './MyPostList.vue'
+import MyContentList from '@/features/userContent/components/MyContentList.vue'
 import EditPostDialog from './EditPostDialog.vue'
 import EditEventDialog from '@/features/events/components/EditEventDialog.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare, faCalendarPlus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { useI18n } from 'vue-i18n'
 import { usePostStore } from '../stores/postStore'
+import { useEventStore } from '@/features/events/stores/eventStore'
 
 const { t } = useI18n()
 
@@ -28,6 +30,7 @@ const editingEvent = ref<OwnerEvent | undefined>()
 const defaultLocation = computed(() => LocationSchema.parse(formData?.location ?? {}))
 
 const postStore = usePostStore()
+const eventStore = useEventStore()
 
 // Guard against deep-linking to an edit route without a loaded post
 watch(
@@ -57,47 +60,51 @@ watch(
   { immediate: true }
 )
 
-function openEditPost(post: OwnerPost) {
-  editingPost.value = post
-  router.push({ name: 'MeEditPost', params: { postId: post.id } })
-}
-
 function openCreatePost() {
   editingPost.value = undefined
   router.push({ name: 'MeCreatePost' })
 }
 
 function openCreateEvent() {
+  editingEvent.value = undefined
   router.push({ name: 'MeCreateEvent' })
 }
 
-async function handleDelete(post: OwnerPost) {
-  if (!post || !confirm(t('posts.messages.confirm_delete'))) {
-    return
+function handleEdit(item: OwnerUserContent) {
+  if (item.kind === 'post') {
+    editingPost.value = item as OwnerPost
+    router.push({ name: 'MeEditPost', params: { postId: item.id } })
+  } else {
+    editingEvent.value = item as OwnerEvent
+    router.push({ name: 'MeEditEvent', params: { eventId: item.id } })
   }
-
-  await postStore.deletePost(post.id)
 }
 
-async function handleHide(post: OwnerPost) {
-  if (!post) {
-    return
-  }
-
-  const isVisible = 'isVisible' in post ? post.isVisible !== false : true
-  if (isVisible) {
-    await postStore.hidePost(post.id)
+async function handleDelete(item: OwnerUserContent) {
+  if (!confirm(t('posts.messages.confirm_delete'))) return
+  if (item.kind === 'post') {
+    await postStore.deletePost(item.id)
   } else {
-    await postStore.showPost(post.id)
+    await eventStore.deleteEvent(item.id)
+  }
+}
+
+async function handleHide(item: OwnerUserContent) {
+  const isVisible = item.isVisible !== false
+  if (item.kind === 'post') {
+    if (isVisible) await postStore.hidePost(item.id)
+    else await postStore.showPost(item.id)
+  } else {
+    // Events use updateEvent for visibility toggle until a dedicated helper lands.
+    await eventStore.updateEvent(item.id, { isVisible: !isVisible })
   }
 }
 </script>
 
 <template>
   <template v-if="subView === 'myposts'">
-    <MyPostList
-      scope="my"
-      @intent:edit="openEditPost"
+    <MyContentList
+      @intent:edit="handleEdit"
       @intent:delete="handleDelete"
       @intent:hide="handleHide"
     />

@@ -1,7 +1,10 @@
-import type { UserContentMetadataRow } from '@/services/userContent.service'
+import type { OwnerHydratedRow, UserContentMetadataRow } from '@/services/userContent.service'
 import { mapProfileSummary } from './profile.mappers'
 import { extractLocation } from './location.mappers'
 import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
+import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
+import { mapDbPostToOwner } from './post.mappers'
+import { mapDbEventToOwner } from './event.mappers'
 
 export function mapUserContentMetadata(
   row: UserContentMetadataRow,
@@ -16,4 +19,13 @@ export function mapUserContentMetadata(
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
   }
+}
+
+/**
+ * Maps an owner-hydrated row (UserContent + both kind-specific content rows
+ * + profile summary loaded eagerly) to the discriminated OwnerUserContent
+ * union. Dispatches by `row.kind` and delegates to the per-kind owner mapper.
+ */
+export function mapOwnerUserContent(row: OwnerHydratedRow): OwnerUserContent {
+  return row.kind === 'post' ? mapDbPostToOwner(row) : mapDbEventToOwner(row)
 }

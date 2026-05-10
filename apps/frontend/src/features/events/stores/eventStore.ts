@@ -12,6 +12,7 @@ import type {
   DeleteEventResponse,
 } from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 type StoreEventResponse = StoreResponse<{ event: OwnerEvent }>
 
@@ -30,6 +31,7 @@ export const useEventStore = defineStore('events', {
         )
         const event = OwnerEventSchema.parse(res.data.event)
         this.myEvents.unshift(event)
+        useUserContentStore().upsert(event)
         return storeSuccess({ event })
       } catch (error: any) {
         return storeError(error, 'Failed to create event')
@@ -50,6 +52,7 @@ export const useEventStore = defineStore('events', {
         if (this.currentEvent?.id === id) {
           this.currentEvent = event
         }
+        useUserContentStore().upsert(event)
 
         return storeSuccess({ event })
       } catch (error: any) {
@@ -64,6 +67,7 @@ export const useEventStore = defineStore('events', {
         if (this.currentEvent?.id === id) {
           this.currentEvent = null
         }
+        useUserContentStore().remove(id)
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to delete event')
