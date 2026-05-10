@@ -88,6 +88,7 @@
     "labels": {
       "content": "What's happening?",
       "starts_at": "When",
+      "venue": "Where",
       "visibility": "Show this event"
     },
     "messages": {
@@ -95,7 +96,8 @@
     },
     "placeholders": {
       "content": "Describe your event…",
-      "starts_at": "Pick a date and time"
+      "starts_at": "Pick a date and time",
+      "venue": "Venue or address (optional)"
     }
   },
   "gender": {

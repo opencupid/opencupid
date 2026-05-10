@@ -56,6 +56,7 @@ function makeOwnerEvent(id: string, overrides: Record<string, unknown> = {}) {
     id,
     kind: 'event' as const,
     startsAt: '2026-06-01T18:00:00Z',
+    venue: null,
     postedBy: profileSummary,
     isDeleted: false,
     isVisible: true,

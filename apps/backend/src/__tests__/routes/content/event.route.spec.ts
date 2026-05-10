@@ -39,7 +39,7 @@ const makeRow = (postedById: string) => ({
   createdAt: new Date(),
   updatedAt: new Date(),
   postedById,
-  event: { userContentId: eventId, startsAt: new Date('2027-01-01') },
+  event: { userContentId: eventId, startsAt: new Date('2027-01-01'), venue: null },
   postedBy: { id: postedById, publicName: 'X', profileImages: [] },
 })
 

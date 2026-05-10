@@ -37,6 +37,7 @@ CREATE TABLE "public"."PostContent" (
 CREATE TABLE "public"."EventContent" (
     "userContentId" TEXT NOT NULL,
     "startsAt" TIMESTAMP(3) NOT NULL,
+    "venue" TEXT,
 
     CONSTRAINT "EventContent_pkey" PRIMARY KEY ("userContentId")
 );

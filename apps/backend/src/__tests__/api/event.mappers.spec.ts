@@ -32,6 +32,7 @@ const baseDbEvent: any = {
   event: {
     userContentId: 'cuevent00000000000001',
     startsAt: new Date('2027-06-01T18:00:00Z'),
+    venue: null,
   },
 }
 

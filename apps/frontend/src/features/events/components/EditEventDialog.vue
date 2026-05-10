@@ -15,11 +15,13 @@ import LocationSelector from '@/features/shared/profileform/LocationSelector.vue
 const datepickerLocales = { en: enGB, hu: huLocale } as const
 
 const EVENT_CONTENT_MAX_LENGTH = 300
+const EVENT_VENUE_MAX_LENGTH = 120
 
 const EventFormSchema = z.object({
   content: z.string().default(''),
   isVisible: z.boolean().default(true),
   startsAt: z.coerce.date(),
+  venue: z.string().max(EVENT_VENUE_MAX_LENGTH).default(''),
   location: LocationSchema,
 })
 type EventForm = z.infer<typeof EventFormSchema>
@@ -54,6 +56,7 @@ const form = ref<EventForm>(
     content: event?.content ?? '',
     isVisible: event?.isVisible ?? true,
     startsAt: event?.startsAt ?? nextHourFromNow(),
+    venue: event?.venue ?? '',
     location: event?.location ?? props.defaultLocation,
   })
 )
@@ -75,12 +78,24 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    const { content, isVisible, startsAt, location } = form.value
+    const { content, isVisible, startsAt, venue, location } = form.value
+    const venueOrNull = venue.trim() === '' ? null : venue.trim()
 
     const result =
       props.isEdit && event
-        ? await contentStore.updateEvent(event.id, { content, isVisible, startsAt, ...location })
-        : await contentStore.createEvent({ content, startsAt, ...location })
+        ? await contentStore.updateEvent(event.id, {
+            content,
+            isVisible,
+            startsAt,
+            venue: venueOrNull,
+            ...location,
+          })
+        : await contentStore.createEvent({
+            content,
+            startsAt,
+            venue: venueOrNull,
+            ...location,
+          })
 
     if (result.success && result.data) {
       emit('saved', result.data.event)
@@ -100,12 +115,12 @@ function nextHourFromNow(): Date {
 <template>
   <BForm
     @submit.prevent="handleSubmit"
-    class="w-100 p-2 p-md-4 p-lg-5 mt-2"
+    class="w-100 p-2 p-md-4 p-lg-5 mt-2 scrollable hide-scrollbar"
   >
     <BFormGroup
       :label="$t('events.labels.content')"
       label-for="event-content"
-      class="mb-2 mb-lg-3"
+      class="mb-2 mb-lg-3 position-relative"
     >
       <BFormTextarea
         id="event-content"
@@ -115,7 +130,7 @@ function nextHourFromNow(): Date {
         required
         rows="6"
       />
-      <div class="fs-6 text-end form-text text-muted">
+      <div class="form-hint text-muted small position-absolute bottom-0 start-50 translate-middle-x">
         {{ form.content.length }}/{{ EVENT_CONTENT_MAX_LENGTH }}
       </div>
     </BFormGroup>
@@ -139,12 +154,27 @@ function nextHourFromNow(): Date {
       />
     </BFormGroup>
 
-    <BFormGroup class="mb-3">
+    <BFormGroup
+      class="mb-3"
+      :label="$t('events.labels.venue')"
+    >
       <LocationSelector
         v-model="form.location"
         open-direction="top"
         :allow-empty="true"
         :close-on-select="true"
+      />
+    </BFormGroup>
+
+    <BFormGroup
+      label-for="event-venue"
+      class="mb-3"
+    >
+      <BFormInput
+        id="event-venue"
+        v-model="form.venue"
+        :placeholder="$t('events.placeholders.venue')"
+        :maxlength="EVENT_VENUE_MAX_LENGTH"
       />
     </BFormGroup>
 

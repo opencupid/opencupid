@@ -44,7 +44,7 @@ export const UserContentScalarFieldEnumSchema = z.enum(['id','kind','postedById'
 
 export const PostContentScalarFieldEnumSchema = z.enum(['userContentId','type']);
 
-export const EventContentScalarFieldEnumSchema = z.enum(['userContentId','startsAt']);
+export const EventContentScalarFieldEnumSchema = z.enum(['userContentId','startsAt','venue']);
 
 export const ProfileSessionLogScalarFieldEnumSchema = z.enum(['id','profileId','startedAt']);
 
@@ -420,6 +420,7 @@ export type PostContent = z.infer<typeof PostContentSchema>
 export const EventContentSchema = z.object({
   userContentId: z.string(),
   startsAt: z.coerce.date(),
+  venue: z.string().nullable(),
 })
 
 export type EventContent = z.infer<typeof EventContentSchema>
@@ -1043,6 +1044,7 @@ export const EventContentArgsSchema: z.ZodType<Prisma.EventContentDefaultArgs> =
 export const EventContentSelectSchema: z.ZodType<Prisma.EventContentSelect> = z.object({
   userContentId: z.boolean().optional(),
   startsAt: z.boolean().optional(),
+  venue: z.boolean().optional(),
   userContent: z.union([z.boolean(),z.lazy(() => UserContentArgsSchema)]).optional(),
 }).strict()
 
@@ -2716,12 +2718,14 @@ export const EventContentWhereInputSchema: z.ZodType<Prisma.EventContentWhereInp
   NOT: z.union([ z.lazy(() => EventContentWhereInputSchema),z.lazy(() => EventContentWhereInputSchema).array() ]).optional(),
   userContentId: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  venue: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   userContent: z.union([ z.lazy(() => UserContentScalarRelationFilterSchema),z.lazy(() => UserContentWhereInputSchema) ]).optional(),
 }).strict();
 
 export const EventContentOrderByWithRelationInputSchema: z.ZodType<Prisma.EventContentOrderByWithRelationInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional(),
+  venue: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   userContent: z.lazy(() => UserContentOrderByWithRelationInputSchema).optional()
 }).strict();
 
@@ -2734,12 +2738,14 @@ export const EventContentWhereUniqueInputSchema: z.ZodType<Prisma.EventContentWh
   OR: z.lazy(() => EventContentWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => EventContentWhereInputSchema),z.lazy(() => EventContentWhereInputSchema).array() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  venue: z.union([ z.lazy(() => StringNullableFilterSchema),z.string() ]).optional().nullable(),
   userContent: z.union([ z.lazy(() => UserContentScalarRelationFilterSchema),z.lazy(() => UserContentWhereInputSchema) ]).optional(),
 }).strict());
 
 export const EventContentOrderByWithAggregationInputSchema: z.ZodType<Prisma.EventContentOrderByWithAggregationInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
   startsAt: z.lazy(() => SortOrderSchema).optional(),
+  venue: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   _count: z.lazy(() => EventContentCountOrderByAggregateInputSchema).optional(),
   _max: z.lazy(() => EventContentMaxOrderByAggregateInputSchema).optional(),
   _min: z.lazy(() => EventContentMinOrderByAggregateInputSchema).optional()
@@ -2751,6 +2757,7 @@ export const EventContentScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.
   NOT: z.union([ z.lazy(() => EventContentScalarWhereWithAggregatesInputSchema),z.lazy(() => EventContentScalarWhereWithAggregatesInputSchema).array() ]).optional(),
   userContentId: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   startsAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  venue: z.union([ z.lazy(() => StringNullableWithAggregatesFilterSchema),z.string() ]).optional().nullable(),
 }).strict();
 
 export const ProfileSessionLogWhereInputSchema: z.ZodType<Prisma.ProfileSessionLogWhereInput> = z.object({
@@ -4502,36 +4509,43 @@ export const PostContentUncheckedUpdateManyInputSchema: z.ZodType<Prisma.PostCon
 
 export const EventContentCreateInputSchema: z.ZodType<Prisma.EventContentCreateInput> = z.object({
   startsAt: z.coerce.date(),
+  venue: z.string().optional().nullable(),
   userContent: z.lazy(() => UserContentCreateNestedOneWithoutEventInputSchema)
 }).strict();
 
 export const EventContentUncheckedCreateInputSchema: z.ZodType<Prisma.EventContentUncheckedCreateInput> = z.object({
   userContentId: z.string(),
-  startsAt: z.coerce.date()
+  startsAt: z.coerce.date(),
+  venue: z.string().optional().nullable()
 }).strict();
 
 export const EventContentUpdateInputSchema: z.ZodType<Prisma.EventContentUpdateInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  venue: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   userContent: z.lazy(() => UserContentUpdateOneRequiredWithoutEventNestedInputSchema).optional()
 }).strict();
 
 export const EventContentUncheckedUpdateInputSchema: z.ZodType<Prisma.EventContentUncheckedUpdateInput> = z.object({
   userContentId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  venue: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const EventContentCreateManyInputSchema: z.ZodType<Prisma.EventContentCreateManyInput> = z.object({
   userContentId: z.string(),
-  startsAt: z.coerce.date()
+  startsAt: z.coerce.date(),
+  venue: z.string().optional().nullable()
 }).strict();
 
 export const EventContentUpdateManyMutationInputSchema: z.ZodType<Prisma.EventContentUpdateManyMutationInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  venue: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const EventContentUncheckedUpdateManyInputSchema: z.ZodType<Prisma.EventContentUncheckedUpdateManyInput> = z.object({
   userContentId: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  venue: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const ProfileSessionLogCreateInputSchema: z.ZodType<Prisma.ProfileSessionLogCreateInput> = z.object({
@@ -6077,17 +6091,20 @@ export const EnumPostTypeWithAggregatesFilterSchema: z.ZodType<Prisma.EnumPostTy
 
 export const EventContentCountOrderByAggregateInputSchema: z.ZodType<Prisma.EventContentCountOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
-  startsAt: z.lazy(() => SortOrderSchema).optional()
+  startsAt: z.lazy(() => SortOrderSchema).optional(),
+  venue: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const EventContentMaxOrderByAggregateInputSchema: z.ZodType<Prisma.EventContentMaxOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
-  startsAt: z.lazy(() => SortOrderSchema).optional()
+  startsAt: z.lazy(() => SortOrderSchema).optional(),
+  venue: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const EventContentMinOrderByAggregateInputSchema: z.ZodType<Prisma.EventContentMinOrderByAggregateInput> = z.object({
   userContentId: z.lazy(() => SortOrderSchema).optional(),
-  startsAt: z.lazy(() => SortOrderSchema).optional()
+  startsAt: z.lazy(() => SortOrderSchema).optional(),
+  venue: z.lazy(() => SortOrderSchema).optional()
 }).strict();
 
 export const ProfileSessionLogCountOrderByAggregateInputSchema: z.ZodType<Prisma.ProfileSessionLogCountOrderByAggregateInput> = z.object({
@@ -13522,11 +13539,13 @@ export const PostContentCreateOrConnectWithoutUserContentInputSchema: z.ZodType<
 }).strict();
 
 export const EventContentCreateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentCreateWithoutUserContentInput> = z.object({
-  startsAt: z.coerce.date()
+  startsAt: z.coerce.date(),
+  venue: z.string().optional().nullable()
 }).strict();
 
 export const EventContentUncheckedCreateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUncheckedCreateWithoutUserContentInput> = z.object({
-  startsAt: z.coerce.date()
+  startsAt: z.coerce.date(),
+  venue: z.string().optional().nullable()
 }).strict();
 
 export const EventContentCreateOrConnectWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentCreateOrConnectWithoutUserContentInput> = z.object({
@@ -13673,10 +13692,12 @@ export const EventContentUpdateToOneWithWhereWithoutUserContentInputSchema: z.Zo
 
 export const EventContentUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUpdateWithoutUserContentInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  venue: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const EventContentUncheckedUpdateWithoutUserContentInputSchema: z.ZodType<Prisma.EventContentUncheckedUpdateWithoutUserContentInput> = z.object({
   startsAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  venue: z.union([ z.string(),z.lazy(() => NullableStringFieldUpdateOperationsInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const UserContentCreateWithoutPostInputSchema: z.ZodType<Prisma.UserContentCreateWithoutPostInput> = z.object({

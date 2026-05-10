@@ -10,7 +10,6 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
   showDetails: boolean
-  dimHidden?: boolean
 }>()
 
 defineEmits<{
@@ -52,34 +51,43 @@ const displayContent = computed(() => {
 </script>
 
 <template>
-  <div
-    class="event-wrapper position-relative w-100 p-2"
-    :class="{
-      'event-wrapper--invisible': event.isOwn && props.dimHidden && !(event as any).isVisible,
-    }"
-  >
+  <div class="event-wrapper position-relative w-100 p-2">
     <div
       class="event-card p-3 rounded border shadow-sm bg-subtle"
       :class="{ 'event-card--own': event.isOwn }"
       @click="$emit('click', event)"
     >
-      <div class="d-flex align-items-top justify-content-start flex-row w-100">
-        <p class="flex-grow-1 flex-shrink-1 min-w-0 me-1 lh-sm small">{{ displayContent }}</p>
-        <div
-          class="small lh-sm flex-grow-0 flex-shrink-0 text-center d-flex align-items-center flex-column"
+      <BRow class="g-2 align-items-start">
+        <BCol
+          cols="12"
+          md="8"
+        >
+          <p class="lh-sm small mb-0">{{ displayContent }}</p>
+        </BCol>
+        <BCol
+          cols="12"
+          md="4"
+          class="small lh-sm text-center d-flex align-items-center flex-column"
         >
           <IconCalendar class="text-primary d-block svg-icon-lg mb-1" />
           <div class="m-0">{{ startsAtYear }}</div>
-          <h6 class="display-6 m-0">{{ startsAtMonthAndDay }}</h6>
-          <div>
-            <strong>{{ startsAtTime }}</strong>
-          </div>
+          <h4 class="m-0">{{ startsAtMonthAndDay }}</h4>
+          <h6>
+            {{ startsAtTime }}
+          </h6>
           <LocationLabel
             v-if="eventLocation"
             :location="eventLocation"
           />
-        </div>
-      </div>
+          <div
+            v-if="event.venue"
+            class="text-muted text-truncate mw-100 small opacity-75"
+            :title="event.venue"
+          >
+            {{ event.venue }}
+          </div>
+        </BCol>
+      </BRow>
 
       <div
         class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted"
@@ -108,9 +116,5 @@ const displayContent = computed(() => {
 <style scoped>
 .event-card {
   background-color: var(--bs-body-bg);
-}
-
-.event-wrapper--invisible {
-  opacity: 0.75;
 }
 </style>
