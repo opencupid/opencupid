@@ -23,6 +23,8 @@ describe('useMyProfileRouteState', () => {
     ['MePosts', 'myposts'],
     ['MeCreatePost', 'editpost'],
     ['MeEditPost', 'editpost'],
+    ['MeCreateEvent', 'editevent'],
+    ['MeEditEvent', 'editevent'],
     ['MeSettings', 'settings'],
     ['MeDating', 'datingprefs'],
     ['MeDatingWizard', 'datingwizard'],
@@ -38,6 +40,8 @@ describe('useMyProfileRouteState', () => {
       'MePosts',
       'MeCreatePost',
       'MeEditPost',
+      'MeCreateEvent',
+      'MeEditEvent',
       'MeSettings',
       'MeDating',
       'MeDatingWizard',
@@ -66,5 +70,19 @@ describe('useMyProfileRouteState', () => {
     mockRouteParams.value = {}
     const { editingPostId } = useMyProfileRouteState()
     expect(editingPostId.value).toBeUndefined()
+  })
+
+  it('editingEventId returns eventId param on MeEditEvent', () => {
+    mockRouteName.value = 'MeEditEvent'
+    mockRouteParams.value = { eventId: 'event-42' }
+    const { editingEventId } = useMyProfileRouteState()
+    expect(editingEventId.value).toBe('event-42')
+  })
+
+  it('editingEventId returns undefined on other routes', () => {
+    mockRouteName.value = 'MeCreateEvent'
+    mockRouteParams.value = {}
+    const { editingEventId } = useMyProfileRouteState()
+    expect(editingEventId.value).toBeUndefined()
   })
 })

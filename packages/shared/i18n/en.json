@@ -79,6 +79,22 @@
       "subject": "Welcome!"
     }
   },
+  "events": {
+    "actions": {
+      "cancel": "Nevermind",
+      "create": "Submit",
+      "save": "Save event"
+    },
+    "labels": {
+      "content": "What's happening?",
+      "starts_at": "When",
+      "visibility": "Show this event"
+    },
+    "placeholders": {
+      "content": "Describe your event…",
+      "starts_at": "Pick a date and time"
+    }
+  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgynous",

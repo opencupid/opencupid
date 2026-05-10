@@ -1,6 +1,7 @@
 import '@/css/fonts.scss'
 import '@/css/bootstrap.scss'
 import '@/css/main.scss'
+import '@vuepic/vue-datepicker/dist/main.css'
 
 import registerToast from './lib/toast'
 import { appUseI18n } from './lib/i18n'

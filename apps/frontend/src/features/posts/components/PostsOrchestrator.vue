@@ -5,11 +5,13 @@ import { useMyProfileRouteState } from '@/features/myprofile/composables/useMyPr
 import { useMyProfileViewModel } from '@/features/myprofile/composables/useMyProfileViewModel'
 import { LocationSchema } from '@zod/dto/location.dto'
 import type { OwnerPost } from '@zod/post/post.dto'
+import type { OwnerEvent } from '@zod/event/event.dto'
 import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 import MyPostList from './MyPostList.vue'
 import EditPostDialog from './EditPostDialog.vue'
+import EditEventDialog from '@/features/events/components/EditEventDialog.vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faPenToSquare, faCalendarPlus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { useI18n } from 'vue-i18n'
 import { usePostStore } from '../stores/postStore'
 
@@ -18,10 +20,11 @@ const { t } = useI18n()
 defineOptions({ name: 'PostsOrchestrator' })
 
 const router = useRouter()
-const { subView, editingPostId } = useMyProfileRouteState()
+const { subView, editingPostId, editingEventId } = useMyProfileRouteState()
 const { formData } = useMyProfileViewModel(false)
 
 const editingPost = ref<OwnerPost | undefined>()
+const editingEvent = ref<OwnerEvent | undefined>()
 const defaultLocation = computed(() => LocationSchema.parse(formData?.location ?? {}))
 
 const postStore = usePostStore()
@@ -40,6 +43,20 @@ watch(
   { immediate: true }
 )
 
+// Same deep-link guard for events
+watch(
+  editingEventId,
+  (eventId) => {
+    if (eventId && !editingEvent.value) {
+      router.replace({ name: 'MePosts' })
+    }
+    if (!eventId) {
+      editingEvent.value = undefined
+    }
+  },
+  { immediate: true }
+)
+
 function openEditPost(post: OwnerPost) {
   editingPost.value = post
   router.push({ name: 'MeEditPost', params: { postId: post.id } })
@@ -48,6 +65,10 @@ function openEditPost(post: OwnerPost) {
 function openCreatePost() {
   editingPost.value = undefined
   router.push({ name: 'MeCreatePost' })
+}
+
+function openCreateEvent() {
+  router.push({ name: 'MeCreateEvent' })
 }
 
 async function handleDelete(post: OwnerPost) {
@@ -81,22 +102,49 @@ async function handleHide(post: OwnerPost) {
       @intent:hide="handleHide"
     />
 
-    <FloatingButton>
+    <FloatingButton speed-dial>
       <BButton
         size="lg"
         class="btn-icon-lg btn-shadow"
         variant="primary"
         :title="$t('posts.actions.create_cta_title')"
-        @click="openCreatePost"
       >
-        <FontAwesomeIcon :icon="faPenToSquare" />
+        <FontAwesomeIcon :icon="faPlus" />
       </BButton>
+      <template #actions>
+        <BButton
+          size="lg"
+          class="btn-icon-lg btn-shadow"
+          variant="outline-primary"
+          :title="$t('posts.actions.create_advert_cta_title')"
+          @click="openCreatePost"
+        >
+          <FontAwesomeIcon :icon="faPenToSquare" />
+        </BButton>
+        <BButton
+          size="lg"
+          class="btn-icon-lg btn-shadow"
+          variant="outline-primary"
+          :title="$t('posts.actions.create_event_cta_title')"
+          @click="openCreateEvent"
+        >
+          <FontAwesomeIcon :icon="faCalendarPlus" />
+        </BButton>
+      </template>
     </FloatingButton>
   </template>
   <EditPostDialog
     v-else-if="subView === 'editpost'"
     :post="editingPost"
     :is-edit="!!editingPost"
+    :default-location="defaultLocation"
+    @cancel="router.replace({ name: 'MePosts' })"
+    @saved="router.replace({ name: 'MePosts' })"
+  />
+  <EditEventDialog
+    v-else-if="subView === 'editevent'"
+    :event="editingEvent"
+    :is-edit="!!editingEvent"
     :default-location="defaultLocation"
     @cancel="router.replace({ name: 'MePosts' })"
     @saved="router.replace({ name: 'MePosts' })"

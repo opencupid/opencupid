@@ -5,6 +5,7 @@ export type ProfileSubView =
   | 'myprofile'
   | 'myposts'
   | 'editpost'
+  | 'editevent'
   | 'settings'
   | 'datingprefs'
   | 'datingwizard'
@@ -14,6 +15,8 @@ const MY_PROFILE_ROUTES = new Set([
   'MePosts',
   'MeCreatePost',
   'MeEditPost',
+  'MeCreateEvent',
+  'MeEditEvent',
   'MeSettings',
   'MeDating',
   'MeDatingWizard',
@@ -31,6 +34,9 @@ export function useMyProfileRouteState() {
       case 'MeCreatePost':
       case 'MeEditPost':
         return 'editpost'
+      case 'MeCreateEvent':
+      case 'MeEditEvent':
+        return 'editevent'
       case 'MeSettings':
         return 'settings'
       case 'MeDating':
@@ -46,5 +52,9 @@ export function useMyProfileRouteState() {
     route.name === 'MeEditPost' ? (route.params.postId as string) : undefined
   )
 
-  return { isActive, subView, editingPostId }
+  const editingEventId = computed(() =>
+    route.name === 'MeEditEvent' ? (route.params.eventId as string) : undefined
+  )
+
+  return { isActive, subView, editingPostId, editingEventId }
 }
