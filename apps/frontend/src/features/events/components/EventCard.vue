@@ -45,43 +45,52 @@ const displayContent = computed(() => {
 
 <template>
   <div
-    class="event-card p-3 rounded border position-relative"
-    :class="{ 'event-card--dim': dimHidden && !isVisible }"
-    @click="$emit('click', event)"
+    class="event-wrapper position-relative w-100 p-2"
+    :class="{
+      'event-wrapper--invisible': event.isOwn && props.dimHidden && !(event as any).isVisible,
+    }"
   >
-    <OwnerToolbar
-      v-if="showOwnerToolbar"
-      :is-visible="isVisible"
-      class="position-absolute top-0 end-0 m-2"
-      @edit.stop="$emit('edit', event)"
-      @hide.stop="$emit('hide', event)"
-      @delete.stop="$emit('delete', event)"
-    />
-
-    <div class="d-flex align-items-center mb-2 gap-2">
-      <FontAwesomeIcon
-        :icon="faCalendar"
-        class="text-primary"
-      />
-      <strong>{{ startsAtFormatted }}</strong>
-    </div>
-
-    <p class="mb-2 white-space-pre-line">{{ displayContent }}</p>
-
-    <div class="d-flex align-items-center justify-content-between gap-2 small text-muted">
-      <div class="d-flex align-items-center gap-2">
-        <ProfileThumbnail
-          :profile="event.postedBy"
-          size="sm"
+    <div
+      class="event-card p-3 rounded border shadow-sm"
+      :class="{ 'event-card--own': event.isOwn }"
+      @click="$emit('click', event)"
+    >
+      <div class="d-flex align-items-center mb-2 gap-2">
+        <FontAwesomeIcon
+          :icon="faCalendar"
+          class="text-primary"
         />
-        <span>{{ event.postedBy.publicName }}</span>
+        <strong>{{ startsAtFormatted }}</strong>
       </div>
-      <div class="d-flex align-items-center gap-2">
-        <LocationLabel
-          v-if="eventLocation"
-          :location="eventLocation"
-        />
-        <LocalizedTimeAgo :date="event.createdAt" />
+
+      <p class="event-content mb-2">{{ displayContent }}</p>
+
+      <div
+        class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted"
+      >
+        <div class="d-flex align-items-center gap-2">
+          <OwnerToolbar
+            v-if="event.isOwn"
+            :is-visible="isVisible"
+            @edit="$emit('edit', event)"
+            @delete="$emit('delete', event)"
+            @hide="$emit('hide', event)"
+          />
+          <template v-else>
+            <ProfileThumbnail
+              :profile="event.postedBy"
+              size="sm"
+            />
+            <span>{{ event.postedBy.publicName }}</span>
+          </template>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <LocationLabel
+            v-if="eventLocation"
+            :location="eventLocation"
+          />
+          <LocalizedTimeAgo :time="event.createdAt" />
+        </div>
       </div>
     </div>
   </div>
@@ -91,10 +100,12 @@ const displayContent = computed(() => {
 .event-card {
   background-color: var(--bs-body-bg);
 }
-.event-card--dim {
-  opacity: 0.5;
-}
-.white-space-pre-line {
+
+.event-content {
   white-space: pre-line;
+}
+
+.event-wrapper--invisible {
+  opacity: 0.75;
 }
 </style>
