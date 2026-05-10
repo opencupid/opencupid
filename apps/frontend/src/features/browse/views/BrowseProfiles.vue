@@ -24,8 +24,12 @@ import PublicProfileView from '@/features/publicprofile/components/PublicProfile
 
 import { renderProfileMarkerHtml } from '@/features/publicprofile/components/profileMarkerIcon'
 import { renderPostMapIconHtml } from '@/features/posts/components/postMapIcon'
+import { renderEventMapIconHtml } from '@/features/events/components/eventMapIcon'
 
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
+import EventMapPopup from '@/features/events/components/EventMapPopup.vue'
+
+import type { MapPoi } from '@/features/map/types/map.types'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
@@ -87,6 +91,21 @@ const highlightedLocation = ref<[number, number] | null>(null)
 function onLocationSet(point: GeoPoint) {
   highlightedLocation.value = [point.lat, point.lon]
 }
+
+// Per-kind dispatch for marker icons and popup components. The discriminator
+// is `poi.kind` from the cluster service's PointFeature; profiles fall through
+// the default branch.
+const iconResolver = computed(() => (poi: MapPoi) => {
+  if (poi.kind === 'post') return renderPostMapIconHtml
+  if (poi.kind === 'event') return renderEventMapIconHtml
+  return renderProfileMarkerHtml
+})
+
+const popupResolver = computed(() => (poi: MapPoi) => {
+  if (poi.kind === 'post') return PostMapPopup
+  if (poi.kind === 'event') return EventMapPopup
+  return ProfileMapCard
+})
 
 provide('viewerProfile', toRef(viewerProfile))
 
@@ -256,12 +275,10 @@ onMounted(async () => {
           v-if="viewerProfile"
           :items="allPois"
           :clusters="clusters"
-          :icon-resolver="
-            (poi) => (poi.kind === 'post' ? renderPostMapIconHtml : renderProfileMarkerHtml)
-          "
+          :icon-resolver="iconResolver"
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"
-          :popup-resolver="(poi) => (poi.kind === 'post' ? PostMapPopup : ProfileMapCard)"
+          :popup-resolver="popupResolver"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
           @item:select="handleMarkerSelect"

@@ -15,14 +15,17 @@ import {
 } from '@zod/post/post.dto'
 import {
   OwnerEventSchema,
+  PublicEventDetailSchema,
   type CreateEventPayload,
   type UpdateEventPayload,
   type OwnerEvent,
+  type PublicEventDetail,
 } from '@zod/event/event.dto'
 import type {
   MyContentResponse,
   PostSummariesResponse,
   PublicPostDetailResponse,
+  PublicEventDetailResponse,
   CreatePostResponse,
   UpdatePostResponse,
   DeletePostResponse,
@@ -42,6 +45,7 @@ type StoreEventResponse = StoreResponse<{ event: OwnerEvent }>
 type StorePostSummariesResponse = StoreResponse<{ posts: PostSummary[] }>
 
 let publicPostAbortController: AbortController | null = null
+let publicEventAbortController: AbortController | null = null
 
 /**
  * Single store for all user-content state and mutations. Holds the
@@ -219,6 +223,30 @@ export const useUserContentStore = defineStore('userContent', {
       } catch (error: any) {
         if (error instanceof CanceledError) return storeSuccess()
         return storeError(error, 'Failed to fetch post')
+      }
+    },
+
+    // ─── Event-only public reads ──────────────────────────────────────
+    async fetchPublicEvent(
+      id: string,
+      signal?: AbortSignal
+    ): Promise<StoreResponse<{ event: PublicEventDetail }>> {
+      if (publicEventAbortController) publicEventAbortController.abort()
+      const controller = new AbortController()
+      publicEventAbortController = controller
+      const composedSignal = signal
+        ? AbortSignal.any([signal, controller.signal])
+        : controller.signal
+
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PublicEventDetailResponse>(`/content/events/${id}`, { signal: composedSignal })
+        )
+        const event = PublicEventDetailSchema.parse(res.data.event)
+        return storeSuccess({ event })
+      } catch (error: any) {
+        if (error instanceof CanceledError) return storeSuccess()
+        return storeError(error, 'Failed to fetch event')
       }
     },
 

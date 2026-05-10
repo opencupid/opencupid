@@ -199,6 +199,7 @@
     "layer_control": {
       "people": "People",
       "posts": "Posts",
+      "events": "Events",
       "aria_label": "Map layers"
     }
   },

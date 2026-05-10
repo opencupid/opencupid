@@ -30,9 +30,9 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
 
     <!--
       Posts render the popup directly from the marker's PointFeature.
-      Profiles need a fetched PublicProfile (popupFullData), so we wait
-      until it lands — pre-fetch the popup container is empty rather
-      than rendering ProfileMapCard with a partial PointFeature shape.
+      Profiles and events need a fetched detail DTO (popupFullData), so we
+      wait until it lands — pre-fetch the popup container is empty rather
+      than rendering with a partial PointFeature shape.
     -->
     <Teleport
       v-if="
@@ -133,6 +133,10 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
 
 :deep(.item-popup-post .leaflet-popup-tip) {
   background: var(--postit-bg);
+}
+
+:deep(.item-popup-event .leaflet-popup-tip) {
+  background: var(--bs-body-bg);
 }
 
 @keyframes popup-fade-in {

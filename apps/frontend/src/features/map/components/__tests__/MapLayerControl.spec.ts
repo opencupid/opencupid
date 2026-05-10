@@ -24,6 +24,10 @@ vi.mock('@/assets/icons/interface/post-it.svg', async () => {
   const { defineComponent, h } = await import('vue')
   return { default: defineComponent({ render: () => h('svg') }) }
 })
+vi.mock('@/assets/icons/interface/calendar.svg', async () => {
+  const { defineComponent, h } = await import('vue')
+  return { default: defineComponent({ render: () => h('svg') }) }
+})
 
 import MapLayerControl from '../MapLayerControl.vue'
 import type { UserContentKind } from '@shared/maps'
@@ -38,28 +42,35 @@ function toggles(wrapper: ReturnType<typeof mountWith>) {
   // checked state and dispatches `change`, which is what BFormCheckbox
   // listens to in order to emit update:modelValue.
   const inputs = wrapper.findAll('input[type="checkbox"]')
-  if (inputs.length !== 2) throw new Error(`expected 2 toggles, got ${inputs.length}`)
-  return { people: inputs[0]!, posts: inputs[1]! }
+  if (inputs.length !== 3) throw new Error(`expected 3 toggles, got ${inputs.length}`)
+  return { people: inputs[0]!, posts: inputs[1]!, events: inputs[2]! }
 }
 
 describe('MapLayerControl', () => {
-  it('renders both layer toggles with translation keys', () => {
-    const wrapper = mountWith(['profile', 'post'])
+  it('renders all layer toggles with translation keys', () => {
+    const wrapper = mountWith(['profile', 'post', 'event'])
     const text = wrapper.text()
     expect(text).toContain('map.layer_control.people')
     expect(text).toContain('map.layer_control.posts')
+    expect(text).toContain('map.layer_control.events')
   })
 
   it('emits update:modelValue without "profile" when the people toggle is unchecked while selected', async () => {
-    const wrapper = mountWith(['profile', 'post'])
+    const wrapper = mountWith(['profile', 'post', 'event'])
     await toggles(wrapper).people.setValue(false)
-    expect(wrapper.emitted('update:modelValue')).toEqual([[['post']]])
+    expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'event']]])
   })
 
   it('emits update:modelValue without "post" when the posts toggle is unchecked while selected', async () => {
-    const wrapper = mountWith(['profile', 'post'])
+    const wrapper = mountWith(['profile', 'post', 'event'])
     await toggles(wrapper).posts.setValue(false)
-    expect(wrapper.emitted('update:modelValue')).toEqual([[['profile']]])
+    expect(wrapper.emitted('update:modelValue')).toEqual([[['profile', 'event']]])
+  })
+
+  it('emits update:modelValue without "event" when the events toggle is unchecked while selected', async () => {
+    const wrapper = mountWith(['profile', 'post', 'event'])
+    await toggles(wrapper).events.setValue(false)
+    expect(wrapper.emitted('update:modelValue')).toEqual([[['profile', 'post']]])
   })
 
   it('emits update:modelValue adding "profile" when the people toggle is checked while unselected', async () => {
@@ -68,10 +79,17 @@ describe('MapLayerControl', () => {
     expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'profile']]])
   })
 
+  it('emits update:modelValue adding "event" when the events toggle is checked while unselected', async () => {
+    const wrapper = mountWith(['post'])
+    await toggles(wrapper).events.setValue(true)
+    expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'event']]])
+  })
+
   it('disables the only-selected toggle so it cannot be unchecked', () => {
     const wrapper = mountWith(['profile'])
-    const { people, posts } = toggles(wrapper)
+    const { people, posts, events } = toggles(wrapper)
     expect(people.attributes('disabled')).toBeDefined()
     expect(posts.attributes('disabled')).toBeUndefined()
+    expect(events.attributes('disabled')).toBeUndefined()
   })
 })

@@ -8,6 +8,7 @@ import { useTimeoutFn } from '@vueuse/core'
 import IconLayer from '@/assets/icons/interface/layer.svg'
 import IconProfile from '@/assets/icons/interface/user.svg'
 import IconPost from '@/assets/icons/interface/post-it.svg'
+import IconEvent from '@/assets/icons/interface/calendar.svg'
 
 const { t } = useI18n()
 
@@ -88,6 +89,20 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
           >
             <IconPost class="svg-icon-lg" />
             <div class="form-hint mt-1">{{ t('map.layer_control.posts') }}</div>
+          </BFormCheckbox>
+        </div>
+        <div class="text-center">
+          <BFormCheckbox
+            button
+            button-variant="outline-primary"
+            size="lg"
+            class="btn-layer-select"
+            :model-value="model.includes('event')"
+            :disabled="isLocked('event')"
+            @update:model-value="toggle('event')"
+          >
+            <IconEvent class="svg-icon-lg" />
+            <div class="form-hint mt-1">{{ t('map.layer_control.events') }}</div>
           </BFormCheckbox>
         </div>
       </div>
