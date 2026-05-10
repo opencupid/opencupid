@@ -17,7 +17,6 @@ import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
   showDetails: boolean
-  dimHidden?: boolean
 }>()
 
 const ownerProfile = inject<Ref<OwnerProfile | null>>('ownerProfile', ref(null))
@@ -59,12 +58,7 @@ const handleContact = async () => {
 </script>
 
 <template>
-  <div
-    class="post-wrapper position-relative w-100 p-2"
-    :class="{
-      'post-wrapper--invisible': post.isOwn && props.dimHidden && !(post as any).isVisible,
-    }"
-  >
+  <div class="post-wrapper position-relative w-100 p-2">
     <PostIt
       class="position-relative p-2"
       :id="post.id"
@@ -229,10 +223,6 @@ const handleContact = async () => {
 
 .post-location {
   font-size: 0.75rem;
-}
-
-.post-wrapper--invisible {
-  opacity: 0.75;
 }
 
 .contact-btn {

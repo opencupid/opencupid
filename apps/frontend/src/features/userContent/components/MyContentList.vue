@@ -92,16 +92,17 @@ const items = computed(() => myContent.value)
           v-for="item in items"
           :key="item.id"
         >
-          <ContentCard
-            :item="item"
-            :show-details="false"
-            :dim-hidden="true"
-            class="clickable"
-            @click="emit('intent:fullview', item)"
-            @edit="emit('intent:edit', item)"
-            @hide="emit('intent:hide', item)"
-            @delete="emit('intent:delete', item)"
-          />
+          <div class="card-wrapper" :class="{ 'opacity-50': !item.isVisible }">
+            <ContentCard
+              :item="item"
+              :show-details="false"
+              class="clickable"
+              @click="emit('intent:fullview', item)"
+              @edit="emit('intent:edit', item)"
+              @hide="emit('intent:hide', item)"
+              @delete="emit('intent:delete', item)"
+            />
+          </div>
         </BCol>
       </BRow>
     </div>
@@ -119,4 +120,8 @@ const items = computed(() => myContent.value)
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.card-wrapper {
+  transition: opacity 300ms  ease-in-out;
+}
+</style>

@@ -3,10 +3,9 @@ import PostCard from '@/features/posts/components/PostCard.vue'
 import EventCard from '@/features/events/components/EventCard.vue'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 
-const props = defineProps<{
+defineProps<{
   item: OwnerUserContent
   showDetails: boolean
-  dimHidden?: boolean
 }>()
 
 defineEmits<{
@@ -22,7 +21,6 @@ defineEmits<{
     v-if="item.kind === 'post'"
     :post="item"
     :show-details="showDetails"
-    :dim-hidden="dimHidden"
     @click="$emit('click', item)"
     @edit="$emit('edit', item)"
     @hide="$emit('hide', item)"
@@ -32,7 +30,6 @@ defineEmits<{
     v-else
     :event="item"
     :show-details="showDetails"
-    :dim-hidden="dimHidden"
     @click="$emit('click', item)"
     @edit="$emit('edit', item)"
     @hide="$emit('hide', item)"
