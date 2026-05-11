@@ -83,6 +83,34 @@
       "subject": "{siteName} Üdv az oldalon!"
     }
   },
+  "events": {
+    "actions": {
+      "add_to_calendar": "Hozzáadás naptárhoz",
+      "add_to_google_calendar": "Hozzáadás Google Naptárhoz",
+      "attend": "Részt veszek",
+      "cancel": "Mégse",
+      "create": "Mehet",
+      "download_ics": ".ics fájl letöltése",
+      "save": "Esemény mentése"
+    },
+    "labels": {
+      "content": "Mi történik?",
+      "starts_at": "Mikor",
+      "venue": "Hol",
+      "visibility": "Mutasd ezt az eseményt"
+    },
+    "messages": {
+      "error_load": "Nem sikerült betölteni az eseményt"
+    },
+    "placeholders": {
+      "content": "Mesélj az eseményről…",
+      "starts_at": "Válassz dátumot és időt",
+      "venue": "Helyszín vagy cím (opcionális)"
+    },
+    "share": {
+      "event_text": "{publicName} eseményt szervez — nézd meg"
+    }
+  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgün",
@@ -326,6 +354,8 @@
       "create": "Mehet",
       "create_cta": "Új hirdetés...",
       "create_cta_title": "Feladok egy hirdetést",
+      "create_advert_cta_title": "Hirdetést adok fel",
+      "create_event_cta_title": "Eseményt szervezek",
       "delete": "Törlés",
       "edit": "Szerkesztés",
       "hide": "Elrejtés (törlés nélkül)",
@@ -370,6 +400,9 @@
     "my_posts": "Saját hirdetéseim",
     "placeholders": {
       "content": "Írd le, mit kínálsz vagy mit keresel"
+    },
+    "share": {
+      "post_text": "{publicName} posztolt valamit — nézd meg"
     },
     "title": "Hirdetőtábla",
     "types": {
@@ -600,5 +633,14 @@
     "done_title": "Sikeresen leiratkoztál",
     "error_body": "Ez a leiratkozási link érvénytelen vagy lejárt. Kérjük, jelentkezz be a beállítások módosításához.",
     "error_title": "Érvénytelen vagy lejárt link"
+  },
+  "userContent": {
+    "actions": {
+      "clipboard_unsupported": "A böngésződ nem támogatja a vágólapra másolást",
+      "contact": "Üzenet küldése",
+      "copied": "Vágólapra másolva",
+      "copy": "Szöveg másolása",
+      "share": "Megosztás"
+    }
   }
 }
