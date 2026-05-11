@@ -131,7 +131,10 @@ export class UserContentService {
    * payload in a single query. Used by `GET /api/content/me` for the unified
    * "my content" list view.
    */
-  async findByProfileIdOwner(profileId: string, opts: ListOptions): Promise<OwnerHydratedRow[]> {
+  async findByProfileIdOwner(
+    profileId: string,
+    opts: Omit<ListOptions, 'includeInvisible'>
+  ): Promise<OwnerHydratedRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,

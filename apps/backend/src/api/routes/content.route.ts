@@ -25,10 +25,7 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const query = UserContentQuerySchema.parse(req.query)
-    const rows = await svc.findByProfileIdOwner(req.session.profileId, {
-      ...query,
-      includeInvisible: true,
-    })
+    const rows = await svc.findByProfileIdOwner(req.session.profileId, query)
     const items = rows.map(mapOwnerUserContent)
     return reply.code(200).send({ success: true, items })
   })

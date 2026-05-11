@@ -234,13 +234,16 @@ export const useUserContentStore = defineStore('userContent', {
       if (publicEventAbortController) publicEventAbortController.abort()
       const controller = new AbortController()
       publicEventAbortController = controller
-      const composedSignal = signal
-        ? AbortSignal.any([signal, controller.signal])
-        : controller.signal
+      if (signal) {
+        if (signal.aborted) controller.abort()
+        else signal.addEventListener('abort', () => controller.abort(), { once: true })
+      }
 
       try {
         const res = await safeApiCall(() =>
-          api.get<PublicEventDetailResponse>(`/content/events/${id}`, { signal: composedSignal })
+          api.get<PublicEventDetailResponse>(`/content/events/${id}`, {
+            signal: controller.signal,
+          })
         )
         const event = PublicEventDetailSchema.parse(res.data.event)
         return storeSuccess({ event })

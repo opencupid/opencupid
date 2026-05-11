@@ -1,6 +1,7 @@
 @import 'bootstrap/scss/functions';
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/mixins';
+@import '@/css/theme.scss';
 @import '@/css/app-vars.scss';
 
 fieldset[disabled] .multiselect {
@@ -142,8 +143,8 @@ fieldset[disabled] .multiselect {
   vertical-align: top;
 }
 
-.multiselect__tag~.multiselect__input,
-.multiselect__tag~.multiselect__single {
+.multiselect__tag ~ .multiselect__input,
+.multiselect__tag ~ .multiselect__single {
   width: auto;
 }
 
