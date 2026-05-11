@@ -121,6 +121,38 @@ describe('GET /:id', () => {
   })
 })
 
+describe('GET /:id/ics', () => {
+  it('returns 401 when no profile', async () => {
+    const handler = fastify.routes['GET /:id/ics']
+    await handler({ session: {}, params: { id: eventId } } as any, reply as any)
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns 404 when event missing', async () => {
+    const handler = fastify.routes['GET /:id/ics']
+    mockEventService.findByIdHydrated.mockResolvedValue(null)
+    await handler(
+      { session: { profileId: ownerProfileId }, params: { id: eventId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns 200 with calendar mime + attachment disposition + VCALENDAR body', async () => {
+    const handler = fastify.routes['GET /:id/ics']
+    mockEventService.findByIdHydrated.mockResolvedValue(makeRow(ownerProfileId))
+    await handler(
+      { session: { profileId: ownerProfileId }, params: { id: eventId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.headers['Content-Type']).toBe('text/calendar; charset=utf-8')
+    expect(reply.headers['Content-Disposition']).toContain(`event-${eventId}.ics`)
+    expect(reply.payload).toContain('BEGIN:VCALENDAR')
+    expect(reply.payload).toContain('END:VCALENDAR')
+  })
+})
+
 describe('PATCH /:id', () => {
   it('returns 401 when no profile', async () => {
     const handler = fastify.routes['PATCH /:id']

@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
+import { createEvent as createIcsEvent, type EventAttributes } from 'ics'
 import { EventService } from '@/services/event.service'
 import { ClusterService } from '@/services/cluster.service'
 import {
@@ -13,6 +14,8 @@ import { z } from 'zod'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../../mappers/event.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
 import { validateBody } from '@/utils/zodValidate'
+
+const ICS_DEFAULT_DURATION_HOURS = 2
 
 const ProfileParamsSchema = z.object({ profileId: z.string().cuid() })
 
@@ -54,6 +57,50 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch event')
+    }
+  })
+
+  fastify.get('/:id/ics', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { id } = EventParamsSchema.parse(req.params)
+    const viewerProfileId = req.session.profileId
+    if (!viewerProfileId) return sendError(reply, 401, 'Profile required')
+    try {
+      const row = await svc.findByIdHydrated(id, viewerProfileId)
+      if (!row || !row.event) return sendError(reply, 404, 'Event not found')
+
+      const startsAt = row.event.startsAt
+      const attributes: EventAttributes = {
+        uid: `${row.id}@opencupid`,
+        productId: 'opencupid/ics',
+        title: row.content.slice(0, 200),
+        description: row.content,
+        start: [
+          startsAt.getUTCFullYear(),
+          startsAt.getUTCMonth() + 1,
+          startsAt.getUTCDate(),
+          startsAt.getUTCHours(),
+          startsAt.getUTCMinutes(),
+        ],
+        startInputType: 'utc',
+        duration: { hours: ICS_DEFAULT_DURATION_HOURS },
+        location: row.event.venue ?? row.cityName ?? undefined,
+        organizer: row.postedBy?.publicName ? { name: row.postedBy.publicName } : undefined,
+      }
+
+      const { error, value } = createIcsEvent(attributes)
+      if (error || !value) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to build calendar file')
+      }
+
+      return reply
+        .code(200)
+        .header('Content-Type', 'text/calendar; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="event-${row.id}.ics"`)
+        .send(value)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to build calendar file')
     }
   })
 

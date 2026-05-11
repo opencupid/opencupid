@@ -8,7 +8,9 @@ import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import IconCalendar from '@/assets/icons/interface/calendar.svg'
 import IconChecklist from '@/assets/icons/interface/checklist.svg'
+import EventCalendarExportDropdown from './EventCalendarExportDropdown.vue'
 import { useI18n } from 'vue-i18n'
+
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
   showDetails: boolean
@@ -66,7 +68,8 @@ const displayContent = computed(() => {
       :class="{ 'event-card--own': event.isOwn }"
       @click="$emit('click', event)"
     >
-      <BRow class="g-2 align-items-start">
+      <BRow class="g-2 align-items-start mb-3"
+      >
         <BCol
           cols="12"
           md="8"
@@ -123,6 +126,7 @@ const displayContent = computed(() => {
           :copy-text="event.content"
           :share-payload="shareEventPayload"
         >
+          <EventCalendarExportDropdown :event="event" />
           <BButton
             @click.stop="$emit('attend', event)"
             variant="link-secondary"

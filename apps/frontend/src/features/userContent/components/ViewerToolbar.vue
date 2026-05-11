@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useToast } from 'vue-toastification'
 
 import IconCopy from '@/assets/icons/interface/copy.svg'
-import IconLink from '@/assets/icons/interface/link.svg'
+import IconShare from '@/assets/icons/interface/send-3.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 
 import ShareSheet, { type SharePayload } from '@/features/app/components/ShareSheet.vue'
@@ -76,7 +76,7 @@ async function handleCopy() {
         :title="t('userContent.actions.share')"
         :aria-label="t('userContent.actions.share')"
       >
-        <IconLink class="svg-icon" />
+        <IconShare class="svg-icon" />
       </BButton>
     </template>
 
