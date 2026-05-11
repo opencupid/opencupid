@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import { useToast } from 'vue-toastification'
 
 import IconCopy from '@/assets/icons/interface/copy.svg'
-import IconShare from '@/assets/icons/interface/send-3.svg'
 import IconMessage from '@/assets/icons/interface/message.svg'
 
-import ShareSheet, { type SharePayload } from '@/features/app/components/ShareSheet.vue'
+import ShareButton from './ShareButton.vue'
+import { type SharePayload } from '@/features/app/components/ShareSheet.vue'
 
 export type ViewerAction = 'contact' | 'copy' | 'share'
 
@@ -29,8 +28,6 @@ const {
   copied,
   isSupported: clipboardSupported,
 } = useClipboard({ source: () => props.copyText })
-
-const shareOpen = ref(false)
 
 async function handleCopy() {
   if (!clipboardSupported.value) {
@@ -68,24 +65,12 @@ async function handleCopy() {
       >
         <IconCopy class="svg-icon" />
       </BButton>
-      <BButton
+      <ShareButton
         v-else-if="action === 'share'"
-        @click.stop="shareOpen = true"
-        variant="link-secondary"
-        size="sm"
-        :title="t('userContent.actions.share')"
-        :aria-label="t('userContent.actions.share')"
-      >
-        <IconShare class="svg-icon" />
-      </BButton>
+        :payload="sharePayload"
+      />
     </template>
 
     <slot />
-
-    <ShareSheet
-      v-if="actions.includes('share')"
-      v-model:open="shareOpen"
-      :payload="sharePayload"
-    />
   </div>
 </template>
