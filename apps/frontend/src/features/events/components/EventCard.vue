@@ -3,9 +3,11 @@ import { computed } from 'vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicEvent, OwnerEvent } from '@zod/event/event.dto'
 import OwnerToolbar from '@/features/posts/components/OwnerToolbar.vue'
+import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
+import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
-import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
 import IconCalendar from '@/assets/icons/interface/calendar.svg'
+import IconChecklist from '@/assets/icons/interface/checklist.svg'
 import { useI18n } from 'vue-i18n'
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
@@ -17,9 +19,16 @@ defineEmits<{
   (e: 'edit', event: PublicEvent | OwnerEvent): void
   (e: 'hide', event: PublicEvent | OwnerEvent): void
   (e: 'delete', event: PublicEvent | OwnerEvent): void
+  (e: 'attend', event: PublicEvent | OwnerEvent): void
 }>()
 
-const { locale } = useI18n()
+const { t, locale } = useI18n()
+
+const shareEventPayload = computed<SharePayload>(() => ({
+  title: props.event.content.substring(0, 80),
+  text: t('events.share.event_text', { publicName: props.event.postedBy.publicName }),
+  url: `${window.location.origin}/events/${props.event.id}`,
+}))
 
 const isVisible = computed(() => !('isVisible' in props.event) || props.event.isVisible !== false)
 const eventLocation = computed(() => props.event.location ?? null)
@@ -108,6 +117,22 @@ const displayContent = computed(() => {
             <span>{{ event.postedBy.publicName }}</span>
           </template>
         </div>
+        <ViewerToolbar
+          v-if="showDetails && !event.isOwn"
+          :actions="['copy', 'share']"
+          :copy-text="event.content"
+          :share-payload="shareEventPayload"
+        >
+          <BButton
+            @click.stop="$emit('attend', event)"
+            variant="link-secondary"
+            size="sm"
+            :title="t('events.actions.attend')"
+            :aria-label="t('events.actions.attend')"
+          >
+            <IconChecklist class="svg-icon" />
+          </BButton>
+        </ViewerToolbar>
       </div>
     </div>
   </div>

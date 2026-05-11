@@ -6,9 +6,10 @@ import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { OwnerProfile, MessageRecipient } from '@zod/profile/profile.dto'
 
-import IconMessage from '@/assets/icons/interface/message.svg'
 import PostTypeBadge from './PostTypeBadge.vue'
 import OwnerToolbar from './OwnerToolbar.vue'
+import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
+import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 
@@ -55,6 +56,12 @@ const handleContact = async () => {
   await nextTick()
   messageInput.value?.focusTextarea?.()
 }
+
+const sharePostPayload = computed<SharePayload>(() => ({
+  title: props.post.content.substring(0, 80),
+  text: t('posts.share.post_text', { publicName: props.post.postedBy.publicName }),
+  url: `${window.location.origin}/posts/${props.post.id}`,
+}))
 </script>
 
 <template>
@@ -156,15 +163,13 @@ const handleContact = async () => {
                 :show-only-foreign-country="true"
               />
             </span>
-            <button
+            <ViewerToolbar
               v-if="showDetails && !post.isOwn"
-              class="contact-btn"
-              :title="t('posts.actions.contact')"
-              :aria-label="t('posts.actions.contact')"
-              @click.stop="handleContact"
-            >
-              <IconMessage class="svg-icon-lg" />
-            </button>
+              :actions="['contact', 'copy', 'share']"
+              :copy-text="post.content"
+              :share-payload="sharePostPayload"
+              @contact="handleContact"
+            />
           </div>
         </div>
       </div>
@@ -223,20 +228,5 @@ const handleContact = async () => {
 
 .post-location {
   font-size: 0.75rem;
-}
-
-.contact-btn {
-  background: none;
-  border: none;
-  padding: 0.1rem 0.2rem;
-  cursor: pointer;
-  color: var(--bs-dark);
-  opacity: 0.7;
-  transition: opacity 150ms ease;
-  line-height: 1;
-}
-
-.contact-btn:hover {
-  opacity: 1;
 }
 </style>

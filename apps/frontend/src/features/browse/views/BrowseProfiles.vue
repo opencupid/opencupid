@@ -37,7 +37,8 @@ import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { toGeoPoint, type GeoPoint } from '@zod/dto/location.dto'
 import type { PostSummary } from '@zod/post/post.dto'
-import ShareDialog from '@/features/app/components/ShareDialog.vue'
+import InviteCtaShareDialog from '@/features/app/components/InviteCtaShareDialog.vue'
+import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
@@ -119,6 +120,16 @@ const contentStore = useUserContentStore()
 
 const { detail } = useDetailRouteState()
 const panel = useDetailPanel()
+
+// Invite-CTA share payload — site-level, not content-specific.
+const shareInvitePayload = computed<SharePayload>(() => ({
+  title: t('uicomponents.share_dialog.share_title', { siteName: __APP_CONFIG__.SITE_NAME }),
+  text: t('uicomponents.share_dialog.share_text', {
+    siteName: __APP_CONFIG__.SITE_NAME,
+    publicName: viewerProfile.value?.publicName || '',
+  }),
+  url: window.location.origin,
+}))
 
 // Sync activePoi with route for map visual state + post detail panel source data
 watch(
@@ -276,9 +287,12 @@ onMounted(async () => {
     </div>
     <main class="list-view d-flex flex-column justify-content-start">
       <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
-        <ShareDialog :trigger="isNoOneAround">
+        <InviteCtaShareDialog
+          :trigger="isNoOneAround"
+          :payload="shareInvitePayload"
+        >
           {{ t('profiles.browse.no_results_cta_title') }}
-        </ShareDialog>
+        </InviteCtaShareDialog>
 
         <MapPlaceholder
           v-if="!isMapReady"

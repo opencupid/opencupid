@@ -81,6 +81,7 @@
   },
   "events": {
     "actions": {
+      "attend": "I'm attending",
       "cancel": "Nevermind",
       "create": "Submit",
       "save": "Save event"
@@ -98,6 +99,9 @@
       "content": "Describe your event…",
       "starts_at": "Pick a date and time",
       "venue": "Venue or address (optional)"
+    },
+    "share": {
+      "event_text": "{publicName} is hosting an event — check it out"
     }
   },
   "gender": {
@@ -390,6 +394,9 @@
     "placeholders": {
       "content": "Share what you're offering or looking for"
     },
+    "share": {
+      "post_text": "{publicName} posted something — take a look"
+    },
     "title": "Bulletin board",
     "types": {
       "OFFER": "Offer",
@@ -616,5 +623,14 @@
     "done_title": "You've been unsubscribed",
     "error_body": "This unsubscribe link is invalid or has expired. Please log in to manage your email preferences.",
     "error_title": "Link invalid or expired"
+  },
+  "userContent": {
+    "actions": {
+      "clipboard_unsupported": "Your browser does not support copying to the clipboard",
+      "contact": "Send a message",
+      "copied": "Copied to clipboard",
+      "copy": "Copy text",
+      "share": "Share"
+    }
   }
 }
