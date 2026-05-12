@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import path from 'path'
 import fs from 'fs'
-import { prisma } from '../src/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { ImageService } from '../src/services/image.service'
 import { getMediaRoot, imageBasePath } from '../src/lib/media'
 import { ImageProcessor } from '../src/services/imageprocessor'

@@ -670,6 +670,10 @@ importers:
   apps/ingress: {}
 
   packages/shared:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@prisma/client':
         specifier: ^7.8.0
