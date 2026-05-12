@@ -108,6 +108,30 @@ describe('useBrowseViewModel', () => {
     expect(vm.allPois.value).toHaveLength(1)
   })
 
+  it('derives community POIs from cluster features and includes them in allPois', () => {
+    const store = useFindProfileStore()
+    store.clusterFeatures = [
+      {
+        type: 'point',
+        kind: 'community',
+        id: 'community-1',
+        lat: 46.87,
+        lon: 17.68,
+        publicName: 'Hannah',
+        image: null,
+        highlighted: false,
+      },
+    ]
+
+    const vm = useBrowseViewModel()
+
+    expect(vm.communityPois.value).toHaveLength(1)
+    expect(vm.communityPois.value[0]!.kind).toBe('community')
+    expect(vm.communityPois.value[0]!.id).toBe('community-1')
+    expect(vm.allPois.value).toHaveLength(1)
+    expect(vm.allPois.value[0]!.kind).toBe('community')
+  })
+
   it('populates tags from cluster response', async () => {
     const mockTags = [{ id: 'cltagabc000000000000001', name: 'Biokert', slug: 'biokert' }]
     mockGet.mockResolvedValue({
