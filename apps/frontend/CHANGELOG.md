@@ -1,5 +1,34 @@
 # frontend
 
+## 0.62.0
+
+### Minor Changes
+
+- 7b36663: Event-GUI suite: speed-dial create-event entry, unified my-content list (posts + events), event-marker click-through on browse map, venue field, ViewerToolbar with share/copy/attend actions, and calendar export (.ics download + Google Calendar).
+- 076f790: Bump Node runtime baseline from 22 to 24. Updates Dockerfile base images,
+  GitHub Actions matrices, devcontainer image, `@tsconfig/node22` →
+  `@tsconfig/node24`, and `@types/node` to 24.x across the workspace. Held
+  back from the latest 25.x line because Node 24 is the current LTS.
+- 57b320d: Server-side filtering for the social map's people/posts layers. Adds a `kinds` query parameter to `/find/clusters` and `/find/cluster-leaves`, and replaces the planned client-side layer toggle with a button-group `<MapLayerControl>` that drives a refetch on change.
+- 807f8db: UserContent polymorphism via class-table inheritance. Posts move under a unified `/api/content` API; adds Event as a second content kind. (#1445)
+
+### Patch Changes
+
+- d3a47b4: Remove the deprecated `@types/dompurify` dev dependency. DOMPurify v3 ships
+  its own types, so no replacement is needed.
+- e4b5b5f: Bump patch and minor versions across the monorepo (Renovate-style catch-up):
+  vue 3.5.34, vitest 4.1.5, fastify 5.8.5, @sentry/_ 10.52, axios 1.16,
+  bullmq 5.76.6, prettier 3.8.3, eslint 10.3.0, typescript-eslint 8.59.2,
+  @vueuse/_ 14.3.0, @playwright/test 1.59.1, dompurify 3.4.2, dotenv 17.4.2,
+  ioredis 5.10.1, sass 1.99.0, ws 8.20.0, plus other patch bumps. No major
+  versions; `zod-prisma-types` held at 3.2.4 (3.3.x emits zod-v4 syntax).
+  Also drops the unused `@google-cloud/translate` backend dependency.
+- af5ae98: Bump dev tooling-only major versions: turbo 2.9.10, npm-run-all2 8, nyc 18,
+  c8 11, tsc-watch 7, rollup-plugin-visualizer 7, chrome-devtools-mcp 0.25,
+  @sentry/cli 3.4, @lingual/i18n-check 0.9. No runtime impact.
+- 645e053: Silence Vue lifecycle warnings in messaging view-model specs by mounting a host component before invoking the composables (#1448)
+- cac9a63: Revert UserContent backend abstraction (#1406) and frontend `useUserContentActions` composable (#1407). Wire format unchanged. Clears the way for a class-table-inheritance redesign tracked in `docs/superpowers/specs/2026-05-08-user-content-polymorphism-design.md`.
+
 ## 0.61.0
 
 ### Minor Changes

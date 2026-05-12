@@ -1,5 +1,13 @@
 # @opencupid/shared
 
+## 0.10.0
+
+### Minor Changes
+
+- 7b36663: Event-GUI suite: speed-dial create-event entry, unified my-content list (posts + events), event-marker click-through on browse map, venue field, ViewerToolbar with share/copy/attend actions, and calendar export (.ics download + Google Calendar).
+- 57b320d: Server-side filtering for the social map's people/posts layers. Adds a `kinds` query parameter to `/find/clusters` and `/find/cluster-leaves`, and replaces the planned client-side layer toggle with a button-group `<MapLayerControl>` that drives a refetch on change.
+- 807f8db: UserContent polymorphism via class-table inheritance. Posts move under a unified `/api/content` API; adds Event as a second content kind. (#1445)
+
 ## 0.9.3
 
 ### Patch Changes
