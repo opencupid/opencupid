@@ -12,15 +12,19 @@ import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 
 const EVENT_KIND = z.literal('event')
 
+const VENUE_MAX_LENGTH = 120
+
 export const PublicEventSchema = UserContentMetadataSchema.extend({
   kind: EVENT_KIND,
   startsAt: z.coerce.date(),
+  venue: z.string().nullable(),
 })
 export type PublicEvent = z.infer<typeof PublicEventSchema>
 
 export const PublicEventDetailSchema = PublicUserContentDetailBaseSchema.extend({
   kind: EVENT_KIND,
   startsAt: z.coerce.date(),
+  venue: z.string().nullable(),
 })
 export type PublicEventDetail = z.infer<typeof PublicEventDetailSchema>
 
@@ -29,6 +33,7 @@ export type OwnerEvent = z.infer<typeof OwnerEventSchema>
 
 export const CreateEventPayloadSchema = BaseUserContentPayloadSchema.extend({
   startsAt: z.coerce.date(),
+  venue: z.string().max(VENUE_MAX_LENGTH).nullable().optional(),
 })
 export type CreateEventPayload = z.infer<typeof CreateEventPayloadSchema>
 

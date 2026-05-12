@@ -189,7 +189,7 @@ describe('GET /:id (unified detail)', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       postedById: 'someone',
-      event: { userContentId: 'cuc00000000000000002', startsAt: new Date('2027-01-01') },
+      event: { userContentId: 'cuc00000000000000002', startsAt: new Date('2027-01-01'), venue: null },
       postedBy: {
         id: 'someone',
         publicName: 'Y',

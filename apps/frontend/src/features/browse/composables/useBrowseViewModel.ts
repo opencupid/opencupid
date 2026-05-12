@@ -3,19 +3,19 @@ import { storeToRefs } from 'pinia'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-import { usePostStore } from '@/features/posts/stores/postStore'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 /**
- * View-model for the browse map. Map POIs (profile + post markers, clusters)
- * derive from findProfileStore cluster features. A single bounds event
- * triggers parallel fetches: cluster features for map markers, and
- * postStore.postSummaries for the NearbyFeatures strip (which BrowseProfiles
- * consumes directly from the store, not via this view-model).
+ * View-model for the browse map. Map POIs (profile + post + event markers,
+ * clusters) derive from findProfileStore cluster features. A single bounds
+ * event triggers parallel fetches: cluster features for map markers, and
+ * userContentStore.postSummaries for the NearbyFeatures strip (which
+ * BrowseProfiles consumes directly from the store, not via this view-model).
  */
 export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
   const ownerStore = useOwnerProfileStore()
-  const postStore = usePostStore()
+  const contentStore = useUserContentStore()
   const { clusterFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
 
   const viewerProfile = computed(() => ownerStore.profile)
@@ -37,6 +37,7 @@ export function useBrowseViewModel() {
   const clusterCache = new Map<number, MapCluster>()
   const profileCache = new Map<string, MapPoi>()
   const postCache = new Map<string, MapPoi>()
+  const eventCache = new Map<string, MapPoi>()
 
   function memoBy<K, V extends object>(cache: Map<K, V>, key: K, value: V): V {
     const cached = cache.get(key)
@@ -82,7 +83,23 @@ export function useBrowseViewModel() {
     return out
   })
 
-  const allPois = computed<MapPoi[]>(() => [...profilePois.value, ...postPois.value])
+  const eventPois = computed<MapPoi[]>(() => {
+    const live = new Set<string>()
+    const out: MapPoi[] = []
+    for (const f of clusterFeatures.value) {
+      if (f.type !== 'point' || f.kind !== 'event') continue
+      live.add(f.id)
+      out.push(memoBy(eventCache, f.id, f))
+    }
+    for (const id of eventCache.keys()) if (!live.has(id)) eventCache.delete(id)
+    return out
+  })
+
+  const allPois = computed<MapPoi[]>(() => [
+    ...profilePois.value,
+    ...postPois.value,
+    ...eventPois.value,
+  ])
 
   const haveResults = computed(() => clusterFeatures.value.length > 0)
 
@@ -109,13 +126,17 @@ export function useBrowseViewModel() {
   async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
     await Promise.all([
       findProfileStore.fetchBounds(bounds, zoom),
-      postStore.fetchPostsInBounds(bounds),
+      contentStore.fetchPostsInBounds(bounds),
     ])
   }
 
-  const fetchPopupData = (id: string, signal?: AbortSignal) => {
+  const fetchPopupData = async (id: string, signal?: AbortSignal) => {
     const poi = allPois.value.find((p) => p.id === id)
-    if (poi?.kind === 'post') return Promise.resolve(null)
+    if (poi?.kind === 'post') return null
+    if (poi?.kind === 'event') {
+      const result = await contentStore.fetchPublicEvent(id, signal)
+      return result.success && result.data ? result.data.event : null
+    }
     return findProfileStore.fetchProfileForPopup(id, signal)
   }
 
@@ -124,6 +145,7 @@ export function useBrowseViewModel() {
     clusters,
     profilePois,
     postPois,
+    eventPois,
     allPois,
     availableTags,
     isLoading,

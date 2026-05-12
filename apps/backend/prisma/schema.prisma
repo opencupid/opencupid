@@ -426,6 +426,7 @@ model EventContent {
   userContentId String      @id
   userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
   startsAt      DateTime
+  venue         String?
 
   @@index([startsAt])
 }

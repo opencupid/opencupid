@@ -3,20 +3,21 @@ import { useI18n } from 'vue-i18n'
 
 import { UseClipboard } from '@vueuse/components'
 import IconCopy from '@/assets/icons/interface/copy.svg'
+import type { SharePayload } from './ShareSheet.vue'
 
 const { t } = useI18n()
 
-const shareUrl = window.location.origin
+const props = defineProps<{
+  payload: SharePayload
+}>()
 </script>
 
 <template>
-  <div class="text-center">
-    <div class="mb-2">
-      <code class="text-truncate">{{ shareUrl }}</code>
-    </div>
+  <div class="text-center w-100">
+    <code class="d-block overflow-hidden text-truncate mb-2 w-100">{{ props.payload.url }}</code>
     <UseClipboard
       v-slot="{ copy, copied }"
-      :source="shareUrl"
+      :source="props.payload.url"
     >
       <BButton
         @click="copy()"

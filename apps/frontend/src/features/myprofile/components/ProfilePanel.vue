@@ -129,7 +129,9 @@ function handleClose() {
       @datingmode:wizard="router.push({ name: 'MeDatingWizard' })"
     />
 
-    <PostsOrchestrator v-else-if="subView === 'myposts' || subView === 'editpost'" />
+    <PostsOrchestrator
+      v-else-if="subView === 'myposts' || subView === 'editpost' || subView === 'editevent'"
+    />
 
     <Settings
       v-else-if="subView === 'settings'"

@@ -42,7 +42,7 @@ const handleBack = () => {
     <PostCard
       :post="post"
       :show-details="true"
-      class="pt-5"
+      class="pt-2 pt-md-3 pt-lg-5"
       :class="{ details: true }"
       @edit="emit('edit', post)"
       @hide="emit('hide', post)"

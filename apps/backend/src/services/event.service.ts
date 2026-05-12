@@ -44,7 +44,7 @@ export class EventService extends UserContentService {
         ...this.baseCreateData(data),
         kind: 'event',
         postedById: profileId,
-        event: { create: { startsAt: data.startsAt } },
+        event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
       },
       include: eventWithMetadataInclude,
     })
@@ -55,7 +55,7 @@ export class EventService extends UserContentService {
     profileId: string,
     data: UpdateEventPayload
   ): Promise<EventWithMetadata | null> {
-    const { startsAt, ...baseFields } = data
+    const { startsAt, venue, ...baseFields } = data
 
     return prisma.$transaction(async (tx) => {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'event', baseFields)
@@ -63,7 +63,7 @@ export class EventService extends UserContentService {
 
       await tx.eventContent.update({
         where: { userContentId: id },
-        data: { startsAt },
+        data: { startsAt, venue },
       })
 
       return tx.userContent.findFirst({

@@ -8,6 +8,7 @@ import { useTimeoutFn } from '@vueuse/core'
 import IconLayer from '@/assets/icons/interface/layer.svg'
 import IconProfile from '@/assets/icons/interface/user.svg'
 import IconPost from '@/assets/icons/interface/post-it.svg'
+import IconEvent from '@/assets/icons/interface/calendar.svg'
 
 const { t } = useI18n()
 
@@ -45,12 +46,11 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
     <BPopover
       ref="popoverRef"
       placement="bottom"
-      style="max-width: 16rem"
       :title="t('map.layer_control.aria_label')"
     >
       <template #target>
         <BButton
-          class="btn-rounded rounded-circle shadow"
+          class="btn-rounded rounded-circle shadow btn btn-light rounded-circle"
           variant="outline-secondary"
           :aria-label="t('map.layer_control.aria_label')"
         >
@@ -58,7 +58,7 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
         </BButton>
       </template>
       <div
-        class="d-flex gap-3 py-2 px-1"
+        class="d-flex flex-wrap gap-3 py-2 px-1 layer-control-grid"
         @mouseenter="stopHideTimer"
         @mouseleave="startHideTimer"
       >
@@ -90,6 +90,20 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
             <div class="form-hint mt-1">{{ t('map.layer_control.posts') }}</div>
           </BFormCheckbox>
         </div>
+        <div class="text-center">
+          <BFormCheckbox
+            button
+            button-variant="outline-primary"
+            size="lg"
+            class="btn-layer-select"
+            :model-value="model.includes('event')"
+            :disabled="isLocked('event')"
+            @update:model-value="toggle('event')"
+          >
+            <IconEvent class="svg-icon-lg" />
+            <div class="form-hint mt-1">{{ t('map.layer_control.events') }}</div>
+          </BFormCheckbox>
+        </div>
       </div>
     </BPopover>
   </div>
@@ -100,5 +114,9 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
   user-select: none;
 }
 .btn-layer-select {
+}
+.layer-control-grid {
+  max-width: 16rem;
+  justify-content: center;
 }
 </style>

@@ -39,6 +39,8 @@ import type {
   PublicPostDetail,
   PostSummary,
 } from '@zod/post/post.dto'
+import type { OwnerEvent, PublicEvent, PublicEventDetail } from '@zod/event/event.dto'
+import type { OwnerUserContent } from '@zod/userContent/userContent.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 
@@ -111,6 +113,18 @@ export type PublicPostDetailResponse = ApiSuccess<{ post: PublicPostDetail }>
 export type CreatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type UpdatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type DeletePostResponse = ApiSuccess<{}>
+
+// Unified user-content responses
+export type MyContentResponse = ApiSuccess<{ items: OwnerUserContent[] }>
+
+// Event responses
+export type EventsResponse = ApiSuccess<{ events: PublicEvent[] }>
+export type MyEventsResponse = ApiSuccess<{ events: OwnerEvent[] }>
+export type EventResponse = ApiSuccess<{ event: OwnerEvent }>
+export type PublicEventDetailResponse = ApiSuccess<{ event: PublicEventDetail }>
+export type CreateEventResponse = ApiSuccess<{ event: OwnerEvent }>
+export type UpdateEventResponse = ApiSuccess<{ event: OwnerEvent }>
+export type DeleteEventResponse = ApiSuccess<{}>
 
 // Browse responses
 export type BrowseBoundsResponse = ApiSuccess<{

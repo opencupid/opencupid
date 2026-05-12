@@ -123,10 +123,9 @@ import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 let mockRefetchBounds: ReturnType<typeof vi.spyOn>
 
 const mockPostSummaries = ref<any[]>([])
-vi.mock('@/features/posts/stores/postStore', () => ({
-  usePostStore: () => ({
+vi.mock('@/features/userContent/stores/userContentStore', () => ({
+  useUserContentStore: () => ({
     fetchPublicPost: vi.fn().mockResolvedValue({ success: false }),
-    fetchOwnerPost: vi.fn().mockResolvedValue({ success: false }),
     get postSummaries() {
       return mockPostSummaries.value
     },
@@ -183,7 +182,10 @@ vi.mock('@/features/shared/composables/useDetailRouteState', () => ({
 
 const BButton = { template: '<button><slot /></button>' }
 const BContainer = { template: '<div class="container"><slot /></div>' }
-const ShareDialog = { template: '<div class="share-dialog"><slot /></div>', props: ['trigger'] }
+const InviteCtaShareDialog = {
+  template: '<div class="share-dialog"><slot /></div>',
+  props: ['trigger', 'payload'],
+}
 
 import BrowseProfiles from '../BrowseProfiles.vue'
 import { MAP_DEFAULT_CENTER } from '@shared/maps'
@@ -213,7 +215,7 @@ describe('BrowseProfiles view', () => {
         stubs: {
           BButton,
           BContainer,
-          ShareDialog,
+          InviteCtaShareDialog,
           NotificationDot: { template: '<span><slot /></span>' },
           ProfileImage: true,
           Teleport: true,
@@ -231,16 +233,16 @@ describe('BrowseProfiles view', () => {
     expect(toastInfo).not.toHaveBeenCalled()
   })
 
-  it('passes trigger=false to ShareDialog when isNoOneAround is false', () => {
+  it('passes trigger=false to InviteCtaShareDialog when isNoOneAround is false', () => {
     vmState.isNoOneAround.value = false
     const wrapper = mountComponent()
-    expect(wrapper.findComponent(ShareDialog).props('trigger')).toBe(false)
+    expect(wrapper.findComponent(InviteCtaShareDialog).props('trigger')).toBe(false)
   })
 
-  it('passes trigger=true to ShareDialog when isNoOneAround is true', () => {
+  it('passes trigger=true to InviteCtaShareDialog when isNoOneAround is true', () => {
     vmState.isNoOneAround.value = true
     const wrapper = mountComponent()
-    expect(wrapper.findComponent(ShareDialog).props('trigger')).toBe(true)
+    expect(wrapper.findComponent(InviteCtaShareDialog).props('trigger')).toBe(true)
   })
 
   it('renders map view with OsmPoiMap', () => {
@@ -291,7 +293,7 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.map-placeholder-stub').exists()).toBe(false)
   })
 
-  it('passes postStore.postSummaries to NearbyFeatures', () => {
+  it('passes contentStore.postSummaries to NearbyFeatures', () => {
     mockPostSummaries.value = [
       {
         id: 'post-1',

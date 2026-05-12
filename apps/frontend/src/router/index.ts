@@ -86,12 +86,15 @@ const routes: Array<RouteRecordRaw> = [
       // Detail panel area (drives DetailPanelOrchestrator via useDetailPanel)
       browseRoute('profile/:profileId', 'PublicProfile'),
       browseRoute('posts/:postId', 'PublicPost'),
+      browseRoute('events/:eventId', 'PublicEvent'),
 
       // My profile area (drives drawer → ProfilePanel sub-views)
       browseRoute('me', 'Me'),
       browseRoute('me/posts', 'MePosts'),
       browseRoute('me/posts/new', 'MeCreatePost'),
       browseRoute('me/posts/:postId/edit', 'MeEditPost'),
+      browseRoute('me/events/new', 'MeCreateEvent'),
+      browseRoute('me/events/:eventId/edit', 'MeEditEvent'),
       browseRoute('me/settings', 'MeSettings'),
       browseRoute('me/dating', 'MeDating'),
       browseRoute('me/dating/wizard', 'MeDatingWizard'),

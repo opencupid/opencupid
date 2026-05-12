@@ -102,3 +102,15 @@ $modal-backdrop-opacity: 0.8;
 $modal-backdrop-bg: $sand-lightest;
 $light-bg-subtle: $sand-lightest;
 $min-contrast-ratio: 2;
+
+// ─── Form control backgrounds ───────────────────────────────────────
+// Per-surface knobs for each form input type. Defaults align with the
+// Sandstone interactive-surface tone ($sand-lightest), matching dropdowns
+// and modals. Override individually to vary a single surface (e.g. give
+// selects a different shade) without affecting the others.
+$input-bg: white;
+$input-focus-bg: white;
+$input-disabled-bg: $gray-200;
+$form-select-bg: white;
+$form-check-input-bg: white;
+

@@ -79,6 +79,34 @@
       "subject": "Welcome!"
     }
   },
+  "events": {
+    "actions": {
+      "add_to_calendar": "Add to calendar",
+      "add_to_google_calendar": "Add to Google Calendar",
+      "attend": "I'm attending",
+      "cancel": "Nevermind",
+      "create": "Submit",
+      "download_ics": "Download .ics file",
+      "save": "Save event"
+    },
+    "labels": {
+      "content": "What's happening?",
+      "starts_at": "When",
+      "venue": "Where",
+      "visibility": "Show this event"
+    },
+    "messages": {
+      "error_load": "Failed to load event"
+    },
+    "placeholders": {
+      "content": "Describe your event…",
+      "starts_at": "Pick a date and time",
+      "venue": "Venue or address (optional)"
+    },
+    "share": {
+      "event_text": "{publicName} is hosting an event — check it out"
+    }
+  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgynous",
@@ -183,6 +211,7 @@
     "layer_control": {
       "people": "People",
       "posts": "Posts",
+      "events": "Events",
       "aria_label": "Map layers"
     }
   },
@@ -321,6 +350,8 @@
       "create": "Submit",
       "create_cta": "Create post...",
       "create_cta_title": "Post something",
+      "create_advert_cta_title": "Post an advert",
+      "create_event_cta_title": "Post an event",
       "delete": "Delete",
       "edit": "Edit Post",
       "hide": "Hide (but don't delete)",
@@ -365,6 +396,9 @@
     "my_posts": "My posts",
     "placeholders": {
       "content": "Share what you're offering or looking for"
+    },
+    "share": {
+      "post_text": "{publicName} posted something — take a look"
     },
     "title": "Bulletin board",
     "types": {
@@ -592,5 +626,14 @@
     "done_title": "You've been unsubscribed",
     "error_body": "This unsubscribe link is invalid or has expired. Please log in to manage your email preferences.",
     "error_title": "Link invalid or expired"
+  },
+  "userContent": {
+    "actions": {
+      "clipboard_unsupported": "Your browser does not support copying to the clipboard",
+      "contact": "Send a message",
+      "copied": "Copied to clipboard",
+      "copy": "Copy text",
+      "share": "Share"
+    }
   }
 }

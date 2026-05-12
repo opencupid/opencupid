@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { PublicPostSchema, PublicPostDetailSchema } from '../post/post.dto'
-import { PublicEventSchema, PublicEventDetailSchema } from '../event/event.dto'
+import { PublicPostSchema, PublicPostDetailSchema, OwnerPostSchema } from '../post/post.dto'
+import { PublicEventSchema, PublicEventDetailSchema, OwnerEventSchema } from '../event/event.dto'
 
 /**
  * Discriminated-union schemas for the full polymorphic user-content API.
@@ -19,3 +19,9 @@ export const PublicUserContentDetailSchema = z.discriminatedUnion('kind', [
   PublicEventDetailSchema,
 ])
 export type PublicUserContentDetail = z.infer<typeof PublicUserContentDetailSchema>
+
+export const OwnerUserContentSchema = z.discriminatedUnion('kind', [
+  OwnerPostSchema,
+  OwnerEventSchema,
+])
+export type OwnerUserContent = z.infer<typeof OwnerUserContentSchema>

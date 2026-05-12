@@ -24,15 +24,21 @@ import PublicProfileView from '@/features/publicprofile/components/PublicProfile
 
 import { renderProfileMarkerHtml } from '@/features/publicprofile/components/profileMarkerIcon'
 import { renderPostMapIconHtml } from '@/features/posts/components/postMapIcon'
+import { renderEventMapIconHtml } from '@/features/events/components/eventMapIcon'
 
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
+import EventMapPopup from '@/features/events/components/EventMapPopup.vue'
+import EventFullView from '@/features/events/components/EventFullView.vue'
+
+import type { MapPoi } from '@/features/map/types/map.types'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
 import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
-import { usePostStore } from '@/features/posts/stores/postStore'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { toGeoPoint, type GeoPoint } from '@zod/dto/location.dto'
 import type { PostSummary } from '@zod/post/post.dto'
-import ShareDialog from '@/features/app/components/ShareDialog.vue'
+import InviteCtaShareDialog from '@/features/app/components/InviteCtaShareDialog.vue'
+import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 
 // Component name must be 'AppShell' for KeepAlive to identify it correctly
 defineOptions({ name: 'AppShell' })
@@ -88,6 +94,21 @@ function onLocationSet(point: GeoPoint) {
   highlightedLocation.value = [point.lat, point.lon]
 }
 
+// Per-kind dispatch for marker icons and popup components. The discriminator
+// is `poi.kind` from the cluster service's PointFeature; profiles fall through
+// the default branch.
+const iconResolver = computed(() => (poi: MapPoi) => {
+  if (poi.kind === 'post') return renderPostMapIconHtml
+  if (poi.kind === 'event') return renderEventMapIconHtml
+  return renderProfileMarkerHtml
+})
+
+const popupResolver = computed(() => (poi: MapPoi) => {
+  if (poi.kind === 'post') return PostMapPopup
+  if (poi.kind === 'event') return EventMapPopup
+  return ProfileMapCard
+})
+
 provide('viewerProfile', toRef(viewerProfile))
 
 // ── Route-driven detail panel ──────────────────────────────────────
@@ -95,10 +116,20 @@ const router = useRouter()
 const toast = useToast()
 const { t } = useI18n()
 const ownerProfileStore = useOwnerProfileStore()
-const postStore = usePostStore()
+const contentStore = useUserContentStore()
 
 const { detail } = useDetailRouteState()
 const panel = useDetailPanel()
+
+// Invite-CTA share payload — site-level, not content-specific.
+const shareInvitePayload = computed<SharePayload>(() => ({
+  title: t('uicomponents.share_dialog.share_title', { siteName: __APP_CONFIG__.SITE_NAME }),
+  text: t('uicomponents.share_dialog.share_text', {
+    siteName: __APP_CONFIG__.SITE_NAME,
+    publicName: viewerProfile.value?.publicName || '',
+  }),
+  url: window.location.origin,
+}))
 
 // Sync activePoi with route for map visual state + post detail panel source data
 watch(
@@ -125,11 +156,20 @@ watch(
     if (d.type === 'profile') {
       panel.show(PublicProfileView, { profileId: d.id })
     } else if (d.type === 'post') {
-      const result = await postStore.fetchPublicPost(d.id)
+      const result = await contentStore.fetchPublicPost(d.id)
       if (result.success && result.data) {
         panel.show(PostFullView, { post: result.data.post })
       } else {
         toast.error(t('posts.messages.error_load'))
+        panel.close()
+        router.replace({ name: 'Browse' })
+      }
+    } else if (d.type === 'event') {
+      const result = await contentStore.fetchPublicEvent(d.id)
+      if (result.success && result.data) {
+        panel.show(EventFullView, { event: result.data.event })
+      } else {
+        toast.error(t('events.messages.error_load'))
         panel.close()
         router.replace({ name: 'Browse' })
       }
@@ -159,6 +199,9 @@ function openInboxDrawer() {
 function handlePostSelect(post: { id: string }) {
   router.push({ name: 'PublicPost', params: { postId: post.id } })
 }
+function handleEventSelect(event: { id: string }) {
+  router.push({ name: 'PublicEvent', params: { eventId: event.id } })
+}
 function handleProfileSelect(profile: { id: string }) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
@@ -177,6 +220,7 @@ function handleMarkerSelect(id: string) {
   const poi = allPois.value.find((p) => p.id === id)
   if (!poi) return
   if (poi.kind === 'post') handlePostSelect({ id })
+  else if (poi.kind === 'event') handleEventSelect({ id })
   else handleProfileSelect({ id })
 }
 
@@ -243,9 +287,12 @@ onMounted(async () => {
     </div>
     <main class="list-view d-flex flex-column justify-content-start">
       <div class="overflow-auto hide-scrollbar flex-grow-1 position-relative">
-        <ShareDialog :trigger="isNoOneAround">
+        <InviteCtaShareDialog
+          :trigger="isNoOneAround"
+          :payload="shareInvitePayload"
+        >
           {{ t('profiles.browse.no_results_cta_title') }}
-        </ShareDialog>
+        </InviteCtaShareDialog>
 
         <MapPlaceholder
           v-if="!isMapReady"
@@ -256,12 +303,10 @@ onMounted(async () => {
           v-if="viewerProfile"
           :items="allPois"
           :clusters="clusters"
-          :icon-resolver="
-            (poi) => (poi.kind === 'post' ? renderPostMapIconHtml : renderProfileMarkerHtml)
-          "
+          :icon-resolver="iconResolver"
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"
-          :popup-resolver="(poi) => (poi.kind === 'post' ? PostMapPopup : ProfileMapCard)"
+          :popup-resolver="popupResolver"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
           @item:select="handleMarkerSelect"
@@ -270,7 +315,7 @@ onMounted(async () => {
         />
 
         <NearbyFeatures
-          :posts="postStore.postSummaries"
+          :posts="contentStore.postSummaries"
           @post:select="onNearbyPostSelect"
         />
       </div>

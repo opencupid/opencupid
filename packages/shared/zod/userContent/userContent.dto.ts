@@ -93,4 +93,8 @@ export const PublicUserContentDetailBaseSchema = UserContentMetadataSchema.exten
  * Imported from @zod/userContent/publicContent.dto to avoid circular imports
  * (post.dto and event.dto import from this file; they cannot be imported here).
  */
-export type { PublicUserContent, PublicUserContentDetail } from './publicContent.dto'
+export type {
+  PublicUserContent,
+  PublicUserContentDetail,
+  OwnerUserContent,
+} from './publicContent.dto'

@@ -1,0 +1,27 @@
+.map-event {
+  width: 1.4rem;
+  height: 1.4rem;
+  background: var(--bs-primary, #0d6efd);
+  color: white;
+  border-radius: 0.25rem;
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.3);
+  position: relative;
+
+  /* calendar binding rings */
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -0.15rem;
+    width: 0.15rem;
+    height: 0.3rem;
+    background: white;
+    border-radius: 0.05rem;
+  }
+  &::before {
+    left: 0.3rem;
+  }
+  &::after {
+    right: 0.3rem;
+  }
+}
