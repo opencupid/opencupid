@@ -27,7 +27,7 @@ defineEmits<{
     @delete="$emit('delete', item)"
   />
   <EventCard
-    v-else
+    v-else-if="item.kind === 'event'"
     :event="item"
     :show-details="showDetails"
     @click="$emit('click', item)"

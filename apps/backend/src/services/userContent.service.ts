@@ -37,6 +37,7 @@ const profileSummaryInclude = {
 const ownerHydratedInclude = {
   post: true,
   event: true,
+  community: true,
   postedBy: { include: { profileImages: true } },
 } as const
 

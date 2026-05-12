@@ -40,6 +40,11 @@ import type {
   PostSummary,
 } from '@zod/post/post.dto'
 import type { OwnerEvent, PublicEvent, PublicEventDetail } from '@zod/event/event.dto'
+import type {
+  OwnerCommunity,
+  PublicCommunity,
+  PublicCommunityDetail,
+} from '@zod/community/community.dto'
 import type { OwnerUserContent } from '@zod/userContent/userContent.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
@@ -125,6 +130,15 @@ export type PublicEventDetailResponse = ApiSuccess<{ event: PublicEventDetail }>
 export type CreateEventResponse = ApiSuccess<{ event: OwnerEvent }>
 export type UpdateEventResponse = ApiSuccess<{ event: OwnerEvent }>
 export type DeleteEventResponse = ApiSuccess<{}>
+
+// Community responses
+export type CommunitiesResponse = ApiSuccess<{ communities: PublicCommunity[] }>
+export type MyCommunitiesResponse = ApiSuccess<{ communities: OwnerCommunity[] }>
+export type CommunityResponse = ApiSuccess<{ community: OwnerCommunity }>
+export type PublicCommunityDetailResponse = ApiSuccess<{ community: PublicCommunityDetail }>
+export type CreateCommunityResponse = ApiSuccess<{ community: OwnerCommunity }>
+export type UpdateCommunityResponse = ApiSuccess<{ community: OwnerCommunity }>
+export type DeleteCommunityResponse = ApiSuccess<{}>
 
 // Browse responses
 export type BrowseBoundsResponse = ApiSuccess<{

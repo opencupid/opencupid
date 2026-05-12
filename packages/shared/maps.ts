@@ -20,5 +20,5 @@ export const MAX_BROWSE_TAGS = 5
  * point properties, and the `<MapLayerControl>` button group. Aligned with
  * the existing UserContent terminology in the backend mappers.
  */
-export const USER_CONTENT_KINDS = ['profile', 'post', 'event'] as const
+export const USER_CONTENT_KINDS = ['profile', 'post', 'event', 'community'] as const
 export type UserContentKind = (typeof USER_CONTENT_KINDS)[number]

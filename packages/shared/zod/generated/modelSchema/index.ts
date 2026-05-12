@@ -15,6 +15,7 @@ export * from './PushSubscriptionSchema';
 export * from './UserContentSchema';
 export * from './PostContentSchema';
 export * from './EventContentSchema';
+export * from './CommunityContentSchema';
 export * from './ProfileSessionLogSchema';
 export * from './ProfileActivitySummarySchema';
 export * from './ProfileTrustFlagSchema';

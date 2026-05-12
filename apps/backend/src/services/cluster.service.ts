@@ -12,7 +12,7 @@ const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
 
 interface PointProperties {
-  kind: 'profile' | 'post' | 'event'
+  kind: UserContentKind
   id: string
   publicName: string
   image: { blurhash?: string | null; url?: string } | null
@@ -303,9 +303,7 @@ export class ClusterService {
       image: props.image,
       highlighted: props.highlighted,
       ...(props.hasPost ? { hasPost: true } : {}),
-      ...(props.kind === 'post' || props.kind === 'event'
-        ? { postContent: props.postContent }
-        : {}),
+      ...(props.kind !== 'profile' ? { postContent: props.postContent } : {}),
     } satisfies PointFeature
   }
 }

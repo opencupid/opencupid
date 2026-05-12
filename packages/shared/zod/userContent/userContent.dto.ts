@@ -3,7 +3,7 @@ import { ProfileSummarySchema } from '../profile/profile.dto'
 import { ConversationContextSchema } from '../interaction/interactionContext.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 
-export const ContentKindSchema = z.enum(['post', 'event'])
+export const ContentKindSchema = z.enum(['post', 'event', 'community'])
 export type ContentKind = z.infer<typeof ContentKindSchema>
 
 /**

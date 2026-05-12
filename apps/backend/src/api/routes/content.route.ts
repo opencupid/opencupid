@@ -2,9 +2,11 @@ import type { FastifyPluginAsync } from 'fastify'
 import { UserContentService } from '@/services/userContent.service'
 import { PostService } from '@/services/post.service'
 import { EventService } from '@/services/event.service'
+import { CommunityService } from '@/services/community.service'
 import { mapOwnerUserContent, mapUserContentMetadata } from '../mappers/userContent.mappers'
 import { mapDbPostToOwner, mapDbPostToDetail } from '../mappers/post.mappers'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../mappers/event.mappers'
+import { mapDbCommunityToOwner, mapDbCommunityToDetail } from '../mappers/community.mappers'
 import {
   UserContentQuerySchema,
   NearbyContentQuerySchema,
@@ -64,21 +66,32 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
 
     const isOwner = metadata.postedById === viewerProfileId
 
-    if (metadata.kind === 'post') {
-      const hydrated = await PostService.getInstance().findByIdHydrated(id, viewerProfileId)
-      if (!hydrated) return sendError(reply, 404, 'Content not found')
-      const item = isOwner
-        ? mapDbPostToOwner(hydrated)
-        : mapDbPostToDetail(hydrated, viewerProfileId)
-      return reply.code(200).send({ success: true, item })
+    switch (metadata.kind) {
+      case 'post': {
+        const hydrated = await PostService.getInstance().findByIdHydrated(id, viewerProfileId)
+        if (!hydrated) return sendError(reply, 404, 'Content not found')
+        const item = isOwner
+          ? mapDbPostToOwner(hydrated)
+          : mapDbPostToDetail(hydrated, viewerProfileId)
+        return reply.code(200).send({ success: true, item })
+      }
+      case 'event': {
+        const hydrated = await EventService.getInstance().findByIdHydrated(id, viewerProfileId)
+        if (!hydrated) return sendError(reply, 404, 'Content not found')
+        const item = isOwner
+          ? mapDbEventToOwner(hydrated)
+          : mapDbEventToDetail(hydrated, viewerProfileId)
+        return reply.code(200).send({ success: true, item })
+      }
+      case 'community': {
+        const hydrated = await CommunityService.getInstance().findByIdHydrated(id, viewerProfileId)
+        if (!hydrated) return sendError(reply, 404, 'Content not found')
+        const item = isOwner
+          ? mapDbCommunityToOwner(hydrated)
+          : mapDbCommunityToDetail(hydrated, viewerProfileId)
+        return reply.code(200).send({ success: true, item })
+      }
     }
-
-    const hydrated = await EventService.getInstance().findByIdHydrated(id, viewerProfileId)
-    if (!hydrated) return sendError(reply, 404, 'Content not found')
-    const item = isOwner
-      ? mapDbEventToOwner(hydrated)
-      : mapDbEventToDetail(hydrated, viewerProfileId)
-    return reply.code(200).send({ success: true, item })
   })
 }
 
