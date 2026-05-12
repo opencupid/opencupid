@@ -38,6 +38,7 @@ export function useBrowseViewModel() {
   const profileCache = new Map<string, MapPoi>()
   const postCache = new Map<string, MapPoi>()
   const eventCache = new Map<string, MapPoi>()
+  const communityCache = new Map<string, MapPoi>()
 
   function memoBy<K, V extends object>(cache: Map<K, V>, key: K, value: V): V {
     const cached = cache.get(key)
@@ -95,10 +96,23 @@ export function useBrowseViewModel() {
     return out
   })
 
+  const communityPois = computed<MapPoi[]>(() => {
+    const live = new Set<string>()
+    const out: MapPoi[] = []
+    for (const f of clusterFeatures.value) {
+      if (f.type !== 'point' || f.kind !== 'community') continue
+      live.add(f.id)
+      out.push(memoBy(communityCache, f.id, f))
+    }
+    for (const id of communityCache.keys()) if (!live.has(id)) communityCache.delete(id)
+    return out
+  })
+
   const allPois = computed<MapPoi[]>(() => [
     ...profilePois.value,
     ...postPois.value,
     ...eventPois.value,
+    ...communityPois.value,
   ])
 
   const haveResults = computed(() => clusterFeatures.value.length > 0)
@@ -137,6 +151,10 @@ export function useBrowseViewModel() {
       const result = await contentStore.fetchPublicEvent(id, signal)
       return result.success && result.data ? result.data.event : null
     }
+    if (poi?.kind === 'community') {
+      const result = await contentStore.fetchPublicCommunity(id, signal)
+      return result.success && result.data ? result.data.community : null
+    }
     return findProfileStore.fetchProfileForPopup(id, signal)
   }
 
@@ -146,6 +164,7 @@ export function useBrowseViewModel() {
     profilePois,
     postPois,
     eventPois,
+    communityPois,
     allPois,
     availableTags,
     isLoading,

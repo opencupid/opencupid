@@ -130,7 +130,12 @@ function handleClose() {
     />
 
     <PostsOrchestrator
-      v-else-if="subView === 'myposts' || subView === 'editpost' || subView === 'editevent'"
+      v-else-if="
+        subView === 'myposts' ||
+        subView === 'editpost' ||
+        subView === 'editevent' ||
+        subView === 'editcommunity'
+      "
     />
 
     <Settings

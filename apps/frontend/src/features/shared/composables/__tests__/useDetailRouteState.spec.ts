@@ -52,4 +52,11 @@ describe('useDetailRouteState', () => {
     const { detail } = useDetailRouteState()
     expect(detail.value).toEqual({ type: 'event', id: 'evt-7' })
   })
+
+  it('detail returns community type with id on PublicCommunity route', () => {
+    mockRouteName.value = 'PublicCommunity'
+    mockRouteParams.value = { communityId: 'c-abc' }
+    const { detail } = useDetailRouteState()
+    expect(detail.value).toEqual({ type: 'community', id: 'c-abc' })
+  })
 })

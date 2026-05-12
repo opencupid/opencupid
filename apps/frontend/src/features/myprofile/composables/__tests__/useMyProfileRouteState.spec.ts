@@ -25,6 +25,8 @@ describe('useMyProfileRouteState', () => {
     ['MeEditPost', 'editpost'],
     ['MeCreateEvent', 'editevent'],
     ['MeEditEvent', 'editevent'],
+    ['MeCreateCommunity', 'editcommunity'],
+    ['MeEditCommunity', 'editcommunity'],
     ['MeSettings', 'settings'],
     ['MeDating', 'datingprefs'],
     ['MeDatingWizard', 'datingwizard'],
@@ -42,6 +44,8 @@ describe('useMyProfileRouteState', () => {
       'MeEditPost',
       'MeCreateEvent',
       'MeEditEvent',
+      'MeCreateCommunity',
+      'MeEditCommunity',
       'MeSettings',
       'MeDating',
       'MeDatingWizard',
@@ -84,5 +88,21 @@ describe('useMyProfileRouteState', () => {
     mockRouteParams.value = {}
     const { editingEventId } = useMyProfileRouteState()
     expect(editingEventId.value).toBeUndefined()
+  })
+})
+
+describe('useMyProfileRouteState — community', () => {
+  it('editingCommunityId returns communityId param on MeEditCommunity', () => {
+    mockRouteName.value = 'MeEditCommunity'
+    mockRouteParams.value = { communityId: 'c-123' }
+    const { editingCommunityId } = useMyProfileRouteState()
+    expect(editingCommunityId.value).toBe('c-123')
+  })
+
+  it('editingCommunityId returns undefined on non-edit routes', () => {
+    mockRouteName.value = 'MeCreateCommunity'
+    mockRouteParams.value = {}
+    const { editingCommunityId } = useMyProfileRouteState()
+    expect(editingCommunityId.value).toBeUndefined()
   })
 })

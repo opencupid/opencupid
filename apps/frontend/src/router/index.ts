@@ -87,6 +87,7 @@ const routes: Array<RouteRecordRaw> = [
       browseRoute('profile/:profileId', 'PublicProfile'),
       browseRoute('posts/:postId', 'PublicPost'),
       browseRoute('events/:eventId', 'PublicEvent'),
+      browseRoute('communities/:communityId', 'PublicCommunity'),
 
       // My profile area (drives drawer → ProfilePanel sub-views)
       browseRoute('me', 'Me'),
@@ -95,6 +96,8 @@ const routes: Array<RouteRecordRaw> = [
       browseRoute('me/posts/:postId/edit', 'MeEditPost'),
       browseRoute('me/events/new', 'MeCreateEvent'),
       browseRoute('me/events/:eventId/edit', 'MeEditEvent'),
+      browseRoute('me/communities/new', 'MeCreateCommunity'),
+      browseRoute('me/communities/:communityId/edit', 'MeEditCommunity'),
       browseRoute('me/settings', 'MeSettings'),
       browseRoute('me/dating', 'MeDating'),
       browseRoute('me/dating/wizard', 'MeDatingWizard'),

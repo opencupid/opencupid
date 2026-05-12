@@ -9,6 +9,7 @@ import IconLayer from '@/assets/icons/interface/layer.svg'
 import IconProfile from '@/assets/icons/interface/user.svg'
 import IconPost from '@/assets/icons/interface/post-it.svg'
 import IconEvent from '@/assets/icons/interface/calendar.svg'
+import IconCommunity from '@/assets/icons/interface/community.svg'
 
 const { t } = useI18n()
 
@@ -104,6 +105,20 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
             <div class="form-hint mt-1">{{ t('map.layer_control.events') }}</div>
           </BFormCheckbox>
         </div>
+        <div class="text-center">
+          <BFormCheckbox
+            button
+            button-variant="outline-primary"
+            size="lg"
+            class="btn-layer-select"
+            :model-value="model.includes('community')"
+            :disabled="isLocked('community')"
+            @update:model-value="toggle('community')"
+          >
+            <IconCommunity class="svg-icon-lg" />
+            <div class="form-hint mt-1">{{ t('map.layer_control.communities') }}</div>
+          </BFormCheckbox>
+        </div>
       </div>
     </BPopover>
   </div>
@@ -116,7 +131,7 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
 .btn-layer-select {
 }
 .layer-control-grid {
-  max-width: 16rem;
+  max-width: 20rem;
   justify-content: center;
 }
 </style>

@@ -111,6 +111,29 @@
       "event_text": "{publicName} eseményt szervez — nézd meg"
     }
   },
+  "community": {
+    "actions": {
+      "cancel": "Nevermind",
+      "create": "Submit",
+      "save": "Save community"
+    },
+    "labels": {
+      "content": "About this community",
+      "year_founded": "Founded in",
+      "founded_since": "Since {year}",
+      "visibility": "Show this community"
+    },
+    "messages": {
+      "error_load": "Failed to load community"
+    },
+    "placeholders": {
+      "content": "Describe your community…",
+      "year_unknown": "Don't know / not sure"
+    },
+    "share": {
+      "community_text": "{publicName} runs a community — check it out"
+    }
+  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgün",
@@ -216,6 +239,7 @@
       "people": "Komák",
       "posts": "Hirdetések",
       "events": "Események",
+      "communities": "Communities",
       "aria_label": "Térképrétegek"
     }
   },
@@ -356,6 +380,7 @@
       "create_cta_title": "Feladok egy hirdetést",
       "create_advert_cta_title": "Hirdetést adok fel",
       "create_event_cta_title": "Eseményt szervezek",
+      "create_community_cta_title": "Create a community",
       "delete": "Törlés",
       "edit": "Szerkesztés",
       "hide": "Elrejtés (törlés nélkül)",

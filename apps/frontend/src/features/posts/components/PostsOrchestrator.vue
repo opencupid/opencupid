@@ -6,11 +6,14 @@ import { useMyProfileViewModel } from '@/features/myprofile/composables/useMyPro
 import { LocationSchema } from '@zod/dto/location.dto'
 import type { OwnerPost } from '@zod/post/post.dto'
 import type { OwnerEvent } from '@zod/event/event.dto'
+import type { OwnerCommunity } from '@zod/community/community.dto'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 import MyContentList from '@/features/userContent/components/MyContentList.vue'
 import EditPostDialog from './EditPostDialog.vue'
 import EditEventDialog from '@/features/events/components/EditEventDialog.vue'
+import EditCommunityDialog from '@/features/community/components/EditCommunityDialog.vue'
+import IconCommunity from '@/assets/icons/interface/community.svg'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare, faCalendarPlus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { useI18n } from 'vue-i18n'
@@ -21,16 +24,16 @@ const { t } = useI18n()
 defineOptions({ name: 'PostsOrchestrator' })
 
 const router = useRouter()
-const { subView, editingPostId, editingEventId } = useMyProfileRouteState()
+const { subView, editingPostId, editingEventId, editingCommunityId } = useMyProfileRouteState()
 const { formData } = useMyProfileViewModel(false)
 
 const editingPost = ref<OwnerPost | undefined>()
 const editingEvent = ref<OwnerEvent | undefined>()
+const editingCommunity = ref<OwnerCommunity | undefined>()
 const defaultLocation = computed(() => LocationSchema.parse(formData?.location ?? {}))
 
 const contentStore = useUserContentStore()
 
-// Guard against deep-linking to an edit route without a loaded post
 watch(
   editingPostId,
   (postId) => {
@@ -44,7 +47,6 @@ watch(
   { immediate: true }
 )
 
-// Same deep-link guard for events
 watch(
   editingEventId,
   (eventId) => {
@@ -53,6 +55,19 @@ watch(
     }
     if (!eventId) {
       editingEvent.value = undefined
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  editingCommunityId,
+  (communityId) => {
+    if (communityId && !editingCommunity.value) {
+      router.replace({ name: 'MePosts' })
+    }
+    if (!communityId) {
+      editingCommunity.value = undefined
     }
   },
   { immediate: true }
@@ -68,33 +83,56 @@ function openCreateEvent() {
   router.push({ name: 'MeCreateEvent' })
 }
 
+function openCreateCommunity() {
+  editingCommunity.value = undefined
+  router.push({ name: 'MeCreateCommunity' })
+}
+
 function handleEdit(item: OwnerUserContent) {
-  if (item.kind === 'post') {
-    editingPost.value = item as OwnerPost
-    router.push({ name: 'MeEditPost', params: { postId: item.id } })
-  } else {
-    editingEvent.value = item as OwnerEvent
-    router.push({ name: 'MeEditEvent', params: { eventId: item.id } })
+  switch (item.kind) {
+    case 'post':
+      editingPost.value = item
+      router.push({ name: 'MeEditPost', params: { postId: item.id } })
+      break
+    case 'event':
+      editingEvent.value = item
+      router.push({ name: 'MeEditEvent', params: { eventId: item.id } })
+      break
+    case 'community':
+      editingCommunity.value = item
+      router.push({ name: 'MeEditCommunity', params: { communityId: item.id } })
+      break
   }
 }
 
 async function handleDelete(item: OwnerUserContent) {
   if (!confirm(t('posts.messages.confirm_delete'))) return
-  if (item.kind === 'post') {
-    await contentStore.deletePost(item.id)
-  } else {
-    await contentStore.deleteEvent(item.id)
+  switch (item.kind) {
+    case 'post':
+      await contentStore.deletePost(item.id)
+      break
+    case 'event':
+      await contentStore.deleteEvent(item.id)
+      break
+    case 'community':
+      await contentStore.deleteCommunity(item.id)
+      break
   }
 }
 
 async function handleHide(item: OwnerUserContent) {
   const isVisible = item.isVisible !== false
-  if (item.kind === 'post') {
-    if (isVisible) await contentStore.hidePost(item.id)
-    else await contentStore.showPost(item.id)
-  } else {
-    // Events use updateEvent for visibility toggle until a dedicated helper lands.
-    await contentStore.updateEvent(item.id, { isVisible: !isVisible })
+  switch (item.kind) {
+    case 'post':
+      if (isVisible) await contentStore.hidePost(item.id)
+      else await contentStore.showPost(item.id)
+      break
+    case 'event':
+      await contentStore.updateEvent(item.id, { isVisible: !isVisible })
+      break
+    case 'community':
+      await contentStore.updateCommunity(item.id, { isVisible: !isVisible })
+      break
   }
 }
 </script>
@@ -110,7 +148,7 @@ async function handleHide(item: OwnerUserContent) {
     <FloatingButton speed-dial>
       <BButton
         size="lg"
-        class="btn-icon-lg btn-shadow "
+        class="btn-icon-lg btn-shadow"
         variant="primary"
         :title="$t('posts.actions.create_cta_title')"
       >
@@ -135,6 +173,15 @@ async function handleHide(item: OwnerUserContent) {
         >
           <FontAwesomeIcon :icon="faCalendarPlus" />
         </BButton>
+        <BButton
+          size="lg"
+          class="btn-icon-lg btn-shadow btn btn-light rounded-circle"
+          variant="outline-primary"
+          :title="$t('posts.actions.create_community_cta_title')"
+          @click="openCreateCommunity"
+        >
+          <IconCommunity class="svg-icon" />
+        </BButton>
       </template>
     </FloatingButton>
   </template>
@@ -150,6 +197,14 @@ async function handleHide(item: OwnerUserContent) {
     v-else-if="subView === 'editevent'"
     :event="editingEvent"
     :is-edit="!!editingEvent"
+    :default-location="defaultLocation"
+    @cancel="router.replace({ name: 'MePosts' })"
+    @saved="router.replace({ name: 'MePosts' })"
+  />
+  <EditCommunityDialog
+    v-else-if="subView === 'editcommunity'"
+    :community="editingCommunity"
+    :is-edit="!!editingCommunity"
     :default-location="defaultLocation"
     @cancel="router.replace({ name: 'MePosts' })"
     @saved="router.replace({ name: 'MePosts' })"
