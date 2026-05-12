@@ -14,7 +14,7 @@
     "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/**",
     "test:coverage": "pnpm run test --coverage --coverage.reporter=text-summary",
     "build-only": "NODE_ENV=production vite build",
-    "type-check": "vue-tsc --build",
+    "type-check": "NODE_OPTIONS='--max-old-space-size=4096' vue-tsc --build",
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
     "vue-i18n-extract": "vue-i18n-extract report --vueFiles './src/**/*.?(ts|vue)' --languageFiles '../../packages/shared/i18n/*.?(json|yml|yaml|js)'"
