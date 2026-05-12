@@ -81,7 +81,10 @@ describe('EditCommunityDialog', () => {
       global: globalOptions,
     })
     await wrapper.find('textarea').setValue('short')
-    const submitBtn = wrapper.findAll('button').filter((b) => b.attributes('type') === 'submit').at(-1)!
+    const submitBtn = wrapper
+      .findAll('button')
+      .filter((b) => b.attributes('type') === 'submit')
+      .at(-1)!
     expect(submitBtn.attributes('disabled')).toBeDefined()
   })
 
@@ -94,7 +97,7 @@ describe('EditCommunityDialog', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(createCommunityMock).toHaveBeenCalledTimes(1)
-    expect(createCommunityMock.mock.calls[0][0]).toMatchObject({
+    expect(createCommunityMock.mock.calls[0]![0]).toMatchObject({
       content: 'This is a long-enough description.',
       yearFounded: null,
     })

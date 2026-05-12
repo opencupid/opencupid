@@ -35,7 +35,7 @@ const community = {
   yearFounded: null,
   location: { country: 'HU', cityName: 'Budapest', lat: null, lon: null },
   postedBy: { id: 'p-1', publicName: 'Alice', profileImages: [] },
-}
+} as any
 
 const globalConfig = { stubs, mocks: { $t: (k: string) => k } }
 

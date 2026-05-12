@@ -3,8 +3,7 @@ import { mount } from '@vue/test-utils'
 
 vi.mock('vue-i18n', () => ({
   useI18n: () => ({
-    t: (k: string, p?: Record<string, unknown>) =>
-      p ? `${k}:${JSON.stringify(p)}` : k,
+    t: (k: string, p?: Record<string, unknown>) => (p ? `${k}:${JSON.stringify(p)}` : k),
     locale: { value: 'en' },
   }),
 }))
@@ -40,7 +39,7 @@ const baseCommunity = {
   location: { country: 'HU', cityName: 'Budapest', lat: null, lon: null },
   postedBy: { id: 'p-1', publicName: 'Alice', profileImages: [] },
   isOwn: false,
-}
+} as any
 
 const stubs = {
   BRow: { template: '<div><slot /></div>' },
@@ -80,7 +79,7 @@ describe('CommunityCard', () => {
     })
     await wrapper.find('.community-card').trigger('click')
     expect(wrapper.emitted('click')).toBeTruthy()
-    expect(wrapper.emitted('click')![0][0]).toMatchObject({ id: 'c-1' })
+    expect(wrapper.emitted('click')?.[0]?.[0]).toMatchObject({ id: 'c-1' })
   })
 
   it('wires ViewerToolbar with copy + share actions and the community content as copy text', () => {
