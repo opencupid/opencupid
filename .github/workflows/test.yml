@@ -13,6 +13,9 @@ jobs:
       TURBO_NO_UPDATE_NOTIFIER: 1
       PRISMA_DISABLE_WARNINGS: "true"
       CI: "true"
+      # Prisma 7 requires DATABASE_URL for `prisma generate`. A placeholder
+      # is sufficient — generate does not connect to the database.
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
 
     steps:
       - uses: actions/checkout@v6
