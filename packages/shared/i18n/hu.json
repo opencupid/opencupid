@@ -10,11 +10,7 @@
     "captcha_success": "Hát persze. Elnézést a kérdésért.",
     "captcha_verify": "Nézzük meg",
     "captcha_verifying": "Egy pillanat...",
-    "email": "E-mail",
     "login": "Tovább",
-    "login_confirm_welcome": "Légy üdvözölve!",
-    "password": "Jelszó",
-    "phone_number": "Telefonszám",
     "token_check_email": "Küldtünk egy bejelentkezési linket. Nézd meg az emailjeidet, és kattints a linkre a belépéshez.",
     "token_check_messages": "Nézz rá az üzeneteidre",
     "token_different_device": "Úgy tűnik, a bejelentkezést egy másik eszközön kezdted el. Menj vissza, és add meg újra az email címedet.",
@@ -23,13 +19,10 @@
     "token_invalid": "A kóddal valami nem stimmel, jól írtad be?",
     "token_invalid_feedback": "A kód 6 számjegyű",
     "token_invalid_link": "Úgy tűnik, az emailben kapott link hibás. Írd be az üzenetben kapott kódot.",
-    "token_sent_email": "Emailen küldtünk egy linket, arra kattints rá (vagy írd be a kódot).  Ha nem látod az emailt, nézz rá a spam mappára is.",
-    "token_sent_phone": "A telefonodra küldtünk egy üzenetet, az abban levő kódot írd be ide.",
     "token_unknown_error": "Valami hiba történt. Kérlek, próbáld újra később.",
     "unknown_error": "Váratlan hiba történt. Kérlek, próbáld újra később."
   },
   "authentication": {
-    "login": "Belépés",
     "logout": "Kilépés"
   },
   "calls": {
@@ -41,7 +34,6 @@
     "cancel_call": "Mégse",
     "decline": "Elutasítás",
     "incoming_call_from": "Bejövő hívás: {name}",
-    "missed_call_message": "Nem fogadott hívás",
     "open_to_calls_setting": "Elérhető vagyok videóhívásra"
   },
   "emails": {
@@ -158,12 +150,6 @@
     "two_spirit": "Két szellem",
     "unspecified": "Inkább nem mondom meg"
   },
-  "general": {
-    "connectiontypes": {
-      "dating": "Társ",
-      "socializing": "Koma"
-    }
-  },
   "haskids_label": {
     "no": "Nincs gyereke",
     "unspecified": "Inkább nem mondom meg",
@@ -179,12 +165,6 @@
     "unspecified": "Mindegy",
     "yes": "Van gyereke"
   },
-  "home": {
-    "explore_interests": "Érdeklődési körök felfedezése",
-    "meet_new_people": "Nemrég csatlakoztak",
-    "more_people": "Komakereső",
-    "welcome_title": "Légy üdvözölve nálunk."
-  },
   "interactions": {
     "anonymous_like_explanation": "Csak akkor derül ki, hogy tőled jött, ha visszamosolyog rád.",
     "anonymous_toggle_anonymous": "Nem",
@@ -192,10 +172,8 @@
     "anonymous_toggle_reveal": "Igen",
     "cancel_button": "Talán később",
     "its_a_match": "Kölcsönös!",
-    "like_button_title": "Rámosolygok!",
     "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
     "like_them_back": "Visszamosolygok",
-    "message_confirmation": "Elküldve!",
     "pass_button_title": "Passzolok",
     "revealed_like_explanation": "Látni fogja, hogy Te küldted.",
     "send_a_like": "Rámosolygok",
@@ -203,21 +181,13 @@
     "send_them_a_message": "Küldj neki egy üzenetet.",
     "they_liked_you": "Rád mosolygott!",
     "you_liked_them": "Rámosolygok",
-    "you_matched_with_them": "{name} visszamosolygott!",
     "you_messaged_them": "Üzenetet küldtél neki",
     "you_smiled_at": "Rámosolyogtál!"
   },
   "matches": {
     "anonymous_like_hint": "Egyelőre névtelenül mosolygott rád. De a Komakeresőben rátalálhatsz - ha Te is rámosolyogsz, ki fog derülni, ki küldte. Ha valakit ilyen jelöléssel látsz, könnyen lehet, hogy egymást keresitek:",
     "anonymous_like_hint_cta": "A Komakeresőhöz",
-    "find_button_cta": "Kapcsolódj",
-    "no_match_have_sent_like": "Még nem lájkolt vissza senki",
-    "no_match_have_sent_like_cta": "Keresés",
-    "no_match_no_sent_like": "Még nem lájkoltál senkit",
-    "no_match_no_sent_like_cta": "Kapcsolódj",
     "notifications": {
-      "and": "és",
-      "matches": "{count, plural, one {# új kölcsönös ❤️} other {# új kölcsönös ❤️}}",
       "you_have_likes": "{count, plural, one {Valaki rád mosolygott} other {Többen rád mosolyogtak}}"
     },
     "pass_confirm_dialog": {
@@ -230,7 +200,6 @@
       "title": "De várj..."
     },
     "received_likes": "{count, plural, =0 {Még nincs ❤️-od} one {# ❤️-ot kaptál} other {# ❤️-od van}}",
-    "received_likes_cta": "Vajon ki küldte?",
     "you_matched_with": "{name} visszamosolygott",
     "you_received_like": "Valaki rád mosolygott!"
   },
@@ -246,48 +215,30 @@
   "messaging": {
     "already_sent_waiting": "Már küldtél nekik üzenetet. Amint válaszolnak, folytathatod a beszélgetést.",
     "block_member": "Tag letiltása",
-    "block_report_unmatch": "Letiltás/jelentés",
-    "block_user_ok": "{name} letiltása",
-    "conversation_options_title": "Beszélgetés beállításai",
     "loading_older_messages": "Régebbi üzenetek betöltése…",
-    "matches_list_title": "Egymásra mosolyogtunk ❤️",
-    "message_input_hint": "Enter-rel küldheted",
-    "message_input_hint_click": "Kattints a KÜLDÉS gombra",
     "message_input_placeholder": "...",
     "message_sent_success": "Az üzeneted megérkezett a postafiókjába.",
     "my_conversations": "Beszélgetéseim",
     "my_turn": "Én jövök",
-    "nevermind": "Mégse",
-    "new_message_notification": "{sender} küldött egy üzenetet",
     "no_messages_cta": "Komakereső",
     "no_messages_placeholder": "Itt találod majd a beszélgetéseidet.",
-    "no_messages_title": "Még nincsenek üzenetek",
     "page_title": "Üzenetek",
-    "send_failed": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
     "send_message_button": "Küldés",
-    "send_message_heading": "Üzenet küldése",
     "send_message_to_user": "Üzenet {name} részére",
     "send_mode_click": "Kattintással küldés",
     "send_mode_press_enter": "Enter-rel küldés",
     "their_turn": "Ő jön",
     "unknown_sender": "Valaki",
     "voice": {
-      "back_to_text": "Vissza a szöveghez",
       "cancel": "Mégse",
       "confirm_cancel_button": "Mégsem",
       "confirm_send_button": "Küldés",
       "confirm_send_title": "Elküldöd?",
       "max_duration": "Max. {duration}mp",
-      "permission_denied": "A mikrofon hozzáférés megtagadva. Engedélyezd a mikrofon használatát.",
       "record": "Felvétel",
       "record_again": "Újra felvétel",
-      "recording_mode": "Hangüzenet",
-      "record_voice_message": "Hangüzenet rögzítése",
-      "retry_permission": "Próbáld újra",
       "start_recording": "Hangüzenet",
       "stop_recording": "Felvétel leállítása",
-      "text": "Szöveg",
-      "unsupported_browser": "A hangrögzítés nem támogatott ebben a böngészőben.",
       "voice_message_notification": "hangüzenetet küldött",
       "voice_message_preview": "Hangüzenet"
     }
@@ -299,16 +250,8 @@
     }
   },
   "nav": {
-    "browse": "Komakereső",
-    "bulletin": "Hirdetőtábla",
-    "home": "Főoldal",
     "inbox": "Üzenetek",
-    "matches": "Pártaláló",
-    "profile": "Profilom",
-    "settings": "Beállítások"
-  },
-  "notifications": {
-    "voice_message_sent": "Hangüzenetet küldött"
+    "profile": "Profilom"
   },
   "onboarding": {
     "age_subtitle": "Ennyi ideje élek ezen a bolygón",
@@ -317,30 +260,17 @@
     "confirmation": {
       "browse_button": "Komakereső",
       "browse_hint": "Ki van még itt?",
-      "profile_button": "A profilomhoz",
-      "profile_hint": "Hogyan látnak mások?",
       "title": "Kész!"
     },
-    "connections_subtitle": "Teljes vagyok, de jól jönne egy kis társaság.",
-    "connections_title": "Kivel kapcsolódnál?",
-    "country_placeholder": "Ország",
-    "dating_hint_subtitle": "Felteszünk néhány kérdést, hogy megtaláljuk a legjobb párokat számodra. Ezek az információk csak azok számára láthatók, akik szintén kapcsolatot keresnek.",
-    "dating_hint_title": "Állítsuk be a társkereső profilodat",
     "dating_intro_hint": "Ezt csak olyanok fogják olvasni, akik szintén párt (is) keresnek.  Ha inkább későbbre hagynád ezt, hagyd üresen.",
     "dating_intro_placeholder": "Milyen kapcsolódást keresek...",
-    "dating_intro_subtitle": "Ezt csak olyanok látják, akik szintén párkapcsolatot keresnek, nem azok, akik csak barátokat vagy társaságot keresnek.",
     "dating_intro_title": "Kit keresek",
     "dating_mode_step_hint_active": "Ezzel bekapcsolod a párkereső profilt, amin keresztül kapcsolódhatsz másokkal, akik szintén hasonló céllal (is) vannak itt.  A következő lépésben adj meg egy pár adatot és állítsd be, kikkel szeretnél találkozni.  Csak azok fogják látni az adataidat, akikkel kölcsönösen megfeleltek egymás preferenciáinak.",
     "dating_mode_step_hint_inactive": "Később bármikor be- és kikapcsolhatod ezt a profil oldaladon.",
     "dating_mode_step_title": "Szeretnéd a társkereső módot is használni?",
     "dating_mode_switch": "Pártaláló mód",
     "dating_preferences_title": "Preferenciáim",
-    "finish_button": "Befejezés",
     "gender_subtitle": "Így azonosítom magam",
-    "goals": {
-      "dating": "Romantikus kapcsolatot is keresek",
-      "socializing": "Komákat szeretnék megismerni"
-    },
     "interests_hint": "Kezdj el beírni egy érdeklődési kört, majd válaszd ki a listából.  Több címkét is hozzáadhatsz.",
     "interests_popular_heading": "Mások itt ezekre kíváncsiak:",
     "interests_title": "Mi érdekel?",
@@ -348,10 +278,7 @@
     "languages_title": "Nyelvek",
     "location_hint": "Kezdd el beírni a városod vagy falvad nevét, majd válaszd ki a listából.",
     "location_title": "Hol laksz?",
-    "next_button": "Következő",
-    "photos_subtitle": "Tölts fel egy képet magadról, hogy mások is láthassanak.",
     "photos_title": "Képeim",
-    "relationship_subtitle": "A családi helyzetem:",
     "relationship_title": "Családi helyzetem",
     "social_intro_hint": "Mit érdemes rólam tudni? Kit, mit keresek? (Később is bármikor kitöltheted.)",
     "social_intro_placeholder": "Rovid bemutatkozo",
@@ -374,9 +301,7 @@
   "posts": {
     "actions": {
       "cancel": "Mégse",
-      "contact": "Kapcsolatfelvétel",
       "create": "Mehet",
-      "create_cta": "Új hirdetés...",
       "create_cta_title": "Feladok egy hirdetést",
       "create_advert_cta_title": "Hirdetést adok fel",
       "create_event_cta_title": "Eseményt szervezek",
@@ -389,47 +314,21 @@
     },
     "create_title": "Új hirdetés",
     "edit_title": "Hirdetés szerkesztése",
-    "filters": {
-      "all": "Összes hirdetés",
-      "nearby": "A közelben",
-      "offers": "Ajánlatok",
-      "recent": "Legújabb",
-      "requests": "Keresések"
-    },
     "labels": {
       "content": "Tartalom",
-      "location": "Helyszín",
-      "type": "Típus",
-      "updated": "Utoljára frissítve",
       "visibility": "Látható?"
-    },
-    "location": {
-      "enable": "Helymeghatározás engedélyezése",
-      "prompt": "Engedélyezd a helymeghatározást a közeli hirdetések megtekintéséhez"
     },
     "messages": {
       "confirm_delete": "Biztosan törölni szeretnéd ezt a hirdetést?",
-      "created": "Hirdetés sikeresen létrehozva",
-      "deleted": "Hirdetés sikeresen törölve",
-      "error_create": "Nem sikerült létrehozni a hirdetést",
-      "error_delete": "Nem sikerült törölni a hirdetést",
       "error_load": "Nem sikerült betölteni a hirdetéseket",
-      "error_update": "Nem sikerült frissíteni a hirdetést",
-      "no_my_posts": "Még nem hoztál létre hirdetést",
-      "no_nearby": "Nincsenek közeli hirdetések",
-      "no_posts": "Nincsenek hirdetések",
-      "no_recent": "Nincsenek friss hirdetések",
-      "not_visible": "Ez a hirdetés nem látható mások számára",
-      "updated": "Hirdetés sikeresen frissítve"
+      "no_posts": "Nincsenek hirdetések"
     },
-    "my_posts": "Saját hirdetéseim",
     "placeholders": {
       "content": "Írd le, mit kínálsz vagy mit keresel"
     },
     "share": {
       "post_text": "{publicName} posztolt valamit — nézd meg"
     },
-    "title": "Hirdetőtábla",
     "types": {
       "OFFER": "Kínál",
       "REQUEST": "Keres"
@@ -443,48 +342,18 @@
       "confirmation_yes": "Igen, letiltom",
       "dialog_message_1": "Ha ez a személy zavar téged, itt le tudod tiltani. Ezután nem fog tudni üzeneteket küldeni Neked, sem bármilyen interakcióba lépni a profiloddal. Sehol nem fog megjelenni neked  a továbbiakban, mintha soha nem is létezett volna.",
       "dialog_message_2": "Nem kap értesítést róla, hogy letiltottad.",
-      "dialog_title": "Profil letiltása",
-      "empty": "Nincsenek letiltott felhasználóid.",
-      "title": "Letiltott felhasználók",
-      "unblock_button": "Tiltás feloldása",
-      "unblock_confirmation": "Biztos, hogy fel akarod oldani a tiltását?",
-      "unblock_confirmation_no": "Nem, maradjon blokkolva",
-      "unblock_confirmation_yes": "Igen"
+      "dialog_title": "Profil letiltása"
     },
     "browse": {
       "filters": {
-        "age_range": "Korosztály:",
-        "anywhere": "Bárhol",
-        "button_update_prefs": "Rendben",
-        "dialog_cancel_button": "Mégse",
-        "dialog_ok_button": "Keresés",
-        "explore_tags": "Népszerű érdeklődési körök",
-        "filter_display_label": "Hely:",
         "locate_button_title": "Keress körülöttem",
-        "near_label": "Errefelé:",
-        "search_button_title_dating": "Keresés",
-        "search_button_title_social": "Keresés",
-        "search_placeholder": "Keresés",
-        "social_title": "Itt keresek...",
-        "tags_label": "Érdeklődési körök..."
+        "search_placeholder": "Keresés"
       },
       "invite_button": "Megosztás",
-      "loading_more_profiles": "Egy pillanat...",
-      "no_results_cta_description": "Segíthetsz, ha meghívod barátaidat, hogy csatlakozzanak. Minél többen vagyunk, annál jobb.",
-      "no_results_cta_title": "Ez a közösség még növekszik. Hívd meg pár barátodat a környékről?",
-      "social_no_results": "Errefelé még nem találtunk senkit.",
-      "social_no_results_city": "Errefelé még nem találtunk senkit.",
-      "social_no_results_tags": "Nem találtunk senkit, akinek ezek a dolgok érdekelnének.",
-      "views": {
-        "grid_view_button_title": "Lista nézet",
-        "map_view_button_title": "Térkép nézet"
-      }
+      "no_results_cta_title": "Ez a közösség még növekszik. Hívd meg pár barátodat a környékről?"
     },
     "forms": {
       "age_range": "Korosztály",
-      "age_title_display": "{birthYear}-ben születtem",
-      "city_add_placeholder": "Új város hozzáadása",
-      "city_deselect_label": "Eltávolítás",
       "city_search_placeholder": "Helyek keresése",
       "city_start_typing": "Kezdd el beírni a városod nevét",
       "dating_mode": "Párkereső mód",
@@ -492,8 +361,6 @@
       "dating_mode_view": "Párkereső nézet",
       "dating_mode_view_hint_active": "Ezt látják azok, akikkel kölcsönösen megfeleltek egymás preferenciáinak.",
       "dating_profile_tab": "Profilom",
-      "dictate": "Diktálj",
-      "dictate_listening": "Hallgatom...",
       "edit_button_hint": "Változtatás",
       "edit_titles": {
         "gender_identity": "Nemem",
@@ -517,11 +384,8 @@
       "more_options": "További lehetőségek...",
       "my_dating_profile": "Párkereső profilom",
       "my_preferences": "Kit keresek?",
-      "my_profile": "Adataim",
       "name_first_name_only": "Csak a keresztnevedet",
-      "name_invalid": "Adj meg legalább 3 betűt",
       "name_label": "A keresztnevem...",
-      "preference_kids_label": " ",
       "preview_language": "Előnézeti nyelv",
       "preview_profile": "Profilom előnézete",
       "preview_profile_hint": "Így látják mások a profilomat",
@@ -538,12 +402,9 @@
     "image_editor": {
       "delete_button_title": "Kép eltávolítása"
     },
-    "image_editor_help": "Itt tölts fel képet",
     "image_upload": {
       "add_from_phone": "Kép egy albumból",
       "errors": {
-        "IMAGE_TOO_LARGE": "A kép túl nagy. Kérjük, válassz kisebb fotót (max. 10MB).",
-        "IMAGE_UPLOAD_FAILED": "A kép feltöltése nem sikerült. Kérjük, próbáld újra.",
         "unknown": "Valami hiba történt. Kérjük, próbáld újra."
       },
       "looks_good": "Jól lesz, mehet",
@@ -553,12 +414,8 @@
       "try_another": "Válassz másik képet"
     },
     "more_options_button_title": "További lehetőségek",
-    "no_profile_create": "Profil létrehozása",
-    "no_profile_title": "Töltsd ki a profilodat",
     "profile_not_found": "Nincs ilyen profil",
-    "profile_photos": "{name} fotói",
-    "pronouns_edit_label": "névmások",
-    "send_message_button": "Üzenet"
+    "pronouns_edit_label": "névmások"
   },
   "pronouns": {
     "he_him": "Ő/Ő",
@@ -578,13 +435,10 @@
   "settings": {
     "calls_opt_in_hint": "Ezt minden tagnál külön is letilthatod. Ha egyáltalán nem szeretnél videóhívásokat fogadni, vedd ki a pipát.",
     "email_notifications_opt_in": "e-mail értesítést új üzenetről",
-    "enable_push": "Push értesítések engedélyezése",
-    "language_label": "Nyelv",
     "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet",
     "newsletter_opt_in_hint": "Közösségi hírek, új funkciók, ilyesmi. Bármikor leiratkozhatsz.",
     "notifications_label": "Értesítések",
     "notifications_opt_in": "Ha üzenetet, lájkot vagy találatot kapok...",
-    "push_notifications": "Push értesítések",
     "push_notify_messages": "Mobil értesítés  új üzenetről",
     "title": "Beállítások"
   },
@@ -597,10 +451,7 @@
     "dialog_cancel_button": "Bezár",
     "edit_button_title": "Szerkesztés",
     "error": {
-      "cancel": "Mégse",
-      "message": "Hiba történt. Kérjük, próbálja meg később újra.",
       "rate_limit": "Hé, lassíts egy kicsit!",
-      "retry": "Retry",
       "title": "Itt elakadtunk."
     },
     "install_banner": {
@@ -613,35 +464,14 @@
     "locale_selector": {
       "help_wanted_translating": "Segíts a fordításban"
     },
-    "modal": {
-      "close": "Zárja be a"
-    },
     "share_dialog": {
       "button_copied": "Másolva",
       "button_copy": "Másolás",
-      "description": "Hívj meg barátokat",
-      "qr_hint": "Villantsd ezt a telefonjukra",
       "share_text": "{publicName} meghívott, hogy csatlakozz a {siteName}-hez",
-      "share_title": "Nézd meg a {siteName}-t",
-      "title": "Terjeszd az igét"
-    },
-    "spinner": {
-      "spinning": "Spinning"
+      "share_title": "Nézd meg a {siteName}-t"
     },
     "submitbutton": {
-      "save": "Mentés",
-      "submit": "Mehet",
       "working": "Dolgozom..."
-    },
-    "toast": {
-      "error": {
-        "message": "Hiba történt. Kérjük, próbáld újra.",
-        "title": "Hiba"
-      },
-      "success": {
-        "message": "A művelet sikeres volt.",
-        "title": "Siker"
-      }
     },
     "update_banner": {
       "message": "Új verzió jelent meg, frissítsünk?",
