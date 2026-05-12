@@ -14,6 +14,7 @@ import EditPostDialog from './EditPostDialog.vue'
 import EditEventDialog from '@/features/events/components/EditEventDialog.vue'
 import EditCommunityDialog from '@/features/community/components/EditCommunityDialog.vue'
 import IconCommunity from '@/assets/icons/interface/community.svg'
+import IconPost from '@/assets/icons/interface/post-it.svg'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faPenToSquare, faCalendarPlus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { useI18n } from 'vue-i18n'
@@ -162,7 +163,7 @@ async function handleHide(item: OwnerUserContent) {
           :title="$t('posts.actions.create_advert_cta_title')"
           @click="openCreatePost"
         >
-          <FontAwesomeIcon :icon="faPenToSquare" />
+          <IconPost class="svg-icon" />
         </BButton>
         <BButton
           size="lg"

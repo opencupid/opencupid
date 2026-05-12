@@ -46,6 +46,7 @@ import type {
   DeleteCommunityResponse,
 } from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
+import { bus } from '@/lib/bus'
 import type { MapBounds } from '@/features/map/types/map.types'
 
 const OwnerUserContentArraySchema = OwnerUserContentSchema.array()
@@ -136,6 +137,7 @@ export const useUserContentStore = defineStore('userContent', {
         const res = await safeApiCall(() => api.post<CreatePostResponse>('/content/posts', payload))
         const post = OwnerPostSchema.parse(res.data.post)
         this.upsert(post)
+        bus.emit('usercontent:mutated')
         return storeSuccess({ post })
       } catch (error: any) {
         return storeError(error, 'Failed to create post')
@@ -149,6 +151,7 @@ export const useUserContentStore = defineStore('userContent', {
         )
         const post = OwnerPostSchema.parse(res.data.post)
         this.upsert(post)
+        bus.emit('usercontent:mutated')
         return storeSuccess({ post })
       } catch (error: any) {
         return storeError(error, 'Failed to update post')
@@ -159,6 +162,7 @@ export const useUserContentStore = defineStore('userContent', {
       try {
         await safeApiCall(() => api.delete<DeletePostResponse>(`/content/posts/${id}`))
         this.remove(id)
+        bus.emit('usercontent:mutated')
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to delete post')
@@ -172,6 +176,7 @@ export const useUserContentStore = defineStore('userContent', {
         )
         const post = OwnerPostSchema.parse(res.data.post)
         this.upsert(post)
+        bus.emit('usercontent:mutated')
         return storeSuccess({ post })
       } catch (error: any) {
         return storeError(error, 'Failed to update post visibility')
@@ -194,6 +199,7 @@ export const useUserContentStore = defineStore('userContent', {
         )
         const event = OwnerEventSchema.parse(res.data.event)
         this.upsert(event)
+        bus.emit('usercontent:mutated')
         return storeSuccess({ event })
       } catch (error: any) {
         return storeError(error, 'Failed to create event')
@@ -207,6 +213,7 @@ export const useUserContentStore = defineStore('userContent', {
         )
         const event = OwnerEventSchema.parse(res.data.event)
         this.upsert(event)
+        bus.emit('usercontent:mutated')
         return storeSuccess({ event })
       } catch (error: any) {
         return storeError(error, 'Failed to update event')
@@ -217,6 +224,7 @@ export const useUserContentStore = defineStore('userContent', {
       try {
         await safeApiCall(() => api.delete<DeleteEventResponse>(`/content/events/${id}`))
         this.remove(id)
+        bus.emit('usercontent:mutated')
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to delete event')
@@ -231,6 +239,7 @@ export const useUserContentStore = defineStore('userContent', {
         )
         const community = OwnerCommunitySchema.parse(res.data.community)
         this.upsert(community)
+        bus.emit('usercontent:mutated')
         return storeSuccess({ community })
       } catch (error: any) {
         return storeError(error, 'Failed to create community')
@@ -247,6 +256,7 @@ export const useUserContentStore = defineStore('userContent', {
         )
         const community = OwnerCommunitySchema.parse(res.data.community)
         this.upsert(community)
+        bus.emit('usercontent:mutated')
         return storeSuccess({ community })
       } catch (error: any) {
         return storeError(error, 'Failed to update community')
@@ -257,6 +267,7 @@ export const useUserContentStore = defineStore('userContent', {
       try {
         await safeApiCall(() => api.delete<DeleteCommunityResponse>(`/content/communities/${id}`))
         this.remove(id)
+        bus.emit('usercontent:mutated')
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to delete community')
