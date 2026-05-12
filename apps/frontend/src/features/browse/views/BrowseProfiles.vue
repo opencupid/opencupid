@@ -25,10 +25,13 @@ import PublicProfileView from '@/features/publicprofile/components/PublicProfile
 import { renderProfileMarkerHtml } from '@/features/publicprofile/components/profileMarkerIcon'
 import { renderPostMapIconHtml } from '@/features/posts/components/postMapIcon'
 import { renderEventMapIconHtml } from '@/features/events/components/eventMapIcon'
+import { renderCommunityMapIconHtml } from '@/features/community/components/communityMapIcon'
 
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import EventMapPopup from '@/features/events/components/EventMapPopup.vue'
 import EventFullView from '@/features/events/components/EventFullView.vue'
+import CommunityMapPopup from '@/features/community/components/CommunityMapPopup.vue'
+import CommunityFullView from '@/features/community/components/CommunityFullView.vue'
 
 import type { MapPoi } from '@/features/map/types/map.types'
 import PostFullView from '@/features/posts/components/PostFullView.vue'
@@ -100,12 +103,14 @@ function onLocationSet(point: GeoPoint) {
 const iconResolver = computed(() => (poi: MapPoi) => {
   if (poi.kind === 'post') return renderPostMapIconHtml
   if (poi.kind === 'event') return renderEventMapIconHtml
+  if (poi.kind === 'community') return renderCommunityMapIconHtml
   return renderProfileMarkerHtml
 })
 
 const popupResolver = computed(() => (poi: MapPoi) => {
   if (poi.kind === 'post') return PostMapPopup
   if (poi.kind === 'event') return EventMapPopup
+  if (poi.kind === 'community') return CommunityMapPopup
   return ProfileMapCard
 })
 
@@ -173,6 +178,15 @@ watch(
         panel.close()
         router.replace({ name: 'Browse' })
       }
+    } else if (d.type === 'community') {
+      const result = await contentStore.fetchPublicCommunity(d.id)
+      if (result.success && result.data) {
+        panel.show(CommunityFullView, { community: result.data.community })
+      } else {
+        toast.error(t('community.messages.error_load'))
+        panel.close()
+        router.replace({ name: 'Browse' })
+      }
     }
   },
   { immediate: true }
@@ -202,6 +216,9 @@ function handlePostSelect(post: { id: string }) {
 function handleEventSelect(event: { id: string }) {
   router.push({ name: 'PublicEvent', params: { eventId: event.id } })
 }
+function handleCommunitySelect(community: { id: string }) {
+  router.push({ name: 'PublicCommunity', params: { communityId: community.id } })
+}
 function handleProfileSelect(profile: { id: string }) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
@@ -221,6 +238,7 @@ function handleMarkerSelect(id: string) {
   if (!poi) return
   if (poi.kind === 'post') handlePostSelect({ id })
   else if (poi.kind === 'event') handleEventSelect({ id })
+  else if (poi.kind === 'community') handleCommunitySelect({ id })
   else handleProfileSelect({ id })
 }
 
