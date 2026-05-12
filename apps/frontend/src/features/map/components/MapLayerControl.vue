@@ -47,6 +47,9 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
     <BPopover
       ref="popoverRef"
       placement="bottom"
+      close-on-hide
+      :boundary-padding="20"
+      body-class="p-1"
       :title="t('map.layer_control.aria_label')"
     >
       <template #target>
@@ -58,12 +61,13 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
           <IconLayer class="svg-icon" />
         </BButton>
       </template>
-      <div
-        class="d-flex flex-wrap gap-3 py-2 px-1 layer-control-grid"
+      <BRow
+        cols="2"
+        class="g-2 py-2 px-1 layer-control-grid"
         @mouseenter="stopHideTimer"
         @mouseleave="startHideTimer"
       >
-        <div class="text-center">
+        <BCol class="text-center">
           <BFormCheckbox
             button
             button-variant="outline-primary"
@@ -74,13 +78,13 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
             @update:model-value="toggle('profile')"
           >
             <IconProfile class="svg-icon-lg" />
-            <div class="form-hint mt-1">{{ t('map.layer_control.people') }}</div>
+            <div class="layer-label mt-1">{{ t('map.layer_control.people') }}</div>
           </BFormCheckbox>
-        </div>
-        <div class="text-center">
+        </BCol>
+        <BCol class="text-center">
           <BFormCheckbox
             button
-            button-variant="outline-primary"
+            button-variant="outline-post-it"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('post')"
@@ -88,13 +92,13 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
             @update:model-value="toggle('post')"
           >
             <IconPost class="svg-icon-lg" />
-            <div class="form-hint mt-1">{{ t('map.layer_control.posts') }}</div>
+            <div class="layer-label mt-1">{{ t('map.layer_control.posts') }}</div>
           </BFormCheckbox>
-        </div>
-        <div class="text-center">
+        </BCol>
+        <BCol class="text-center">
           <BFormCheckbox
             button
-            button-variant="outline-primary"
+            button-variant="outline-event"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('event')"
@@ -102,13 +106,13 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
             @update:model-value="toggle('event')"
           >
             <IconEvent class="svg-icon-lg" />
-            <div class="form-hint mt-1">{{ t('map.layer_control.events') }}</div>
+            <div class="layer-label mt-1">{{ t('map.layer_control.events') }}</div>
           </BFormCheckbox>
-        </div>
-        <div class="text-center">
+        </BCol>
+        <BCol class="text-center">
           <BFormCheckbox
             button
-            button-variant="outline-primary"
+            button-variant="outline-community"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('community')"
@@ -116,22 +120,28 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
             @update:model-value="toggle('community')"
           >
             <IconCommunity class="svg-icon-lg" />
-            <div class="form-hint mt-1">{{ t('map.layer_control.communities') }}</div>
+            <div class="layer-label mt-1">{{ t('map.layer_control.communities') }}</div>
           </BFormCheckbox>
-        </div>
-      </div>
+        </BCol>
+      </BRow>
     </BPopover>
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .map-layer-control {
   user-select: none;
 }
-.btn-layer-select {
-}
 .layer-control-grid {
-  max-width: 20rem;
-  justify-content: center;
+  width: 100%;
+  margin: 0;
+}
+.btn-layer-select :deep(.btn) {
+  width: 100%;
+  padding-inline: 0.25rem;
+}
+.layer-label {
+  font-size: 0.7rem;
+  line-height: 1.1;
 }
 </style>
