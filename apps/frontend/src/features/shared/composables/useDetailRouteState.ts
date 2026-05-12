@@ -11,6 +11,8 @@ export function useDetailRouteState() {
       return { type: 'post' as const, id: route.params.postId as string }
     if (route.name === 'PublicEvent')
       return { type: 'event' as const, id: route.params.eventId as string }
+    if (route.name === 'PublicCommunity')
+      return { type: 'community' as const, id: route.params.communityId as string }
     return null
   })
 
