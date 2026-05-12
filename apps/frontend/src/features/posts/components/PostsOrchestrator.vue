@@ -110,7 +110,7 @@ async function handleHide(item: OwnerUserContent) {
     <FloatingButton speed-dial>
       <BButton
         size="lg"
-        class="btn-icon-lg btn-shadow"
+        class="btn-icon-lg btn-shadow "
         variant="primary"
         :title="$t('posts.actions.create_cta_title')"
       >
@@ -119,7 +119,7 @@ async function handleHide(item: OwnerUserContent) {
       <template #actions>
         <BButton
           size="lg"
-          class="btn-icon-lg btn-shadow"
+          class="btn-icon-lg btn-shadow btn btn-light rounded-circle"
           variant="outline-primary"
           :title="$t('posts.actions.create_advert_cta_title')"
           @click="openCreatePost"
@@ -128,7 +128,7 @@ async function handleHide(item: OwnerUserContent) {
         </BButton>
         <BButton
           size="lg"
-          class="btn-icon-lg btn-shadow"
+          class="btn-icon-lg btn-shadow btn btn-light rounded-circle"
           variant="outline-primary"
           :title="$t('posts.actions.create_event_cta_title')"
           @click="openCreateEvent"
