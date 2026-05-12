@@ -8,6 +8,7 @@ let reply: MockReply
 let mockUserContentService: any
 let mockPostService: any
 let mockEventService: any
+let mockCommunityService: any
 
 vi.mock('@/services/userContent.service', () => ({
   UserContentService: { getInstance: () => mockUserContentService },
@@ -17,6 +18,9 @@ vi.mock('@/services/post.service', () => ({
 }))
 vi.mock('@/services/event.service', () => ({
   EventService: { getInstance: () => mockEventService },
+}))
+vi.mock('@/services/community.service', () => ({
+  CommunityService: { getInstance: () => mockCommunityService },
 }))
 
 import contentRoutes from '../../api/routes/content.route'
@@ -31,6 +35,7 @@ beforeEach(async () => {
   }
   mockPostService = { findByIdHydrated: vi.fn().mockResolvedValue(null) }
   mockEventService = { findByIdHydrated: vi.fn().mockResolvedValue(null) }
+  mockCommunityService = { findByIdHydrated: vi.fn().mockResolvedValue(null) }
   fastify = new MockFastify()
   reply = new MockReply()
   await contentRoutes(fastify as any, {})
@@ -189,7 +194,11 @@ describe('GET /:id (unified detail)', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       postedById: 'someone',
-      event: { userContentId: 'cuc00000000000000002', startsAt: new Date('2027-01-01'), venue: null },
+      event: {
+        userContentId: 'cuc00000000000000002',
+        startsAt: new Date('2027-01-01'),
+        venue: null,
+      },
       postedBy: {
         id: 'someone',
         publicName: 'Y',
@@ -203,6 +212,43 @@ describe('GET /:id (unified detail)', () => {
       reply as any
     )
     expect(mockEventService.findByIdHydrated).toHaveBeenCalled()
+    expect(reply.statusCode).toBe(200)
+  })
+
+  it('dispatches to CommunityService.findByIdHydrated when kind=community', async () => {
+    const handler = fastify.routes['GET /:id']
+    mockUserContentService.findByIdMetadata.mockResolvedValue({
+      id: 'cuc00000000000000003',
+      kind: 'community',
+      postedById: 'someone',
+    })
+    mockCommunityService.findByIdHydrated.mockResolvedValue({
+      id: 'cuc00000000000000003',
+      kind: 'community',
+      content: 'guild',
+      isDeleted: false,
+      isVisible: true,
+      country: null,
+      cityName: null,
+      lat: null,
+      lon: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      postedById: 'someone',
+      community: { userContentId: 'cuc00000000000000003', yearFounded: 1998 },
+      postedBy: {
+        id: 'someone',
+        publicName: 'Z',
+        profileImages: [],
+        conversationAsA: [],
+        conversationAsB: [],
+      },
+    })
+    await handler(
+      { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000003' } } as any,
+      reply as any
+    )
+    expect(mockCommunityService.findByIdHydrated).toHaveBeenCalled()
     expect(reply.statusCode).toBe(200)
   })
 

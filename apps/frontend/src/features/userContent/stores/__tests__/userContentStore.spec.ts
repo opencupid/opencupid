@@ -65,6 +65,20 @@ function makeOwnerEvent(id: string, overrides: Record<string, unknown> = {}) {
   }
 }
 
+function makeOwnerCommunity(id: string, overrides: Record<string, unknown> = {}) {
+  return {
+    ...baseScalars,
+    id,
+    kind: 'community' as const,
+    yearFounded: 1998,
+    postedBy: profileSummary,
+    isDeleted: false,
+    isVisible: true,
+    isOwn: true,
+    ...overrides,
+  }
+}
+
 describe('useUserContentStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -98,12 +112,18 @@ describe('useUserContentStore', () => {
     })
   })
 
-  describe('myPosts / myEvents getters', () => {
+  describe('myPosts / myEvents / myCommunities getters', () => {
     it('partitions myContent by kind', () => {
       const store = useUserContentStore()
-      store.myContent = [makeOwnerPost(CUID_1) as any, makeOwnerEvent(CUID_2) as any]
+      const CUID_3 = 'cmc7t45x400086w39gj30pzn5'
+      store.myContent = [
+        makeOwnerPost(CUID_1) as any,
+        makeOwnerEvent(CUID_2) as any,
+        makeOwnerCommunity(CUID_3) as any,
+      ]
       expect(store.myPosts.map((c) => c.id)).toEqual([CUID_1])
       expect(store.myEvents.map((c) => c.id)).toEqual([CUID_2])
+      expect(store.myCommunities.map((c) => c.id)).toEqual([CUID_3])
     })
   })
 
@@ -208,6 +228,75 @@ describe('useUserContentStore', () => {
       const result = await store.deleteEvent(CUID_1)
 
       expect(result.success).toBe(true)
+      expect(store.myContent).toEqual([])
+    })
+  })
+
+  describe('community CRUD mirrors into myContent', () => {
+    it('createCommunity posts to /content/communities and upserts the result', async () => {
+      const store = useUserContentStore()
+      const created = makeOwnerCommunity(CUID_1)
+      mockApi.post.mockResolvedValue({ data: { success: true, community: created } })
+
+      const result = await store.createCommunity({
+        content: 'a local guild',
+        yearFounded: 1998,
+      } as any)
+
+      expect(result.success).toBe(true)
+      expect(mockApi.post).toHaveBeenCalledWith('/content/communities', {
+        content: 'a local guild',
+        yearFounded: 1998,
+      })
+      expect(store.myContent.map((c) => c.id)).toEqual([CUID_1])
+    })
+
+    it('updateCommunity patches and replaces the existing item', async () => {
+      const store = useUserContentStore()
+      store.myContent = [makeOwnerCommunity(CUID_1) as any]
+      const updated = makeOwnerCommunity(CUID_1, { content: 'renamed guild' })
+      mockApi.patch.mockResolvedValue({ data: { success: true, community: updated } })
+
+      const result = await store.updateCommunity(CUID_1, { content: 'renamed guild' } as any)
+
+      expect(result.success).toBe(true)
+      expect(mockApi.patch).toHaveBeenCalledWith(`/content/communities/${CUID_1}`, {
+        content: 'renamed guild',
+      })
+      expect(store.myContent[0]!.content).toBe('renamed guild')
+    })
+
+    it('deleteCommunity removes from myContent', async () => {
+      const store = useUserContentStore()
+      store.myContent = [makeOwnerCommunity(CUID_1) as any]
+      mockApi.delete.mockResolvedValue({ data: { success: true } })
+
+      const result = await store.deleteCommunity(CUID_1)
+
+      expect(result.success).toBe(true)
+      expect(mockApi.delete).toHaveBeenCalledWith(`/content/communities/${CUID_1}`)
+      expect(store.myContent).toEqual([])
+    })
+
+    it('fetchPublicCommunity returns the parsed detail without touching myContent', async () => {
+      const store = useUserContentStore()
+      const detail = {
+        ...baseScalars,
+        id: CUID_1,
+        kind: 'community',
+        yearFounded: 1998,
+        isOwn: false,
+        postedBy: { ...profileSummary, haveConversation: false, canMessage: true },
+      }
+      mockApi.get.mockResolvedValue({ data: { success: true, community: detail } })
+
+      const result = await store.fetchPublicCommunity(CUID_1)
+
+      expect(result.success).toBe(true)
+      expect(mockApi.get).toHaveBeenCalledWith(
+        `/content/communities/${CUID_1}`,
+        expect.objectContaining({ signal: expect.any(Object) })
+      )
       expect(store.myContent).toEqual([])
     })
   })

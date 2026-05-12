@@ -88,6 +88,7 @@ enum PostType {
 enum ContentKind {
   post
   event
+  community
 }
 
 enum ActivitySegment {
@@ -407,8 +408,9 @@ model UserContent {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
-  post  PostContent?
-  event EventContent?
+  post      PostContent?
+  event     EventContent?
+  community CommunityContent?
 
   @@index([postedById])
   @@index([kind])
@@ -430,6 +432,12 @@ model EventContent {
   venue         String?
 
   @@index([startsAt])
+}
+
+model CommunityContent {
+  userContentId String      @id
+  userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
+  yearFounded   Int?
 }
 
 model ProfileSessionLog {

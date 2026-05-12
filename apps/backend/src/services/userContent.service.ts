@@ -37,6 +37,7 @@ const profileSummaryInclude = {
 const ownerHydratedInclude = {
   post: true,
   event: true,
+  community: true,
   postedBy: { include: { profileImages: true } },
 } as const
 
@@ -126,10 +127,11 @@ export class UserContentService {
   }
 
   /**
-   * Owner-scoped fully-hydrated lookup: includes both kind-specific content
-   * rows (post and event) joined eagerly so callers receive the discriminated
-   * payload in a single query. Used by `GET /api/content/me` for the unified
-   * "my content" list view.
+   * Owner-scoped fully-hydrated lookup: eagerly joins every kind-specific
+   * content row so callers receive the full discriminated payload in a single
+   * query. The set of joined kinds is governed by `ownerHydratedInclude` —
+   * every new content kind must be added there so `GET /api/content/me`
+   * keeps returning a complete unified list.
    */
   async findByProfileIdOwner(
     profileId: string,

@@ -175,7 +175,7 @@ describe('findClustersForMapBounds with layer kinds', () => {
     vi.clearAllMocks()
   })
 
-  it('sends kinds=profile,post when both layers are on', async () => {
+  it('sends all enabled layers as comma-separated kinds param by default', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
     await store.findClustersForMapBounds(bounds, 7)
@@ -183,7 +183,7 @@ describe('findClustersForMapBounds with layer kinds', () => {
     expect(mockGet).toHaveBeenCalledWith(
       '/find/clusters',
       expect.objectContaining({
-        params: expect.objectContaining({ kinds: 'profile,post,event' }),
+        params: expect.objectContaining({ kinds: 'profile,post,event,community' }),
       })
     )
   })

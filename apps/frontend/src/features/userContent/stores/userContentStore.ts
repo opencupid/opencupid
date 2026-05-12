@@ -21,17 +21,29 @@ import {
   type OwnerEvent,
   type PublicEventDetail,
 } from '@zod/event/event.dto'
+import {
+  OwnerCommunitySchema,
+  PublicCommunityDetailSchema,
+  type CreateCommunityPayload,
+  type UpdateCommunityPayload,
+  type OwnerCommunity,
+  type PublicCommunityDetail,
+} from '@zod/community/community.dto'
 import type {
   MyContentResponse,
   PostSummariesResponse,
   PublicPostDetailResponse,
   PublicEventDetailResponse,
+  PublicCommunityDetailResponse,
   CreatePostResponse,
   UpdatePostResponse,
   DeletePostResponse,
   CreateEventResponse,
   UpdateEventResponse,
   DeleteEventResponse,
+  CreateCommunityResponse,
+  UpdateCommunityResponse,
+  DeleteCommunityResponse,
 } from '@zod/apiResponse.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 import type { MapBounds } from '@/features/map/types/map.types'
@@ -42,10 +54,12 @@ const PostSummaryArraySchema = PostSummarySchema.array()
 type StoreMyContentResponse = StoreResponse<{ items: OwnerUserContent[] }>
 type StorePostResponse = StoreResponse<{ post: OwnerPost }>
 type StoreEventResponse = StoreResponse<{ event: OwnerEvent }>
+type StoreCommunityResponse = StoreResponse<{ community: OwnerCommunity }>
 type StorePostSummariesResponse = StoreResponse<{ posts: PostSummary[] }>
 
 let publicPostAbortController: AbortController | null = null
 let publicEventAbortController: AbortController | null = null
+let publicCommunityAbortController: AbortController | null = null
 
 /**
  * Single store for all user-content state and mutations. Holds the
@@ -72,6 +86,7 @@ export const useUserContentStore = defineStore('userContent', {
   getters: {
     myPosts: (state) => state.myContent.filter((c) => c.kind === 'post'),
     myEvents: (state) => state.myContent.filter((c) => c.kind === 'event'),
+    myCommunities: (state) => state.myContent.filter((c) => c.kind === 'community'),
   },
 
   actions: {
@@ -208,6 +223,46 @@ export const useUserContentStore = defineStore('userContent', {
       }
     },
 
+    // ─── Community CRUD ───────────────────────────────────────────────
+    async createCommunity(payload: CreateCommunityPayload): Promise<StoreCommunityResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.post<CreateCommunityResponse>('/content/communities', payload)
+        )
+        const community = OwnerCommunitySchema.parse(res.data.community)
+        this.upsert(community)
+        return storeSuccess({ community })
+      } catch (error: any) {
+        return storeError(error, 'Failed to create community')
+      }
+    },
+
+    async updateCommunity(
+      id: string,
+      payload: UpdateCommunityPayload
+    ): Promise<StoreCommunityResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.patch<UpdateCommunityResponse>(`/content/communities/${id}`, payload)
+        )
+        const community = OwnerCommunitySchema.parse(res.data.community)
+        this.upsert(community)
+        return storeSuccess({ community })
+      } catch (error: any) {
+        return storeError(error, 'Failed to update community')
+      }
+    },
+
+    async deleteCommunity(id: string): Promise<StoreResponse<void>> {
+      try {
+        await safeApiCall(() => api.delete<DeleteCommunityResponse>(`/content/communities/${id}`))
+        this.remove(id)
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to delete community')
+      }
+    },
+
     // ─── Post-only public reads ───────────────────────────────────────
     async fetchPublicPost(id: string): Promise<StoreResponse<{ post: PublicPostDetail }>> {
       if (publicPostAbortController) publicPostAbortController.abort()
@@ -250,6 +305,33 @@ export const useUserContentStore = defineStore('userContent', {
       } catch (error: any) {
         if (error instanceof CanceledError) return storeSuccess()
         return storeError(error, 'Failed to fetch event')
+      }
+    },
+
+    // ─── Community-only public reads ──────────────────────────────────
+    async fetchPublicCommunity(
+      id: string,
+      signal?: AbortSignal
+    ): Promise<StoreResponse<{ community: PublicCommunityDetail }>> {
+      if (publicCommunityAbortController) publicCommunityAbortController.abort()
+      const controller = new AbortController()
+      publicCommunityAbortController = controller
+      if (signal) {
+        if (signal.aborted) controller.abort()
+        else signal.addEventListener('abort', () => controller.abort(), { once: true })
+      }
+
+      try {
+        const res = await safeApiCall(() =>
+          api.get<PublicCommunityDetailResponse>(`/content/communities/${id}`, {
+            signal: controller.signal,
+          })
+        )
+        const community = PublicCommunityDetailSchema.parse(res.data.community)
+        return storeSuccess({ community })
+      } catch (error: any) {
+        if (error instanceof CanceledError) return storeSuccess()
+        return storeError(error, 'Failed to fetch community')
       }
     },
 
