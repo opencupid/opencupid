@@ -148,7 +148,7 @@ async function handleHide(item: OwnerUserContent) {
     <FloatingButton speed-dial>
       <BButton
         size="lg"
-        class="btn-icon-lg btn-shadow "
+        class="btn-icon-lg btn-shadow"
         variant="primary"
         :title="$t('posts.actions.create_cta_title')"
       >

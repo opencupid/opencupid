@@ -31,7 +31,7 @@ const shareCommunityPayload = computed<SharePayload>(() => ({
 }))
 
 const isVisible = computed(
-  () => !('isVisible' in props.community) || props.community.isVisible !== false,
+  () => !('isVisible' in props.community) || props.community.isVisible !== false
 )
 const communityLocation = computed(() => props.community.location ?? null)
 
@@ -53,7 +53,10 @@ const displayContent = computed(() => {
       @click="$emit('click', community)"
     >
       <BRow class="g-2 align-items-start mb-3">
-        <BCol cols="12" md="8">
+        <BCol
+          cols="12"
+          md="8"
+        >
           <p class="lh-sm small mb-0">{{ displayContent }}</p>
         </BCol>
         <BCol
@@ -62,10 +65,16 @@ const displayContent = computed(() => {
           class="small lh-sm text-center d-flex align-items-center flex-column"
         >
           <IconCommunity class="text-primary d-block svg-icon-lg mb-1" />
-          <h6 v-if="community.yearFounded != null" class="m-0">
+          <h6
+            v-if="community.yearFounded != null"
+            class="m-0"
+          >
             {{ t('community.labels.founded_since', { year: community.yearFounded }) }}
           </h6>
-          <LocationLabel v-if="communityLocation" :location="communityLocation" />
+          <LocationLabel
+            v-if="communityLocation"
+            :location="communityLocation"
+          />
         </BCol>
       </BRow>
 
@@ -81,7 +90,10 @@ const displayContent = computed(() => {
             @hide="$emit('hide', community)"
           />
           <template v-else>
-            <ProfileThumbnail :profile="community.postedBy" size="sm" />
+            <ProfileThumbnail
+              :profile="community.postedBy"
+              size="sm"
+            />
             <span>{{ community.postedBy.publicName }}</span>
           </template>
         </div>

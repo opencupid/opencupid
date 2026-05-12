@@ -87,19 +87,25 @@ describe('MapLayerControl', () => {
   it('emits update:modelValue adding "profile" when the people toggle is checked while unselected', async () => {
     const wrapper = mountWith(['post', 'event', 'community'])
     await toggles(wrapper).people.setValue(true)
-    expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'event', 'community', 'profile']]])
+    expect(wrapper.emitted('update:modelValue')).toEqual([
+      [['post', 'event', 'community', 'profile']],
+    ])
   })
 
   it('emits update:modelValue adding "event" when the events toggle is checked while unselected', async () => {
     const wrapper = mountWith(['post', 'profile', 'community'])
     await toggles(wrapper).events.setValue(true)
-    expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'profile', 'community', 'event']]])
+    expect(wrapper.emitted('update:modelValue')).toEqual([
+      [['post', 'profile', 'community', 'event']],
+    ])
   })
 
   it('emits update:modelValue adding "community" when the communities toggle is checked while unselected', async () => {
     const wrapper = mountWith(['post', 'profile', 'event'])
     await toggles(wrapper).communities.setValue(true)
-    expect(wrapper.emitted('update:modelValue')).toEqual([[['post', 'profile', 'event', 'community']]])
+    expect(wrapper.emitted('update:modelValue')).toEqual([
+      [['post', 'profile', 'event', 'community']],
+    ])
   })
 
   it('disables the only-selected toggle so it cannot be unchecked', () => {

@@ -30,7 +30,10 @@ const handleBack = () => {
 
 <template>
   <div class="w-100">
-    <div class="d-flex justify-content-end align-items-center w-100" v-if="isMdUp">
+    <div
+      class="d-flex justify-content-end align-items-center w-100"
+      v-if="isMdUp"
+    >
       <BButton
         variant="link-secondary"
         :title="$t('profiles.back_button_title')"
