@@ -107,6 +107,29 @@
       "event_text": "{publicName} is hosting an event — check it out"
     }
   },
+  "community": {
+    "actions": {
+      "cancel": "Nevermind",
+      "create": "Submit",
+      "save": "Save community"
+    },
+    "labels": {
+      "content": "About this community",
+      "year_founded": "Founded in",
+      "founded_since": "Since {year}",
+      "visibility": "Show this community"
+    },
+    "messages": {
+      "error_load": "Failed to load community"
+    },
+    "placeholders": {
+      "content": "Describe your community…",
+      "year_unknown": "Don't know / not sure"
+    },
+    "share": {
+      "community_text": "{publicName} runs a community — check it out"
+    }
+  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgynous",
@@ -212,6 +235,7 @@
       "people": "People",
       "posts": "Posts",
       "events": "Events",
+      "communities": "Communities",
       "aria_label": "Map layers"
     }
   },
@@ -352,6 +376,7 @@
       "create_cta_title": "Post something",
       "create_advert_cta_title": "Post an advert",
       "create_event_cta_title": "Post an event",
+      "create_community_cta_title": "Create a community",
       "delete": "Delete",
       "edit": "Edit Post",
       "hide": "Hide (but don't delete)",
