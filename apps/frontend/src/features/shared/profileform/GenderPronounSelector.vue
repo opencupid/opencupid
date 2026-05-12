@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { GenderType, PronounsType } from '@zod/generated'
+import type { GenderType } from '@zod/generated/inputTypeSchemas/GenderSchema'
+import type { PronounsType } from '@zod/generated/inputTypeSchemas/PronounsSchema'
 import { type MultiselectOption } from '@/types/multiselect'
 
 import { computed, ref } from 'vue'

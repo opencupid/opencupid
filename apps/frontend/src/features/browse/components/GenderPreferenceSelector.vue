@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '@/features/shared/composables/useEnumOptions'
 import { computed, ref, useId } from 'vue'
 import { type MultiselectOption } from '@/types/multiselect'
-import type { GenderType } from '@zod/generated'
+import type { GenderType } from '@zod/generated/inputTypeSchemas/GenderSchema'
 import ExpandCollapseButton from '@/features/shared/ui/ExpandCollapseButton.vue'
 
 const { t } = useI18n()
