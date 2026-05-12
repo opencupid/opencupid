@@ -121,6 +121,53 @@ describe('GET /:id', () => {
   })
 })
 
+describe('PATCH /:id', () => {
+  it('returns 401 when no profile', async () => {
+    const handler = fastify.routes['PATCH /:id']
+    await handler(
+      { session: {}, params: { id: communityId }, body: { isVisible: false } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns 404 when ownership mismatch', async () => {
+    const handler = fastify.routes['PATCH /:id']
+    mockCommunityService.update.mockResolvedValue(null)
+    await handler(
+      {
+        session: { profileId: otherProfileId },
+        params: { id: communityId },
+        body: { isVisible: false },
+      } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns updated owner DTO and evicts cluster', async () => {
+    const handler = fastify.routes['PATCH /:id']
+    mockCommunityService.update.mockResolvedValue({
+      ...makeRow(ownerProfileId),
+      content: 'updated guild',
+    })
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        params: { id: communityId },
+        body: { content: 'updated guild' },
+      } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toMatchObject({
+      success: true,
+      community: expect.objectContaining({ content: 'updated guild' }),
+    })
+    expect(mockCluster.evictAll).toHaveBeenCalled()
+  })
+})
+
 describe('DELETE /:id', () => {
   it('returns 401 when no profile', async () => {
     const handler = fastify.routes['DELETE /:id']
@@ -147,5 +194,92 @@ describe('DELETE /:id', () => {
     )
     expect(reply.statusCode).toBe(200)
     expect(mockCluster.evictAll).toHaveBeenCalled()
+  })
+})
+
+describe('GET /me', () => {
+  it('returns 401 when no profile', async () => {
+    const handler = fastify.routes['GET /me']
+    await handler({ session: {}, query: {} } as any, reply as any)
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns own communities with includeInvisible=true', async () => {
+    const handler = fastify.routes['GET /me']
+    mockCommunityService.findByProfileIdHydrated.mockResolvedValue([makeRow(ownerProfileId)])
+    await handler({ session: { profileId: ownerProfileId }, query: {} } as any, reply as any)
+    expect(mockCommunityService.findByProfileIdHydrated).toHaveBeenCalledWith(
+      ownerProfileId,
+      ownerProfileId,
+      expect.objectContaining({ includeInvisible: true })
+    )
+    expect(reply.payload).toMatchObject({
+      success: true,
+      communities: expect.arrayContaining([expect.objectContaining({ _isOwn: true })]),
+    })
+  })
+})
+
+describe('GET /profile/:profileId', () => {
+  it('owner viewing own profile gets owner mapper + includeInvisible', async () => {
+    const handler = fastify.routes['GET /profile/:profileId']
+    mockCommunityService.findByProfileIdHydrated.mockResolvedValue([makeRow(ownerProfileId)])
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        params: { profileId: ownerProfileId },
+        query: {},
+      } as any,
+      reply as any
+    )
+    expect(mockCommunityService.findByProfileIdHydrated).toHaveBeenCalledWith(
+      ownerProfileId,
+      ownerProfileId,
+      expect.objectContaining({ includeInvisible: true })
+    )
+    expect(reply.payload).toMatchObject({
+      success: true,
+      communities: [expect.objectContaining({ _isOwn: true })],
+    })
+  })
+
+  it('stranger gets detail mapper + visible-only', async () => {
+    const handler = fastify.routes['GET /profile/:profileId']
+    mockCommunityService.findByProfileIdHydrated.mockResolvedValue([makeRow(otherProfileId)])
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        params: { profileId: otherProfileId },
+        query: {},
+      } as any,
+      reply as any
+    )
+    expect(mockCommunityService.findByProfileIdHydrated).toHaveBeenCalledWith(
+      otherProfileId,
+      ownerProfileId,
+      expect.objectContaining({ includeInvisible: false })
+    )
+    expect(reply.payload).toMatchObject({
+      success: true,
+      communities: [expect.objectContaining({ _isOwn: false })],
+    })
+  })
+
+  it('forwards pagination params', async () => {
+    const handler = fastify.routes['GET /profile/:profileId']
+    mockCommunityService.findByProfileIdHydrated.mockResolvedValue([])
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        params: { profileId: otherProfileId },
+        query: { limit: '5', offset: '10' },
+      } as any,
+      reply as any
+    )
+    expect(mockCommunityService.findByProfileIdHydrated).toHaveBeenCalledWith(
+      otherProfileId,
+      ownerProfileId,
+      expect.objectContaining({ limit: 5, offset: 10 })
+    )
   })
 })

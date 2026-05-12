@@ -13,9 +13,17 @@ import { ProfileSummarySchema } from '@zod/profile/profile.dto'
 const COMMUNITY_KIND = z.literal('community')
 
 const MIN_YEAR_FOUNDED = 1
-const MAX_YEAR_FOUNDED = new Date().getUTCFullYear()
 
-const YearFoundedSchema = z.number().int().min(MIN_YEAR_FOUNDED).max(MAX_YEAR_FOUNDED).nullable()
+// Upper bound is re-evaluated per parse so a long-running process doesn't keep
+// rejecting the new year after a calendar rollover.
+const YearFoundedSchema = z
+  .number()
+  .int()
+  .min(MIN_YEAR_FOUNDED)
+  .refine((y) => y <= new Date().getUTCFullYear(), {
+    message: 'yearFounded cannot be in the future',
+  })
+  .nullable()
 
 export const PublicCommunitySchema = UserContentMetadataSchema.extend({
   kind: COMMUNITY_KIND,
