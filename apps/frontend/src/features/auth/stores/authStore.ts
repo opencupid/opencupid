@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import Cookies from 'universal-cookie'
 import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
-import { type UserRoleType } from '@zod/generated'
+import type { UserRoleType } from '@zod/generated/inputTypeSchemas/UserRoleSchema'
 
 import { LoginUserSchema } from '@zod/user/user.dto'
 

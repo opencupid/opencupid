@@ -1,6 +1,8 @@
 generator zod {
-  provider = "zod-prisma-types"
-  output   = "../../../packages/shared/zod/generated"
+  provider         = "zod-prisma-types"
+  output           = "../../../packages/shared/zod/generated"
+  createInputTypes = false
+  useMultipleFiles = true
 }
 
 generator client {
