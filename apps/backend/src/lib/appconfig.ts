@@ -73,7 +73,7 @@ if (!['production', 'staging'].includes(process.env.NODE_ENV!)) {
 // Directly parse and export
 const parsed = configSchema.safeParse(process.env)
 if (!parsed.success) {
-  console.error('Invalid environment variables:', parsed.error.format())
+  console.error('Invalid environment variables:', z.treeifyError(parsed.error))
   process.exit(1)
 }
 

@@ -13,11 +13,6 @@
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "groupName": "all non-major",
       "automerge": true
-    },
-    {
-      "description": "Pin Prisma to v6",
-      "matchPackagePatterns": ["^prisma", "^@prisma/"],
-      "allowedVersions": "<7.0.0"
     }
   ]
 }
