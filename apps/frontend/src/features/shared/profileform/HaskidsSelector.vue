@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { HasKidsType } from '@zod/generated'
+import type { HasKidsType } from '@zod/generated/inputTypeSchemas/HasKidsSchema'
 import { useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '../composables/useEnumOptions'

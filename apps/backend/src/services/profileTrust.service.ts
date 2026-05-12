@@ -1,4 +1,4 @@
-import type { TrustReasonType } from '@zod/generated'
+import type { TrustReasonType } from '@zod/generated/inputTypeSchemas/TrustReasonSchema'
 import { prisma } from '@/lib/prisma'
 import { MessageService } from '@/services/messaging.service'
 

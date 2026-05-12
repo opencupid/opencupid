@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { GenderType } from '@zod/generated'
+import type { GenderType } from '@zod/generated/inputTypeSchemas/GenderSchema'
 import { type MultiselectOption } from '@/types/multiselect'
 
 import { useI18n } from 'vue-i18n'

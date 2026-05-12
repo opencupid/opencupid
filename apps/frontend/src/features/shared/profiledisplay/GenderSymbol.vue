@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { type GenderType } from '@zod/generated'
+import type { GenderType } from '@zod/generated/inputTypeSchemas/GenderSchema'
 import { genderIcons } from './genderIcons'
 
 const props = defineProps<{

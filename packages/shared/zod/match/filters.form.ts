@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { GenderSchema, HasKidsSchema, type GenderType } from '@zod/generated'
+import { GenderSchema, HasKidsSchema } from '@zod/generated'
+import type { GenderType } from '@zod/generated/inputTypeSchemas/GenderSchema'
 
 export const PREF_AGE_MIN = 18
 export const PREF_AGE_MAX = 80

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RelationshipStatusType } from '@zod/generated'
+import type { RelationshipStatusType } from '@zod/generated/inputTypeSchemas/RelationshipStatusSchema'
 import { useId } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useEnumOptions } from '../composables/useEnumOptions'
