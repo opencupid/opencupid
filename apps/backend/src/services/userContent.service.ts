@@ -75,7 +75,10 @@ export class UserContentService {
     })
   }
 
-  async findInBounds(box: BoundsBox): Promise<UserContentMetadataRow[]> {
+  async findInBounds(
+    box: BoundsBox,
+    opts: { limit?: number } = {}
+  ): Promise<UserContentMetadataRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,
@@ -84,6 +87,8 @@ export class UserContentService {
         lon: { gte: box.west, lte: box.east },
       },
       include: profileSummaryInclude,
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+      take: opts.limit ?? 50,
     })
   }
 
