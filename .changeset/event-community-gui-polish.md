@@ -1,5 +1,6 @@
 ---
 '@opencupid/frontend': minor
+'@opencupid/shared': patch
 ---
 
 GUI iteration on top of the Community feature (#1454):
