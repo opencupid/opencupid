@@ -4,7 +4,7 @@ import { computed } from 'vue'
 const props = defineProps({
   variant: {
     type: String,
-    default: '',
+    default: 'post',
   },
   id: {
     type: String,
