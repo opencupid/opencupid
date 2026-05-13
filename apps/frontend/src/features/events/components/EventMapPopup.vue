@@ -17,23 +17,20 @@ const startsAtFormatted = computed(() =>
 
 <template>
   <div
-    class="event-map-popup cursor-pointer p-3 user-select-none"
+    class="event-map-popup bg-event-light cursor-pointer p-3 user-select-none"
     @click="$emit('click', item.id)"
   >
-    <div class="event-map-popup__date small text-primary fw-semibold mb-1">
-      {{ startsAtFormatted }}
-    </div>
-    <div class="event-map-popup__content">
+    <div class="event-map-popup__content mb-1">
       {{ (item.content ?? '').substring(0, 120) }}
+    </div>
+    <div class="small text-secondary fw-semibold ">
+      {{ startsAtFormatted }}
     </div>
   </div>
 </template>
 
 <style scoped>
 .event-map-popup {
-  background: var(--bs-body-bg, #fff);
-  font-size: 0.85rem;
   word-break: break-word;
-  border-left: 3px solid var(--bs-primary, #0d6efd);
 }
 </style>

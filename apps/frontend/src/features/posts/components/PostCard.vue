@@ -68,8 +68,8 @@ const sharePostPayload = computed<SharePayload>(() => ({
   <div class="post-wrapper position-relative w-100 p-2">
     <PostIt
       class="position-relative p-2"
+      variant="post"
       :id="post.id"
-      :variant="post.isOwn ? 'accent' : ''"
     >
       <template #header>
         <div class="d-flex justify-content-end align-items-center">

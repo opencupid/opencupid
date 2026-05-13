@@ -14,26 +14,25 @@ const { t } = useI18n()
     class="community-map-popup cursor-pointer p-3 user-select-none"
     @click="$emit('click', item.id)"
   >
-    <div class="community-map-popup__icon mb-2 text-primary">
-      <IconCommunity class="svg-icon" />
-      <span
-        v-if="item.yearFounded != null"
-        class="small fw-semibold ms-2"
-      >
-        {{ t('community.labels.founded_since', { year: item.yearFounded }) }}
-      </span>
-    </div>
-    <div class="community-map-popup__content">
-      {{ (item.content ?? '').substring(0, 120) }}
+    <div class="mb-2 text-primary d-flex flex-row">
+      <IconCommunity class="svg-icon flex-shrink-0 flex-grow-0 me-2" />
+      <div class="flex-grow-1">
+        <div class="mb-1">
+          {{ (item.content ?? '').substring(0, 120) }}
+        </div>
+        <div
+          class="small text-secondary fw-semibold"
+          v-if="item.yearFounded != null"
+        >
+          {{ t('community.labels.founded_since', { year: item.yearFounded }) }}
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .community-map-popup {
-  background: var(--bs-body-bg, #fff);
-  font-size: 0.85rem;
   word-break: break-word;
-  border-left: 3px solid var(--bs-primary, #0d6efd);
 }
 </style>
