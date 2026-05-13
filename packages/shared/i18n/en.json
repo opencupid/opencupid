@@ -28,13 +28,36 @@
   "calls": {
     "accept": "Accept",
     "allow_calls_label": "Allow calls",
-    "section_title": "Calls",
     "call_button_title": "Start video call",
     "calling": "Calling...",
     "cancel_call": "Cancel",
     "decline": "Decline",
     "incoming_call_from": "Incoming call from {name}",
-    "open_to_calls_setting": "I'm open to video calls"
+    "open_to_calls_setting": "I'm open to video calls",
+    "section_title": "Calls"
+  },
+  "community": {
+    "actions": {
+      "cancel": "Nevermind",
+      "create": "Submit",
+      "save": "Save community"
+    },
+    "labels": {
+      "content": "About this community",
+      "founded_since": "Since {year}",
+      "visibility": "Show this community",
+      "year_founded": "Founded in"
+    },
+    "messages": {
+      "error_load": "Failed to load community"
+    },
+    "placeholders": {
+      "content": "Describe your community…",
+      "year_unknown": "Don't know / not sure"
+    },
+    "share": {
+      "community_text": "{publicName} runs a community — check it out"
+    }
   },
   "emails": {
     "fallback_hint": "If the button doesn't work, copy and paste this URL:",
@@ -99,29 +122,6 @@
       "event_text": "{publicName} is hosting an event — check it out"
     }
   },
-  "community": {
-    "actions": {
-      "cancel": "Nevermind",
-      "create": "Submit",
-      "save": "Save community"
-    },
-    "labels": {
-      "content": "About this community",
-      "year_founded": "Founded in",
-      "founded_since": "Since {year}",
-      "visibility": "Show this community"
-    },
-    "messages": {
-      "error_load": "Failed to load community"
-    },
-    "placeholders": {
-      "content": "Describe your community…",
-      "year_unknown": "Don't know / not sure"
-    },
-    "share": {
-      "community_text": "{publicName} runs a community — check it out"
-    }
-  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgynous",
@@ -180,6 +180,15 @@
     "you_messaged_them": "You messaged them",
     "you_smiled_at": "You smiled at {name}"
   },
+  "map": {
+    "layer_control": {
+      "aria_label": "Map layers",
+      "communities": "Communities",
+      "events": "Events",
+      "people": "People",
+      "posts": "Posts"
+    }
+  },
   "matches": {
     "anonymous_like_hint": "They smiled at you anonymously, at least for now. You'll find out who when you smile back. You can bump into them on the map — if you see someone marked like this, your preferences match.",
     "anonymous_like_hint_cta": "Discover the community",
@@ -198,15 +207,6 @@
     "received_likes": "{count, plural, =0 {No smiles yet.} one {You have # smile.} other {You have # smiles!}}",
     "you_matched_with": "{name} smiled back!",
     "you_received_like": "Someone smiled at you!"
-  },
-  "map": {
-    "layer_control": {
-      "people": "People",
-      "posts": "Posts",
-      "events": "Events",
-      "communities": "Communities",
-      "aria_label": "Map layers"
-    }
   },
   "messaging": {
     "already_sent_waiting": "You have already sent them a message. Once they answer, you can continue the conversation.",
@@ -297,11 +297,12 @@
   "posts": {
     "actions": {
       "cancel": "Nevermind",
+      "contact": "Contact poster",
       "create": "Submit",
-      "create_cta_title": "Post something",
       "create_advert_cta_title": "Post an advert",
-      "create_event_cta_title": "Post an event",
       "create_community_cta_title": "Create a community",
+      "create_cta_title": "Post something",
+      "create_event_cta_title": "Post an event",
       "delete": "Delete",
       "edit": "Edit Post",
       "hide": "Hide (but don't delete)",
@@ -433,8 +434,8 @@
     "email_notifications_opt_in": "Email",
     "newsletter_opt_in": "Email newsletter",
     "newsletter_opt_in_hint": "Community updates, new features, that kind of stuff. You can unsubscribe any time.",
-    "notifications_opt_in": "When someone messages me, smiles at me, or matches with me...",
     "notifications_label": "Notifications",
+    "notifications_opt_in": "When someone messages me, smiles at me, or matches with me...",
     "push_notify_messages": "Popup and mobile notification",
     "title": "Settings"
   },

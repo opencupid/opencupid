@@ -28,13 +28,36 @@
   "calls": {
     "accept": "Fogadás",
     "allow_calls_label": "Hívható vagyok",
-    "section_title": "Hívások",
     "call_button_title": "Videóhívás",
     "calling": "Hívás...",
     "cancel_call": "Mégse",
     "decline": "Elutasítás",
     "incoming_call_from": "Bejövő hívás: {name}",
-    "open_to_calls_setting": "Elérhető vagyok videóhívásra"
+    "open_to_calls_setting": "Elérhető vagyok videóhívásra",
+    "section_title": "Hívások"
+  },
+  "community": {
+    "actions": {
+      "cancel": "Mégse",
+      "create": "Mehet",
+      "save": "Közösség mentése"
+    },
+    "labels": {
+      "content": "A közösségről",
+      "founded_since": "{year} óta",
+      "visibility": "Mutasd ezt a közösséget",
+      "year_founded": "Alapítás éve"
+    },
+    "messages": {
+      "error_load": "Nem sikerült betölteni a közösséget"
+    },
+    "placeholders": {
+      "content": "Mesélj a közösségről…",
+      "year_unknown": "Nem tudom / nem biztos"
+    },
+    "share": {
+      "community_text": "{publicName} közösséget vezet — nézd meg"
+    }
   },
   "emails": {
     "fallback_hint": "Ha a gomb nem működik, másold ki és illeszd be ezt a címsorba:",
@@ -103,29 +126,6 @@
       "event_text": "{publicName} eseményt szervez — nézd meg"
     }
   },
-  "community": {
-    "actions": {
-      "cancel": "Mégse",
-      "create": "Mehet",
-      "save": "Közösség mentése"
-    },
-    "labels": {
-      "content": "A közösségről",
-      "year_founded": "Alapítás éve",
-      "founded_since": "{year} óta",
-      "visibility": "Mutasd ezt a közösséget"
-    },
-    "messages": {
-      "error_load": "Nem sikerült betölteni a közösséget"
-    },
-    "placeholders": {
-      "content": "Mesélj a közösségről…",
-      "year_unknown": "Nem tudom / nem biztos"
-    },
-    "share": {
-      "community_text": "{publicName} közösséget vezet — nézd meg"
-    }
-  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgün",
@@ -184,6 +184,15 @@
     "you_messaged_them": "Üzenetet küldtél neki",
     "you_smiled_at": "Rámosolyogtál!"
   },
+  "map": {
+    "layer_control": {
+      "aria_label": "Térképrétegek",
+      "communities": "Communities",
+      "events": "Események",
+      "people": "Komák",
+      "posts": "Hirdetések"
+    }
+  },
   "matches": {
     "anonymous_like_hint": "Egyelőre névtelenül mosolygott rád. De a Komakeresőben rátalálhatsz - ha Te is rámosolyogsz, ki fog derülni, ki küldte. Ha valakit ilyen jelöléssel látsz, könnyen lehet, hogy egymást keresitek:",
     "anonymous_like_hint_cta": "A Komakeresőhöz",
@@ -202,15 +211,6 @@
     "received_likes": "{count, plural, =0 {Még nincs ❤️-od} one {# ❤️-ot kaptál} other {# ❤️-od van}}",
     "you_matched_with": "{name} visszamosolygott",
     "you_received_like": "Valaki rád mosolygott!"
-  },
-  "map": {
-    "layer_control": {
-      "people": "Komák",
-      "posts": "Hirdetések",
-      "events": "Események",
-      "communities": "Communities",
-      "aria_label": "Térképrétegek"
-    }
   },
   "messaging": {
     "already_sent_waiting": "Már küldtél nekik üzenetet. Amint válaszolnak, folytathatod a beszélgetést.",
@@ -301,11 +301,12 @@
   "posts": {
     "actions": {
       "cancel": "Mégse",
+      "contact": "Kapcsolatfelvétel",
       "create": "Mehet",
-      "create_cta_title": "Feladok egy hirdetést",
       "create_advert_cta_title": "Hirdetést adok fel",
-      "create_event_cta_title": "Eseményt szervezek",
       "create_community_cta_title": "Create a community",
+      "create_cta_title": "Feladok egy hirdetést",
+      "create_event_cta_title": "Eseményt szervezek",
       "delete": "Törlés",
       "edit": "Szerkesztés",
       "hide": "Elrejtés (törlés nélkül)",
