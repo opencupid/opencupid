@@ -35,15 +35,9 @@ function openCreateCommunity() {
 
 <template>
   <div class="owner-drawer-controls d-flex flex-column flex-md-row gap-2">
-    <UserContentCreateSpeedDial
-      @create:post="openCreatePost"
-      @create:event="openCreateEvent"
-      @create:community="openCreateCommunity"
-    />
-
     <BButton
       variant="light"
-      class="btn-rounded rounded-circle shadow overflow-hidden order-1 order-md-0 border"
+      class="btn-rounded shadow overflow-hidden order-1 order-md-0 border"
       :aria-label="$t('nav.inbox')"
       @click="$emit('open:inbox')"
     >
@@ -53,7 +47,7 @@ function openCreateCommunity() {
     </BButton>
     <BButton
       variant="light"
-      class="btn-rounded rounded-circle p-0 shadow overflow-hidden"
+      class="btn-rounded p-0 shadow overflow-hidden"
       :aria-label="$t('nav.profile')"
       @click="$emit('open:profile')"
     >
@@ -68,5 +62,14 @@ function openCreateCommunity() {
         class="svg-icon"
       />
     </BButton>
+
+    <UserContentCreateSpeedDial
+      class="order-2"
+      trigger-class="btn-rounded shadow"
+      action-class="btn-rounded shadow bg-light"
+      @create:post="openCreatePost"
+      @create:event="openCreateEvent"
+      @create:community="openCreateCommunity"
+    />
   </div>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { HTMLAttributes } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCalendarPlus } from '@fortawesome/free-solid-svg-icons'
 
@@ -7,6 +8,19 @@ import SpeedDial from '@/features/shared/components/SpeedDial.vue'
 import IconAdd from '@/assets/icons/interface/plus.svg'
 import IconPost from '@/assets/icons/interface/post-it.svg'
 import IconCommunity from '@/assets/icons/interface/community.svg'
+
+withDefaults(
+  defineProps<{
+    /** Classes applied to the trigger BButton. Same shape as Vue's `class` binding. */
+    triggerClass?: HTMLAttributes['class']
+    /** Classes applied to each action pill BButton. Same shape as Vue's `class` binding. */
+    actionClass?: HTMLAttributes['class']
+  }>(),
+  {
+    triggerClass: 'btn-icon-lg btn-shadow',
+    actionClass: 'btn-icon-lg btn-shadow btn-light rounded-circle',
+  }
+)
 
 defineEmits<{
   (e: 'create:post'): void
@@ -19,7 +33,7 @@ defineEmits<{
   <SpeedDial>
     <template #trigger>
       <BButton
-        class="btn-icon-lg btn-shadow"
+        :class="triggerClass"
         variant="primary"
         :title="$t('posts.actions.create_cta_title')"
       >
@@ -27,7 +41,7 @@ defineEmits<{
       </BButton>
     </template>
     <BButton
-      class="btn-icon-lg btn-shadow btn-light rounded-circle"
+      :class="actionClass"
       variant="outline-primary"
       :title="$t('posts.actions.create_advert_cta_title')"
       @click="$emit('create:post')"
@@ -35,7 +49,7 @@ defineEmits<{
       <IconPost class="svg-icon" />
     </BButton>
     <BButton
-      class="btn-icon-lg btn-shadow btn-light rounded-circle"
+      :class="actionClass"
       variant="outline-primary"
       :title="$t('posts.actions.create_event_cta_title')"
       @click="$emit('create:event')"
@@ -43,7 +57,7 @@ defineEmits<{
       <FontAwesomeIcon :icon="faCalendarPlus" />
     </BButton>
     <BButton
-      class="btn-icon-lg btn-shadow btn-light rounded-circle"
+      :class="actionClass"
       variant="outline-primary"
       :title="$t('posts.actions.create_community_cta_title')"
       @click="$emit('create:community')"
