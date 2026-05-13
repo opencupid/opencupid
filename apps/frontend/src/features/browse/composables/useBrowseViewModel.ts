@@ -6,11 +6,11 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 /**
- * View-model for the browse map. Map POIs (profile + post + event markers,
- * clusters) derive from findProfileStore cluster features. A single bounds
- * event triggers parallel fetches: cluster features for map markers, and
- * userContentStore.postSummaries for the NearbyFeatures strip (which
- * BrowseProfiles consumes directly from the store, not via this view-model).
+ * View-model for the browse map. Map POIs derive from findProfileStore
+ * cluster features. A single bounds event triggers parallel fetches:
+ * cluster features for map markers and userContentStore.feedItems for
+ * the NearbyFeatures strip (BrowseProfiles consumes feedItems directly
+ * from the store, not via this view-model).
  */
 export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
@@ -140,7 +140,7 @@ export function useBrowseViewModel() {
   async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
     await Promise.all([
       findProfileStore.fetchBounds(bounds, zoom),
-      contentStore.fetchPostsInBounds(bounds),
+      contentStore.fetchFeedInBounds(bounds),
     ])
   }
 
