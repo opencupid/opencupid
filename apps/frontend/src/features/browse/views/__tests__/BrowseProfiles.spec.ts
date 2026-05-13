@@ -59,8 +59,8 @@ vi.mock('../../components/NearbyFeatures.vue', () => ({
   default: {
     name: 'NearbyFeatures',
     template: '<div class="nearby-features-stub" />',
-    props: ['posts'],
-    emits: ['post:select'],
+    props: ['items'],
+    emits: ['item:select'],
   },
 }))
 vi.mock('@/features/publicprofile/components/profileMarkerIcon', () => ({
@@ -122,12 +122,14 @@ vi.mock('../../composables/useBrowseViewModel', () => ({
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 let mockRefetchBounds: ReturnType<typeof vi.spyOn>
 
-const mockPostSummaries = ref<any[]>([])
+const mockFeedItems = ref<any[]>([])
 vi.mock('@/features/userContent/stores/userContentStore', () => ({
   useUserContentStore: () => ({
     fetchPublicPost: vi.fn().mockResolvedValue({ success: false }),
-    get postSummaries() {
-      return mockPostSummaries.value
+    fetchPublicEvent: vi.fn().mockResolvedValue({ success: false }),
+    fetchPublicCommunity: vi.fn().mockResolvedValue({ success: false }),
+    get feedItems() {
+      return mockFeedItems.value
     },
   }),
 }))
@@ -203,7 +205,7 @@ describe('BrowseProfiles view', () => {
     }
     mockRouteName.value = 'Browse'
     mockDetail.value = null
-    mockPostSummaries.value = []
+    mockFeedItems.value = []
     toastInfo.mockClear()
     mockPush.mockClear()
     mockReplace.mockClear()
@@ -293,37 +295,85 @@ describe('BrowseProfiles view', () => {
     expect(wrapper.find('.map-placeholder-stub').exists()).toBe(false)
   })
 
-  it('passes contentStore.postSummaries to NearbyFeatures', () => {
-    mockPostSummaries.value = [
+  it('passes contentStore.feedItems to NearbyFeatures', () => {
+    mockFeedItems.value = [
       {
         id: 'post-1',
-        type: 'OFFER',
+        kind: 'post',
         content: 'Test post',
         location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
-        postedBy: {
-          id: 'p1',
-          publicName: 'Author',
-          profileImages: [],
-          location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.0 },
-        },
+        postedBy: { id: 'p1', publicName: 'Author', profileImages: [] } as any,
+        createdAt: new Date(),
+        isOwn: false,
       },
     ]
     const wrapper = mountComponent()
     const nearby = wrapper.findComponent({ name: 'NearbyFeatures' })
     expect(nearby.exists()).toBe(true)
-    expect(nearby.props('posts')).toHaveLength(1)
-    expect(nearby.props('posts')[0].id).toBe('post-1')
+    expect(nearby.props('items')).toHaveLength(1)
+    expect(nearby.props('items')[0].id).toBe('post-1')
   })
 
-  it('navigates to post route when NearbyFeatures emits post:select', async () => {
+  it('navigates to post route when NearbyFeatures emits item:select with kind=post', async () => {
     const wrapper = mountComponent()
     const nearby = wrapper.findComponent({ name: 'NearbyFeatures' })
-    nearby.vm.$emit('post:select', { id: 'post-42' })
+    nearby.vm.$emit('item:select', { id: 'post-42', kind: 'post' })
     await nextTick()
     expect(mockPush).toHaveBeenCalledWith({
       name: 'PublicPost',
       params: { postId: 'post-42' },
     })
+  })
+
+  it('navigates by kind when an item is selected from NearbyFeatures', async () => {
+    mockFeedItems.value = [
+      {
+        id: 'e1',
+        kind: 'event',
+        content: 'a',
+        postedBy: { id: 'p', publicName: 'P', profileImages: [] } as any,
+        createdAt: new Date(),
+        isOwn: false,
+      },
+    ]
+    const wrapper = mountComponent()
+    const nearby = wrapper.findComponent({ name: 'NearbyFeatures' })
+    await nearby.vm.$emit('item:select', mockFeedItems.value[0])
+    expect(mockPush).toHaveBeenCalledWith({ name: 'PublicEvent', params: { eventId: 'e1' } })
+  })
+
+  it('navigates to community route when NearbyFeatures emits item:select with kind=community', async () => {
+    const wrapper = mountComponent()
+    const nearby = wrapper.findComponent({ name: 'NearbyFeatures' })
+    await nearby.vm.$emit('item:select', {
+      id: 'c1',
+      kind: 'community',
+      content: 'a',
+      postedBy: { id: 'p', publicName: 'P', profileImages: [] } as any,
+      createdAt: new Date(),
+      isOwn: false,
+    })
+    expect(mockPush).toHaveBeenCalledWith({
+      name: 'PublicCommunity',
+      params: { communityId: 'c1' },
+    })
+  })
+
+  it('recenters the map (highlightedLocation) when an item with a valid location is selected', async () => {
+    const wrapper = mountComponent()
+    const nearby = wrapper.findComponent({ name: 'NearbyFeatures' })
+    await nearby.vm.$emit('item:select', {
+      id: 'e1',
+      kind: 'event',
+      content: 'a',
+      postedBy: { id: 'p', publicName: 'P', profileImages: [] } as any,
+      createdAt: new Date(),
+      isOwn: false,
+      location: { lat: 51.5, lon: -0.1, country: 'GB', cityName: 'London' } as any,
+    })
+    await nextTick()
+    const map = wrapper.findComponent({ name: 'OsmPoiMap' })
+    expect(map.props('highlightedLocation')).toEqual([51.5, -0.1])
   })
 
   it('refetches bounds when findProfileStore.selectedLayers changes', async () => {

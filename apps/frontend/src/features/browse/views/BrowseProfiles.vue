@@ -39,7 +39,7 @@ import OwnerDrawerControls from '../components/OwnerDrawerControls.vue'
 import NearbyFeatures from '../components/NearbyFeatures.vue'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { toGeoPoint, type GeoPoint } from '@zod/dto/location.dto'
-import type { PostSummary } from '@zod/post/post.dto'
+import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
 import InviteCtaShareDialog from '@/features/app/components/InviteCtaShareDialog.vue'
 import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 
@@ -223,14 +223,18 @@ function handleProfileSelect(profile: { id: string }) {
   router.push({ name: 'PublicProfile', params: { profileId: profile.id } })
 }
 
-// NearbyFeatures lives outside the map, so picking a post there must move the
+// NearbyFeatures lives outside the map, so picking an item there must move the
 // map for context. Map-marker clicks (handleMarkerSelect) and SearchBar's
 // post:select don't need this — the marker click is already on-screen, and
 // SearchBar emits its own location:set alongside post:select.
-function onNearbyPostSelect(post: PostSummary) {
-  const point = toGeoPoint(post.location)
-  if (point) highlightedLocation.value = [point.lat, point.lon]
-  handlePostSelect(post)
+function onNearbyItemSelect(item: UserContentMetadata) {
+  if (item.location) {
+    const point = toGeoPoint(item.location)
+    if (point) highlightedLocation.value = [point.lat, point.lon]
+  }
+  if (item.kind === 'post') handlePostSelect({ id: item.id })
+  else if (item.kind === 'event') handleEventSelect({ id: item.id })
+  else if (item.kind === 'community') handleCommunitySelect({ id: item.id })
 }
 
 function handleMarkerSelect(id: string) {
@@ -333,8 +337,8 @@ onMounted(async () => {
         />
 
         <NearbyFeatures
-          :posts="contentStore.postSummaries"
-          @post:select="onNearbyPostSelect"
+          :items="contentStore.feedItems"
+          @item:select="onNearbyItemSelect"
         />
       </div>
     </main>
