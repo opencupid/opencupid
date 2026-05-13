@@ -19,11 +19,12 @@ declare module 'bootstrap-vue-next' {
     'event-light': unknown
     community: unknown
     'community-light': unknown
+    post: unknown
+    'post-light': unknown
     social: unknown
     tag: unknown
     muted: unknown
     highlight: unknown
-    'post-it': unknown
   }
 
   export interface BaseButtonVariant {
@@ -33,10 +34,11 @@ declare module 'bootstrap-vue-next' {
     'outline-event-light': unknown
     'outline-community': unknown
     'outline-community-light': unknown
+    'outline-post': unknown
+    'outline-post-light': unknown
     'outline-social': unknown
     'outline-tag': unknown
     'outline-muted': unknown
     'outline-highlight': unknown
-    'outline-post-it': unknown
   }
 }

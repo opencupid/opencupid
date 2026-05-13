@@ -81,7 +81,7 @@ const isVisible = computed(() => props.items.length > 0)
           v-if="item.kind === 'post'"
           class="cursor-pointer p-2 post-content"
           :id="item.id"
-          variant="post-it"
+          variant="post"
         >
           {{ item.content.substring(0, 120) }}
         </PostIt>

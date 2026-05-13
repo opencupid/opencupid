@@ -70,7 +70,7 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
         <BCol class="text-center">
           <BFormCheckbox
             button
-            :button-variant="model.includes('profile') ? 'outline-primary' :'outline-secondary'"
+            :button-variant="model.includes('profile') ? 'outline-primary' : 'outline-secondary'"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('profile')"
@@ -84,7 +84,7 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
         <BCol class="text-center">
           <BFormCheckbox
             button
-            :button-variant="model.includes('post') ? 'outline-post-it' :'outline-secondary'"
+            :button-variant="model.includes('post') ? 'outline-post' : 'outline-secondary'"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('post')"
@@ -98,7 +98,7 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
         <BCol class="text-center">
           <BFormCheckbox
             button
-            :button-variant="model.includes('event') ? 'outline-event' :'outline-secondary'"
+            :button-variant="model.includes('event') ? 'outline-event' : 'outline-secondary'"
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('event')"
@@ -112,7 +112,9 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
         <BCol class="text-center">
           <BFormCheckbox
             button
-            :button-variant="model.includes('community') ? 'outline-community' :'outline-secondary'"
+            :button-variant="
+              model.includes('community') ? 'outline-community' : 'outline-secondary'
+            "
             size="lg"
             class="btn-layer-select"
             :model-value="model.includes('community')"
