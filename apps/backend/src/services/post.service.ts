@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma'
 import {
   UserContentService,
   type ListOptions,
-  type BoundsBox,
   type UserContentMetadataRow,
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
@@ -129,11 +128,6 @@ export class PostService extends UserContentService {
     opts: ListOptions
   ): Promise<PostWithMetadata[]> {
     const metadata = await this.findNearby(lat, lon, radiusKm, { ...opts, kind: 'post' })
-    return this.attachPostContent(metadata)
-  }
-
-  async findInBoundsHydrated(box: BoundsBox): Promise<PostWithMetadata[]> {
-    const metadata = (await this.findInBounds(box)).filter((r) => r.kind === 'post')
     return this.attachPostContent(metadata)
   }
 

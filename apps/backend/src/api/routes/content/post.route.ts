@@ -10,14 +10,8 @@ import {
   type UpdatePostPayload,
 } from '@zod/post/post.dto'
 import { PaginationSchema } from '@zod/userContent/userContent.dto'
-import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import { z } from 'zod'
-import {
-  mapDbPostToOwner,
-  mapDbPostToDetail,
-  mapDbPostToPublic,
-  mapPostSummary,
-} from '../../mappers/post.mappers'
+import { mapDbPostToOwner, mapDbPostToDetail, mapDbPostToPublic } from '../../mappers/post.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
@@ -75,19 +69,6 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch nearby posts')
-    }
-  })
-
-  fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const parsed = BoundsQuerySchema.safeParse(req.query)
-    if (!parsed.success) return sendError(reply, 400, 'Invalid bounds')
-    try {
-      const rows = await svc.findInBoundsHydrated(parsed.data)
-      const posts = rows.map((r) => mapPostSummary({ ...r, kind: 'post' as const, post: r.post! }))
-      return reply.code(200).send({ success: true, posts })
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch posts in bounds')
     }
   })
 
