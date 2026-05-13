@@ -121,6 +121,12 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
   box-shadow: 0 3px 14px rgba(217, 83, 79, 0.3);
 }
 
+:deep(.leaflet-popup-pane) {
+  /* Lift above .poi-avatar-icon:hover (10000) so an open popup is never
+     occluded by hovered or adjacent markers. */
+  z-index: 10001;
+}
+
 :deep(.leaflet-popup) {
   width: 15rem !important;
   /* offset to top of marker to eliminate hover flashes */
