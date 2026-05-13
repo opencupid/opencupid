@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@cospired/i18n-iso-languages": "4.2.0",
+    "@floating-ui/vue": "^1.1.11",
     "@fontsource/caveat": "5.2.8",
     "@fortawesome/fontawesome-svg-core": "7.2.0",
     "@fortawesome/free-regular-svg-icons": "7.2.0",

@@ -113,25 +113,25 @@
   },
   "community": {
     "actions": {
-      "cancel": "Nevermind",
-      "create": "Submit",
-      "save": "Save community"
+      "cancel": "Mégse",
+      "create": "Mehet",
+      "save": "Közösség mentése"
     },
     "labels": {
-      "content": "About this community",
-      "year_founded": "Founded in",
-      "founded_since": "Since {year}",
-      "visibility": "Show this community"
+      "content": "A közösségről",
+      "year_founded": "Alapítás éve",
+      "founded_since": "{year} óta",
+      "visibility": "Mutasd ezt a közösséget"
     },
     "messages": {
-      "error_load": "Failed to load community"
+      "error_load": "Nem sikerült betölteni a közösséget"
     },
     "placeholders": {
-      "content": "Describe your community…",
-      "year_unknown": "Don't know / not sure"
+      "content": "Mesélj a közösségről…",
+      "year_unknown": "Nem tudom / nem biztos"
     },
     "share": {
-      "community_text": "{publicName} runs a community — check it out"
+      "community_text": "{publicName} közösséget vezet — nézd meg"
     }
   },
   "gender": {

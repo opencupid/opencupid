@@ -54,18 +54,44 @@ $theme-colors: (
 );
 
 // ─── Accent colors ──────────────────────────────────────────────────
-$social: #325d88; // Sandstone blue
-$dating: #d9534f; // Sandstone red
-$dating-light: #f5e5e0;
-$tag: #b8860b; // Muted goldenrod — tags/interests
-$post-it: #fff4a3; // Sticky-note yellow
+// Tonal system: new accents (event, community, future kinds) share
+// hsl(_, 47%, 36%) — same saturation and lightness as the Sandstone
+// primary, varying only hue. This keeps siblings at equal visual weight
+// when they appear on the same surface (e.g. side-by-side map markers).
+//
+// `-light` variants are derived by mixing 88% of $sand-lightest into
+// the accent, so every tint matches the page background's warmth at
+// the same perceived lightness. Adding a new accent: pick a hue at
+// hsl(<H>, 47%, 36%); the light variant follows from the formula.
+//
+// $dating and $tag pre-date the system and are grandfathered to avoid
+// reskinning shipped surfaces. $post-it is paper, not an accent.
+
+// $sand-lightest is referenced by both the -light derivations and the
+// component overrides below; declared here so the order works.
+$sand-lightest: #faf4ea;
+$accent-light-mix: 88%;
+
+// semantic colors for user-content types and accents
+$event: #5c3187; // hsl(210, 47%, 36%) — Sandstone blue (== primary)
+$community: #318763; // hsl(155, 47%, 36%) — mossy green at the system S/L
+$dating: #873131; // hsl(2, 64%, 58%) — grandfathered Bootswatch red
+$tag: #877131; // hsl(43, 89%, 38%) — grandfathered goldenrod
+$post-it: #fff4a3; // sticky-note yellow (paper, not accent)
+
+$dating-light: mix($sand-lightest, $dating, $accent-light-mix);
+$event-light: mix($sand-lightest, $event, $accent-light-mix);
+$community-light: mix($sand-lightest, $community, $accent-light-mix);
 
 $theme-colors: map-merge(
   $theme-colors,
   (
     'dating': $dating,
     'dating-light': $dating-light,
-    'social': $social,
+    'event': $event,
+    'event-light': $event-light,
+    'community': $community,
+    'community-light': $community-light,
     'tag': $tag,
     'post-it': $post-it,
   )
@@ -82,7 +108,6 @@ $aspect-ratios: map-merge(
 $enable-negative-margins: true;
 
 // ─── Sandstone-inspired component overrides ─────────────────────────
-$sand-lightest: #faf4ea; // lightest stop of the main gradient
 
 $card-border-color: rgba($gray-300, 0.75);
 $card-cap-bg: rgba($gray-200, 0.25);

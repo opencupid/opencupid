@@ -239,3 +239,7 @@ bus.on('profile:dating-prefs-updated', () => {
 bus.on('profile:blocked', () => {
   useFindProfileStore().refetchBounds()
 })
+
+bus.on('usercontent:mutated', () => {
+  useFindProfileStore().refetchBounds()
+})

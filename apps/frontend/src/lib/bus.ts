@@ -16,6 +16,7 @@ type AppEvents = {
   'app:visible': void
   'profile:dating-prefs-updated': void
   'profile:blocked': { profileId: string }
+  'usercontent:mutated': void
 }
 
 type Events = AppEvents & WSEvents

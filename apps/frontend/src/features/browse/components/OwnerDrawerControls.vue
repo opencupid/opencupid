@@ -5,6 +5,8 @@ import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
+import { useRouter } from 'vue-router'
+import UserContentCreateSpeedDial from '@/features/userContent/components/UserContentCreateSpeedDial.vue'
 
 defineOptions({ name: 'OwnerDrawerControls' })
 
@@ -15,13 +17,27 @@ defineEmits<{
 
 const ownerProfileStore = useOwnerProfileStore()
 const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
+
+const router = useRouter()
+
+function openCreatePost() {
+  router.push({ name: 'MeCreatePost' })
+}
+
+function openCreateEvent() {
+  router.push({ name: 'MeCreateEvent' })
+}
+
+function openCreateCommunity() {
+  router.push({ name: 'MeCreateCommunity' })
+}
 </script>
 
 <template>
   <div class="owner-drawer-controls d-flex flex-column flex-md-row gap-2">
     <BButton
       variant="light"
-      class="btn-rounded rounded-circle shadow  overflow-hidden order-1 order-md-0 border"
+      class="btn-rounded shadow overflow-hidden order-1 order-md-1 border"
       :aria-label="$t('nav.inbox')"
       @click="$emit('open:inbox')"
     >
@@ -29,9 +45,10 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
         <IconMessage class="svg-icon" />
       </NotificationDot>
     </BButton>
+
     <BButton
       variant="light"
-      class="btn-rounded rounded-circle p-0 shadow  overflow-hidden"
+      class="btn-rounded p-0 shadow overflow-hidden order-md-2"
       :aria-label="$t('nav.profile')"
       @click="$emit('open:profile')"
     >
@@ -46,5 +63,14 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
         class="svg-icon"
       />
     </BButton>
+
+    <UserContentCreateSpeedDial
+      class="order-2 order-md-0"
+      trigger-class="btn-rounded shadow"
+      action-class="btn-rounded shadow"
+      @create:post="openCreatePost"
+      @create:event="openCreateEvent"
+      @create:community="openCreateCommunity"
+    />
   </div>
 </template>

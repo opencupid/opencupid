@@ -180,20 +180,12 @@ main {
   }
 }
 
-.btn-social-toggle {
-  @include btn-colored-push($social);
-}
-
 .btn-dating-toggle {
   @include btn-colored-push($dating);
 }
 
 .dating {
   background-color: $dating-light;
-}
-
-.social {
-  background-color: transparentize($social, 0.9);
 }
 
 // List group checkbox/radio lists
@@ -257,10 +249,6 @@ main {
     background-color: $color;
     border-color: $color;
   }
-}
-
-.nav-link-social {
-  @include nav-link-theme($social);
 }
 
 .nav-link-dating {
