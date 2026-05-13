@@ -144,6 +144,6 @@ const displayContent = computed(() => {
 
 <style scoped>
 .event-card {
-  background-color: var(--bs-body-bg);
+  background-color: var(--bs-event-light);
 }
 </style>

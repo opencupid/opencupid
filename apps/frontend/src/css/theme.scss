@@ -72,11 +72,11 @@ $theme-colors: (
 $sand-lightest: #faf4ea;
 $accent-light-mix: 88%;
 
-$social: #325d88; // hsl(210, 47%, 36%) — Sandstone blue (== primary)
-$event: $social; // alias; events share the social hue
+// semantic colors for user-content types and accents
+$event: #5c3187; // hsl(210, 47%, 36%) — Sandstone blue (== primary)
 $community: #318763; // hsl(155, 47%, 36%) — mossy green at the system S/L
-$dating: #d9534f; // hsl(2, 64%, 58%) — grandfathered Bootswatch red
-$tag: #b8860b; // hsl(43, 89%, 38%) — grandfathered goldenrod
+$dating: #873131; // hsl(2, 64%, 58%) — grandfathered Bootswatch red
+$tag: #877131; // hsl(43, 89%, 38%) — grandfathered goldenrod
 $post-it: #fff4a3; // sticky-note yellow (paper, not accent)
 
 $dating-light: mix($sand-lightest, $dating, $accent-light-mix);
@@ -92,7 +92,6 @@ $theme-colors: map-merge(
     'event-light': $event-light,
     'community': $community,
     'community-light': $community-light,
-    'social': $social,
     'tag': $tag,
     'post-it': $post-it,
   )

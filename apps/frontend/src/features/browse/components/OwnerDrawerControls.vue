@@ -67,7 +67,7 @@ function openCreateCommunity() {
     <UserContentCreateSpeedDial
       class="order-2 order-md-0"
       trigger-class="btn-rounded shadow"
-      action-class="btn-rounded shadow bg-light"
+      action-class="btn-rounded shadow"
       @create:post="openCreatePost"
       @create:event="openCreateEvent"
       @create:community="openCreateCommunity"

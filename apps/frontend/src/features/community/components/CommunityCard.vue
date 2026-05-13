@@ -110,6 +110,6 @@ const displayContent = computed(() => {
 
 <style scoped>
 .community-card {
-  background-color: var(--bs-body-bg);
+  background-color: var(--bs-community-light);
 }
 </style>
