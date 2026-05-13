@@ -10,13 +10,10 @@ import type { OwnerCommunity } from '@zod/community/community.dto'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 import FloatingButton from '@/features/shared/components/FloatingButton.vue'
 import MyContentList from '@/features/userContent/components/MyContentList.vue'
+import UserContentCreateSpeedDial from '@/features/userContent/components/UserContentCreateSpeedDial.vue'
 import EditPostDialog from './EditPostDialog.vue'
 import EditEventDialog from '@/features/events/components/EditEventDialog.vue'
 import EditCommunityDialog from '@/features/community/components/EditCommunityDialog.vue'
-import IconCommunity from '@/assets/icons/interface/community.svg'
-import IconPost from '@/assets/icons/interface/post-it.svg'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faPenToSquare, faCalendarPlus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { useI18n } from 'vue-i18n'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
@@ -146,44 +143,12 @@ async function handleHide(item: OwnerUserContent) {
       @intent:hide="handleHide"
     />
 
-    <FloatingButton speed-dial>
-      <BButton
-        size="lg"
-        class="btn-icon-lg btn-shadow"
-        variant="primary"
-        :title="$t('posts.actions.create_cta_title')"
-      >
-        <FontAwesomeIcon :icon="faPlus" />
-      </BButton>
-      <template #actions>
-        <BButton
-          size="lg"
-          class="btn-icon-lg btn-shadow btn btn-light rounded-circle"
-          variant="outline-primary"
-          :title="$t('posts.actions.create_advert_cta_title')"
-          @click="openCreatePost"
-        >
-          <IconPost class="svg-icon" />
-        </BButton>
-        <BButton
-          size="lg"
-          class="btn-icon-lg btn-shadow btn btn-light rounded-circle"
-          variant="outline-primary"
-          :title="$t('posts.actions.create_event_cta_title')"
-          @click="openCreateEvent"
-        >
-          <FontAwesomeIcon :icon="faCalendarPlus" />
-        </BButton>
-        <BButton
-          size="lg"
-          class="btn-icon-lg btn-shadow btn btn-light rounded-circle"
-          variant="outline-primary"
-          :title="$t('posts.actions.create_community_cta_title')"
-          @click="openCreateCommunity"
-        >
-          <IconCommunity class="svg-icon" />
-        </BButton>
-      </template>
+    <FloatingButton>
+      <UserContentCreateSpeedDial
+        @create:post="openCreatePost"
+        @create:event="openCreateEvent"
+        @create:community="openCreateCommunity"
+      />
     </FloatingButton>
   </template>
   <EditPostDialog

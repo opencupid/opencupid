@@ -195,7 +195,7 @@ export function useMapController(
     pointLayer = L.layerGroup().addTo(map)
     clusterLayer = L.layerGroup().addTo(map)
 
-    oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true })
+    oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true, circleSpiralSwitchover: 5 })
     oms.circleFootSeparation = OMS_CIRCLE_FOOT_SEPARATION
     oms.spiralFootSeparation = OMS_SPIRAL_FOOT_SEPARATION
     oms.spiralLengthStart = OMS_SPIRAL_LENGTH_START

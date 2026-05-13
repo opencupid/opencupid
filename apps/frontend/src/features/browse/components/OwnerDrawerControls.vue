@@ -5,6 +5,8 @@ import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
+import { useRouter } from 'vue-router'
+import UserContentCreateSpeedDial from '@/features/userContent/components/UserContentCreateSpeedDial.vue'
 
 defineOptions({ name: 'OwnerDrawerControls' })
 
@@ -15,13 +17,33 @@ defineEmits<{
 
 const ownerProfileStore = useOwnerProfileStore()
 const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
+
+const router = useRouter()
+
+function openCreatePost() {
+  router.push({ name: 'MeCreatePost' })
+}
+
+function openCreateEvent() {
+  router.push({ name: 'MeCreateEvent' })
+}
+
+function openCreateCommunity() {
+  router.push({ name: 'MeCreateCommunity' })
+}
 </script>
 
 <template>
   <div class="owner-drawer-controls d-flex flex-column flex-md-row gap-2">
+    <UserContentCreateSpeedDial
+      @create:post="openCreatePost"
+      @create:event="openCreateEvent"
+      @create:community="openCreateCommunity"
+    />
+
     <BButton
       variant="light"
-      class="btn-rounded rounded-circle shadow  overflow-hidden order-1 order-md-0 border"
+      class="btn-rounded rounded-circle shadow overflow-hidden order-1 order-md-0 border"
       :aria-label="$t('nav.inbox')"
       @click="$emit('open:inbox')"
     >
@@ -31,7 +53,7 @@ const { hasUnreadMessages, hasMatchNotifications } = useNotificationState()
     </BButton>
     <BButton
       variant="light"
-      class="btn-rounded rounded-circle p-0 shadow  overflow-hidden"
+      class="btn-rounded rounded-circle p-0 shadow overflow-hidden"
       :aria-label="$t('nav.profile')"
       @click="$emit('open:profile')"
     >

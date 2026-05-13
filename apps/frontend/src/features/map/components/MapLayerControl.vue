@@ -54,7 +54,7 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
     >
       <template #target>
         <BButton
-          class="btn-rounded rounded-circle shadow btn btn-light rounded-circle"
+          class="btn-rounded rounded-circle shadow btn btn-light"
           variant="outline-secondary"
           :aria-label="t('map.layer_control.aria_label')"
         >
