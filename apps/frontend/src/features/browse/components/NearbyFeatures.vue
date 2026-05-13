@@ -1,20 +1,22 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { PostSummary } from '@zod/post/post.dto'
+import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
 import PostIt from '@/features/shared/ui/PostIt.vue'
+import EventTeaser from '@/features/events/components/EventTeaser.vue'
+import CommunityTeaser from '@/features/community/components/CommunityTeaser.vue'
 import IconExpand from '@/assets/icons/arrows/chevrons-up.svg'
 import IconCollapse from '@/assets/icons/arrows/chevrons-down.svg'
 
 const props = defineProps<{
-  posts: PostSummary[]
+  items: UserContentMetadata[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'post:select', post: PostSummary): void
+  (e: 'item:select', item: UserContentMetadata): void
 }>()
 
-function handleClick(post: PostSummary) {
-  emit('post:select', post)
+function handleClick(item: UserContentMetadata) {
+  emit('item:select', item)
 }
 
 const isExpanded = ref(false)
@@ -31,7 +33,11 @@ function onWheel(e: WheelEvent) {
   e.preventDefault()
 }
 
-const isVisible = computed(() => props.posts.length > 0)
+const isVisible = computed(() => props.items.length > 0)
+
+function assertExhaustive(_value: never): never {
+  throw new Error('Unhandled UserContentMetadata kind in NearbyFeatures')
+}
 </script>
 
 <template>
@@ -45,7 +51,7 @@ const isVisible = computed(() => props.posts.length > 0)
     header-class="py-1"
     class="nearby-features-panel"
     :class="{ expanded: isExpanded }"
-    style="z-index:1005"
+    style="z-index: 1005"
   >
     <template #header>
       <div class="d-flex align-items-center justify-content-center w-100">
@@ -70,17 +76,27 @@ const isVisible = computed(() => props.posts.length > 0)
       @wheel="onWheel"
     >
       <div
-        v-for="post in posts"
-        :key="post.id"
+        v-for="item in items"
+        :key="item.id"
         class="user-select-none col-12 col-sm-6 col-md-4 col-lg-3"
-        @click="handleClick(post)"
+        @click="handleClick(item)"
       >
         <PostIt
+          v-if="item.kind === 'post'"
           class="cursor-pointer p-2 post-content"
-          :id="post.id"
+          :id="item.id"
         >
-          {{ post.content.substring(0, 120) }}
+          {{ item.content.substring(0, 120) }}
         </PostIt>
+        <EventTeaser
+          v-else-if="item.kind === 'event'"
+          :item="item"
+        />
+        <CommunityTeaser
+          v-else-if="item.kind === 'community'"
+          :item="item"
+        />
+        <template v-else>{{ assertExhaustive(item.kind) }}</template>
       </div>
     </div>
   </BOffcanvas>
