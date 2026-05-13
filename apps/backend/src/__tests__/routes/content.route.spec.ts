@@ -72,12 +72,10 @@ describe('GET /bounds', () => {
       } as any,
       reply as any
     )
-    expect(mockUserContentService.findInBounds).toHaveBeenCalledWith({
-      south: 40,
-      north: 50,
-      west: 10,
-      east: 20,
-    })
+    expect(mockUserContentService.findInBounds).toHaveBeenCalledWith(
+      { south: 40, north: 50, west: 10, east: 20 },
+      { limit: 50 }
+    )
     expect(reply.statusCode).toBe(200)
   })
 

@@ -35,7 +35,7 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const parsed = BoundsQuerySchema.safeParse(req.query)
     if (!parsed.success) return sendError(reply, 400, 'Invalid bounds')
-    const rows = await svc.findInBounds(parsed.data)
+    const rows = await svc.findInBounds(parsed.data, { limit: 50 })
     const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
     return reply.code(200).send({ success: true, items })
   })
