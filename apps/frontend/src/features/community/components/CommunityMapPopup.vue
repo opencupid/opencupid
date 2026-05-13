@@ -11,7 +11,7 @@ const { t } = useI18n()
 
 <template>
   <div
-    class="community-map-popup cursor-pointer p-3 user-select-none"
+    class="community-map-popup bg-community-light cursor-pointer p-3 user-select-none"
     @click="$emit('click', item.id)"
   >
     <div class="mb-2 text-primary d-flex flex-row">
