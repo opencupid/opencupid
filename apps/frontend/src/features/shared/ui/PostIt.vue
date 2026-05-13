@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   variant: {
     type: String,
     default: '',
@@ -46,6 +48,7 @@ function warpStyle(id: string) {
     '--shadow': (0.1 + r() * 0.06).toString(),
   } as Record<string, string>
 }
+const backgroundClass = computed(()=>`bg-${props.variant}-light`)
 </script>
 <template>
   <div
@@ -54,7 +57,7 @@ function warpStyle(id: string) {
   >
     <div
       class="post-it"
-      :class="variant"
+      :class="backgroundClass"
     >
       <div class="header mb-2">
         <slot name="header"></slot>
@@ -100,7 +103,7 @@ function warpStyle(id: string) {
 }
 
 .post-it {
-  background: var(--postit-bg);
+  // background: var(--postit-bg);
   border-radius: var(--radius-md);
   padding: 0.7rem 0.8rem 0.9rem;
   position: relative;
@@ -157,9 +160,6 @@ function warpStyle(id: string) {
 
 /* end warp */
 
-.accent {
-  background-color: var(--postit-bg-alt);
-}
 .content {
   white-space: pre-wrap; /* Preserves whitespace and line breaks */
   overflow: hidden;

@@ -34,10 +34,6 @@ function onWheel(e: WheelEvent) {
 }
 
 const isVisible = computed(() => props.items.length > 0)
-
-function assertExhaustive(_value: never): never {
-  throw new Error('Unhandled UserContentMetadata kind in NearbyFeatures')
-}
 </script>
 
 <template>
@@ -78,25 +74,36 @@ function assertExhaustive(_value: never): never {
       <div
         v-for="item in items"
         :key="item.id"
-        class="user-select-none col-12 col-sm-6 col-md-4 col-lg-3"
+        class="user-select-none col-12 col-sm-6 col-md-4 col-lg-3 p-1"
         @click="handleClick(item)"
       >
         <PostIt
           v-if="item.kind === 'post'"
           class="cursor-pointer p-2 post-content"
           :id="item.id"
+          variant="post-it"
         >
           {{ item.content.substring(0, 120) }}
         </PostIt>
-        <EventTeaser
+        <PostIt
           v-else-if="item.kind === 'event'"
-          :item="item"
-        />
-        <CommunityTeaser
+          class="cursor-pointer post-content"
+          :id="item.id"
+          variant="event"
+        >
+          <EventTeaser
+            :item="item"
+            class="p-2"
+          />
+        </PostIt>
+        <PostIt
           v-else-if="item.kind === 'community'"
-          :item="item"
-        />
-        <template v-else>{{ assertExhaustive(item.kind) }}</template>
+          class="cursor-pointer post-content"
+          :id="item.id"
+          variant="community"
+        >
+          <CommunityTeaser :item="item" />
+        </PostIt>
       </div>
     </div>
   </BOffcanvas>

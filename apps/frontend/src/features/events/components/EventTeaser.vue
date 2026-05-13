@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
+import IconCalendar from '@/assets/icons/interface/calendar.svg'
 
 defineProps<{
   item: UserContentMetadata
@@ -7,22 +8,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="event-teaser p-2 rounded shadow-sm">
-    <div class="event-teaser-title text-truncate">{{ item.content }}</div>
-    <div class="event-teaser-author text-muted small">
-      {{ item.postedBy.publicName }}
-    </div>
+  <div class="event-teaser d-flex flex-row">
+    <IconCalendar class="d-block svg-icon-lg flex-shrink-0 flex-grow-0 me-2" />
+    <div class="flex-grow-1 text-truncate">{{ item.content }}</div>
   </div>
 </template>
 
-<style scoped lang="scss">
-.event-teaser {
-  background-color: var(--bs-event-light);
-  cursor: pointer;
-  min-width: 0;
-  font-size: 0.95rem;
-}
-.event-teaser-title {
-  font-weight: 600;
-}
-</style>
