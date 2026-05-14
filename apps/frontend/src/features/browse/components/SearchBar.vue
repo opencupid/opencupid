@@ -16,7 +16,7 @@ import type { PostSummary } from '@zod/post/post.dto'
 import { SEARCH_MIN_QUERY_LENGTH } from '@zod/search/search.dto'
 
 import { useSearchStore } from '@/features/browse/stores/searchStore'
-import { useGeocodingStore } from '@/features/geocoding/stores/geocodingStore'
+import { useGeocoder } from '@/features/geocoding/composables/useGeocoder'
 import { tracker } from '@/lib/umami'
 import { useI18n } from 'vue-i18n'
 import { toGeoPoint } from '../../map/utils/mapUtils'
@@ -34,7 +34,7 @@ const emit = defineEmits<{
 }>()
 
 const searchStore = useSearchStore()
-const geocodingStore = useGeocodingStore()
+const geocoder = useGeocoder()
 const {
   selectedTags,
   searchResults,
@@ -45,7 +45,7 @@ const {
   results: geocodedLocations,
   isLoading: geocodingLoading,
   hasResults: geocodingHasResults,
-} = storeToRefs(geocodingStore)
+} = geocoder
 const { locale } = useI18n()
 
 const pillRef = ref<HTMLElement | null>(null)
@@ -77,7 +77,7 @@ function onSelectLocation(location: LocationDTO) {
   if (!point) return
   selectedTags.value = []
   emit('location:set', point)
-  geocodingStore.clear()
+  geocoder.clear()
 }
 
 function onSelectTag(tag: PublicTag) {
@@ -105,14 +105,14 @@ const trackSearch = useDebounceFn(() => tracker.track('search'), 500)
 watch(searchQuery, (query) => {
   if (query.trim().length < SEARCH_MIN_QUERY_LENGTH) {
     searchStore.searchResults = null
-    geocodingStore.clear()
+    geocoder.clear()
     return
   }
   trackSearch()
-  // Fire both searches in parallel — each store owns its own abort controller,
+  // Fire both searches in parallel — each owns its own abort controller,
   // so rapid re-typing cancels prior in-flight requests on both sides.
   searchStore.search(query)
-  geocodingStore.search(query, locale.value, props.viewerProfile?.location)
+  geocoder.search(query, locale.value, props.viewerProfile?.location)
 })
 
 watch(haveResults, () => {

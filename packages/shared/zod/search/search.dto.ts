@@ -11,7 +11,7 @@ export const SearchQuerySchema = z.object({
 export type SearchQuery = z.infer<typeof SearchQuerySchema>
 
 // Location suggestions are sourced from Photon on the client
-// (see geocodingStore.searchNearby), so they don't appear in this response.
+// (see features/geocoding/composables/useGeocoder), so they don't appear in this response.
 export const SearchResponseSchema = z.object({
   success: z.literal(true),
   tags: z.array(PublicTagSchema),

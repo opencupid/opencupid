@@ -21,23 +21,26 @@ vi.mock('vue-i18n', () => ({
   }),
 }))
 
-// Stub the geocoding store — its module-level useGeocoder() call hits the
-// network on import; not relevant to SearchBar's own behavior.
-vi.mock('@/features/geocoding/stores/geocodingStore', () => {
-  const results = ref([])
-  const isLoading = ref(false)
-  const hasResults = computed(() => results.value.length > 0)
-  return {
-    useGeocodingStore: () => ({
+// Stub the geocoder composable so SearchBar tests are decoupled from the
+// real geocoding behavior. Each call to useGeocoder() returns its own refs,
+// mirroring the per-instance contract of the production composable.
+vi.mock('@/features/geocoding/composables/useGeocoder', () => ({
+  useGeocoder: () => {
+    const results = ref<unknown[]>([])
+    const isLoading = ref(false)
+    const hasResults = computed(() => results.value.length > 0)
+    return {
       results,
       isLoading,
       hasResults,
       search: vi.fn(),
-      searchNearby: vi.fn(),
+      setResults: vi.fn((items: unknown[]) => {
+        results.value = items
+      }),
       clear: vi.fn(),
-    }),
-  }
-})
+    }
+  },
+}))
 
 // Stub SVG-as-component imports — jsdom chokes parsing data-uri SVG src.
 vi.mock('@/assets/icons/interface/home.svg', () => ({

@@ -8,7 +8,7 @@ import IconTag from '@/assets/icons/e-commerce/tag.svg'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
-import type { GeocodingResult } from '@/features/geocoding/stores/geocodingStore'
+import type { GeocodingResult } from '@/features/geocoding/types'
 
 import SelectableTagList from './SelectableTagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
