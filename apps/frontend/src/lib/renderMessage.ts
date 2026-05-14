@@ -33,9 +33,12 @@ export function renderMessage(content: string): string {
   })
 }
 
-/** Strip markdown and HTML for plain-text previews (conversation list, etc.) */
+/** Strip markdown and HTML for plain-text previews (conversation list, etc.).
+ *  Returns only the first paragraph (text up to the first blank line). */
 export function stripForPreview(content: string): string {
-  let text = content
+  let text = content.split(/\n\s*\n/, 1)[0] ?? ''
+
+  text = text
     .replace(/\*\*(.+?)\*\*/g, '$1') // **bold**
     .replace(/\*(.+?)\*/g, '$1') // *italic*
     .replace(/__(.+?)__/g, '$1') // __bold__
