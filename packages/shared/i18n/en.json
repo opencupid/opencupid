@@ -10,11 +10,7 @@
     "captcha_success": "Of course!  Sorry for asking.",
     "captcha_verify": "Let's check",
     "captcha_verifying": "Hang on a sec...",
-    "email": "Email",
     "login": "Continue",
-    "login_confirm_welcome": "Welcome!",
-    "password": "Password",
-    "phone_number": "Phone number",
     "token_check_email": "We sent you a login link. Check your email and click the link to log in.",
     "token_check_messages": "Check your messages",
     "token_different_device": "It seems the login was started on a different device. Please go back and enter your email again.",
@@ -23,26 +19,45 @@
     "token_invalid": "The code is invalid. Please try again.",
     "token_invalid_feedback": "Code should be 6 digits",
     "token_invalid_link": "Hmm that link in the email didn't look right. Please enter the code in the message.",
-    "token_sent_email": "We have sent you a login link, check your inbox. If you don't see it, please check your spam folder.",
-    "token_sent_phone": "We have sent you a little code to your phone number, please enter it below.",
     "token_unknown_error": "Something went wrong. Please try again later.",
     "unknown_error": "An unexpected error occurred. Please try again later."
   },
   "authentication": {
-    "login": "Login",
     "logout": "Logout"
   },
   "calls": {
     "accept": "Accept",
     "allow_calls_label": "Allow calls",
-    "section_title": "Calls",
     "call_button_title": "Start video call",
     "calling": "Calling...",
     "cancel_call": "Cancel",
     "decline": "Decline",
     "incoming_call_from": "Incoming call from {name}",
-    "missed_call_message": "Missed call",
-    "open_to_calls_setting": "I'm open to video calls"
+    "open_to_calls_setting": "I'm open to video calls",
+    "section_title": "Calls"
+  },
+  "community": {
+    "actions": {
+      "cancel": "Nevermind",
+      "create": "Submit",
+      "save": "Save community"
+    },
+    "labels": {
+      "content": "About this community",
+      "founded_since": "Since {year}",
+      "visibility": "Show this community",
+      "year_founded": "Founded in"
+    },
+    "messages": {
+      "error_load": "Failed to load community"
+    },
+    "placeholders": {
+      "content": "Describe your community…",
+      "year_unknown": "Don't know / not sure"
+    },
+    "share": {
+      "community_text": "{publicName} runs a community — check it out"
+    }
   },
   "emails": {
     "fallback_hint": "If the button doesn't work, copy and paste this URL:",
@@ -107,29 +122,6 @@
       "event_text": "{publicName} is hosting an event — check it out"
     }
   },
-  "community": {
-    "actions": {
-      "cancel": "Nevermind",
-      "create": "Submit",
-      "save": "Save community"
-    },
-    "labels": {
-      "content": "About this community",
-      "year_founded": "Founded in",
-      "founded_since": "Since {year}",
-      "visibility": "Show this community"
-    },
-    "messages": {
-      "error_load": "Failed to load community"
-    },
-    "placeholders": {
-      "content": "Describe your community…",
-      "year_unknown": "Don't know / not sure"
-    },
-    "share": {
-      "community_text": "{publicName} runs a community — check it out"
-    }
-  },
   "gender": {
     "agender": "Agender",
     "androgynous": "Androgynous",
@@ -154,12 +146,6 @@
     "two_spirit": "Two-spirit",
     "unspecified": "I'd rather not say"
   },
-  "general": {
-    "connectiontypes": {
-      "dating": "Date",
-      "socializing": "Buddy"
-    }
-  },
   "haskids_label": {
     "no": "No kids",
     "unspecified": "I'd rather not say",
@@ -175,12 +161,6 @@
     "unspecified": "Doesn't matter",
     "yes": "Has kids"
   },
-  "home": {
-    "explore_interests": "Explore interests",
-    "meet_new_people": "New people",
-    "more_people": "Find buddies",
-    "welcome_title": "Welcome to {siteName}!"
-  },
   "interactions": {
     "anonymous_like_explanation": "They won't know who sent it until they smile back at you.",
     "anonymous_toggle_anonymous": "Stay anonymous",
@@ -188,10 +168,8 @@
     "anonymous_toggle_reveal": "Show my name",
     "cancel_button": "Maybe later",
     "its_a_match": "It's a match!",
-    "like_button_title": "Smile",
     "like_error": "Oops, this didn't work. Please try again.",
     "like_them_back": "Smile back",
-    "message_confirmation": "Nice!",
     "pass_button_title": "Pass",
     "revealed_like_explanation": "They will see who sent it.",
     "send_a_like": "Smile at them",
@@ -199,21 +177,22 @@
     "send_them_a_message": "Send {name} a message",
     "they_liked_you": "They smiled at you!",
     "you_liked_them": "You smiled at them",
-    "you_matched_with_them": "{name} smiled back!",
     "you_messaged_them": "You messaged them",
     "you_smiled_at": "You smiled at {name}"
+  },
+  "map": {
+    "layer_control": {
+      "aria_label": "Map layers",
+      "communities": "Communities",
+      "events": "Events",
+      "people": "People",
+      "posts": "Posts"
+    }
   },
   "matches": {
     "anonymous_like_hint": "They smiled at you anonymously, at least for now. You'll find out who when you smile back. You can bump into them on the map — if you see someone marked like this, your preferences match.",
     "anonymous_like_hint_cta": "Discover the community",
-    "find_button_cta": "Go connect",
-    "no_match_have_sent_like": "They will surely smile back at you.",
-    "no_match_have_sent_like_cta": "Keep lookin'",
-    "no_match_no_sent_like": "There's gotta be someone out there worth smiling at?  ",
-    "no_match_no_sent_like_cta": "Start lookin'",
     "notifications": {
-      "and": "and",
-      "matches": "{count, plural, one {# new match} other {# new matches}}",
       "you_have_likes": "{count, plural, one {Someone smiled at you} other {# people smiled at you}}"
     },
     "pass_confirm_dialog": {
@@ -226,64 +205,36 @@
       "title": "But wait..."
     },
     "received_likes": "{count, plural, =0 {No smiles yet.} one {You have # smile.} other {You have # smiles!}}",
-    "received_likes_cta": "Find out who sent it",
     "you_matched_with": "{name} smiled back!",
     "you_received_like": "Someone smiled at you!"
-  },
-  "map": {
-    "layer_control": {
-      "people": "People",
-      "posts": "Posts",
-      "events": "Events",
-      "communities": "Communities",
-      "aria_label": "Map layers"
-    }
   },
   "messaging": {
     "already_sent_waiting": "You have already sent them a message. Once they answer, you can continue the conversation.",
     "block_member": "Block member",
-    "block_report_unmatch": "Block/report/unmatch",
-    "block_user_ok": "Block {name}",
-    "conversation_options_title": "Conversation options",
     "loading_older_messages": "Loading older messages…",
-    "matches_list_title": "My matches ❤️",
-    "message_input_hint": "Press Enter to send",
-    "message_input_hint_click": "Click SEND to send",
     "message_input_placeholder": "Type your message here...",
     "message_sent_success": "Message sent successfully!",
     "my_conversations": "My conversations",
     "my_turn": "My turn",
-    "nevermind": "Nevermind",
-    "new_message_notification": "{sender} sent a message",
     "no_messages_cta": "Find people",
     "no_messages_placeholder": "Your conversations will take place here.",
-    "no_messages_title": "No messages yet",
     "page_title": "Messages",
-    "send_failed": "Oops, this didn't work. Please try again.",
     "send_message_button": "Send",
-    "send_message_heading": "Send Message",
     "send_message_to_user": "Send a message to {name}",
     "send_mode_click": "Click to send",
     "send_mode_press_enter": "Press enter to send",
     "their_turn": "Their turn",
     "unknown_sender": "Someone",
     "voice": {
-      "back_to_text": "Back to text",
       "cancel": "Cancel",
       "confirm_cancel_button": "Nevermind",
       "confirm_send_button": "Send",
       "confirm_send_title": "Ok to send this?",
       "max_duration": "Max {duration}s",
-      "permission_denied": "Microphone permission denied. Please allow microphone access to record voice messages.",
       "record": "Record",
       "record_again": "Record again",
-      "recording_mode": "Voice Message",
-      "record_voice_message": "Record voice message",
-      "retry_permission": "Try Again",
       "start_recording": "Leave voice message",
       "stop_recording": "Stop recording",
-      "text": "Text",
-      "unsupported_browser": "Voice recording is not supported in this browser.",
       "voice_message_notification": "sent you a voice message",
       "voice_message_preview": "Voice message"
     }
@@ -295,16 +246,8 @@
     }
   },
   "nav": {
-    "browse": "Buddies",
-    "bulletin": "Bulletin",
-    "home": "Home",
     "inbox": "Inbox",
-    "matches": "Dating",
-    "profile": "Profile",
-    "settings": "Settings"
-  },
-  "notifications": {
-    "voice_message_sent": "Sent a voice message"
+    "profile": "Profile"
   },
   "onboarding": {
     "age_subtitle": "I've been on this planet since",
@@ -313,30 +256,17 @@
     "confirmation": {
       "browse_button": "Meet people",
       "browse_hint": "See who else is on here",
-      "profile_button": "My profile",
-      "profile_hint": "See what other people see about me.",
       "title": "All set!"
     },
-    "connections_subtitle": "I feel complete but could use some company.",
-    "connections_title": "I am looking for...",
-    "country_placeholder": "Country",
-    "dating_hint_subtitle": "We'll ask you a few questions so we can find the best matches for you. This information is only visible to other people who are also looking for a relationship.",
-    "dating_hint_title": "Let's set up your dating profile",
     "dating_intro_hint": "Leave this empty if you want to fill this in later.",
     "dating_intro_placeholder": "Tell a bit about the kind of relationship you are looking for",
-    "dating_intro_subtitle": "This will be visible only to people who are looking for a relationship as well, not to those who are just looking for friends or social connections.",
     "dating_intro_title": "I would like to find:",
     "dating_mode_step_hint_active": "In the next few steps, please reveal a few additional details about yourself, and your preferences on who you would like to meet.  Those details will be visible only to other people in dating mode who match your preferences.  ",
     "dating_mode_step_hint_inactive": "You can always enable or disable dating mode later from your profile.",
     "dating_mode_step_title": "Would you also like to use dating mode?",
     "dating_mode_switch": "Dating mode ON?",
     "dating_preferences_title": "My preferences",
-    "finish_button": "Finish",
     "gender_subtitle": "I identify as...",
-    "goals": {
-      "dating": "Dating, finding a partner, and exploring romantic relationships.",
-      "socializing": "Socializing, hanging out, traveling, and meeting new people"
-    },
     "interests_hint": "Start typing to search for tags. You can add new tags if you don't find what you're looking for.",
     "interests_popular_heading": "What other people here are into:",
     "interests_title": "I'm into...",
@@ -344,10 +274,7 @@
     "languages_title": "I speak...",
     "location_hint": "Start typing your city or village, and select from the list.",
     "location_title": "I'm from...",
-    "next_button": "Next",
-    "photos_subtitle": "Add a photo of yourself so others can see you.",
     "photos_title": "I look like...",
-    "relationship_subtitle": "My family situation is",
     "relationship_title": "I am...",
     "social_intro_hint": "Leave this empty if you want to fill this in later.",
     "social_intro_placeholder": "Tell a bit about yourself",
@@ -372,11 +299,10 @@
       "cancel": "Nevermind",
       "contact": "Contact poster",
       "create": "Submit",
-      "create_cta": "Create post...",
-      "create_cta_title": "Post something",
       "create_advert_cta_title": "Post an advert",
-      "create_event_cta_title": "Post an event",
       "create_community_cta_title": "Create a community",
+      "create_cta_title": "Post something",
+      "create_event_cta_title": "Post an event",
       "delete": "Delete",
       "edit": "Edit Post",
       "hide": "Hide (but don't delete)",
@@ -385,47 +311,21 @@
     },
     "create_title": "Post something",
     "edit_title": "Edit post",
-    "filters": {
-      "all": "All Posts",
-      "nearby": "Nearby",
-      "offers": "Offers",
-      "recent": "Recent",
-      "requests": "Requests"
-    },
     "labels": {
       "content": "Content",
-      "location": "Location",
-      "type": "Post Type",
-      "updated": "Last updated",
       "visibility": "Visible to others"
-    },
-    "location": {
-      "enable": "Enable Location",
-      "prompt": "Enable location to see nearby posts"
     },
     "messages": {
       "confirm_delete": "Are you sure you want to delete this post?",
-      "created": "Post created successfully",
-      "deleted": "Post deleted successfully",
-      "error_create": "Failed to create post",
-      "error_delete": "Failed to delete post",
       "error_load": "Failed to load posts",
-      "error_update": "Failed to update post",
-      "no_my_posts": "You haven't created any posts yet",
-      "no_nearby": "No posts found nearby",
-      "no_posts": "No posts found",
-      "no_recent": "No recent posts found",
-      "not_visible": "This post is not visible to others",
-      "updated": "Post updated successfully"
+      "no_posts": "No posts found"
     },
-    "my_posts": "My posts",
     "placeholders": {
       "content": "Share what you're offering or looking for"
     },
     "share": {
       "post_text": "{publicName} posted something — take a look"
     },
-    "title": "Bulletin board",
     "types": {
       "OFFER": "Offer",
       "REQUEST": "Request"
@@ -439,48 +339,18 @@
       "confirmation_yes": "Yes, block them",
       "dialog_message_1": "If this person is bothering you, you can block them. This will prevent them from sending you messages or interacting with your profile. They will also not be shown to you anywhere on this site, as if they never existed.",
       "dialog_message_2": "They will not receive any notification that you have blocked them.",
-      "dialog_title": "Block {name}?",
-      "empty": "You have no blocked users.",
-      "title": "Blocked users",
-      "unblock_button": "Unblock",
-      "unblock_confirmation": "Are you sure you want to unblock this user?",
-      "unblock_confirmation_no": "No, keep blocked",
-      "unblock_confirmation_yes": "Yes, unblock"
+      "dialog_title": "Block {name}?"
     },
     "browse": {
       "filters": {
-        "age_range": "Age range:",
-        "anywhere": "Anywhere",
-        "button_update_prefs": "Update",
-        "dialog_cancel_button": "Nevermind",
-        "dialog_ok_button": "Find people",
-        "explore_tags": "Explore popular interests",
-        "filter_display_label": "Looking in:",
         "locate_button_title": "Set to my location",
-        "near_label": "Near...",
-        "search_button_title_dating": "Find people",
-        "search_button_title_social": "Find people",
-        "search_placeholder": "Search",
-        "social_title": "I 'm looking for connections...",
-        "tags_label": "Interested in..."
+        "search_placeholder": "Search"
       },
       "invite_button": "Invite",
-      "loading_more_profiles": "Loading more profiles...",
-      "no_results_cta_description": "You can help by inviting your friends to join. The more, the merrier.",
-      "no_results_cta_title": "It's a bit lonely here. Invite a friend?",
-      "social_no_results": "We haven't found anyone in {country} yet.",
-      "social_no_results_city": "Haven't found anyone in {cityName} yet.",
-      "social_no_results_tags": "Haven't found anyone with those interests.",
-      "views": {
-        "grid_view_button_title": "Grid view",
-        "map_view_button_title": "Map view"
-      }
+      "no_results_cta_title": "It's a bit lonely here. Invite a friend?"
     },
     "forms": {
       "age_range": "Age range",
-      "age_title_display": "I was born in {birthYear}",
-      "city_add_placeholder": "Add this as new city",
-      "city_deselect_label": "Remove",
       "city_search_placeholder": "Search locations",
       "city_start_typing": "Start typing to search for your city",
       "dating_mode": "Dating mode",
@@ -488,8 +358,6 @@
       "dating_mode_view": "Dating mode view",
       "dating_mode_view_hint_active": "This is what other people with whom your preferences mutually match will see.",
       "dating_profile_tab": "My profile",
-      "dictate": "Dictate",
-      "dictate_listening": "Listening…",
       "edit_button_hint": "Edit your info",
       "edit_titles": {
         "gender_identity": "Gender",
@@ -513,9 +381,7 @@
       "more_options": "More options",
       "my_dating_profile": "My dating profile",
       "my_preferences": "My preferences",
-      "my_profile": "My profile",
       "name_first_name_only": "Just your first name please",
-      "name_invalid": "Enter at least 3 letters",
       "name_label": "My first name is...",
       "preview_language": "Preview language",
       "preview_profile": "Preview my profile",
@@ -533,12 +399,9 @@
     "image_editor": {
       "delete_button_title": "Remove photo"
     },
-    "image_editor_help": "Your photo here",
     "image_upload": {
       "add_from_phone": "Add a photo from your phone",
       "errors": {
-        "IMAGE_TOO_LARGE": "The image is too large. Please choose a smaller photo (max 10MB).",
-        "IMAGE_UPLOAD_FAILED": "Failed to upload image. Please try again.",
         "unknown": "Something went wrong. Please try again."
       },
       "looks_good": "Looks good!",
@@ -548,12 +411,8 @@
       "try_another": "Choose a different photo"
     },
     "more_options_button_title": "More options",
-    "no_profile_create": "Create Profile",
-    "no_profile_title": "Please fill in your profile",
     "profile_not_found": "Profile not found",
-    "profile_photos": "{name}'s photos",
-    "pronouns_edit_label": "pronouns",
-    "send_message_button": "Message"
+    "pronouns_edit_label": "pronouns"
   },
   "pronouns": {
     "he_him": "He/him",
@@ -573,11 +432,10 @@
   "settings": {
     "calls_opt_in_hint": "You can disable this on a per-member basis as well. Uncheck this if you're not interested in using this at all.",
     "email_notifications_opt_in": "Email",
-    "language_label": "Language",
     "newsletter_opt_in": "Email newsletter",
     "newsletter_opt_in_hint": "Community updates, new features, that kind of stuff. You can unsubscribe any time.",
-    "notifications_opt_in": "When someone messages me, smiles at me, or matches with me...",
     "notifications_label": "Notifications",
+    "notifications_opt_in": "When someone messages me, smiles at me, or matches with me...",
     "push_notify_messages": "Popup and mobile notification",
     "title": "Settings"
   },
@@ -590,10 +448,7 @@
     "dialog_cancel_button": "Nevermind",
     "edit_button_title": "Edit",
     "error": {
-      "cancel": "Cancel",
-      "message": "An error occurred. Please try again later.",
       "rate_limit": "Slow down partner.",
-      "retry": "Retry",
       "title": "We've hit a snag here."
     },
     "install_banner": {
@@ -606,35 +461,14 @@
     "locale_selector": {
       "help_wanted_translating": "Help wanted translating"
     },
-    "modal": {
-      "close": "Close"
-    },
     "share_dialog": {
       "button_copied": "Copied",
       "button_copy": "Copy",
-      "description": "Invite your friends to join Gaians and connect with like-minded people.",
-      "qr_hint": "Flash this at their phone",
       "share_text": "{publicName} invited you to join {siteName}",
-      "share_title": "Check out {siteName}",
-      "title": "Spread the word"
-    },
-    "spinner": {
-      "spinning": "Spinning"
+      "share_title": "Check out {siteName}"
     },
     "submitbutton": {
-      "save": "Save",
-      "submit": "Submit",
       "working": "Working..."
-    },
-    "toast": {
-      "error": {
-        "message": "An error occurred. Please try again.",
-        "title": "Error"
-      },
-      "success": {
-        "message": "Your action was successful.",
-        "title": "Success"
-      }
     },
     "update_banner": {
       "message": "An update is available.",
