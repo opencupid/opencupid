@@ -13,6 +13,7 @@ vi.mock('@/lib/api', () => ({
   safeApiCall: async <T>(fn: () => Promise<T>) => fn(),
 }))
 
+import type { MapBounds } from '@/features/map/types/map.types'
 import { useUserContentStore } from '../userContentStore'
 
 const CUID_1 = 'cmc7t45x400086w39gj30pzn3'
@@ -301,30 +302,40 @@ describe('useUserContentStore', () => {
     })
   })
 
-  describe('fetchPostsInBounds', () => {
-    it('populates postSummaries on success', async () => {
+  describe('fetchFeedInBounds', () => {
+    it('populates feedItems on success', async () => {
       const store = useUserContentStore()
-      const summaries = [
+      const items = [
         {
           id: CUID_1,
           kind: 'post',
-          type: 'OFFER',
           content: 'a',
-          location: { country: 'US' },
+          createdAt: new Date('2026-05-13T10:00:00Z').toISOString(),
+          isOwn: false,
           postedBy: profileSummary,
+          location: { country: 'US' },
+        },
+        {
+          id: 'event-2',
+          kind: 'event',
+          content: 'b',
+          createdAt: new Date('2026-05-13T09:00:00Z').toISOString(),
+          isOwn: false,
+          postedBy: profileSummary,
+          location: { country: 'US' },
         },
       ]
-      mockApi.get.mockResolvedValue({ data: { success: true, posts: summaries } })
+      mockApi.get.mockResolvedValue({ data: { success: true, items } })
 
-      const result = await store.fetchPostsInBounds({
-        north: 0,
-        south: 0,
-        east: 0,
-        west: 0,
-      } as any)
+      const bounds: MapBounds = { north: 0, south: 0, east: 0, west: 0 }
+      const result = await store.fetchFeedInBounds(bounds)
 
       expect(result.success).toBe(true)
-      expect(store.postSummaries.map((p) => p.id)).toEqual([CUID_1])
+      expect(mockApi.get).toHaveBeenCalledWith('/content/bounds', { params: bounds })
+      expect(store.feedItems.map((i) => [i.id, i.kind])).toEqual([
+        [CUID_1, 'post'],
+        ['event-2', 'event'],
+      ])
     })
   })
 })

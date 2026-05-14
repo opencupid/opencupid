@@ -33,19 +33,14 @@ import {
   type ReceivedLike,
 } from './interaction/interaction.dto'
 
-import type {
-  OwnerPost,
-  PublicPostWithProfile,
-  PublicPostDetail,
-  PostSummary,
-} from '@zod/post/post.dto'
+import type { OwnerPost, PublicPostWithProfile, PublicPostDetail } from '@zod/post/post.dto'
 import type { OwnerEvent, PublicEvent, PublicEventDetail } from '@zod/event/event.dto'
 import type {
   OwnerCommunity,
   PublicCommunity,
   PublicCommunityDetail,
 } from '@zod/community/community.dto'
-import type { OwnerUserContent } from '@zod/userContent/userContent.dto'
+import type { OwnerUserContent, UserContentMetadata } from '@zod/userContent/userContent.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 
@@ -111,7 +106,6 @@ export type CaptchaChallengeResponse = ApiSuccess<any> // altcha challenge shape
 
 // Post responses
 export type PostsResponse = ApiSuccess<{ posts: PublicPostWithProfile[] }>
-export type PostSummariesResponse = ApiSuccess<{ posts: PostSummary[] }>
 export type MyPostsResponse = ApiSuccess<{ posts: OwnerPost[] }>
 export type PostResponse = ApiSuccess<{ post: OwnerPost }>
 export type PublicPostDetailResponse = ApiSuccess<{ post: PublicPostDetail }>
@@ -121,6 +115,7 @@ export type DeletePostResponse = ApiSuccess<{}>
 
 // Unified user-content responses
 export type MyContentResponse = ApiSuccess<{ items: OwnerUserContent[] }>
+export type ContentBoundsResponse = ApiSuccess<{ items: UserContentMetadata[] }>
 
 // Event responses
 export type EventsResponse = ApiSuccess<{ events: PublicEvent[] }>

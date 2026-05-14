@@ -72,12 +72,10 @@ describe('GET /bounds', () => {
       } as any,
       reply as any
     )
-    expect(mockUserContentService.findInBounds).toHaveBeenCalledWith({
-      south: 40,
-      north: 50,
-      west: 10,
-      east: 20,
-    })
+    expect(mockUserContentService.findInBounds).toHaveBeenCalledWith(
+      { south: 40, north: 50, west: 10, east: 20 },
+      { limit: 50 }
+    )
     expect(reply.statusCode).toBe(200)
   })
 
@@ -85,6 +83,73 @@ describe('GET /bounds', () => {
     const handler = fastify.routes['GET /bounds']
     await handler({ session: { profileId: 'p1' }, query: {} } as any, reply as any)
     expect(reply.statusCode).toBe(400)
+  })
+
+  it('maps mixed-kind rows through the metadata mapper preserving order', async () => {
+    const handler = fastify.routes['GET /bounds']
+    const postedBy = {
+      id: 'author1',
+      publicName: 'Author',
+      profileImages: [],
+      country: null,
+      cityName: null,
+      lat: null,
+      lon: null,
+    }
+    const rows = [
+      {
+        id: 'p1',
+        kind: 'post',
+        content: 'post content',
+        createdAt: new Date('2026-05-13T10:00:00Z'),
+        postedById: 'author1',
+        postedBy,
+        country: null,
+        cityName: null,
+        lat: null,
+        lon: null,
+      },
+      {
+        id: 'e1',
+        kind: 'event',
+        content: 'event content',
+        createdAt: new Date('2026-05-13T09:00:00Z'),
+        postedById: 'author1',
+        postedBy,
+        country: null,
+        cityName: null,
+        lat: null,
+        lon: null,
+      },
+      {
+        id: 'c1',
+        kind: 'community',
+        content: 'community content',
+        createdAt: new Date('2026-05-13T08:00:00Z'),
+        postedById: 'author1',
+        postedBy,
+        country: null,
+        cityName: null,
+        lat: null,
+        lon: null,
+      },
+    ]
+    mockUserContentService.findInBounds.mockResolvedValueOnce(rows)
+    await handler(
+      {
+        session: { profileId: 'viewer' },
+        query: { south: '40', north: '50', west: '10', east: '20' },
+      } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(200)
+    const { items } = reply.payload
+    expect(items).toHaveLength(3)
+    expect(items.map((i: any) => ({ id: i.id, kind: i.kind }))).toEqual([
+      { id: 'p1', kind: 'post' },
+      { id: 'e1', kind: 'event' },
+      { id: 'c1', kind: 'community' },
+    ])
   })
 })
 

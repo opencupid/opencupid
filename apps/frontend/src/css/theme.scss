@@ -65,7 +65,7 @@ $theme-colors: (
 // hsl(<H>, 47%, 36%); the light variant follows from the formula.
 //
 // $dating and $tag pre-date the system and are grandfathered to avoid
-// reskinning shipped surfaces. $post-it is paper, not an accent.
+// reskinning shipped surfaces. $post is paper, not an accent.
 
 // $sand-lightest is referenced by both the -light derivations and the
 // component overrides below; declared here so the order works.
@@ -77,11 +77,12 @@ $event: #5c3187; // hsl(210, 47%, 36%) — Sandstone blue (== primary)
 $community: #318763; // hsl(155, 47%, 36%) — mossy green at the system S/L
 $dating: #873131; // hsl(2, 64%, 58%) — grandfathered Bootswatch red
 $tag: #877131; // hsl(43, 89%, 38%) — grandfathered goldenrod
-$post-it: #fff4a3; // sticky-note yellow (paper, not accent)
+$post: #fff4a3; // sticky-note yellow
 
 $dating-light: mix($sand-lightest, $dating, $accent-light-mix);
 $event-light: mix($sand-lightest, $event, $accent-light-mix);
 $community-light: mix($sand-lightest, $community, $accent-light-mix);
+$post-light: #fff4a3; // exception - keep post original color for background, it's light enough
 
 $theme-colors: map-merge(
   $theme-colors,
@@ -92,8 +93,9 @@ $theme-colors: map-merge(
     'event-light': $event-light,
     'community': $community,
     'community-light': $community-light,
+    'post': $post,
+    'post-light': $post-light,
     'tag': $tag,
-    'post-it': $post-it,
   )
 );
 
@@ -138,4 +140,3 @@ $input-focus-bg: white;
 $input-disabled-bg: $gray-200;
 $form-select-bg: white;
 $form-check-input-bg: white;
-

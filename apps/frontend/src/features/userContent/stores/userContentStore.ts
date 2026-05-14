@@ -5,12 +5,10 @@ import { OwnerUserContentSchema } from '@zod/userContent/publicContent.dto'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 import {
   OwnerPostSchema,
-  PostSummarySchema,
   PublicPostDetailSchema,
   type CreatePostPayload,
   type UpdatePostPayload,
   type OwnerPost,
-  type PostSummary,
   type PublicPostDetail,
 } from '@zod/post/post.dto'
 import {
@@ -30,8 +28,8 @@ import {
   type PublicCommunityDetail,
 } from '@zod/community/community.dto'
 import type {
+  ContentBoundsResponse,
   MyContentResponse,
-  PostSummariesResponse,
   PublicPostDetailResponse,
   PublicEventDetailResponse,
   PublicCommunityDetailResponse,
@@ -45,18 +43,22 @@ import type {
   UpdateCommunityResponse,
   DeleteCommunityResponse,
 } from '@zod/apiResponse.dto'
+import {
+  UserContentMetadataSchema,
+  type UserContentMetadata,
+} from '@zod/userContent/userContent.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import type { MapBounds } from '@/features/map/types/map.types'
 
 const OwnerUserContentArraySchema = OwnerUserContentSchema.array()
-const PostSummaryArraySchema = PostSummarySchema.array()
+const UserContentMetadataArraySchema = UserContentMetadataSchema.array()
 
 type StoreMyContentResponse = StoreResponse<{ items: OwnerUserContent[] }>
 type StorePostResponse = StoreResponse<{ post: OwnerPost }>
 type StoreEventResponse = StoreResponse<{ event: OwnerEvent }>
 type StoreCommunityResponse = StoreResponse<{ community: OwnerCommunity }>
-type StorePostSummariesResponse = StoreResponse<{ posts: PostSummary[] }>
+type StoreFeedItemsResponse = StoreResponse<{ items: UserContentMetadata[] }>
 
 let publicPostAbortController: AbortController | null = null
 let publicEventAbortController: AbortController | null = null
@@ -65,21 +67,20 @@ let publicCommunityAbortController: AbortController | null = null
 /**
  * Single store for all user-content state and mutations. Holds the
  * unified `myContent` list (posts + events mixed chronologically),
- * the post-only map-bounds summaries, and per-kind CRUD that mirrors
- * its writes into `myContent` so the unified list stays in sync.
+ * map-bounds feed items, and per-kind CRUD that mirrors its writes
+ * into `myContent` so the unified list stays in sync.
  *
  * Method naming: kind-prefixed for write/detail actions (createPost,
  * fetchPublicPost, …), unsuffixed for read actions over the unified
- * list (fetchMyContent, upsert, remove). The `postSummaries` /
- * `fetchPostsInBounds` pair stays kind-specific while the browse
- * map's marker UI is post-only.
+ * list (fetchMyContent, upsert, remove). fetchFeedInBounds populates
+ * feedItems with kind-mixed UserContentMetadata for the map's bottom strip.
  */
 export const useUserContentStore = defineStore('userContent', {
   state: () => ({
     /** Owner-scoped unified list — populated by fetchMyContent. */
     myContent: [] as OwnerUserContent[],
-    /** Map-bounds teasers — populated by fetchPostsInBounds. */
-    postSummaries: [] as PostSummary[],
+    /** Map-bounds feed items — populated by fetchFeedInBounds. */
+    feedItems: [] as UserContentMetadata[],
     isLoading: false,
     isInitialized: false,
   }),
@@ -346,16 +347,18 @@ export const useUserContentStore = defineStore('userContent', {
       }
     },
 
-    async fetchPostsInBounds(bounds: MapBounds): Promise<StorePostSummariesResponse> {
+    async fetchFeedInBounds(bounds: MapBounds): Promise<StoreFeedItemsResponse> {
       try {
         const res = await safeApiCall(() =>
-          api.get<PostSummariesResponse>('/content/posts/bounds', { params: bounds })
+          api.get<ContentBoundsResponse>('/content/bounds', {
+            params: bounds,
+          })
         )
-        const posts = PostSummaryArraySchema.parse(res.data.posts)
-        this.postSummaries = posts
-        return storeSuccess({ posts })
+        const items = UserContentMetadataArraySchema.parse(res.data.items)
+        this.feedItems = items
+        return storeSuccess({ items })
       } catch (error: any) {
-        return storeError(error, 'Failed to fetch posts in bounds')
+        return storeError(error, 'Failed to fetch feed in bounds')
       }
     },
   },

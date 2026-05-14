@@ -19,7 +19,6 @@ vi.mock('@/api/mappers/post.mappers', () => ({
   mapDbPostToOwner: (row: any) => ({ ...row, _isOwn: true }),
   mapDbPostToDetail: (row: any) => ({ ...row, _isOwn: false }),
   mapDbPostToPublic: (row: any) => ({ id: row.id, _public: true }),
-  mapPostSummary: (row: any) => ({ id: row.id, _summary: true }),
 }))
 
 import postRoutes from '../../../api/routes/content/post.route'
@@ -56,7 +55,6 @@ beforeEach(async () => {
     findByProfileIdHydrated: vi.fn(),
     findFeedHydrated: vi.fn(),
     findNearbyHydrated: vi.fn(),
-    findInBoundsHydrated: vi.fn(),
   }
   mockCluster = { evictAll: vi.fn().mockResolvedValue(undefined) }
   await postRoutes(fastify as any, {})
@@ -297,39 +295,6 @@ describe('GET /nearby', () => {
     expect(reply.payload).toMatchObject({
       success: true,
       posts: [expect.objectContaining({ _public: true })],
-    })
-  })
-})
-
-describe('GET /bounds', () => {
-  it('returns 400 on invalid bounds', async () => {
-    const handler = fastify.routes['GET /bounds']
-    await handler(
-      { session: { profileId: ownerProfileId }, query: { south: 'nope' } } as any,
-      reply as any
-    )
-    expect(reply.statusCode).toBe(400)
-  })
-
-  it('returns posts envelope with summary mapper', async () => {
-    const handler = fastify.routes['GET /bounds']
-    mockPostService.findInBoundsHydrated.mockResolvedValue([makeRow(otherProfileId)])
-    await handler(
-      {
-        session: { profileId: ownerProfileId },
-        query: { south: 47, north: 48, west: 18, east: 20 },
-      } as any,
-      reply as any
-    )
-    expect(mockPostService.findInBoundsHydrated).toHaveBeenCalledWith({
-      south: 47,
-      north: 48,
-      west: 18,
-      east: 20,
-    })
-    expect(reply.payload).toMatchObject({
-      success: true,
-      posts: [expect.objectContaining({ _summary: true })],
     })
   })
 })

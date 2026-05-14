@@ -7,7 +7,7 @@ defineEmits<{ (e: 'click', id: string): void }>()
 
 <template>
   <div
-    class="post-map-popup cursor-pointer p-3 user-select-none"
+    class="post-map-popup bg-post-light cursor-pointer p-3 user-select-none"
     @click="$emit('click', item.id)"
   >
     {{ (item.postContent ?? '').substring(0, 120) }}
@@ -16,7 +16,6 @@ defineEmits<{ (e: 'click', id: string): void }>()
 
 <style scoped>
 .post-map-popup {
-  background: var(--postit-bg);
   font-family: 'Patrick Hand', cursive;
   font-size: 0.85rem;
   word-break: break-word;

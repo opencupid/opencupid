@@ -13,10 +13,10 @@ vi.mock('@/lib/bus', () => ({
   bus: { on: vi.fn(), emit: vi.fn() },
 }))
 
-const fetchPostsInBounds = vi.fn().mockResolvedValue({ success: true })
-const postSummaries = ref<any[]>([])
+const fetchFeedInBounds = vi.fn().mockResolvedValue({ success: true })
+const feedItems = ref<any[]>([])
 vi.mock('@/features/userContent/stores/userContentStore', () => ({
-  useUserContentStore: () => ({ fetchPostsInBounds, postSummaries }),
+  useUserContentStore: () => ({ fetchFeedInBounds, feedItems }),
 }))
 
 import { useBrowseViewModel } from '../useBrowseViewModel'
@@ -29,7 +29,7 @@ describe('useBrowseViewModel', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
-    postSummaries.value = []
+    feedItems.value = []
   })
 
   it('derives profile POIs from cluster features', () => {
@@ -194,7 +194,7 @@ describe('useBrowseViewModel', () => {
       })
 
       expect(fetchBoundsSpy).toHaveBeenCalledWith({ south: 47, north: 48, west: 18, east: 20 }, 7)
-      expect(fetchPostsInBounds).toHaveBeenCalledWith({
+      expect(fetchFeedInBounds).toHaveBeenCalledWith({
         south: 47,
         north: 48,
         west: 18,
