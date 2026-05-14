@@ -1,6 +1,6 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
-import { ProfileImageSchema, ProfileSchema } from '../generated'
+import { ImageSchema, ProfileSchema } from '../generated'
 
 export const ImageVariantSchema = z.object({
   size: z.string(),
@@ -18,7 +18,7 @@ const publicFields = {
 } as const
 
 // Public schema
-export const PublicProfileImageSchema = ProfileImageSchema.pick(publicFields).extend({
+export const PublicProfileImageSchema = ImageSchema.pick(publicFields).extend({
   variants: z.array(ImageVariantSchema).default([]),
 })
 
@@ -30,7 +30,7 @@ const ownerFields = {
   id: true,
 } as const
 
-export const OwnerProfileImageScalarSchema = ProfileImageSchema.pick(ownerFields).extend({
+export const OwnerProfileImageScalarSchema = ImageSchema.pick(ownerFields).extend({
   variants: z.array(ImageVariantSchema).default([]),
 })
 export type OwnerProfileImageScalar = z.infer<typeof OwnerProfileImageScalarSchema>

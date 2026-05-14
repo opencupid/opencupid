@@ -4,7 +4,7 @@ import {
   HiddenProfileSchema,
   LikedProfileSchema,
   LocalizedProfileFieldSchema,
-  ProfileImageSchema,
+  ImageSchema,
   ProfileSchema,
 } from '@zod/generated'
 import { TagWithTranslationsSchema } from '@zod/tag/tag.db'
@@ -24,7 +24,7 @@ export const DbProfileSchema = ProfileSchema.extend({
 export type DbProfile = z.infer<typeof DbProfileSchema>
 
 export const DbProfileWithImagesSchema = DbProfileSchema.extend({
-  profileImages: z.array(ProfileImageSchema).default([]),
+  profileImages: z.array(ImageSchema).default([]),
 })
 export type DbProfileWithImages = z.infer<typeof DbProfileWithImagesSchema>
 
