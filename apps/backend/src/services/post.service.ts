@@ -10,7 +10,14 @@ import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
 const postWithMetadataInclude = {
   post: true,
-  postedBy: { include: { profileImages: true } },
+  postedBy: {
+    include: {
+      profileImages: {
+        include: { image: true },
+        orderBy: { image: { position: 'asc' } },
+      },
+    },
+  },
 } as const
 
 const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -18,7 +25,10 @@ const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
     post: true,
     postedBy: {
       include: {
-        profileImages: true,
+        profileImages: {
+          include: { image: true },
+          orderBy: { image: { position: 'asc' } },
+        },
         ...conversationContextInclude(viewerProfileId),
       },
     },

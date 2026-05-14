@@ -2,7 +2,10 @@ import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
 import { Prisma } from '@prisma/client'
-import { TrustReasonSchema, type TrustReasonType } from '@zod/generated/inputTypeSchemas/TrustReasonSchema'
+import {
+  TrustReasonSchema,
+  type TrustReasonType,
+} from '@zod/generated/inputTypeSchemas/TrustReasonSchema'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
@@ -1062,8 +1065,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             },
           },
           profileImages: {
-            select: { id: true, url: true, position: true },
-            orderBy: { position: 'asc' },
+            select: {
+              id: true,
+              image: { select: { id: true, url: true, position: true } },
+            },
+            orderBy: { image: { position: 'asc' } },
           },
           trustFlags: {
             where: { clearedAt: null },

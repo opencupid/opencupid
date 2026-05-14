@@ -33,12 +33,12 @@ export async function syncProfileHasFace(
   profileId: string
 ): Promise<void> {
   const primary = await tx.profileImage.findFirst({
-    where: { profileId, position: 0 },
-    select: { hasFace: true },
+    where: { profileId, image: { position: 0 } },
+    select: { image: { select: { hasFace: true } } },
   })
   await tx.profile.update({
     where: { id: profileId },
-    data: { hasFace: primary?.hasFace ?? false },
+    data: { hasFace: primary?.image.hasFace ?? false },
   })
 }
 
@@ -389,17 +389,21 @@ export class ProfileService {
     profileId: string,
     imageId: string
   ): Promise<{
-    profileImages: ProfileImage[]
+    profileImages: (ProfileImage & { image: import('@zod/generated').Image })[]
   }> {
     return prisma.$transaction(async (tx) => {
-      await tx.profile.update({
-        where: { id: profileId },
-        data: { profileImages: { connect: { id: imageId } } },
+      await tx.profileImage.create({
+        data: { profileId, imageId },
       })
       await syncProfileHasFace(tx, profileId)
       return tx.profile.findUniqueOrThrow({
         where: { id: profileId },
-        select: { profileImages: true },
+        select: {
+          profileImages: {
+            include: { image: true },
+            orderBy: { image: { position: 'asc' } },
+          },
+        },
       })
     })
   }
@@ -519,16 +523,15 @@ export class ProfileService {
     return !(aBlocksB || bBlocksA)
   }
 
-  async getBlockedProfiles(
-    profileId: string
-  ): Promise<{ id: string; publicName: string; profileImages: ProfileImage[] }[]> {
+  async getBlockedProfiles(profileId: string) {
     const result = await prisma.profile.findUnique({
       where: { id: profileId },
       include: {
         blockedProfiles: {
           include: {
             profileImages: {
-              orderBy: { position: 'asc' },
+              include: { image: true },
+              orderBy: { image: { position: 'asc' } },
             },
           },
         },

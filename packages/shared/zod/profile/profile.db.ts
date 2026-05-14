@@ -5,6 +5,7 @@ import {
   LikedProfileSchema,
   LocalizedProfileFieldSchema,
   ImageSchema,
+  ProfileImageSchema,
   ProfileSchema,
 } from '@zod/generated'
 import { TagWithTranslationsSchema } from '@zod/tag/tag.db'
@@ -23,15 +24,28 @@ export const DbProfileSchema = ProfileSchema.extend({
 })
 export type DbProfile = z.infer<typeof DbProfileSchema>
 
+/**
+ * Profile image join row with its underlying Image asset.
+ * Matches Prisma's `profileImages: { include: { image: true } }` shape.
+ */
+export const DbProfileImageWithAssetSchema = ProfileImageSchema.extend({
+  image: ImageSchema,
+})
+export type DbProfileImageWithAsset = z.infer<typeof DbProfileImageWithAssetSchema>
+
 export const DbProfileWithImagesSchema = DbProfileSchema.extend({
-  profileImages: z.array(ImageSchema).default([]),
+  profileImages: z.array(DbProfileImageWithAssetSchema).default([]),
 })
 export type DbProfileWithImages = z.infer<typeof DbProfileWithImagesSchema>
 
 export const DbMinimalProfileSchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  profileImages: z.array(z.object({ storagePath: z.string() })),
+  profileImages: z.array(
+    z.object({
+      image: z.object({ storagePath: z.string() }),
+    })
+  ),
   country: z.string().nullable().optional(),
   cityName: z.string().nullable().optional(),
   lat: z.number().nullable().optional(),

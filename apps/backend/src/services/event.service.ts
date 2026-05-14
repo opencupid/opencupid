@@ -6,7 +6,14 @@ import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
 const eventWithMetadataInclude = {
   event: true,
-  postedBy: { include: { profileImages: true } },
+  postedBy: {
+    include: {
+      profileImages: {
+        include: { image: true },
+        orderBy: { image: { position: 'asc' } },
+      },
+    },
+  },
 } as const
 
 const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -14,7 +21,10 @@ const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
     event: true,
     postedBy: {
       include: {
-        profileImages: true,
+        profileImages: {
+          include: { image: true },
+          orderBy: { image: { position: 'asc' } },
+        },
         ...conversationContextInclude(viewerProfileId),
       },
     },

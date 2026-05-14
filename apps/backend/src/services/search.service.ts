@@ -151,9 +151,9 @@ export class SearchService {
     if (rows.length === 0) return []
 
     const ids = rows.map((r) => r.id)
-    // `profileImages` is loaded without `select` so downstream mappers
-    // (toPublicProfileImage) receive the full row — they need mimeType,
-    // altText, position and blurhash, not just storagePath.
+    // `profileImages` is loaded with the underlying Image asset so downstream
+    // mappers (toPublicProfileImage) receive the full asset — they need
+    // mimeType, altText, position and blurhash, not just storagePath.
     const posts = await prisma.userContent.findMany({
       where: { id: { in: ids }, kind: 'post' },
       select: {
@@ -169,7 +169,10 @@ export class SearchService {
           select: {
             id: true,
             publicName: true,
-            profileImages: { orderBy: { position: 'asc' } },
+            profileImages: {
+              include: { image: true },
+              orderBy: { image: { position: 'asc' } },
+            },
           },
         },
       },

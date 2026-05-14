@@ -55,7 +55,7 @@ describe('ImageService.deleteImage (profile owner)', () => {
       profileId: 'p1',
       image: { id: 'img1', storagePath: 'p1/abc' },
     })
-    mockPrisma.profileImage.findFirst.mockResolvedValue({ hasFace: true })
+    mockPrisma.profileImage.findFirst.mockResolvedValue({ image: { hasFace: true } })
 
     const ok = await service.deleteImage({ type: 'profile', profileId: 'p1' }, 'img1')
 
@@ -69,8 +69,8 @@ describe('ImageService.deleteImage (profile owner)', () => {
     expect(mockPrisma.image.delete).toHaveBeenCalledWith({ where: { id: 'img1' } })
     // syncProfileHasFace runs inside the same transaction
     expect(mockPrisma.profileImage.findFirst).toHaveBeenCalledWith({
-      where: { profileId: 'p1', position: 0 },
-      select: { hasFace: true },
+      where: { profileId: 'p1', image: { position: 0 } },
+      select: { image: { select: { hasFace: true } } },
     })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
       where: { id: 'p1' },
@@ -192,7 +192,7 @@ describe('ImageService.reorderImages (profile owner)', () => {
     mockPrisma.image.update
       .mockResolvedValueOnce({ id: 'img1', position: 1 })
       .mockResolvedValueOnce({ id: 'img2', position: 0 })
-    mockPrisma.profileImage.findFirst.mockResolvedValue({ hasFace: true })
+    mockPrisma.profileImage.findFirst.mockResolvedValue({ image: { hasFace: true } })
 
     const result = await service.reorderImages({ type: 'profile', profileId: 'p1' }, items)
 

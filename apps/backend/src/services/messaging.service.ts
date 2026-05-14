@@ -32,8 +32,8 @@ const conversationSummaryInclude = {
       // the mapper can resolve the partner profile without depending on the
       // participants list — required because PENDING conversations have only the
       // sender as a participant until the trust flag clears.
-      profileA: { include: { profileImages: true } },
-      profileB: { include: { profileImages: true } },
+      profileA: { include: { profileImages: { include: { image: true } } } },
+      profileB: { include: { profileImages: { include: { image: true } } } },
       participants: {
         select: {
           profileId: true,
@@ -63,7 +63,8 @@ export const messageWithSenderInclude = {
       lat: true,
       lon: true,
       profileImages: {
-        orderBy: { position: 'asc' },
+        include: { image: true },
+        orderBy: { image: { position: 'asc' } },
       },
     },
   },

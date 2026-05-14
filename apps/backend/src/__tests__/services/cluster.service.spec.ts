@@ -49,9 +49,14 @@ const makeProfile = (id: string, lat: number, lon: number, name = 'User') => ({
   localized: [],
   profileImages: [
     {
-      id: 'img-1',
-      blurhash: 'LEHV6nWB2yk8',
-      storagePath: `images/${id}/photo`,
+      id: 'pi-1',
+      imageId: 'img-1',
+      profileId: id,
+      image: {
+        id: 'img-1',
+        blurhash: 'LEHV6nWB2yk8',
+        storagePath: `images/${id}/photo`,
+      },
     },
   ],
   tags: [
@@ -91,9 +96,14 @@ const makePost = (
     lon: ownerLon ?? null,
     profileImages: [
       {
-        id: `post-img-${id}`,
-        blurhash: 'LBG^x3',
-        storagePath: `images/post-${id}/photo`,
+        id: `post-pi-${id}`,
+        imageId: `post-img-${id}`,
+        profileId: postedById,
+        image: {
+          id: `post-img-${id}`,
+          blurhash: 'LBG^x3',
+          storagePath: `images/post-${id}/photo`,
+        },
       },
     ],
   },
@@ -126,9 +136,14 @@ const makeEvent = (
     lon: ownerLon ?? null,
     profileImages: [
       {
-        id: `event-img-${id}`,
-        blurhash: 'LBG^x3',
-        storagePath: `images/event-${id}/photo`,
+        id: `event-pi-${id}`,
+        imageId: `event-img-${id}`,
+        profileId: postedById,
+        image: {
+          id: `event-img-${id}`,
+          blurhash: 'LBG^x3',
+          storagePath: `images/event-${id}/photo`,
+        },
       },
     ],
   },

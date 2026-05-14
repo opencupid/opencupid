@@ -11,7 +11,9 @@ import {
 } from '@zod/interaction/interaction.dto'
 
 function toLikeEdge(
-  profile: Prisma.ProfileGetPayload<{ include: { profileImages: true } }>,
+  profile: Prisma.ProfileGetPayload<{
+    include: { profileImages: { include: { image: true } } }
+  }>,
   createdAt: Date,
   isMatch: boolean,
   isNew = true,

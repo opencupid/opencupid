@@ -163,23 +163,27 @@ describe('ProfileService.updateProfileScalars', () => {
 })
 
 describe('ProfileService.addProfileImage', () => {
-  it('connects image, syncs Profile.hasFace from position-0 image, and returns updated images', async () => {
+  it('creates join row, syncs Profile.hasFace from position-0 image, and returns updated images', async () => {
+    mockPrisma.profileImage.create.mockResolvedValue({
+      id: 'pi1',
+      imageId: 'img1',
+      profileId: 'p1',
+    })
     mockPrisma.profile.update.mockResolvedValue({})
-    mockPrisma.profileImage.findFirst.mockResolvedValue({ hasFace: true })
+    mockPrisma.profileImage.findFirst.mockResolvedValue({ image: { hasFace: true } })
     mockPrisma.profile.findUniqueOrThrow.mockResolvedValue({
-      profileImages: [{ id: 'img1' }],
+      profileImages: [{ id: 'pi1', imageId: 'img1', profileId: 'p1', image: { id: 'img1' } }],
     })
 
     const result = await service.addProfileImage('p1', 'img1')
 
     expect(mockPrisma.$transaction).toHaveBeenCalled()
-    expect(mockPrisma.profile.update).toHaveBeenCalledWith({
-      where: { id: 'p1' },
-      data: { profileImages: { connect: { id: 'img1' } } },
+    expect(mockPrisma.profileImage.create).toHaveBeenCalledWith({
+      data: { profileId: 'p1', imageId: 'img1' },
     })
     expect(mockPrisma.profileImage.findFirst).toHaveBeenCalledWith({
-      where: { profileId: 'p1', position: 0 },
-      select: { hasFace: true },
+      where: { profileId: 'p1', image: { position: 0 } },
+      select: { image: { select: { hasFace: true } } },
     })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
       where: { id: 'p1' },
@@ -187,12 +191,22 @@ describe('ProfileService.addProfileImage', () => {
     })
     expect(mockPrisma.profile.findUniqueOrThrow).toHaveBeenCalledWith({
       where: { id: 'p1' },
-      select: { profileImages: true },
+      select: {
+        profileImages: {
+          include: { image: true },
+          orderBy: { image: { position: 'asc' } },
+        },
+      },
     })
     expect(result.profileImages).toHaveLength(1)
   })
 
   it('writes hasFace=false when no position-0 image exists', async () => {
+    mockPrisma.profileImage.create.mockResolvedValue({
+      id: 'pi1',
+      imageId: 'img1',
+      profileId: 'p1',
+    })
     mockPrisma.profile.update.mockResolvedValue({})
     mockPrisma.profileImage.findFirst.mockResolvedValue(null)
     mockPrisma.profile.findUniqueOrThrow.mockResolvedValue({ profileImages: [] })
