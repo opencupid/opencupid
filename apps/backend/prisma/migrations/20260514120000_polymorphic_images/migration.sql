@@ -18,6 +18,7 @@ ALTER TABLE "ProfileImage" RENAME TO "Image";
 ALTER INDEX "ProfileImage_pkey" RENAME TO "Image_pkey";
 ALTER INDEX "ProfileImage_storagePath_key" RENAME TO "Image_storagePath_key";
 ALTER INDEX "ProfileImage_userId_idx" RENAME TO "Image_userId_idx";
+ALTER TABLE "Image" RENAME CONSTRAINT "ProfileImage_userId_fkey" TO "Image_userId_fkey";
 
 -- 3. Drop the legacy profileId column from Image
 ALTER TABLE "Image" DROP COLUMN "profileId";
