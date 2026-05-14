@@ -5,12 +5,15 @@ import { ref, computed } from 'vue'
 
 vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k, locale: ref('en') }) }))
-vi.mock('@/features/geocoding/composables/useGeocoder', () => {
-  const results = ref<unknown[]>([])
-  const isLoading = ref(false)
-  const hasResults = computed(() => results.value.length > 0)
-  return {
-    useGeocoder: () => ({
+// Each call to useGeocoder() returns its own refs, mirroring the per-instance
+// contract of the production composable so two LocationSelector mounts can't
+// silently share state in tests.
+vi.mock('@/features/geocoding/composables/useGeocoder', () => ({
+  useGeocoder: () => {
+    const results = ref<unknown[]>([])
+    const isLoading = ref(false)
+    const hasResults = computed(() => results.value.length > 0)
+    return {
       results,
       isLoading,
       hasResults,
@@ -19,9 +22,9 @@ vi.mock('@/features/geocoding/composables/useGeocoder', () => {
         results.value = items
       }),
       clear: vi.fn(),
-    }),
-  }
-})
+    }
+  },
+}))
 vi.mock('@/assets/icons/interface/search.svg', () => ({ default: { template: '<span />' } }))
 
 import LocationSelectorComponent from '../LocationSelector.vue'
