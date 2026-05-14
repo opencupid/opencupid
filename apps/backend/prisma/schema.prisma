@@ -158,8 +158,8 @@ model User {
   roles                   UserRole[] @default([user])
 
   // relations
-  profile      Profile?       @relation
-  ProfileImage ProfileImage[]
+  profile Profile? @relation
+  images  Image[]
 
   requestsSent     ConnectionRequest[] @relation("RequestsSent")
   requestsReceived ConnectionRequest[] @relation("RequestsReceived")
@@ -253,32 +253,52 @@ model LocalizedProfileField {
   @@unique([profileId, field, locale])
 }
 
-model ProfileImage {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  profileId String?
-  profile   Profile? @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
+model Image {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 
-  position    Int     @default(0) // order of images, 0 is the primary profile image
-  altText     String  @default("")
-  storagePath String  @unique
+  position    Int      @default(0)
+  altText     String   @default("")
+  storagePath String   @unique
   url         String?
   width       Int?
   height      Int?
   mimeType    String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   contentHash String?
   blurhash    String?
-  isModerated Boolean @default(false)
-  isFlagged   Boolean @default(false)
-  hasFace     Boolean @default(false)
+  isModerated Boolean  @default(false)
+  isFlagged   Boolean  @default(false)
+  hasFace     Boolean  @default(false)
+
+  profileImage     ProfileImage?
+  userContentImage UserContentImage?
 
   @@index([userId])
-  @@index([profileId, position])
+}
+
+model ProfileImage {
+  id        String  @id @default(cuid())
+  imageId   String  @unique
+  image     Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+model UserContentImage {
+  id            String      @id @default(cuid())
+  imageId       String      @unique
+  image         Image       @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  userContentId String
+  userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
+
+  @@index([userContentId])
 }
 
 model Conversation {
@@ -411,6 +431,7 @@ model UserContent {
   post      PostContent?
   event     EventContent?
   community CommunityContent?
+  images    UserContentImage[]
 
   @@index([postedById])
   @@index([kind])
