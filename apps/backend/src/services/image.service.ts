@@ -6,7 +6,8 @@ import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/
 
 import { generateContentHash } from '@/utils/hash'
 import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
-import type { ProfileImage } from '@zod/generated'
+import type { Image } from '@zod/generated'
+import type { ImageOwner } from '@zod/image/image.dto'
 
 import sharp from 'sharp'
 
@@ -26,6 +27,37 @@ const variants: Variant[] = [
   { name: 'profile', width: 1200, height: 900, fit: sharp.fit.contain }, // 4:3 aspect ratio
   { name: 'full', width: 1280, fit: sharp.fit.inside },
 ]
+
+/**
+ * Owner-to-join-table descriptor used by every owner-scoped query in this
+ * service. Local to the file — callers pass an `ImageOwner`, not this helper.
+ */
+type JoinDescriptor =
+  | { kind: 'profile'; accessor: 'profileImage'; ownerKey: 'profileId'; ownerVal: string }
+  | {
+      kind: 'userContent'
+      accessor: 'userContentImage'
+      ownerKey: 'userContentId'
+      ownerVal: string
+    }
+
+function ownerToJoin(owner: ImageOwner): JoinDescriptor {
+  if (owner.type === 'profile') {
+    return {
+      kind: 'profile',
+      accessor: 'profileImage',
+      ownerKey: 'profileId',
+      ownerVal: owner.profileId,
+    }
+  }
+  return {
+    kind: 'userContent',
+    accessor: 'userContentImage',
+    ownerKey: 'userContentId',
+    ownerVal: owner.userContentId,
+  }
+}
+
 export class ImageService {
   private static instance: ImageService
 
@@ -47,18 +79,22 @@ export class ImageService {
   /**
    * Get a single image by ID for the authenticated user
    */
-  async getImage(id: string, userId: string): Promise<ProfileImage | null> {
-    return prisma.profileImage.findFirst({ where: { id, userId } })
+  async getImage(id: string, userId: string): Promise<Image | null> {
+    return prisma.image.findFirst({ where: { id, userId } })
   }
 
   /**
-   * List all images for a given user, most recent last
+   * List all images for a given owner, ordered by position ascending.
+   * Returns the flat Image rows (join rows are unwrapped).
    */
-  async listImages(userId: string): Promise<ProfileImage[]> {
-    return prisma.profileImage.findMany({
-      where: { userId },
-      orderBy: { position: 'asc' },
+  async listImages(owner: ImageOwner): Promise<Image[]> {
+    const join = ownerToJoin(owner)
+    const rows = await (prisma[join.accessor] as any).findMany({
+      where: { [join.ownerKey]: join.ownerVal },
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
     })
+    return rows.map((r: { image: Image }) => r.image)
   }
 
   /**
@@ -75,20 +111,27 @@ export class ImageService {
   }
 
   /**
-   * Store an image uploaded by the user
-   * @param userId - ID of the user uploading the image
-   * @param fileUpload - The uploaded file object
-   * @param captionText - Optional caption or alt text for the image
-   * Returns the created ProfileImage record
+   * Store an image uploaded by the user.
+   *
+   * Creates the Image asset row and the matching owner-join row in a single
+   * transaction. Position is scoped to the owner's gallery (count of siblings
+   * within this owner's join table), not across all images uploaded by the
+   * user.
+   *
+   * @param userId       ID of the user uploading the image (asset uploader)
+   * @param tmpImagePath Path to the temporary uploaded file
+   * @param captionText  Caption / alt text for the image
+   * @param owner        Tagged owner — `profile` or `userContent`
+   * @returns The created Image row and its owner-join row
    */
   async storeImage(
     userId: string,
     tmpImagePath: string,
-    captionText: string
-  ): Promise<ProfileImage> {
+    captionText: string,
+    owner: ImageOwner
+  ): Promise<{ image: Image; ownerRow: unknown }> {
     let imageLocation
 
-    // create image subdir, generate basename
     try {
       imageLocation = await makeImageLocation(userId)
     } catch (err: any) {
@@ -97,36 +140,51 @@ export class ImageService {
     }
 
     try {
-      // Process the image and save resized variants
       const processed = await this.processImage(
         tmpImagePath,
         imageLocation.absPath,
         imageLocation.base
       )
-      // compute the content hash of the original
       const contentHash = await generateContentHash(processed.variants.original)
-      // set position to be the last position
-      const position = await prisma.profileImage.count({ where: { userId } })
 
-      // Create a new ProfileImage record
-      return await prisma.profileImage.create({
-        data: {
-          userId: userId,
-          mimeType: processed.mime,
-          altText: captionText,
-          storagePath: path.join(imageLocation.relPath, imageLocation.base),
-          isModerated: false,
-          contentHash: contentHash,
-          blurhash: processed.blurhash,
-          hasFace: processed.hasFace,
-          position: position,
-        },
+      const join = ownerToJoin(owner)
+      // Position scoped to the owner's gallery, not the user's total uploads.
+      const position = await (prisma[join.accessor] as any).count({
+        where: { [join.ownerKey]: join.ownerVal },
+      })
+
+      return await prisma.$transaction(async (tx) => {
+        const image = (await tx.image.create({
+          data: {
+            userId,
+            mimeType: processed.mime,
+            altText: captionText,
+            storagePath: path.join(imageLocation.relPath, imageLocation.base),
+            isModerated: false,
+            contentHash,
+            blurhash: processed.blurhash,
+            hasFace: processed.hasFace,
+            position,
+          },
+        })) as Image
+
+        const ownerRow =
+          join.kind === 'profile'
+            ? await tx.profileImage.create({
+                data: { imageId: image.id, profileId: join.ownerVal },
+              })
+            : await tx.userContentImage.create({
+                data: { imageId: image.id, userContentId: join.ownerVal },
+              })
+
+        return { image, ownerRow }
       })
     } catch (err: any) {
       console.error('Failed to process image', err)
       throw new Error(`Failed to process image ${tmpImagePath}: ${err.message}`)
     }
   }
+
   async processImage(filePath: string, outputDir: string, baseName: string) {
     await fs.promises.mkdir(outputDir, { recursive: true })
 
@@ -200,12 +258,10 @@ export class ImageService {
   }
 
   /**
-   * Update an existing ProfileImage's metadata
-   * @param image - The ProfileImage object with updated fields
-   * Returns number of records updated (0 or 1)
+   * Update an Image asset row's metadata (altText only).
    */
-  async updateImage(image: ProfileImage): Promise<ProfileImage> {
-    return prisma.profileImage.update({
+  async updateImage(image: Image): Promise<Image> {
+    return prisma.image.update({
       where: { id: image.id },
       data: {
         altText: image.altText,
@@ -214,23 +270,42 @@ export class ImageService {
   }
 
   /**
-   * Delete a ProfileImage record
-   * @param profileId - ID of the profile that owns the image
-   * @param imageId - ID of the image to delete
-   * Returns true if successful, false if not
+   * Delete an image owned by the given owner.
+   *
+   * Verifies a join row exists for this owner pointing at `imageId`. Returns
+   * `false` when the image is not found or belongs to a different owner.
+   * Otherwise removes the join row, the Image row, and (for profile owners)
+   * syncs `Profile.hasFace`, all in one transaction. After the transaction
+   * commits, deletes the on-disk variant files.
    */
-  async deleteImage(profileId: string, imageId: string): Promise<boolean> {
-    const image = await prisma.profileImage.findUnique({
-      where: { id: imageId, profileId },
+  async deleteImage(owner: ImageOwner, imageId: string): Promise<boolean> {
+    const join = ownerToJoin(owner)
+    const joinRow = await (prisma[join.accessor] as any).findUnique({
+      where: { imageId },
+      include: { image: true },
     })
-    if (!image) {
-      console.warn('Image not found or does not belong to profile')
+
+    if (!joinRow) {
+      console.warn('Image not found')
       return false
     }
+    if (joinRow[join.ownerKey] !== join.ownerVal) {
+      console.warn('Image does not belong to owner')
+      return false
+    }
+
+    const image = joinRow.image as Image
     try {
       await prisma.$transaction(async (tx) => {
-        await tx.profileImage.delete({ where: { id: image.id } })
-        await syncProfileHasFace(tx, profileId)
+        if (join.kind === 'profile') {
+          await tx.profileImage.delete({ where: { id: joinRow.id } })
+        } else {
+          await tx.userContentImage.delete({ where: { id: joinRow.id } })
+        }
+        await tx.image.delete({ where: { id: image.id } })
+        if (join.kind === 'profile') {
+          await syncProfileHasFace(tx, join.ownerVal)
+        }
       })
     } catch (err) {
       console.error('Error deleting image from database:', err)
@@ -249,7 +324,6 @@ export class ImageService {
       try {
         await fs.promises.unlink(f)
       } catch (err) {
-        // Log but continue deleting other variants
         console.warn('Error deleting file:', err)
       }
     }
@@ -257,33 +331,40 @@ export class ImageService {
   }
 
   /**
-   * Reorder images by updating their positions
-   * @param profileId - ID of the profile whose images are being reordered
-   * @param items - Array of image IDs and their new positions
-   * Returns the updated images sorted by position
+   * Reorder an owner's images by updating each Image's `position`.
+   *
+   * Validates every requested image id is owned by this owner. Throws
+   * `Error('Invalid image ID')` if any id is foreign. For profile owners,
+   * syncs `Profile.hasFace` inside the same transaction. Returns the updated
+   * Image rows sorted by position ascending.
    */
-  async reorderImages(profileId: string, items: ProfileImagePosition[]) {
-    const valid = await prisma.profileImage.findMany({
-      where: { profileId, id: { in: items.map((i) => i.id) } },
-      select: { id: true },
+  async reorderImages(owner: ImageOwner, items: ProfileImagePosition[]): Promise<Image[]> {
+    const join = ownerToJoin(owner)
+    const requestedIds = items.map((i) => i.id)
+
+    const valid = await (prisma[join.accessor] as any).findMany({
+      where: { [join.ownerKey]: join.ownerVal, imageId: { in: requestedIds } },
+      select: { imageId: true },
     })
 
-    const validIds = new Set(valid.map((v) => v.id))
+    const validIds = new Set<string>(valid.map((v: { imageId: string }) => v.imageId))
     if (items.some((i) => !validIds.has(i.id))) {
       throw new Error('Invalid image ID')
     }
 
     return prisma.$transaction(async (tx) => {
-      const updated = []
+      const updated: Image[] = []
       for (const item of items) {
         updated.push(
-          await tx.profileImage.update({
+          (await tx.image.update({
             where: { id: item.id },
             data: { position: item.position },
-          })
+          })) as Image
         )
       }
-      await syncProfileHasFace(tx, profileId)
+      if (join.kind === 'profile') {
+        await syncProfileHasFace(tx, join.ownerVal)
+      }
       return updated.sort((a, b) => a.position - b.position)
     })
   }
