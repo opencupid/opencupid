@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, useAttrs } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGeocodingStore, type GeocodingResult } from '@/features/geocoding/stores/geocodingStore'
+import { useGeocoder, type GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
 import type { LocationDTO } from '@zod/dto/location.dto'
 import Multiselect from '@/features/shared/ui/multiselect'
 
@@ -21,10 +21,10 @@ const emit = defineEmits<{
 
 const debouncedAsyncFind = useDebounceFn(async (query: string) => {
   if (!query) {
-    geocoding.results = selected.value ? [selected.value] : []
+    geocoder.setResults(selected.value ? [selected.value] : [])
     return
   }
-  await geocoding.search(query, locale.value, props.locationBias ?? undefined)
+  await geocoder.search(query, locale.value, props.locationBias ?? undefined)
 }, 500) // debounce delay in ms
 
 const model = defineModel<LocationDTO>({
@@ -39,11 +39,11 @@ const model = defineModel<LocationDTO>({
 const attrs = useAttrs()
 
 const { locale, t } = useI18n()
-const geocoding = useGeocodingStore()
+const geocoder = useGeocoder()
 
 const showHint = ref(false)
-const options = computed(() => geocoding.results)
-const isLoading = computed(() => geocoding.isLoading)
+const options = computed(() => geocoder.results.value)
+const isLoading = computed(() => geocoder.isLoading.value)
 
 const selected = computed<GeocodingResult | null>({
   get() {
@@ -71,12 +71,12 @@ const selected = computed<GeocodingResult | null>({
 })
 
 function handleSelected() {
-  geocoding.results = []
+  geocoder.setResults([])
   emit('selected', model.value)
 }
 
 onUnmounted(() => {
-  geocoding.results = []
+  geocoder.clear()
 })
 </script>
 

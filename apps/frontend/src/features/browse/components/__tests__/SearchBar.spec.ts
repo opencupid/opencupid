@@ -21,19 +21,19 @@ vi.mock('vue-i18n', () => ({
   }),
 }))
 
-// Stub the geocoding store — its module-level useGeocoder() call hits the
-// network on import; not relevant to SearchBar's own behavior.
-vi.mock('@/features/geocoding/stores/geocodingStore', () => {
+// Stub the geocoder composable — provider modules hit the network on import,
+// which isn't relevant to SearchBar's own behavior.
+vi.mock('@/features/geocoding/composables/useGeocoder', () => {
   const results = ref([])
   const isLoading = ref(false)
   const hasResults = computed(() => results.value.length > 0)
   return {
-    useGeocodingStore: () => ({
+    useGeocoder: () => ({
       results,
       isLoading,
       hasResults,
       search: vi.fn(),
-      searchNearby: vi.fn(),
+      setResults: vi.fn(),
       clear: vi.fn(),
     }),
   }
