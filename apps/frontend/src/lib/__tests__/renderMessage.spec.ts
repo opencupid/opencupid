@@ -113,4 +113,12 @@ describe('stripForPreview', () => {
   it('collapses whitespace', () => {
     expect(stripForPreview('hello   \n   world')).toBe('hello world')
   })
+
+  it('returns only the first paragraph', () => {
+    expect(stripForPreview('first para\n\nsecond para')).toBe('first para')
+  })
+
+  it('treats lines separated by whitespace-only blank line as paragraph break', () => {
+    expect(stripForPreview('first\n   \nsecond')).toBe('first')
+  })
 })
