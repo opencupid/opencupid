@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { ImageSchema } from '../generated'
-import { ImageVariantSchema } from '../profile/profileimage.dto'
+import { ApiSuccessSchema, ImageVariantSchema } from '../profile/profileimage.dto'
 
 const publicFields = {
   mimeType: true,
@@ -30,8 +30,8 @@ export const UserContentImagesResponseSchema = z.object({
   images: z.array(OwnerUserContentImageSchema).default([]),
 })
 
-export const UserContentImageApiResponseSchema = z.object({
-  success: z.boolean(),
-}).merge(UserContentImagesResponseSchema)
+export const UserContentImageApiResponseSchema = ApiSuccessSchema.merge(
+  UserContentImagesResponseSchema,
+)
 
 export type UserContentImageApiResponse = z.infer<typeof UserContentImageApiResponseSchema>
