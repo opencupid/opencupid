@@ -291,6 +291,20 @@ gh run watch --exit-status
    docker compose -f docker-compose.production.yml up -d --no-deps backend
    ```
 
+4b. **Run polymorphic-images data migration** (only for the release containing this change):
+
+    Compute the SHA-256 of the dev migration SQL, then paste it into the data-migration file before running:
+
+    ```bash
+    sha256sum ~/opencupid/apps/backend/prisma/migrations/20260514120000_polymorphic_images/migration.sql
+    # Edit ~/opencupid/apps/backend/prisma/data-migrations/20260514_polymorphic_images_prod.sql
+    # and replace <SHA256_OF_MIGRATION_SQL> with the value above.
+
+    docker compose -f docker-compose.production.yml exec -T db \
+      psql -U $POSTGRES_USER -d $POSTGRES_DB \
+      < ~/opencupid/apps/backend/prisma/data-migrations/20260514_polymorphic_images_prod.sql
+    ```
+
 5. **Run migrations** (if schema changes were included):
 
 ```bash
