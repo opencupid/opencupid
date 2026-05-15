@@ -6,8 +6,7 @@ import { z } from 'zod';
 
 export const ProfileImageSchema = z.object({
   id: z.cuid(),
-  userId: z.string(),
-  profileId: z.string().nullable(),
+  profileId: z.string(),
   position: z.number().int(),
   altText: z.string(),
   storagePath: z.string(),

@@ -2,10 +2,9 @@ import { z } from 'zod'
 import { FastifyPluginAsync } from 'fastify'
 import multipart, { MultipartValue } from '@fastify/multipart'
 
-import { ProfileService } from '@/services/profile.service'
 import { ImageService } from '@/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
-import { rateLimitConfig, sendError, sendForbiddenError } from '../helpers'
+import { rateLimitConfig, sendError } from '../helpers'
 import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
 import { ReorderProfileImagesPayloadSchema } from '@zod/profile/profileimage.dto'
 import { appConfig } from '@/lib/appconfig'
@@ -30,8 +29,6 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     attachFieldsToBody: false,
   })
 
-  // instantiate services
-  const profileService = ProfileService.getInstance()
   const imageService = ImageService.getInstance()
 
   /**
@@ -41,7 +38,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     try {
-      const rawImages = await imageService.listImages(req.user.userId)
+      const rawImages = await imageService.listImages(req.session.profileId)
       const images = mapProfileImagesToOwner(rawImages)
       const response: ImageApiResponse = { success: true, images }
       return reply.code(200).send(response)
@@ -98,22 +95,17 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
           : fileUpload.fields.captionText) as MultipartValue
       ).value ?? '') as string
 
-      const profile = await profileService.getProfileByUserId(req.user.userId)
-      if (!profile) {
-        return sendError(reply, 404, 'No user profile to link the image to')
-      }
-
       try {
         const stored = await imageService.storeImage(
-          req.user.userId,
+          req.session.profileId,
           fileUpload.filepath,
           captionText
         )
         if (!stored) {
           return sendError(reply, 500, 'Failed to store image')
         }
-        const updated = await profileService.addProfileImage(profile.id, stored.id)
-        const images = mapProfileImagesToOwner(updated.profileImages)
+        const updated = await imageService.listImages(req.session.profileId)
+        const images = mapProfileImagesToOwner(updated)
         const response: ImageApiResponse = { success: true, images }
         return reply.code(200).send(response)
       } catch (err) {
@@ -137,10 +129,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
       if (!ok) {
         return sendError(reply, 500, 'Failed to delete image')
       }
-      const updated = await imageService.listImages(req.user.userId)
-      if (!updated) {
-        return sendError(reply, 400, 'No user profile found to update after image deletion')
-      }
+      const updated = await imageService.listImages(req.session.profileId)
       const images = mapProfileImagesToOwner(updated)
       const response: ImageApiResponse = { success: true, images }
       return reply.code(200).send(response)
