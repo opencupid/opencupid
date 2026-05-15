@@ -5,16 +5,18 @@ import {
   type OwnerProfile,
   OwnerScalarsSchema,
 } from '@zod/profile/profile.dto'
-import { type DbProfileSummary, type DbProfileWithImages } from '@zod/profile/profile.db'
+import {
+  type DbProfileImageWithAsset,
+  type DbProfileSummary,
+  type DbProfileWithImages,
+} from '@zod/profile/profile.db'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
 import { type OwnerProfileImage, type PublicProfileImage } from '@zod/profile/profileimage.dto'
 import { mapProfileTagsTranslated } from './tag.mappers'
-import type { Image, ProfileImage as ProfileImageJoin } from '@prisma/client'
+import type { Image } from '@zod/generated'
 import { toOwnerProfileImage, toPublicProfileImage } from './image.mappers'
-
-type ProfileImageJoinRow = ProfileImageJoin & { image: Image }
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
@@ -90,11 +92,11 @@ export function mapProfileImagesToPublic(images: Image[]): PublicProfileImage[] 
   return images.map(toPublicProfileImage)
 }
 
-export function mapProfileJoinRowsToOwner(rows: ProfileImageJoinRow[]): OwnerProfileImage[] {
+export function mapProfileJoinRowsToOwner(rows: DbProfileImageWithAsset[]): OwnerProfileImage[] {
   return rows.map((r) => toOwnerProfileImage(r.image))
 }
 
-export function mapProfileJoinRowsToPublic(rows: ProfileImageJoinRow[]): PublicProfileImage[] {
+export function mapProfileJoinRowsToPublic(rows: DbProfileImageWithAsset[]): PublicProfileImage[] {
   return rows.map((r) => toPublicProfileImage(r.image))
 }
 
@@ -102,7 +104,7 @@ export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
   return {
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile?.profileImages.map((pi) => toPublicProfileImage(pi.image)),
+    profileImages: profile.profileImages.map((pi) => toPublicProfileImage(pi.image)),
     location: DbLocationToLocationDTO({
       country: profile.country ?? null,
       cityName: profile.cityName ?? null,
