@@ -29,7 +29,7 @@ CREATE INDEX "Image_ownerProfileId_idx" ON "Image"("ownerProfileId");
 
 ALTER TABLE "Image" ADD CONSTRAINT "Image_ownerProfileId_fkey"
     FOREIGN KEY ("ownerProfileId") REFERENCES "Profile"("id")
-    ON DELETE CASCADE ON UPDATE NO ACTION;
+    ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 2) Backfill Image from ProfileImage (IDs preserved)
 INSERT INTO "Image" ("id", "ownerProfileId", "storagePath", "mimeType",
@@ -56,11 +56,11 @@ CREATE INDEX "ProfileImage_profileId_idx" ON "ProfileImage"("profileId");
 
 ALTER TABLE "ProfileImage" ADD CONSTRAINT "ProfileImage_imageId_fkey"
     FOREIGN KEY ("imageId") REFERENCES "Image"("id")
-    ON DELETE CASCADE ON UPDATE NO ACTION;
+    ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "ProfileImage" ADD CONSTRAINT "ProfileImage_profileId_fkey"
     FOREIGN KEY ("profileId") REFERENCES "Profile"("id")
-    ON DELETE CASCADE ON UPDATE NO ACTION;
+    ON DELETE CASCADE ON UPDATE CASCADE;
 
 INSERT INTO "ProfileImage" ("imageId", "profileId")
 SELECT "id", "profileId" FROM "ProfileImage_old";
@@ -79,8 +79,8 @@ CREATE INDEX "UserContentImage_userContentId_idx" ON "UserContentImage"("userCon
 
 ALTER TABLE "UserContentImage" ADD CONSTRAINT "UserContentImage_imageId_fkey"
     FOREIGN KEY ("imageId") REFERENCES "Image"("id")
-    ON DELETE CASCADE ON UPDATE NO ACTION;
+    ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "UserContentImage" ADD CONSTRAINT "UserContentImage_userContentId_fkey"
     FOREIGN KEY ("userContentId") REFERENCES "UserContent"("id")
-    ON DELETE CASCADE ON UPDATE NO ACTION;
+    ON DELETE CASCADE ON UPDATE CASCADE;
