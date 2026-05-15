@@ -96,14 +96,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
       ).value ?? '') as string
 
       try {
-        const stored = await imageService.storeImage(
-          req.session.profileId,
-          fileUpload.filepath,
-          captionText
-        )
-        if (!stored) {
-          return sendError(reply, 500, 'Failed to store image')
-        }
+        await imageService.storeImage(req.session.profileId, fileUpload.filepath, captionText)
         const updated = await imageService.listImages(req.session.profileId)
         const images = mapProfileImagesToOwner(updated)
         const response: ImageApiResponse = { success: true, images }
