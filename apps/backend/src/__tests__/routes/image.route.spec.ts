@@ -46,7 +46,6 @@ let reply: MockReply
 
 const makeReq = (overrides: any = {}) => ({
   user: { userId: 'u1' },
-  session: { profileId: PROFILE_ID },
   ...overrides,
 })
 
