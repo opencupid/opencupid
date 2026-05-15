@@ -69,7 +69,9 @@ export class ImageService {
 
   /**
    * Create an Image row for a freshly uploaded file. Does NOT attach it to any gallery —
-   * the caller (route handler) composes createImage + attachTo* in one transaction.
+   * the caller (route handler) composes createImage + attachTo* sequentially. If the
+   * subsequent attach fails the route is responsible for compensating delete (atomicity is
+   * not provided here; createImage opens its own write).
    *
    * @param opts.detectFace  When false, skips OpenCV face detection (~100ms saved).
    *                         Use true for profile uploads, false for UserContent uploads.
