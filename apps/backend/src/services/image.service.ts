@@ -69,13 +69,6 @@ export class ImageService {
   }
 
   /**
-   * @deprecated Use listProfileGallery. Kept temporarily so existing route handlers compile.
-   */
-  async listImages(profileId: string): Promise<Image[]> {
-    return this.listProfileGallery(profileId)
-  }
-
-  /**
    * Build URLs for all variants of an image.
    */
   getImageUrls(image: { storagePath: string }): { size: string; url: string }[] {
@@ -375,12 +368,5 @@ export class ImageService {
       }
     })
     return this.listUserContentGallery(userContentId)
-  }
-
-  /**
-   * @deprecated Use reorderProfileGallery. Kept temporarily so existing route handlers compile.
-   */
-  async reorderImages(profileId: string, items: ImagePosition[]): Promise<Image[]> {
-    return this.reorderProfileGallery(profileId, items)
   }
 }

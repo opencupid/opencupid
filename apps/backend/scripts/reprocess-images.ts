@@ -6,12 +6,13 @@ import { ImageService } from '../src/services/image.service'
 import { getMediaRoot, imageBasePath } from '../src/lib/media'
 import { ImageProcessor } from '../src/services/imageprocessor'
 import { syncProfileHasFace } from '../src/services/profile.service'
+
 const imageService = ImageService.getInstance()
 
 async function main() {
   await ImageProcessor.initialize()
 
-  const images = await prisma.profileImage.findMany()
+  const images = await prisma.image.findMany()
 
   console.log(`Found ${images.length} images to reprocess`)
 
@@ -35,7 +36,7 @@ async function main() {
       console.log(`Reprocessing ${img.id}`)
       const result = await imageService.reprocessImage(originalFile, outputDir, baseName)
 
-      await prisma.profileImage.update({
+      await prisma.image.update({
         where: { id: img.id },
         data: {
           blurhash: result.blurhash,
@@ -57,27 +58,26 @@ async function main() {
 
   console.log(`\nImages: ${success} updated, ${skipped} skipped, ${failed} failed`)
 
-  // Mirror Profile.hasFace from the now-current ProfileImage.hasFace at position 0.
-  const profiles = await prisma.profile.findMany({ select: { id: true } })
-  console.log(`\nSyncing Profile.hasFace for ${profiles.length} profiles`)
+  // Mirror Profile.hasFace from the now-current Image.hasFace via the Profile gallery's position-0 image.
+  const profilesWithGallery = await prisma.profile.findMany({
+    where: { galleryImages: { some: {} } },
+    select: { id: true },
+  })
 
-  let synced = 0
-  let syncFailed = 0
-  for (const p of profiles) {
-    try {
-      await prisma.$transaction((tx) => syncProfileHasFace(tx, p.id))
-      synced++
-    } catch (err) {
-      console.error(`❌ Failed to sync Profile ${p.id}:`, err)
-      syncFailed++
-    }
+  console.log(`\nResyncing Profile.hasFace for ${profilesWithGallery.length} profiles…`)
+  for (const p of profilesWithGallery) {
+    await prisma.$transaction(async (tx) => {
+      await syncProfileHasFace(tx, p.id)
+    })
   }
-
-  console.log(`Profiles: ${synced} synced, ${syncFailed} failed`)
+  console.log('Done.')
 }
 
 main()
   .catch((err) => {
     console.error(err)
+    process.exit(1)
   })
-  .finally(() => prisma.$disconnect())
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
