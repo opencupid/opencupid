@@ -1,4 +1,3 @@
-import z from 'zod'
 import { defineStore } from 'pinia'
 import { api, axios, safeApiCall } from '@/lib/api'
 import type { ApiError, ApiSuccess } from '@zod/apiResponse.dto'
@@ -8,36 +7,47 @@ import {
   type OwnerProfileImage,
   type ProfileImagePosition,
 } from '@zod/profile/profileimage.dto'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { bus } from '@/lib/bus'
 
 type ImageStoreResponse = ApiSuccess<{}> | ApiError
 
+function profileScopedPath(profileId: string, segment = ''): string {
+  return `/image/profile/${profileId}${segment}`
+}
+
 export const useImageStore = defineStore('image', {
   state: () => ({
-    images: [] as OwnerProfileImage[], // List of profile images
-    isLoading: false, // Loading state
+    images: [] as OwnerProfileImage[],
+    isLoading: false,
   }),
 
   actions: {
+    requireProfileId(): string | null {
+      const profileId = useOwnerProfileStore().profile?.id
+      return profileId ?? null
+    },
+
     async uploadProfileImage(file: File, captionText: string): Promise<ImageStoreResponse> {
+      const profileId = this.requireProfileId()
+      if (!profileId) return { success: false, message: 'No profile in session' }
+
       const formData = new FormData()
       formData.append('file', file)
       formData.append('captionText', captionText)
 
       try {
-        this.isLoading = true // Set loading state
-        const { data } = await safeApiCall(() => api.post<ImageApiResponse>('/image', formData))
-        const { success, images } = ImageApiResponseSchema.parse(data)
+        this.isLoading = true
+        const { data } = await safeApiCall(() =>
+          api.post<ImageApiResponse>(profileScopedPath(profileId), formData)
+        )
+        const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
       } catch (err: unknown) {
         const out: ApiError = {
           success: false,
           message: 'An unexpected error occurred',
-        }
-
-        if (err instanceof z.ZodError) {
-          // out.message = 'Validation error'
         }
 
         if (axios.isAxiosError(err) && err.response) {
@@ -50,15 +60,20 @@ export const useImageStore = defineStore('image', {
 
         return out
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
     async deleteImage(image: OwnerProfileImage): Promise<ImageStoreResponse> {
+      const profileId = this.requireProfileId()
+      if (!profileId) return { success: false, message: 'No profile in session' }
+
       try {
-        this.isLoading = true // Set loading state
-        const { data } = await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
-        const { success, images } = ImageApiResponseSchema.parse(data)
+        this.isLoading = true
+        const { data } = await safeApiCall(() =>
+          api.delete<ImageApiResponse>(profileScopedPath(profileId, `/${image.id}`))
+        )
+        const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
       } catch (error: any) {
@@ -67,46 +82,56 @@ export const useImageStore = defineStore('image', {
           message: 'An unexpected error occurred',
         }
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
     async reorderImages(imagesForUpdate: ProfileImagePosition[]): Promise<ImageStoreResponse> {
+      const profileId = this.requireProfileId()
+      if (!profileId) return { success: false, message: 'No profile in session' }
+
       try {
-        this.isLoading = true // Set loading state
+        this.isLoading = true
         const { data } = await safeApiCall(() =>
-          api.patch<ImageApiResponse>('/image/order', { images: imagesForUpdate })
+          api.patch<ImageApiResponse>(profileScopedPath(profileId, '/order'), {
+            images: imagesForUpdate,
+          })
         )
-        const { success, images } = ImageApiResponseSchema.parse(data)
+        const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
       } catch (error: any) {
-        this.images = [] // Reset images on error
+        this.images = []
         return {
           success: false,
           message: 'An unexpected error occurred',
         }
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
     async fetchImages(): Promise<ImageStoreResponse> {
+      const profileId = this.requireProfileId()
+      if (!profileId) return { success: false, message: 'No profile in session' }
+
       try {
-        this.isLoading = true // Set loading state
-        const { data } = await safeApiCall(() => api.get<ImageApiResponse>('/image/me'))
-        const { success, images } = ImageApiResponseSchema.parse(data)
+        this.isLoading = true
+        const { data } = await safeApiCall(() =>
+          api.get<ImageApiResponse>(profileScopedPath(profileId))
+        )
+        const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
         return { success: true }
       } catch (error: any) {
         console.error('Failed to fetch profile images:', error)
-        this.images = [] // Reset images on error
+        this.images = []
         return {
           success: false,
-          message: error.response?.data?.message || 'Failed to fetch profile images',
+          message: error?.response?.data?.message ?? 'Failed to fetch profile images',
         }
       } finally {
-        this.isLoading = false // Reset loading state
+        this.isLoading = false
       }
     },
 
