@@ -11,17 +11,15 @@ import { DbLocationToLocationDTO } from './location.mappers'
 
 import { type OwnerProfileImage, type PublicProfileImage } from '@zod/profile/profileimage.dto'
 import { mapProfileTagsTranslated } from './tag.mappers'
-import { ProfileImage } from '@zod/generated'
-import {
-  toOwnerProfileImage,
-  toPublicProfileImage,
-  type MinimalProfileImage,
-} from './image.mappers'
+import type { Image, ProfileImage as ProfileImageJoin } from '@prisma/client'
+import { toOwnerProfileImage, toPublicProfileImage } from './image.mappers'
+
+type ProfileImageJoinRow = ProfileImageJoin & { image: Image }
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
   const tags = mapProfileTagsTranslated(db.tags, locale)
-  const images = db.profileImages ? mapProfileImagesToOwner(db.profileImages) : []
+  const images = db.profileImages ? mapProfileJoinRowsToOwner(db.profileImages) : []
   const location = LocationSchema.parse(db)
 
   const localizedMap = db.localized.reduce(
@@ -70,7 +68,7 @@ export function mapProfileToPublic(
   }
   const scalars = ProfileUnionSchema.parse(dProf)
   const publicImages = dbProfile.profileImages
-    ? mapProfileImagesToPublic(dbProfile.profileImages)
+    ? mapProfileJoinRowsToPublic(dbProfile.profileImages)
     : []
   const publicTags = dbProfile.tags ? mapProfileTagsTranslated(dbProfile.tags, locale) : []
 
@@ -84,19 +82,27 @@ export function mapProfileToPublic(
   } as PublicProfile
 }
 
-export function mapProfileImagesToOwner(images: ProfileImage[]): OwnerProfileImage[] {
-  return images.map((img) => toOwnerProfileImage(img))
+export function mapProfileImagesToOwner(images: Image[]): OwnerProfileImage[] {
+  return images.map(toOwnerProfileImage)
 }
 
-export function mapProfileImagesToPublic(images: ProfileImage[]): PublicProfileImage[] {
-  return images.map((img: ProfileImage) => toPublicProfileImage(img))
+export function mapProfileImagesToPublic(images: Image[]): PublicProfileImage[] {
+  return images.map(toPublicProfileImage)
+}
+
+export function mapProfileJoinRowsToOwner(rows: ProfileImageJoinRow[]): OwnerProfileImage[] {
+  return rows.map((r) => toOwnerProfileImage(r.image))
+}
+
+export function mapProfileJoinRowsToPublic(rows: ProfileImageJoinRow[]): PublicProfileImage[] {
+  return rows.map((r) => toPublicProfileImage(r.image))
 }
 
 export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
   return {
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile?.profileImages.map(toPublicProfileImage),
+    profileImages: profile?.profileImages.map((pi) => toPublicProfileImage(pi.image)),
     location: DbLocationToLocationDTO({
       country: profile.country ?? null,
       cityName: profile.cityName ?? null,

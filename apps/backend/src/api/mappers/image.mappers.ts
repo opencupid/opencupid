@@ -1,4 +1,4 @@
-import { ProfileImage } from '@prisma/client'
+import { Image } from '@prisma/client'
 import { ImageService } from '@/services/image.service'
 import {
   PublicProfileImage,
@@ -29,7 +29,7 @@ export function toPublicProfileImage(image: MinimalProfileImage): PublicProfileI
  * Add the public URL to the image object and sanitize it
  * by removing fields that are not accessible to the owner
  */
-export function toOwnerProfileImage(image: ProfileImage): OwnerProfileImage {
+export function toOwnerProfileImage(image: Image): OwnerProfileImage {
   const variants = getImageVariants(image)
   return OwnerProfileImageSchema.parse({ ...image, variants })
 }

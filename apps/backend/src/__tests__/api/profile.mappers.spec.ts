@@ -57,7 +57,14 @@ describe('mapProfileSummary', () => {
     const profile = {
       id: 'p1',
       publicName: 'Alice',
-      profileImages: [{ id: 'img1', hash: 'abc', position: 0, format: 'webp', status: 'APPROVED' }],
+      profileImages: [
+        {
+          id: 'pi1',
+          imageId: 'img1',
+          profileId: 'p1',
+          image: { id: 'img1', hash: 'abc', position: 0, format: 'webp', status: 'APPROVED' },
+        },
+      ],
     }
 
     const result = mapProfileSummary(profile as any)
