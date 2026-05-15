@@ -6,17 +6,12 @@ import {
   type UserContentMetadataRow,
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
-import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { conversationContextInclude, profileImageInclude } from '@/db/includes/profileIncludes'
 
 const postWithMetadataInclude = {
   post: true,
   postedBy: {
-    include: {
-      profileImages: {
-        include: { image: true },
-        orderBy: { image: { position: 'asc' } },
-      },
-    },
+    include: profileImageInclude(),
   },
 } as const
 
@@ -25,10 +20,7 @@ const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
     post: true,
     postedBy: {
       include: {
-        profileImages: {
-          include: { image: true },
-          orderBy: { image: { position: 'asc' } },
-        },
+        ...profileImageInclude(),
         ...conversationContextInclude(viewerProfileId),
       },
     },

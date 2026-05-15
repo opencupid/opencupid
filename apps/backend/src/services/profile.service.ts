@@ -399,10 +399,7 @@ export class ProfileService {
       return tx.profile.findUniqueOrThrow({
         where: { id: profileId },
         select: {
-          profileImages: {
-            include: { image: true },
-            orderBy: { image: { position: 'asc' } },
-          },
+          ...profileImageInclude(),
         },
       })
     })
@@ -528,12 +525,7 @@ export class ProfileService {
       where: { id: profileId },
       include: {
         blockedProfiles: {
-          include: {
-            profileImages: {
-              include: { image: true },
-              orderBy: { image: { position: 'asc' } },
-            },
-          },
+          include: profileImageInclude(),
         },
       },
     })

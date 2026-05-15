@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import type { ConversationParticipantWithConversationSummary } from '@zod/messaging/messaging.dto'
 import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { profileImageInclude } from '@/db/includes/profileIncludes'
 import { appConfig } from '../lib/appconfig'
 import { computeSendOutcome } from './messaging.stateMachine'
 
@@ -62,10 +63,7 @@ export const messageWithSenderInclude = {
       cityName: true,
       lat: true,
       lon: true,
-      profileImages: {
-        include: { image: true },
-        orderBy: { image: { position: 'asc' } },
-      },
+      ...profileImageInclude(),
     },
   },
   attachment: true,

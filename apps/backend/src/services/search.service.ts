@@ -169,10 +169,7 @@ export class SearchService {
           select: {
             id: true,
             publicName: true,
-            profileImages: {
-              include: { image: true },
-              orderBy: { image: { position: 'asc' } },
-            },
+            ...profileImageInclude(),
           },
         },
       },

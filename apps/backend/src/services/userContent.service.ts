@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { profileImageInclude } from '@/db/includes/profileIncludes'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
 /**
@@ -32,12 +33,7 @@ export interface BoundsBox {
 
 const profileSummaryInclude = {
   postedBy: {
-    include: {
-      profileImages: {
-        include: { image: true },
-        orderBy: { image: { position: 'asc' } },
-      },
-    },
+    include: profileImageInclude(),
   },
 } as const
 
@@ -46,12 +42,7 @@ const ownerHydratedInclude = {
   event: true,
   community: true,
   postedBy: {
-    include: {
-      profileImages: {
-        include: { image: true },
-        orderBy: { image: { position: 'asc' } },
-      },
-    },
+    include: profileImageInclude(),
   },
 } as const
 
