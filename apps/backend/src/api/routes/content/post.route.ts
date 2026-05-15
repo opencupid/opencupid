@@ -1,6 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { PostService } from '@/services/post.service'
-import { ClusterService } from '@/services/cluster.service'
 import {
   CreatePostPayloadSchema,
   UpdatePostPayloadSchema,
@@ -19,7 +18,6 @@ const ProfileParamsSchema = z.object({ profileId: z.string().cuid() })
 
 const postRoutes: FastifyPluginAsync = async (fastify) => {
   const svc = PostService.getInstance()
-  const cluster = ClusterService.getInstance()
 
   fastify.post(
     '/',
@@ -34,7 +32,6 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       if (!data) return
       try {
         const created = await svc.create(profileId, data)
-        cluster.evictAll()
         return reply.code(201).send({ success: true, post: mapDbPostToOwner(created) })
       } catch (err) {
         fastify.log.error(err)
@@ -102,7 +99,6 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const row = await svc.update(id, profileId, data)
         if (!row) return sendError(reply, 404, 'Post not found or access denied')
-        cluster.evictAll()
         return reply.code(200).send({ success: true, post: mapDbPostToOwner(row) })
       } catch (err) {
         fastify.log.error(err)
@@ -124,7 +120,6 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await svc.softDelete(id, profileId)
         if (!result) return sendError(reply, 404, 'Post not found or access denied')
-        cluster.evictAll()
         return reply.code(200).send({ success: true })
       } catch (err) {
         fastify.log.error(err)

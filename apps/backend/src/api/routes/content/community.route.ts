@@ -1,6 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { CommunityService } from '@/services/community.service'
-import { ClusterService } from '@/services/cluster.service'
 import {
   CreateCommunityPayloadSchema,
   UpdateCommunityPayloadSchema,
@@ -18,7 +17,6 @@ const ProfileParamsSchema = z.object({ profileId: z.string().cuid() })
 
 const communityRoutes: FastifyPluginAsync = async (fastify) => {
   const svc = CommunityService.getInstance()
-  const cluster = ClusterService.getInstance()
 
   fastify.post(
     '/',
@@ -33,7 +31,6 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
       if (!data) return
       try {
         const created = await svc.create(profileId, data)
-        cluster.evictAll()
         return reply.code(201).send({ success: true, community: mapDbCommunityToOwner(created) })
       } catch (err) {
         fastify.log.error(err)
@@ -74,7 +71,6 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const row = await svc.update(id, profileId, data)
         if (!row) return sendError(reply, 404, 'Community not found or access denied')
-        cluster.evictAll()
         return reply.code(200).send({ success: true, community: mapDbCommunityToOwner(row) })
       } catch (err) {
         fastify.log.error(err)
@@ -96,7 +92,6 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await svc.softDelete(id, profileId)
         if (!result) return sendError(reply, 404, 'Community not found or access denied')
-        cluster.evictAll()
         return reply.code(200).send({ success: true })
       } catch (err) {
         fastify.log.error(err)

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-vi.mock('@/services/cluster.service')
+vi.mock('@/services/poiBounds.service')
 
 vi.mock('@/services/profileMatch.service', () => ({
   ProfileMatchService: {
@@ -42,12 +42,11 @@ vi.mock('../../api/mappers/tag.mappers', () => ({
 
 import findProfileRoutes from '../../api/routes/findProfile.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
-import { ClusterService } from '@/services/cluster.service'
+import { PoiBoundsService } from '@/services/poiBounds.service'
 
 let fastify: MockFastify
 let reply: MockReply
-let mockGetOrBuildClusters: ReturnType<typeof vi.fn>
-let mockGetLeaves: ReturnType<typeof vi.fn>
+let mockGetPois: ReturnType<typeof vi.fn>
 
 const mockSession = {
   profileId: 'profile-123',
@@ -56,12 +55,10 @@ const mockSession = {
 }
 
 beforeEach(async () => {
-  mockGetOrBuildClusters = vi.fn()
-  mockGetLeaves = vi.fn()
+  mockGetPois = vi.fn()
 
-  vi.mocked(ClusterService.getInstance).mockReturnValue({
-    getOrBuildClusters: mockGetOrBuildClusters,
-    getLeaves: mockGetLeaves,
+  vi.mocked(PoiBoundsService.getInstance).mockReturnValue({
+    getPois: mockGetPois,
   } as any)
 
   fastify = new MockFastify()
@@ -73,19 +70,18 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('GET /clusters', () => {
-  const handler = () => fastify.routes['GET /clusters']
+describe('GET /bounds', () => {
+  const handler = () => fastify.routes['GET /bounds']
 
   const validQuery = {
     south: '45.0',
     north: '48.0',
     west: '16.0',
     east: '23.0',
-    zoom: '10',
     kinds: 'profile,post',
   }
 
-  it('returns features and tags for valid bounds and zoom', async () => {
+  it('returns features and tags for valid bounds', async () => {
     const mockFeatures = [
       {
         type: 'point',
@@ -99,7 +95,7 @@ describe('GET /clusters', () => {
       },
     ]
     const mockTags = [{ id: 't1', name: 'Bio', slug: 'bio' }]
-    mockGetOrBuildClusters.mockResolvedValue({ features: mockFeatures, tags: mockTags })
+    mockGetPois.mockResolvedValue({ features: mockFeatures, tags: mockTags })
 
     await handler()({ session: mockSession, query: validQuery, log: { error: vi.fn() } }, reply)
 
@@ -107,17 +103,16 @@ describe('GET /clusters', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.features).toEqual(mockFeatures)
     expect(reply.payload.tags).toBeDefined()
-    expect(mockGetOrBuildClusters).toHaveBeenCalledWith(
+    expect(mockGetPois).toHaveBeenCalledWith(
       'profile-123',
       [16.0, 45.0, 23.0, 48.0],
-      10,
       [],
       ['profile', 'post']
     )
   })
 
-  it('forwards parsed tagIds to the cluster service', async () => {
-    mockGetOrBuildClusters.mockResolvedValue({ features: [], tags: [] })
+  it('forwards parsed tagIds to the bounds service', async () => {
+    mockGetPois.mockResolvedValue({ features: [], tags: [] })
 
     await handler()(
       {
@@ -128,17 +123,16 @@ describe('GET /clusters', () => {
       reply
     )
 
-    expect(mockGetOrBuildClusters).toHaveBeenCalledWith(
+    expect(mockGetPois).toHaveBeenCalledWith(
       'profile-123',
       [16.0, 45.0, 23.0, 48.0],
-      10,
       ['cabcdef01', 'cabcdef02'],
       ['profile', 'post']
     )
   })
 
-  it('forwards parsed kinds to the cluster service', async () => {
-    mockGetOrBuildClusters.mockResolvedValue({ features: [], tags: [] })
+  it('forwards parsed kinds to the bounds service', async () => {
+    mockGetPois.mockResolvedValue({ features: [], tags: [] })
 
     await handler()(
       {
@@ -149,13 +143,7 @@ describe('GET /clusters', () => {
       reply
     )
 
-    expect(mockGetOrBuildClusters).toHaveBeenCalledWith(
-      'profile-123',
-      [16.0, 45.0, 23.0, 48.0],
-      10,
-      [],
-      ['post']
-    )
+    expect(mockGetPois).toHaveBeenCalledWith('profile-123', [16.0, 45.0, 23.0, 48.0], [], ['post'])
   })
 
   it('returns 400 when kinds is empty', async () => {
@@ -168,7 +156,7 @@ describe('GET /clusters', () => {
       reply
     )
     expect(reply.statusCode).toBe(400)
-    expect(mockGetOrBuildClusters).not.toHaveBeenCalled()
+    expect(mockGetPois).not.toHaveBeenCalled()
   })
 
   it('returns 400 when kinds is unknown', async () => {
@@ -181,7 +169,7 @@ describe('GET /clusters', () => {
       reply
     )
     expect(reply.statusCode).toBe(400)
-    expect(mockGetOrBuildClusters).not.toHaveBeenCalled()
+    expect(mockGetPois).not.toHaveBeenCalled()
   })
 
   it('returns 400 for missing params', async () => {
@@ -191,7 +179,7 @@ describe('GET /clusters', () => {
     )
 
     expect(reply.statusCode).toBe(400)
-    expect(mockGetOrBuildClusters).not.toHaveBeenCalled()
+    expect(mockGetPois).not.toHaveBeenCalled()
   })
 
   it('returns 403 when social is not active', async () => {
@@ -205,67 +193,34 @@ describe('GET /clusters', () => {
     )
 
     expect(reply.statusCode).toBe(403)
-    expect(mockGetOrBuildClusters).not.toHaveBeenCalled()
+    expect(mockGetPois).not.toHaveBeenCalled()
+  })
+
+  it('returns 500 when the service rejects', async () => {
+    mockGetPois.mockRejectedValue(new Error('db down'))
+
+    await handler()({ session: mockSession, query: validQuery, log: { error: vi.fn() } }, reply)
+
+    expect(reply.statusCode).toBe(500)
   })
 })
 
-describe('GET /cluster-leaves', () => {
-  const handler = () => fastify.routes['GET /cluster-leaves']
-
-  it('returns features for valid clusterId', async () => {
-    const mockFeatures = [
-      {
-        type: 'point',
-        kind: 'profile',
-        id: 'p1',
-        lat: 47,
-        lon: 19,
-        publicName: 'Alice',
-        image: null,
-        highlighted: false,
-      },
-    ]
-    mockGetLeaves.mockReturnValue(mockFeatures)
-
-    await handler()(
-      {
-        session: mockSession,
-        query: { clusterId: '42', kinds: 'profile,post' },
-        log: { error: vi.fn() },
-      },
+describe('deprecated /clusters and /cluster-leaves shims', () => {
+  it('returns an empty success envelope from /clusters', async () => {
+    await fastify.routes['GET /clusters']!(
+      { session: mockSession, query: {}, log: { error: vi.fn() } },
       reply
     )
-
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.success).toBe(true)
-    expect(reply.payload.features).toEqual(mockFeatures)
-    expect(mockGetLeaves).toHaveBeenCalledWith('profile-123', 42, [], ['profile', 'post'])
+    expect(reply.payload).toEqual({ success: true, features: [], tags: [] })
   })
 
-  it('forwards tagIds so the correct cached index is queried', async () => {
-    mockGetLeaves.mockReturnValue([])
-
-    await handler()(
-      {
-        session: mockSession,
-        query: { clusterId: '42', tagIds: 'cabcdef01', kinds: 'profile,post' },
-        log: { error: vi.fn() },
-      },
+  it('returns an empty success envelope from /cluster-leaves', async () => {
+    await fastify.routes['GET /cluster-leaves']!(
+      { session: mockSession, query: {}, log: { error: vi.fn() } },
       reply
     )
-
-    expect(mockGetLeaves).toHaveBeenCalledWith(
-      'profile-123',
-      42,
-      ['cabcdef01'],
-      ['profile', 'post']
-    )
-  })
-
-  it('returns 400 for missing clusterId', async () => {
-    await handler()({ session: mockSession, query: {}, log: { error: vi.fn() } }, reply)
-
-    expect(reply.statusCode).toBe(400)
-    expect(mockGetLeaves).not.toHaveBeenCalled()
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true, features: [] })
   })
 })

@@ -2,15 +2,13 @@ import { z } from 'zod'
 import { PublicTagSchema } from '../tag/tag.dto'
 import { USER_CONTENT_KINDS } from '../../maps'
 
-export const ClusterFeatureSchema = z.object({
-  type: z.literal('cluster'),
-  id: z.number(),
-  lat: z.number(),
-  lon: z.number(),
-  count: z.number().int().min(2),
-  expansionZoom: z.number().int(),
-})
-
+/**
+ * A single POI on the map: a profile, post, event or community located at
+ * a real geographic coordinate. The map is fully bounds-driven — the
+ * backend returns every visible POI in the viewport and the frontend
+ * applies density-based spreading at render time when they overlap in
+ * pixel space.
+ */
 export const PointFeatureSchema = z.object({
   type: z.literal('point'),
   kind: z.enum(USER_CONTENT_KINDS),
@@ -29,21 +27,14 @@ export const PointFeatureSchema = z.object({
   postContent: z.string().optional(),
 })
 
-export const MapFeatureSchema = z.discriminatedUnion('type', [
-  ClusterFeatureSchema,
-  PointFeatureSchema,
-])
-
-export const ClusterMapResponseSchema = z.object({
+export const BoundsMapResponseSchema = z.object({
   success: z.literal(true),
-  features: z.array(MapFeatureSchema),
+  features: z.array(PointFeatureSchema),
   tags: z.array(PublicTagSchema),
 })
 
-export type ClusterFeature = z.infer<typeof ClusterFeatureSchema>
 export type PointFeature = z.infer<typeof PointFeatureSchema>
-export type MapFeature = z.infer<typeof MapFeatureSchema>
-export type ClusterMapResponse = z.infer<typeof ClusterMapResponseSchema>
+export type BoundsMapResponse = z.infer<typeof BoundsMapResponseSchema>
 
 /**
  * Parses a comma-separated `kinds` query param into a deduped array of

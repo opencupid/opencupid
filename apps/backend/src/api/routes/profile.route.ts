@@ -39,7 +39,6 @@ import { createDatingPrefsDefaults, DatingPreferencesFormSchema } from '@zod/mat
 import { ProfileService } from '@/services/profile.service'
 import { ProfileMatchService } from '@/services/profileMatch.service'
 import { MessageService } from '../../services/messaging.service'
-import { ClusterService } from '@/services/cluster.service'
 
 const RATE_LIMIT_PROFILE_SCOPES = 5 // max scope toggles per day
 
@@ -58,7 +57,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   const profileService = ProfileService.getInstance()
   const profileMatchService = ProfileMatchService.getInstance()
   const messageService = MessageService.getInstance()
-  const clusterService = ClusterService.getInstance()
 
   /**
    * GET /me
@@ -361,7 +359,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return profile
       })
 
-      clusterService.evict(updated.id)
       const response: UpdateProfileResponse = { success: true, profile: updated }
       return reply.code(200).send(response)
     } catch (err) {
@@ -410,7 +407,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
             isActive: updated.isActive,
           },
         })
-        clusterService.evict(updated.id)
 
         const response: UpdateProfileScopeResponse = {
           success: true,
@@ -442,7 +438,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ error: 'Cannot block yourself.' })
       }
       await profileService.blockProfile(profileId, id)
-      clusterService.evict(profileId)
       return reply.code(204).send()
     } catch (error) {
       fastify.log.error(error)
@@ -461,7 +456,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const { id } = IdLookupParamsSchema.parse(req.params)
       await profileService.unblockProfile(profileId, id)
-      clusterService.evict(profileId)
       return reply.code(204).send()
     } catch (error) {
       fastify.log.error(error)

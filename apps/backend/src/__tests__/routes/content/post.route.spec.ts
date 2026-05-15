@@ -6,13 +6,9 @@ vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 let fastify: MockFastify
 let reply: MockReply
 let mockPostService: any
-let mockCluster: any
 
 vi.mock('@/services/post.service', () => ({
   PostService: { getInstance: () => mockPostService },
-}))
-vi.mock('@/services/cluster.service', () => ({
-  ClusterService: { getInstance: () => mockCluster },
 }))
 
 vi.mock('@/api/mappers/post.mappers', () => ({
@@ -56,7 +52,6 @@ beforeEach(async () => {
     findFeedHydrated: vi.fn(),
     findNearbyHydrated: vi.fn(),
   }
-  mockCluster = { evictAll: vi.fn().mockResolvedValue(undefined) }
   await postRoutes(fastify as any, {})
 })
 
@@ -79,7 +74,6 @@ describe('POST /', () => {
       success: true,
       post: expect.objectContaining({ _isOwn: true }),
     })
-    expect(mockCluster.evictAll).toHaveBeenCalled()
   })
 })
 
@@ -161,7 +155,6 @@ describe('PATCH /:id', () => {
       success: true,
       post: expect.objectContaining({ content: 'updated' }),
     })
-    expect(mockCluster.evictAll).toHaveBeenCalled()
   })
 })
 
@@ -190,7 +183,6 @@ describe('DELETE /:id', () => {
       reply as any
     )
     expect(reply.statusCode).toBe(200)
-    expect(mockCluster.evictAll).toHaveBeenCalled()
   })
 })
 

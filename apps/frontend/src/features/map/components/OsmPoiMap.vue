@@ -6,9 +6,7 @@ import 'leaflet/dist/leaflet.css'
 import type { BoundsWithZoom } from '../types/map.types'
 import { useMapController, type MapProps } from '../composables/useMapController'
 
-const props = withDefaults(defineProps<MapProps>(), {
-  clusters: () => [],
-})
+const props = defineProps<MapProps>()
 
 const emit = defineEmits<{
   (e: 'item:select', id: string): void
@@ -61,33 +59,10 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
   width: 100%;
 }
 
-/* Cluster badge */
-:deep(.poi-cluster-icon) {
-  background: transparent;
-  border: none;
-}
-
-:deep(.poi-cluster-badge) {
-  border-radius: 50%;
-  background: #3a86ff;
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-}
-
 /* Remove default Leaflet icon images spacing */
 :deep(.leaflet-div-icon) {
   background: transparent;
   border: none;
-}
-
-:deep(.poi-cluster-icon) {
-  z-index: 5000; /* above regular markers but below hovered avatar icons */
 }
 
 /* Avatar marker hover feedback */
@@ -97,8 +72,13 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
     border-color 0.15s ease;
 }
 
-:deep(.poi-avatar-icon) {
-  transition: z-index 0s 250ms;
+/* Smooth slide between original and spread positions. Leaflet sets
+   marker positions via the parent element's transform, so the transition
+   below catches both the spread reflow and any later setLatLng updates. */
+:deep(.leaflet-marker-pane > .poi-avatar-icon) {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0.2, 0.2, 1),
+    z-index 0s 250ms;
 }
 
 :deep(.poi-avatar-icon:hover) {

@@ -1,22 +1,19 @@
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
-import { OverlappingMarkerSpiderfier } from 'ts-overlapping-marker-spiderfier-leaflet'
-import { nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated, ref, watch } from 'vue'
+import {
+  nextTick,
+  onMounted,
+  onBeforeUnmount,
+  onActivated,
+  onDeactivated,
+  ref,
+  shallowRef,
+  watch,
+} from 'vue'
 import type { Component, Ref } from 'vue'
 
-import { DiffableLayer } from './DiffableLayer'
-import type {
-  MapPoi,
-  MapCluster,
-  BoundsWithZoom,
-  MarkerConfig,
-  IconRenderer,
-} from '../types/map.types'
-import {
-  isValidLatLng,
-  createServerClusterIcon,
-  hydratePoiIcon,
-  MAP_MAX_ZOOM,
-} from '../utils/mapUtils'
+import type { MapPoi, BoundsWithZoom, MarkerConfig, IconRenderer } from '../types/map.types'
+import { isValidLatLng, hydratePoiIcon, MAP_MAX_ZOOM } from '../utils/mapUtils'
+import { spreadMarkers, type SpreadMarker, type SpreadingConfig } from '../utils/markerSpreading'
 import { MAP_DEFAULT_ZOOM } from '@shared/maps'
 
 // ---------------------------------------------------------------------------
@@ -31,7 +28,6 @@ interface DeferredWork {
 
 export interface MapProps {
   items: MapPoi[]
-  clusters?: MapCluster[]
   iconResolver: (poi: MapPoi) => IconRenderer
   popupResolver?: (poi: MapPoi) => Component
   initialCenter: [number, number]
@@ -65,16 +61,27 @@ function supportsHover(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// OMS tuning constants
+// Spread tuning
 // ---------------------------------------------------------------------------
 
-const SPIDERFY_COLOCATION_THRESHOLD_M = 10
-const OMS_CIRCLE_FOOT_SEPARATION = 65
-const OMS_SPIRAL_FOOT_SEPARATION = 50
-const OMS_SPIRAL_LENGTH_START = 16
-const OMS_SPIRAL_LENGTH_FACTOR = 12
 const BOUNDS_DEBOUNCE_MS = 500
 const SEARCH_FOCUS_ZOOM = 12
+
+/**
+ * Tuned for place-level (city-granularity) data. At the default zoom (8)
+ * a city-sized cluster of POIs sits within a few pixels of each other;
+ * the spreader pushes them apart on a circle / spiral so each is
+ * separately hoverable. Above zoom 14 (i.e. street level) markers are
+ * shown at their true coordinates.
+ */
+const SPREAD_CONFIG: SpreadingConfig = {
+  pixelThreshold: 24,
+  minZoomToSpread: 8,
+  maxZoomCutoffOffset: 6,
+  maxSpreadRadius: 38,
+  spiralRadiusMultiplier: 1.6,
+  circleSpiralSwitchover: 8,
+}
 
 // ---------------------------------------------------------------------------
 // Composable
@@ -100,22 +107,20 @@ export function useMapController(
   let phase: MapPhase = 'uninitialized'
   const deferred: DeferredWork = {}
   let map: LMap
-  let oms: OverlappingMarkerSpiderfier
-  let pois: DiffableLayer<MapPoi>
-  let clusters: DiffableLayer<MapCluster>
   let pointLayer: L.LayerGroup
-  let clusterLayer: L.LayerGroup
+  // Source of truth for the current set of POIs. Spreading reprojects
+  // their `current` coordinates on every zoom/move/items change; the
+  // Leaflet markers track `current` via setLatLng so existing markers
+  // animate to their new positions rather than being torn down.
+  const spreadItemsById = new Map<string, SpreadMarker<MapPoi>>()
+  const markersById = new Map<string, LMarker>()
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
-  // One-shot continuation invoked the next time an items batch arrives.
-  // Used by the max-zoom cluster click to spiderfy as soon as the leaves
-  // land, and only then. A second click overwrites the slot; an items
-  // batch with no matching leaves consumes it silently. Bounding the
-  // intent to the first batch after the click means a stale flag can't
-  // fire a phantom spiderfy minutes later if the user has panned away.
-  let pendingItemsCallback: (() => void) | null = null
   let markerConfig: MarkerConfig | null = null
+
+  // Latest items snapshot, used by spread recomputation on map events.
+  const latestItems = shallowRef<MapPoi[]>([])
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
 
@@ -134,9 +139,11 @@ export function useMapController(
       boundsTimer = null
     }
     iconCache.clear()
-    map?.off('moveend', emitBounds)
-    pois?.clear()
-    clusters?.clear()
+    map?.off('moveend', onMoveend)
+    map?.off('zoomend', recomputeSpread)
+    pointLayer?.clearLayers()
+    markersById.clear()
+    spreadItemsById.clear()
     map?.remove()
     phase = 'uninitialized'
   }
@@ -168,13 +175,15 @@ export function useMapController(
     })
     L.control.zoom({ position: 'bottomright' }).addTo(map)
 
-    map.on('moveend', emitBounds)
+    map.on('moveend', onMoveend)
+    map.on('zoomend', recomputeSpread)
 
     resizeObserver = new ResizeObserver(() => {
       const size = map.getSize()
       if (size.x === 0 || size.y === 0) return
       map.invalidateSize({ debounceMoveend: true })
       drainDeferred()
+      recomputeSpread()
     })
     resizeObserver.observe(mapEl.value!)
   }
@@ -193,36 +202,6 @@ export function useMapController(
 
   function initLayers(): void {
     pointLayer = L.layerGroup().addTo(map)
-    clusterLayer = L.layerGroup().addTo(map)
-
-    oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true, circleSpiralSwitchover: 5 })
-    oms.circleFootSeparation = OMS_CIRCLE_FOOT_SEPARATION
-    oms.spiralFootSeparation = OMS_SPIRAL_FOOT_SEPARATION
-    oms.spiralLengthStart = OMS_SPIRAL_LENGTH_START
-    oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
-
-    oms.addListener('click', (marker) => {
-      const id = pois.getId(marker as LMarker)
-      if (id !== undefined) emit('item:select', String(id))
-    })
-
-    // POI data is treated as immutable per id for the lifetime of a session
-    // (the GUI is not expected to reflect mid-session DB changes). No
-    // shouldUpdate/apply: existing markers are never re-rendered, only
-    // added on first sighting and removed when their id leaves the viewport.
-    pois = new DiffableLayer<MapPoi>(pointLayer, {
-      create: (item) => createPoiMarker(item),
-    })
-
-    // Clusters share the immutable-per-id contract with POIs: cluster_id
-    // is supercluster's per-index identifier and the index is cached per
-    // (profile, tagIds) on the backend, so within a session the same id
-    // always carries the same fields. Filter changes produce entirely
-    // different ids (different cache key → different index), not same
-    // ids with different counts.
-    clusters = new DiffableLayer<MapCluster>(clusterLayer, {
-      create: (cluster) => createClusterMarker(cluster),
-    })
   }
 
   function onReady(): void {
@@ -233,6 +212,9 @@ export function useMapController(
     // moveend for the first view (no animation to settle). Emit once
     // explicitly so downstream can fetch data for the initial viewport.
     emitBounds()
+    // Apply spreading once the map has real dimensions — items may have
+    // arrived before the map was ready.
+    recomputeSpread()
   }
 
   function drainDeferred(): void {
@@ -244,6 +226,11 @@ export function useMapController(
   }
 
   // ── Bounds emission ───────────────────────────────────────────────────
+
+  function onMoveend(): void {
+    emitBounds()
+    recomputeSpread()
+  }
 
   const emitBounds = (): void => {
     if (boundsTimer) clearTimeout(boundsTimer)
@@ -267,11 +254,11 @@ export function useMapController(
 
   // ── POI markers ───────────────────────────────────────────────────────
 
-  function createPoiMarker(item: MapPoi): LMarker {
+  function createPoiMarker(item: MapPoi, lat: number, lon: number): LMarker {
     if (!markerConfig) throw new Error('markerConfig must be set before createPoiMarker')
     const { resolveIcon, resolvePopup, fetchPopupData } = markerConfig
 
-    const m = L.marker([item.lat, item.lon], {
+    const m = L.marker([lat, lon], {
       icon: hydratePoiIcon(
         resolveIcon(item),
         {
@@ -283,6 +270,10 @@ export function useMapController(
         iconCache
       ),
       keyboard: true,
+    })
+
+    m.on('click', () => {
+      emit('item:select', item.id)
     })
 
     if (resolvePopup && supportsHover()) {
@@ -300,10 +291,6 @@ export function useMapController(
       })
 
       m.on('mouseout', () => {
-        m.closePopup()
-      })
-
-      m.on('click', () => {
         m.closePopup()
       })
 
@@ -356,67 +343,65 @@ export function useMapController(
     return m
   }
 
-  // ── Cluster markers ───────────────────────────────────────────────────
+  // ── Data updates ──────────────────────────────────────────────────────
 
-  function createClusterMarker(cluster: MapCluster): LMarker {
-    const m = L.marker([cluster.lat, cluster.lon], {
-      icon: createServerClusterIcon(cluster.count),
-      keyboard: true,
-    })
+  /**
+   * Reconcile the layer against the latest items snapshot, then apply
+   * density-based spreading at the current zoom level. Existing markers
+   * keep their identity — only their lat/lng changes — so popups, hover
+   * state, and Leaflet's own caches stay intact across reflows.
+   */
+  function recomputeSpread(): void {
+    if (phase !== 'ready' || !markerConfig) return
+    const size = map.getSize()
+    if (size.x === 0 || size.y === 0) return
 
-    m.on('click', () => {
-      if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
-        clusters.update(clusters.allItems().filter((c) => c.id !== cluster.id))
-        const target = L.latLng(cluster.lat, cluster.lon)
-        // Bind the spiderfy intent to this click's closure. The next items
-        // batch consumes it; a second click before that overwrites it.
-        pendingItemsCallback = () => triggerSpiderfy(target)
-        map.setView([cluster.lat, cluster.lon], MAP_MAX_ZOOM)
-      } else {
-        map.flyTo([cluster.lat, cluster.lon], cluster.expansionZoom, {
-          duration: 0.5,
-        })
+    const items = latestItems.value
+    const incomingIds = new Set(items.map((i) => i.id))
+
+    // Drop markers whose id has left the viewport.
+    for (const [id, marker] of markersById) {
+      if (!incomingIds.has(id)) {
+        pointLayer.removeLayer(marker)
+        markersById.delete(id)
+        spreadItemsById.delete(id)
+      }
+    }
+
+    // Build the spread input: each item carries its true coords. Reuse the
+    // previously-spread current position as a starting point so the spread
+    // is stable when the map state is unchanged.
+    const spreadInput: SpreadMarker<MapPoi>[] = items.map((item) => {
+      const prev = spreadItemsById.get(item.id)
+      const original = { lat: item.lat, lng: item.lon }
+      return {
+        id: item.id,
+        original,
+        current: prev?.current ?? original,
+        data: item,
+        isSpread: prev?.isSpread,
       }
     })
 
-    return m
-  }
+    const spread = spreadMarkers(spreadInput, map, map.getZoom(), SPREAD_CONFIG)
 
-  // ── Data updates ──────────────────────────────────────────────────────
-
-  function doUpdateMarkers(items: MapPoi[]): void {
-    if (!markerConfig) return
-    const { added, removed } = pois.update(items)
-
-    for (const m of removed) oms.removeMarker(m)
-    for (const m of added) oms.addMarker(m)
-
-    if (pendingItemsCallback) {
-      const cb = pendingItemsCallback
-      pendingItemsCallback = null
-      cb()
+    for (const s of spread) {
+      spreadItemsById.set(s.id, s)
+      const existing = markersById.get(s.id)
+      if (existing) {
+        existing.setLatLng([s.current.lat, s.current.lng])
+      } else {
+        const marker = createPoiMarker(s.data, s.current.lat, s.current.lng)
+        markersById.set(s.id, marker)
+        pointLayer.addLayer(marker)
+      }
     }
-  }
-
-  function triggerSpiderfy(target: L.LatLng): void {
-    const match = [...pois.values()].find(
-      (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
-    )
-    if (!match) return
-    ;(oms as any).spiderListener(match)
   }
 
   function updateMarkers(items: MapPoi[], config: MarkerConfig): void {
     markerConfig = config
-    if (phase !== 'ready') return
-    const size = map.getSize()
-    if (size.x === 0 || size.y === 0) return
-    doUpdateMarkers(items)
-  }
-
-  function updateClusters(newClusters: MapCluster[]): void {
-    if (phase !== 'ready') return
-    clusters.update(newClusters)
+    latestItems.value = items
+    recomputeSpread()
   }
 
   // ── Highlighted location (search-driven flyTo) ────────────────────────
@@ -461,11 +446,6 @@ export function useMapController(
   watch(
     () => props.items,
     (items) => updateMarkers(items, markerConfigFromProps())
-  )
-
-  watch(
-    () => props.clusters,
-    (newClusters) => updateClusters(newClusters ?? [])
   )
 
   watch(

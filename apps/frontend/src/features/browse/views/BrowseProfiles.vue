@@ -50,7 +50,6 @@ defineOptions({ name: 'AppShell' })
 const {
   viewerProfile,
   isNoOneAround,
-  clusters,
   allPois,
   availableTags,
   activePoi,
@@ -70,7 +69,7 @@ watch(selectedTagIds, () => {
 })
 
 // Server-side layer filtering: toggling a layer changes the `kinds` query
-// param sent on cluster fetches. Invalidate the bounds cache and refetch.
+// param sent on bounds fetches. Invalidate the bounds cache and refetch.
 const { selectedLayers } = storeToRefs(findProfileStore)
 watch(selectedLayers, () => {
   findProfileStore.refetchBounds()
@@ -98,7 +97,7 @@ function onLocationSet(point: GeoPoint) {
 }
 
 // Per-kind dispatch for marker icons and popup components. The discriminator
-// is `poi.kind` from the cluster service's PointFeature; profiles fall through
+// is `poi.kind` from the bounds service's PointFeature; profiles fall through
 // the default branch.
 const iconResolver = computed(() => (poi: MapPoi) => {
   if (poi.kind === 'post') return renderPostMapIconHtml
@@ -324,7 +323,6 @@ onMounted(async () => {
         <OsmPoiMap
           v-if="viewerProfile"
           :items="allPois"
-          :clusters="clusters"
           :icon-resolver="iconResolver"
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"

@@ -61,12 +61,12 @@ export class ProfileMatchService {
 
   /**
    * Fetches all social profiles with a location, optionally filtered by tagIds.
-   * Used by ClusterService.buildIndex to seed the supercluster index.
+   * Used by PoiBoundsService.getPois to seed the map's POI layer.
    *
    * The viewer's own profile is intentionally NOT excluded — the frontend
    * empty-state logic in `useProfilesViewModel.isNoOneAround` relies on the
-   * viewer being present in the cluster results to detect "I'm alone on
-   * the map" and render the NoResultsCTA.
+   * viewer being present in the results to detect "I'm alone on the map"
+   * and render the NoResultsCTA.
    */
   async findSocialProfilesWithLocation(
     profileId: string,

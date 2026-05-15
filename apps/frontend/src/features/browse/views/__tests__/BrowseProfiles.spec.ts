@@ -14,7 +14,6 @@ vi.mock('@/features/map/components/OsmPoiMap.vue', () => ({
     template: '<div class="map-view"><div class="osm-poi-map" /></div>',
     props: [
       'items',
-      'clusters',
       'iconResolver',
       'initialCenter',
       'highlightedLocation',
@@ -104,7 +103,6 @@ const vmState = {
   isNoOneAround: ref(false),
   isLoading: ref(false),
   haveResults: ref(true),
-  clusters: ref([]),
   allPois: ref([]),
   profilePois: ref([]),
   availableTags: ref([]),

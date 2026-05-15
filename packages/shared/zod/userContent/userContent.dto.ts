@@ -7,7 +7,7 @@ export const ContentKindSchema = z.enum(['post', 'event', 'community'])
 export type ContentKind = z.infer<typeof ContentKindSchema>
 
 /**
- * Metadata shape used by feed/bounds/nearby/search and supercluster.
+ * Metadata shape used by feed/bounds/nearby/search and the map POI layer.
  * Row-level attributes only — no kind-specific content payload; consumers
  * branch on `kind` to fetch the per-kind content when they need it.
  */

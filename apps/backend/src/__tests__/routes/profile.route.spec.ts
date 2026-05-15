@@ -7,13 +7,9 @@ let reply: MockReply
 let mockProfileService: any
 let mockProfileMatchService: any
 let mockMessageService: any
-let mockClusterService: any
 
 vi.mock('../../services/profile.service', () => ({
   ProfileService: { getInstance: () => mockProfileService },
-}))
-vi.mock('../../services/cluster.service', () => ({
-  ClusterService: { getInstance: () => mockClusterService },
 }))
 vi.mock('../../services/profileMatch.service', () => ({
   ProfileMatchService: { getInstance: () => mockProfileMatchService },
@@ -94,9 +90,6 @@ beforeEach(async () => {
   }
   mockMessageService = {
     sendWelcomeMessage: vi.fn(),
-  }
-  mockClusterService = {
-    evict: vi.fn(),
   }
   await profileRoutes(fastify as any, {})
 })
@@ -225,7 +218,7 @@ describe('GET /:id', () => {
 })
 
 describe('POST /:id/block', () => {
-  it('blocks a profile successfully and evicts cluster cache', async () => {
+  it('blocks a profile successfully', async () => {
     const handler = fastify.routes['POST /:id/block']
     mockProfileService.blockProfile.mockResolvedValue({})
 
@@ -233,7 +226,6 @@ describe('POST /:id/block', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(204)
     expect(mockProfileService.blockProfile).toHaveBeenCalledWith('p1', 'cm000000000000000000000p2')
-    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
   })
 
   it('returns 400 when trying to block yourself', async () => {
@@ -250,14 +242,13 @@ describe('POST /:id/block', () => {
 })
 
 describe('POST /:id/unblock', () => {
-  it('unblocks a profile and evicts cluster cache', async () => {
+  it('unblocks a profile', async () => {
     const handler = fastify.routes['POST /:id/unblock']
     mockProfileService.unblockProfile.mockResolvedValue({})
 
     const req = makeReq({ params: { id: 'cm000000000000000000000p2' } })
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(204)
-    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
   })
 })
 
@@ -276,7 +267,7 @@ describe('GET /blocked', () => {
 })
 
 describe('PATCH /me', () => {
-  it('updates profile and returns 200, evicts cluster cache', async () => {
+  it('updates profile and returns 200', async () => {
     const handler = fastify.routes['PATCH /me']
     const updatedDb = {
       id: 'p1',
@@ -291,7 +282,6 @@ describe('PATCH /me', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
   })
 })
 
@@ -360,7 +350,6 @@ describe('PATCH /scopes', () => {
         isActive: true,
       },
     })
-    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
   })
 
   it('returns 404 when profile not found', async () => {
@@ -372,7 +361,7 @@ describe('PATCH /scopes', () => {
     expect(reply.statusCode).toBe(404)
   })
 
-  it('does not evict when updateSession throws', async () => {
+  it('returns 500 when updateSession throws', async () => {
     const handler = fastify.routes['PATCH /scopes']
     const updatedDb = {
       id: 'p1',
@@ -386,7 +375,6 @@ describe('PATCH /scopes', () => {
 
     await handler(req, reply as any)
 
-    expect(mockClusterService.evict).not.toHaveBeenCalled()
     expect(reply.statusCode).toBe(500)
   })
 })

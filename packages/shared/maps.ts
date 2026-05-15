@@ -1,4 +1,4 @@
-/** Maximum zoom level used by the map and the supercluster index. */
+/** Maximum zoom level the map allows the viewer to zoom into. */
 export const MAP_MAX_ZOOM = 12
 
 /** Default zoom level used on map initialization. */
@@ -16,9 +16,9 @@ export const MAX_BROWSE_TAGS = 5
 
 /**
  * Discriminator values for the kinds of user-generated content that appear on
- * the social map. Used by the wire-level `kinds` filter, the supercluster
- * point properties, and the `<MapLayerControl>` button group. Aligned with
- * the existing UserContent terminology in the backend mappers.
+ * the social map. Used by the wire-level `kinds` filter, the POI feature
+ * shape, and the `<MapLayerControl>` button group. Aligned with the existing
+ * UserContent terminology in the backend mappers.
  */
 export const USER_CONTENT_KINDS = ['profile', 'post', 'event', 'community'] as const
 export type UserContentKind = (typeof USER_CONTENT_KINDS)[number]

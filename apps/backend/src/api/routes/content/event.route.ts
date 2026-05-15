@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { createEvent as createIcsEvent, type EventAttributes } from 'ics'
 import { EventService } from '@/services/event.service'
-import { ClusterService } from '@/services/cluster.service'
 import {
   CreateEventPayloadSchema,
   UpdateEventPayloadSchema,
@@ -21,7 +20,6 @@ const ProfileParamsSchema = z.object({ profileId: z.string().cuid() })
 
 const eventRoutes: FastifyPluginAsync = async (fastify) => {
   const svc = EventService.getInstance()
-  const cluster = ClusterService.getInstance()
 
   fastify.post(
     '/',
@@ -36,7 +34,6 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       if (!data) return
       try {
         const created = await svc.create(profileId, data)
-        cluster.evictAll()
         return reply.code(201).send({ success: true, event: mapDbEventToOwner(created) })
       } catch (err) {
         fastify.log.error(err)
@@ -119,7 +116,6 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const row = await svc.update(id, profileId, data)
         if (!row) return sendError(reply, 404, 'Event not found or access denied')
-        cluster.evictAll()
         return reply.code(200).send({ success: true, event: mapDbEventToOwner(row) })
       } catch (err) {
         fastify.log.error(err)
@@ -141,7 +137,6 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await svc.softDelete(id, profileId)
         if (!result) return sendError(reply, 404, 'Event not found or access denied')
-        cluster.evictAll()
         return reply.code(200).send({ success: true })
       } catch (err) {
         fastify.log.error(err)

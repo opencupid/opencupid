@@ -4,7 +4,7 @@ import { api, safeApiCall } from '@/lib/api'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { GetPublicProfileResponse } from '@zod/apiResponse.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
-import { ClusterMapResponseSchema, type MapFeature } from '@shared/zod/map/cluster.dto'
+import { BoundsMapResponseSchema, type PointFeature } from '@shared/zod/map/map.dto'
 import { storeSuccess, storeError, type StoreVoidSuccess, type StoreError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import { useSearchStore } from './searchStore'
@@ -12,12 +12,10 @@ import { USER_CONTENT_KINDS, type UserContentKind } from '@shared/maps'
 import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
-let clusterAbortController: AbortController | null = null
-let lastZoom = 7
-let cachedClusterZoom: number | null = null
-let cachedClusterBounds: MapBounds | null = null
-let cachedClusterTagSig = ''
-let cachedClusterKindsSig = ''
+let boundsAbortController: AbortController | null = null
+let cachedBounds: MapBounds | null = null
+let cachedTagSig = ''
+let cachedKindsSig = ''
 const popupCache = new Map<string, PublicProfile>()
 const POPUP_CACHE_MAX = 20
 
@@ -50,9 +48,8 @@ function kindsParam(kinds: UserContentKind[]): string {
   return kinds.join(',')
 }
 
-function sameViewport(a: MapBounds | null, aZoom: number, b: MapBounds, bZoom: number): boolean {
+function sameBounds(a: MapBounds | null, b: MapBounds): boolean {
   return (
-    aZoom === bZoom &&
     a !== null &&
     a.south === b.south &&
     a.north === b.north &&
@@ -62,21 +59,20 @@ function sameViewport(a: MapBounds | null, aZoom: number, b: MapBounds, bZoom: n
 }
 
 function invalidateBoundsCache(): void {
-  cachedClusterBounds = null
-  cachedClusterZoom = null
-  cachedClusterTagSig = ''
-  cachedClusterKindsSig = ''
+  cachedBounds = null
+  cachedTagSig = ''
+  cachedKindsSig = ''
   popupCache.clear()
 }
 
 type FindProfileStoreState = {
-  clusterFeatures: MapFeature[]
+  poiFeatures: PointFeature[]
   lastMapBounds: MapBounds | null
   isLoading: boolean
   availableTags: PublicTag[]
   /**
    * Which user-content layers are visible on the map. Sent verbatim to the
-   * backend as the `kinds` query param on cluster fetches; toggling
+   * backend as the `kinds` query param on bounds fetches; toggling
    * invalidates the bounds cache and triggers a refetch. The non-empty
    * invariant required by the wire schema is enforced upstream by
    * MapLayerControl, which disables the last-remaining checkbox.
@@ -86,7 +82,7 @@ type FindProfileStoreState = {
 
 export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
-    clusterFeatures: [] as MapFeature[],
+    poiFeatures: [] as PointFeature[],
     lastMapBounds: null,
     isLoading: false,
     availableTags: [] as PublicTag[],
@@ -94,19 +90,12 @@ export const useFindProfileStore = defineStore('findProfile', {
   }),
 
   actions: {
-    async findClustersForMapBounds(
-      bounds: MapBounds,
-      zoom: number
-    ): Promise<StoreVoidSuccess | StoreError> {
-      // Supercluster requires integer zoom; Leaflet can report fractional values
-      // during fitBounds or mid-animation.
-      zoom = Math.round(zoom)
-
-      if (clusterAbortController) {
-        clusterAbortController.abort()
+    async findPoisForMapBounds(bounds: MapBounds): Promise<StoreVoidSuccess | StoreError> {
+      if (boundsAbortController) {
+        boundsAbortController.abort()
       }
       const controller = new AbortController()
-      clusterAbortController = controller
+      boundsAbortController = controller
       this.lastMapBounds = bounds
 
       const tagIds = useSearchStore().selectedTagIds
@@ -114,16 +103,9 @@ export const useFindProfileStore = defineStore('findProfile', {
       const kinds = this.selectedLayers
       const kindsSig = kindsSignature(kinds)
 
-      const sameTags = sig === cachedClusterTagSig
-      const sameKinds = kindsSig === cachedClusterKindsSig
-      const zoomChanged = cachedClusterZoom !== zoom
-      if (
-        sameTags &&
-        sameKinds &&
-        !zoomChanged &&
-        cachedClusterBounds &&
-        boundsContain(cachedClusterBounds, bounds)
-      ) {
+      const sameTags = sig === cachedTagSig
+      const sameKinds = kindsSig === cachedKindsSig
+      if (sameTags && sameKinds && cachedBounds && boundsContain(cachedBounds, bounds)) {
         this.isLoading = false
         return storeSuccess()
       }
@@ -133,10 +115,9 @@ export const useFindProfileStore = defineStore('findProfile', {
 
         const paddedBounds = padBounds(bounds, 0.3)
         const res = await safeApiCall(() =>
-          api.get('/find/clusters', {
+          api.get('/find/bounds', {
             params: {
               ...paddedBounds,
-              zoom,
               tagIds: tagIdsParam(tagIds),
               kinds: kindsParam(kinds),
             },
@@ -144,36 +125,37 @@ export const useFindProfileStore = defineStore('findProfile', {
           })
         )
 
-        const parsed = ClusterMapResponseSchema.parse(res.data)
-        this.clusterFeatures = parsed.features
+        const parsed = BoundsMapResponseSchema.parse(res.data)
+        this.poiFeatures = parsed.features
         this.availableTags = parsed.tags
-        cachedClusterBounds = paddedBounds
-        cachedClusterZoom = zoom
-        cachedClusterTagSig = sig
-        cachedClusterKindsSig = kindsSig
+        cachedBounds = paddedBounds
+        cachedTagSig = sig
+        cachedKindsSig = kindsSig
 
         return storeSuccess()
       } catch (error: any) {
         if (error instanceof CanceledError) {
           return storeSuccess()
         }
-        this.clusterFeatures = []
-        return storeError(error, 'Failed to fetch map clusters')
+        this.poiFeatures = []
+        return storeError(error, 'Failed to fetch map POIs')
       } finally {
-        if (clusterAbortController === controller) {
+        if (boundsAbortController === controller) {
           this.isLoading = false
         }
       }
     },
 
     /**
-     * Unified bounds handler — deduplicates viewport, then fetches
-     * clusters (including posts and tags) in a single request.
+     * Unified bounds handler — deduplicates viewport, then fetches POIs
+     * (including content and tags) in a single request. The zoom is no
+     * longer relevant to the request: the backend returns every visible
+     * POI regardless of zoom, and the frontend applies density-based
+     * spreading at render time.
      */
-    async fetchBounds(bounds: MapBounds, zoom: number): Promise<void> {
-      if (sameViewport(this.lastMapBounds, lastZoom, bounds, zoom)) return
-      lastZoom = zoom
-      await this.findClustersForMapBounds(bounds, zoom)
+    async fetchBounds(bounds: MapBounds, _zoom: number): Promise<void> {
+      if (sameBounds(this.lastMapBounds, bounds)) return
+      await this.findPoisForMapBounds(bounds)
     },
 
     async fetchProfileForPopup(
@@ -209,17 +191,17 @@ export const useFindProfileStore = defineStore('findProfile', {
     async refetchBounds(): Promise<void> {
       invalidateBoundsCache()
       if (this.lastMapBounds) {
-        await this.findClustersForMapBounds(this.lastMapBounds, lastZoom)
+        await this.findPoisForMapBounds(this.lastMapBounds)
       }
     },
 
     teardown() {
-      if (clusterAbortController) {
-        clusterAbortController.abort()
-        clusterAbortController = null
+      if (boundsAbortController) {
+        boundsAbortController.abort()
+        boundsAbortController = null
       }
       invalidateBoundsCache()
-      this.clusterFeatures = []
+      this.poiFeatures = []
       this.lastMapBounds = null
       this.isLoading = false
       this.availableTags = []

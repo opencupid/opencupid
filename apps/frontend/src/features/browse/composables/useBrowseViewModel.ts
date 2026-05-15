@@ -1,40 +1,34 @@
 import { computed, markRaw, ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
+import type { MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 /**
  * View-model for the browse map. Map POIs derive from findProfileStore
- * cluster features. A single bounds event triggers parallel fetches:
- * cluster features for map markers and userContentStore.feedItems for
- * the NearbyFeatures strip (BrowseProfiles consumes feedItems directly
- * from the store, not via this view-model).
+ * bounds features. A single bounds event triggers parallel fetches: POI
+ * features for map markers and userContentStore.feedItems for the
+ * NearbyFeatures strip (BrowseProfiles consumes feedItems directly from
+ * the store, not via this view-model).
  */
 export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
   const ownerStore = useOwnerProfileStore()
   const contentStore = useUserContentStore()
-  const { clusterFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
+  const { poiFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
 
   const viewerProfile = computed(() => ownerStore.profile)
 
   // ── DTO → map-layer mapping ─────────────────────────────────────
-  // The map layer renders cluster-service DTOs directly: MapPoi is
-  // PointFeature, MapCluster is ClusterFeature. No projection.
+  // The map layer renders bounds-service DTOs directly: MapPoi is
+  // PointFeature.
   //
-  // Memoise output objects by id. Per-session contract: map data —
-  // POIs and clusters alike — is treated as immutable for the lifetime
-  // of an id. First sighting wins; later batches with the same id
-  // return the cached reference unchanged. Clusters satisfy this by
-  // construction: cluster_id is supercluster's per-index identifier,
-  // and the supercluster index is keyed in the backend by (profile,
-  // tagIds), so within a session the (id → fields) mapping is a
-  // function — different filters produce entirely different ids, not
-  // same ids with different counts. Every entry is markRaw'd to skip
-  // Vue's deep-proxy traversal.
-  const clusterCache = new Map<number, MapCluster>()
+  // Memoise output objects by id. Per-session contract: map data — POIs
+  // — are treated as immutable for the lifetime of an id. First sighting
+  // wins; later batches with the same id return the cached reference
+  // unchanged. Every entry is markRaw'd to skip Vue's deep-proxy
+  // traversal.
   const profileCache = new Map<string, MapPoi>()
   const postCache = new Map<string, MapPoi>()
   const eventCache = new Map<string, MapPoi>()
@@ -48,23 +42,11 @@ export function useBrowseViewModel() {
     return next
   }
 
-  const clusters = computed<MapCluster[]>(() => {
-    const live = new Set<number>()
-    const out: MapCluster[] = []
-    for (const f of clusterFeatures.value) {
-      if (f.type !== 'cluster') continue
-      live.add(f.id)
-      out.push(memoBy(clusterCache, f.id, f))
-    }
-    for (const id of clusterCache.keys()) if (!live.has(id)) clusterCache.delete(id)
-    return out
-  })
-
   const profilePois = computed<MapPoi[]>(() => {
     const live = new Set<string>()
     const out: MapPoi[] = []
-    for (const f of clusterFeatures.value) {
-      if (f.type !== 'point' || f.kind !== 'profile') continue
+    for (const f of poiFeatures.value) {
+      if (f.kind !== 'profile') continue
       live.add(f.id)
       out.push(memoBy(profileCache, f.id, f))
     }
@@ -75,8 +57,8 @@ export function useBrowseViewModel() {
   const postPois = computed<MapPoi[]>(() => {
     const live = new Set<string>()
     const out: MapPoi[] = []
-    for (const f of clusterFeatures.value) {
-      if (f.type !== 'point' || f.kind !== 'post') continue
+    for (const f of poiFeatures.value) {
+      if (f.kind !== 'post') continue
       live.add(f.id)
       out.push(memoBy(postCache, f.id, f))
     }
@@ -87,8 +69,8 @@ export function useBrowseViewModel() {
   const eventPois = computed<MapPoi[]>(() => {
     const live = new Set<string>()
     const out: MapPoi[] = []
-    for (const f of clusterFeatures.value) {
-      if (f.type !== 'point' || f.kind !== 'event') continue
+    for (const f of poiFeatures.value) {
+      if (f.kind !== 'event') continue
       live.add(f.id)
       out.push(memoBy(eventCache, f.id, f))
     }
@@ -99,8 +81,8 @@ export function useBrowseViewModel() {
   const communityPois = computed<MapPoi[]>(() => {
     const live = new Set<string>()
     const out: MapPoi[] = []
-    for (const f of clusterFeatures.value) {
-      if (f.type !== 'point' || f.kind !== 'community') continue
+    for (const f of poiFeatures.value) {
+      if (f.kind !== 'community') continue
       live.add(f.id)
       out.push(memoBy(communityCache, f.id, f))
     }
@@ -115,17 +97,14 @@ export function useBrowseViewModel() {
     ...communityPois.value,
   ])
 
-  const haveResults = computed(() => clusterFeatures.value.length > 0)
+  const haveResults = computed(() => poiFeatures.value.length > 0)
 
   const isNoOneAround = computed(() => {
-    const features = clusterFeatures.value
+    const features = poiFeatures.value
     if (features.length === 0) return false
     const first = features[0]
     return (
-      features.length === 1 &&
-      first?.type === 'point' &&
-      first.kind === 'profile' &&
-      first.id === viewerProfile.value?.id
+      features.length === 1 && first?.kind === 'profile' && first.id === viewerProfile.value?.id
     )
   })
 
@@ -160,7 +139,6 @@ export function useBrowseViewModel() {
 
   return {
     viewerProfile,
-    clusters,
     profilePois,
     postPois,
     eventPois,

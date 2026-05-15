@@ -32,9 +32,9 @@ describe('useBrowseViewModel', () => {
     feedItems.value = []
   })
 
-  it('derives profile POIs from cluster features', () => {
+  it('derives profile POIs from bounds features', () => {
     const store = useFindProfileStore()
-    store.clusterFeatures = [
+    store.poiFeatures = [
       {
         type: 'point',
         kind: 'profile',
@@ -45,14 +45,6 @@ describe('useBrowseViewModel', () => {
         image: null,
         highlighted: false,
       },
-      {
-        type: 'cluster',
-        id: 1,
-        lat: 47.3,
-        lon: 18.8,
-        count: 5,
-        expansionZoom: 8,
-      },
     ]
 
     const vm = useBrowseViewModel()
@@ -60,13 +52,11 @@ describe('useBrowseViewModel', () => {
     expect(vm.profilePois.value).toHaveLength(1)
     expect(vm.profilePois.value[0]!.kind).toBe('profile')
     expect(vm.profilePois.value[0]!.id).toBe('p1')
-
-    expect(vm.clusters.value).toHaveLength(1)
   })
 
   it('passes hasPost flag from profile features to MapPoi', () => {
     const store = useFindProfileStore()
-    store.clusterFeatures = [
+    store.poiFeatures = [
       {
         type: 'point',
         kind: 'profile',
@@ -84,9 +74,9 @@ describe('useBrowseViewModel', () => {
     expect(vm.profilePois.value[0]!.hasPost).toBe(true)
   })
 
-  it('derives post POIs from cluster features', () => {
+  it('derives post POIs from bounds features', () => {
     const store = useFindProfileStore()
-    store.clusterFeatures = [
+    store.poiFeatures = [
       {
         type: 'point',
         kind: 'post',
@@ -108,9 +98,9 @@ describe('useBrowseViewModel', () => {
     expect(vm.allPois.value).toHaveLength(1)
   })
 
-  it('derives community POIs from cluster features and includes them in allPois', () => {
+  it('derives community POIs from bounds features and includes them in allPois', () => {
     const store = useFindProfileStore()
-    store.clusterFeatures = [
+    store.poiFeatures = [
       {
         type: 'point',
         kind: 'community',
@@ -132,7 +122,7 @@ describe('useBrowseViewModel', () => {
     expect(vm.allPois.value[0]!.kind).toBe('community')
   })
 
-  it('populates tags from cluster response', async () => {
+  it('populates tags from bounds response', async () => {
     const mockTags = [{ id: 'cltagabc000000000000001', name: 'Biokert', slug: 'biokert' }]
     mockGet.mockResolvedValue({
       data: {
@@ -148,7 +138,6 @@ describe('useBrowseViewModel', () => {
             image: null,
             highlighted: false,
             postContent: 'Has loc',
-            postType: 'OFFER',
           },
         ],
         tags: mockTags,
@@ -156,34 +145,15 @@ describe('useBrowseViewModel', () => {
     })
 
     const store = useFindProfileStore()
-    await store.findClustersForMapBounds(mockBounds, 10)
+    await store.findPoisForMapBounds(mockBounds)
 
     const vm = useBrowseViewModel()
     expect(vm.availableTags.value).toHaveLength(1)
     expect(vm.availableTags.value[0]!.name).toBe('Biokert')
   })
 
-  it('excludes cluster features from POI lists', () => {
-    const store = useFindProfileStore()
-    store.clusterFeatures = [
-      {
-        type: 'cluster',
-        id: 1,
-        lat: 47.5,
-        lon: 19.0,
-        count: 10,
-        expansionZoom: 6,
-      },
-    ]
-
-    const vm = useBrowseViewModel()
-    expect(vm.profilePois.value).toHaveLength(0)
-    expect(vm.postPois.value).toHaveLength(0)
-    expect(vm.allPois.value).toHaveLength(0)
-  })
-
   describe('onBoundsChanged', () => {
-    it('fetches cluster features and bounds posts in parallel', async () => {
+    it('fetches bounds features and feed posts in parallel', async () => {
       const store = useFindProfileStore()
       const fetchBoundsSpy = vi.spyOn(store, 'fetchBounds').mockResolvedValue()
 

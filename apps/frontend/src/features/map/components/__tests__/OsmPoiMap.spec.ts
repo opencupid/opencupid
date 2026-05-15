@@ -38,24 +38,26 @@ const createdMarkers: { latLng: [number, number]; opts: any; icon?: any }[] = []
 vi.mock('leaflet', () => {
   const divIcon = vi.fn((opts: any) => ({ _type: 'divIcon', ...opts }))
 
-  const markerProto = {
-    bindPopup: vi.fn().mockReturnThis(),
-    on: vi.fn().mockReturnThis(),
-    addTo: vi.fn().mockReturnThis(),
-    openPopup: vi.fn().mockReturnThis(),
-    setIcon: vi.fn(function (this: any, icon: any) {
-      this._icon = icon
-      return this
-    }),
-    setLatLng: vi.fn().mockReturnThis(),
-    getLatLng: vi.fn(() => ({ lat: 47, lng: 19, distanceTo: vi.fn(() => 0) })),
-    _icon: null as any,
-  }
-
-  /** Each marker gets its own `on` spy so we can extract per-marker handlers. */
+  /** Each marker gets its own `on` and `setLatLng` spy so we can extract
+   * per-marker handlers and assert reflows independently. */
   const marker = vi.fn((latLng: [number, number], opts: any) => {
     const perMarkerOn = vi.fn().mockReturnThis()
-    const m = { ...markerProto, on: perMarkerOn, _icon: opts?.icon }
+    const setLatLng = vi.fn().mockReturnThis()
+    const m = {
+      _icon: opts?.icon,
+      _latLng: latLng,
+      on: perMarkerOn,
+      bindPopup: vi.fn().mockReturnThis(),
+      addTo: vi.fn().mockReturnThis(),
+      openPopup: vi.fn().mockReturnThis(),
+      closePopup: vi.fn().mockReturnThis(),
+      setIcon: vi.fn(function (this: any, icon: any) {
+        this._icon = icon
+        return this
+      }),
+      setLatLng,
+      getLatLng: vi.fn(() => ({ lat: latLng[0], lng: latLng[1], distanceTo: vi.fn(() => 0) })),
+    }
     createdMarkers.push({ latLng, opts, icon: opts?.icon })
     return m
   })
@@ -89,14 +91,16 @@ vi.mock('leaflet', () => {
     })),
     invalidateSize: vi.fn().mockReturnThis(),
     getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
-    latLngToLayerPoint: vi.fn((latlng: { lat: number; lng: number }) => ({
-      x: latlng.lng * 10,
-      y: latlng.lat * 10,
-    })),
-    layerPointToLatLng: vi.fn((p: { x: number; y: number }) => ({
-      lat: p.y / 10,
-      lng: p.x / 10,
-    })),
+    latLngToContainerPoint: vi.fn((latlng: any) => {
+      const lat = Array.isArray(latlng) ? latlng[0] : latlng.lat
+      const lng = Array.isArray(latlng) ? latlng[1] : latlng.lng
+      return { x: lng * 10, y: -lat * 10 }
+    }),
+    containerPointToLatLng: vi.fn((p: any) => {
+      const x = Array.isArray(p) ? p[0] : p.x
+      const y = Array.isArray(p) ? p[1] : p.y
+      return { lat: -y / 10, lng: x / 10 }
+    }),
     on: vi.fn().mockReturnThis(),
     once: vi.fn(function (this: any, _event: string, cb: () => void) {
       cb()
@@ -159,29 +163,6 @@ vi.mock('leaflet', () => {
   }
 })
 
-// vi.mock is hoisted before const declarations, so omsInstance must be defined
-// via vi.hoisted() to be available when the mock factory runs.
-const { omsInstance } = vi.hoisted(() => ({
-  omsInstance: {
-    addMarker: vi.fn().mockReturnThis(),
-    removeMarker: vi.fn().mockReturnThis(),
-    clearMarkers: vi.fn().mockReturnThis(),
-    addListener: vi.fn().mockReturnThis(),
-    getMarkers: vi.fn(() => []),
-    circleSpiralSwitchover: 9,
-    circleFootSeparation: 25,
-    spiralFootSeparation: 28,
-    spiralLengthStart: 11,
-    spiralLengthFactor: 5,
-    spiderListener: vi.fn(),
-  },
-}))
-vi.mock('ts-overlapping-marker-spiderfier-leaflet', () => ({
-  OverlappingMarkerSpiderfier: vi.fn(function () {
-    return omsInstance
-  }),
-}))
-
 // Mock blurhash (canvas unavailable in jsdom)
 vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
   blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
@@ -189,9 +170,9 @@ vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
 
 import { mount, flushPromises } from '@vue/test-utils'
 import OsmPoiMap from '../OsmPoiMap.vue'
-import { POI_ICON_SIZE, MAP_MAX_ZOOM } from '../../utils/mapUtils'
+import { POI_ICON_SIZE } from '../../utils/mapUtils'
 import { MAP_DEFAULT_ZOOM } from '@shared/maps'
-import type { MapCluster, MapPoi } from '../../types/map.types'
+import type { MapPoi } from '../../types/map.types'
 import L from 'leaflet'
 
 const DummyPopup = defineComponent({
@@ -252,8 +233,6 @@ const items: MapPoi[] = [
 async function mountMap(props: Partial<Record<string, any>> = {}) {
   const testItems = props.items ?? items
   delete props.items
-  const testClusters = props.clusters
-  delete props.clusters
 
   const wrapper = mount(OsmPoiMap as any, {
     props: {
@@ -266,11 +245,8 @@ async function mountMap(props: Partial<Record<string, any>> = {}) {
     attachTo: document.body,
   })
 
-  // Simulate real app flow: items/clusters arrive after mount via reactive update
+  // Simulate real app flow: items arrive after mount via reactive update
   await wrapper.setProps({ items: testItems })
-  if (testClusters) {
-    await wrapper.setProps({ clusters: testClusters })
-  }
   return wrapper
 }
 
@@ -278,12 +254,6 @@ beforeEach(() => {
   createdMarkers.length = 0
   resizeObserverCallbacks.length = 0
   vi.clearAllMocks()
-  omsInstance.addMarker.mockReturnThis()
-  omsInstance.removeMarker.mockReturnThis()
-  omsInstance.clearMarkers.mockReturnThis()
-  omsInstance.addListener.mockReturnThis()
-  omsInstance.getMarkers.mockReturnValue([])
-  omsInstance.spiderListener.mockReset()
 })
 
 describe('OsmPoiMap', () => {
@@ -404,13 +374,15 @@ describe('OsmPoiMap', () => {
     vi.useRealTimers()
   })
 
-  it('registers moveend listener during map init', async () => {
+  it('registers moveend and zoomend listeners during map init', async () => {
     await mountMap()
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
     const moveendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')
+    const zoomendCall = mapInstance.on.mock.calls.find((c: any) => c[0] === 'zoomend')
     expect(moveendCall).toBeDefined()
+    expect(zoomendCall).toBeDefined()
   })
 
   it('initializes at the provided initialCenter and the default zoom', async () => {
@@ -537,8 +509,8 @@ describe('OsmPoiMap', () => {
     })
   })
 
-  describe('diff-based updateMarkers', () => {
-    it('adds only new markers without clearing existing ones on items update', async () => {
+  describe('marker lifecycle', () => {
+    it('adds only new markers without recreating existing ones on items update', async () => {
       const wrapper = await mountMap({ items: [items[0]] })
       await flushPromises()
 
@@ -551,16 +523,12 @@ describe('OsmPoiMap', () => {
       await wrapper.setProps({ items: [items[0], items[1]] })
       await flushPromises()
 
-      // Should have created only 1 additional marker (not cleared + rebuilt 2)
+      // Should have created only 1 additional marker
       expect((L.marker as any).mock.calls.length).toBe(initialMarkerCount + 1)
-      // addLayer should have been called for the new marker
       expect(pointLayerInstance.addLayer).toHaveBeenCalled()
 
       // Trigger another update with same items — no new markers should be created
       const markerCountBefore = (L.marker as any).mock.calls.length
-      await wrapper.setProps({ items: [items[0], items[1]] })
-      await flushPromises()
-      // Same array reference won't trigger the watcher, so force with a new array
       await wrapper.setProps({ items: [...[items[0], items[1]]] })
       await flushPromises()
       expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
@@ -579,247 +547,61 @@ describe('OsmPoiMap', () => {
       expect(pointLayerInstance.removeLayer).toHaveBeenCalled()
     })
 
-    it('does not update existing POI markers when fields change between batches', async () => {
-      // Per-session contract: POI data is treated as immutable per id —
-      // the GUI is not expected to reflect mid-session DB changes. Existing
-      // markers are never re-rendered, only added on first sighting and
-      // removed when their id leaves the viewport.
-      const item0 = { ...items[0], highlighted: false }
-      const wrapper = await mountMap({ items: [item0] })
+    it('emits item:select when a marker is clicked', async () => {
+      const wrapper = await mountMap({ items: [items[0]] })
       await flushPromises()
 
       const markerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = markerInstance.on.mock.calls.find((c: any) => c[0] === 'click')?.[1]
+      expect(clickHandler).toBeDefined()
 
-      // Same id, different highlighted. Pre-fix this would have fired
-      // DiffableLayer.shouldUpdate → apply → setIcon. Now nothing happens.
-      const item0Highlighted = { ...items[0], highlighted: true }
-      await wrapper.setProps({ items: [item0Highlighted] })
-      await flushPromises()
-
-      expect(markerInstance.setIcon).not.toHaveBeenCalled()
-      expect((L.marker as any).mock.calls.length).toBe(1)
+      clickHandler()
+      expect(wrapper.emitted('item:select')).toBeTruthy()
+      expect(wrapper.emitted('item:select')![0]).toEqual(['1'])
     })
   })
 
-  describe('updateClusterMarkers', () => {
-    const clusters: MapCluster[] = [
-      { type: 'cluster', id: 100, lat: 47.5, lon: 19.0, count: 5, expansionZoom: 8 },
-      { type: 'cluster', id: 200, lat: 48.0, lon: 16.0, count: 3, expansionZoom: 10 },
-    ]
-
-    it('creates cluster markers and removes stale ones on prop change', async () => {
-      const wrapper = await mountMap({ items: [], clusters })
+  describe('density spreading', () => {
+    it('reflows existing markers via setLatLng when zoom changes', async () => {
+      // Two colocated markers — the spreader will offset them, then a
+      // zoom change re-runs the layout and calls setLatLng to animate
+      // them to new positions.
+      const colocated: MapPoi[] = [
+        makePoi({ id: 'a', lat: 47.5, lon: 19.0, publicName: 'A' }),
+        makePoi({ id: 'b', lat: 47.5, lon: 19.0, publicName: 'B' }),
+      ]
+      await mountMap({ items: colocated })
       await flushPromises()
 
-      // 0 point markers + 2 cluster markers = 2 total L.marker calls
-      expect((L.marker as any).mock.calls.length).toBe(2)
+      const markerA = (L.marker as any).mock.results[0].value
+      const markerB = (L.marker as any).mock.results[1].value
 
-      // Remove one cluster
-      await wrapper.setProps({ clusters: [clusters[0]] })
-      await flushPromises()
-
-      const clusterLayerInstance = (L.layerGroup as any).mock.results[1].value
-      expect(clusterLayerInstance.removeLayer).toHaveBeenCalled()
-    })
-
-    it('does not update existing cluster markers when fields change between batches', async () => {
-      // Per-session contract: cluster fields are immutable per id.
-      // cluster_id is supercluster's per-index identifier and the index
-      // is cached per (profile, tagIds) on the backend, so the same id
-      // never legitimately appears with different fields. Filter changes
-      // produce entirely different ids, not same id with new count.
-      const wrapper = await mountMap({ items: [], clusters: [clusters[0]] })
-      await flushPromises()
-
-      const markerInstance = (L.marker as any).mock.results[0].value
-      const markerCountBefore = (L.marker as any).mock.calls.length
-
-      // Same id with different fields would have triggered shouldUpdate +
-      // apply pre-fix. Now nothing happens: no new marker, no setLatLng,
-      // no setIcon. The marker keeps its original construction-time state.
-      const updated: MapCluster = {
-        type: 'cluster',
-        id: 100,
-        lat: 49.0,
-        lon: 20.0,
-        count: 8,
-        expansionZoom: 9,
-      }
-      await wrapper.setProps({ clusters: [updated] })
-      await flushPromises()
-
-      expect((L.marker as any).mock.calls.length).toBe(markerCountBefore)
-      expect(markerInstance.setLatLng).not.toHaveBeenCalled()
-      expect(markerInstance.setIcon).not.toHaveBeenCalled()
-    })
-
-    it('cluster click at max zoom removes marker and sets view', async () => {
-      const maxZoomCluster: MapCluster = {
-        type: 'cluster',
-        id: 300,
-        lat: 47.0,
-        lon: 19.0,
-        count: 2,
-        expansionZoom: MAP_MAX_ZOOM,
-      }
-      await mountMap({ items: [], clusters: [maxZoomCluster] })
-      await flushPromises()
+      // Spread positions should already differ between A and B
+      expect(markerA._latLng).not.toEqual(markerB._latLng)
 
       const mapInstance = (L.map as any).mock.results[0].value
+      const zoomendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'zoomend')[1]
 
-      // Only cluster marker exists (no point markers)
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
-      expect(clickHandler).toBeDefined()
+      markerA.setLatLng.mockClear()
+      markerB.setLatLng.mockClear()
+      mapInstance.getZoom.mockReturnValue(13)
+      zoomendHandler()
 
-      clickHandler()
-
-      expect(mapInstance.setView).toHaveBeenCalledWith([47.0, 19.0], MAP_MAX_ZOOM)
+      expect(markerA.setLatLng).toHaveBeenCalled()
+      expect(markerB.setLatLng).toHaveBeenCalled()
     })
 
-    it('cluster click below max zoom flies to expansion zoom', async () => {
-      await mountMap({ items: [], clusters: [clusters[0]] })
+    it('places colocated markers at distinct lat/lng on creation', async () => {
+      const colocated: MapPoi[] = [
+        makePoi({ id: 'a', lat: 47.5, lon: 19.0, publicName: 'A' }),
+        makePoi({ id: 'b', lat: 47.5, lon: 19.0, publicName: 'B' }),
+        makePoi({ id: 'c', lat: 47.5, lon: 19.0, publicName: 'C' }),
+      ]
+      await mountMap({ items: colocated })
       await flushPromises()
 
-      const mapInstance = (L.map as any).mock.results[0].value
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
-      expect(clickHandler).toBeDefined()
-
-      clickHandler()
-
-      expect(mapInstance.flyTo).toHaveBeenCalledWith([47.5, 19.0], 8, { duration: 0.5 })
-    })
-  })
-
-  describe('init guard and OMS registration', () => {
-    it('calls L.map exactly once even after reactive prop updates', async () => {
-      const wrapper = await mountMap()
-      await flushPromises()
-
-      const mapCallsBefore = (L.map as any).mock.calls.length
-
-      // Additional prop updates should not re-init the map
-      await wrapper.setProps({ highlightedLocation: [48.0, 20.0] as [number, number] })
-      await flushPromises()
-      await wrapper.setProps({ items: [items[0]] })
-      await flushPromises()
-
-      expect((L.map as any).mock.calls.length).toBe(mapCallsBefore)
-    })
-
-    it('registers new markers with OMS via addMarker', async () => {
-      await mountMap({ items: [items[0]] })
-      await flushPromises()
-
-      expect(omsInstance.addMarker).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  describe('spiderfy after max-zoom cluster dissolve', () => {
-    const maxZoomCluster: MapCluster = {
-      type: 'cluster',
-      id: 300,
-      lat: 47.0,
-      lon: 19.0,
-      count: 2,
-      expansionZoom: MAP_MAX_ZOOM,
-    }
-
-    it('auto-spiderfies after max-zoom cluster click followed by items update', async () => {
-      vi.useFakeTimers()
-
-      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
-      await flushPromises()
-
-      // The cluster marker is the only marker created (no point markers)
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
-      expect(clickHandler).toBeDefined()
-
-      // Click the cluster at max zoom — pending spiderfy is armed
-      clickHandler()
-
-      // spiderfy not yet triggered (no leaf markers arrived yet)
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
-
-      // Simulate leaf markers arriving via items update
-      await wrapper.setProps({ items: [items[0]] })
-      await flushPromises()
-      vi.runAllTimers()
-
-      expect(omsInstance.spiderListener).toHaveBeenCalledTimes(1)
-
-      vi.useRealTimers()
-    })
-
-    it('pending spiderfy is consumed only once even if items update is called twice', async () => {
-      vi.useFakeTimers()
-
-      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
-      await flushPromises()
-
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
-      clickHandler()
-
-      // First items update — drains the pending callback, triggers spiderfy
-      await wrapper.setProps({ items: [items[0]] })
-      await flushPromises()
-      vi.runAllTimers()
-      omsInstance.spiderListener.mockClear()
-
-      // Second items update — should NOT re-trigger spiderfy
-      await wrapper.setProps({ items: [...[items[0]]] })
-      await flushPromises()
-      vi.runAllTimers()
-
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
-
-      vi.useRealTimers()
-    })
-
-    it('does not fire phantom spiderfy on a later items batch when the first batch had no leaves', async () => {
-      // Regression: pre-fix, the dissolvedClusterAt flag stayed armed when
-      // an items batch arrived without matching leaves (e.g., user panned
-      // before the fetch returned). Any later batch with nearby markers —
-      // possibly from a wholly unrelated viewport later — would fire a
-      // phantom spiderfy. The fix binds the intent to the click's closure
-      // and consumes it on the first batch regardless of match success.
-      vi.useFakeTimers()
-
-      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
-      await flushPromises()
-
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
-      clickHandler()
-
-      // First batch: empty (user panned, leaves never arrived). The pending
-      // callback runs against zero markers and silently consumes itself.
-      await wrapper.setProps({ items: [] })
-      await flushPromises()
-      vi.runAllTimers()
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
-
-      // Second batch: leaves are now present (mock distanceTo = 0 means any
-      // marker matches). Pre-fix this would have fired phantom spiderfy.
-      await wrapper.setProps({ items: [items[0]] })
-      await flushPromises()
-      vi.runAllTimers()
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
-
-      vi.useRealTimers()
+      const positions = (L.marker as any).mock.calls.map((c: any) => `${c[0][0]},${c[0][1]}`)
+      expect(new Set(positions).size).toBe(3)
     })
   })
 
@@ -928,6 +710,23 @@ describe('OsmPoiMap', () => {
 
       // popup.update should NOT have been called since popup closed
       expect(popupUpdate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('init guard', () => {
+    it('calls L.map exactly once even after reactive prop updates', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+
+      const mapCallsBefore = (L.map as any).mock.calls.length
+
+      // Additional prop updates should not re-init the map
+      await wrapper.setProps({ highlightedLocation: [48.0, 20.0] as [number, number] })
+      await flushPromises()
+      await wrapper.setProps({ items: [items[0]] })
+      await flushPromises()
+
+      expect((L.map as any).mock.calls.length).toBe(mapCallsBefore)
     })
   })
 })

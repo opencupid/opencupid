@@ -1,16 +1,15 @@
 import type { Component } from 'vue'
-import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
+import type { PointFeature } from '@shared/zod/map/map.dto'
 
 /**
- * The map layer renders the cluster service's DTOs directly. Earlier
- * iterations defined separate `MapPoi` / `MapCluster` shapes that the
- * view-model projected into; that layer earned nothing — it had one
- * consumer, one input shape, and the projection's only architectural
- * job was to manufacture a `source` round-trip for the type info it
- * had just discarded. The DTO types are the single source of truth.
+ * The map layer renders the bounds-service DTOs directly. Earlier
+ * iterations defined a separate `MapPoi` shape that the view-model
+ * projected into; that layer earned nothing — it had one consumer, one
+ * input shape, and the projection's only architectural job was to
+ * manufacture a `source` round-trip for the type info it had just
+ * discarded. The DTO type is the single source of truth.
  */
 export type MapPoi = PointFeature
-export type MapCluster = ClusterFeature
 
 /**
  * A marker-icon renderer. Returns the inner HTML for a Leaflet DivIcon —
@@ -35,7 +34,7 @@ export interface PoiIconProps {
   hasPost?: boolean
 }
 
-/** Bounds + zoom emitted on viewport change for cluster queries. */
+/** Bounds + zoom emitted on viewport change for POI queries. */
 export interface BoundsWithZoom {
   bounds: MapBounds
   zoom: number

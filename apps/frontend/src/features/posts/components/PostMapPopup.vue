@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PointFeature } from '@shared/zod/map/cluster.dto'
+import type { PointFeature } from '@shared/zod/map/map.dto'
 
 defineProps<{ item: PointFeature }>()
 defineEmits<{ (e: 'click', id: string): void }>()

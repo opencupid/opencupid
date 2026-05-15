@@ -6,13 +6,9 @@ vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 let fastify: MockFastify
 let reply: MockReply
 let mockCommunityService: any
-let mockCluster: any
 
 vi.mock('@/services/community.service', () => ({
   CommunityService: { getInstance: () => mockCommunityService },
-}))
-vi.mock('@/services/cluster.service', () => ({
-  ClusterService: { getInstance: () => mockCluster },
 }))
 
 vi.mock('@/api/mappers/community.mappers', () => ({
@@ -53,7 +49,6 @@ beforeEach(async () => {
     findByIdHydrated: vi.fn(),
     findByProfileIdHydrated: vi.fn(),
   }
-  mockCluster = { evictAll: vi.fn().mockResolvedValue(undefined) }
   await communityRoutes(fastify as any, {})
 })
 
@@ -79,7 +74,6 @@ describe('POST /', () => {
       success: true,
       community: expect.objectContaining({ _isOwn: true }),
     })
-    expect(mockCluster.evictAll).toHaveBeenCalled()
   })
 })
 
@@ -164,7 +158,6 @@ describe('PATCH /:id', () => {
       success: true,
       community: expect.objectContaining({ content: 'updated guild' }),
     })
-    expect(mockCluster.evictAll).toHaveBeenCalled()
   })
 })
 
@@ -193,7 +186,6 @@ describe('DELETE /:id', () => {
       reply as any
     )
     expect(reply.statusCode).toBe(200)
-    expect(mockCluster.evictAll).toHaveBeenCalled()
   })
 })
 

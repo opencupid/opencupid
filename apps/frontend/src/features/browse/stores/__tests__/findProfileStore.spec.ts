@@ -26,21 +26,20 @@ describe('findProfileStore.refetchBounds', () => {
     vi.clearAllMocks()
   })
 
-  it('re-fetches clusters when lastMapBounds is set', async () => {
+  it('re-fetches POIs when lastMapBounds is set', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
     store.lastMapBounds = bounds
 
     await store.refetchBounds()
 
     expect(mockGet).toHaveBeenCalledWith(
-      '/find/clusters',
+      '/find/bounds',
       expect.objectContaining({
         params: expect.objectContaining({
           south: expect.any(Number),
           north: expect.any(Number),
           west: expect.any(Number),
           east: expect.any(Number),
-          zoom: expect.any(Number),
         }),
       })
     )
@@ -53,7 +52,7 @@ describe('findProfileStore.refetchBounds', () => {
   })
 })
 
-describe('findClustersForMapBounds', () => {
+describe('findPoisForMapBounds', () => {
   let store: ReturnType<typeof useFindProfileStore>
 
   beforeEach(() => {
@@ -63,9 +62,8 @@ describe('findClustersForMapBounds', () => {
     vi.clearAllMocks()
   })
 
-  it('fetches clusters and tags from the cluster endpoint', async () => {
+  it('fetches POIs and tags from the bounds endpoint', async () => {
     const mockFeatures = [
-      { type: 'cluster', id: 1, lat: 47.5, lon: 19.0, count: 5, expansionZoom: 8 },
       {
         type: 'point',
         kind: 'profile',
@@ -76,41 +74,56 @@ describe('findClustersForMapBounds', () => {
         image: null,
         highlighted: false,
       },
+      {
+        type: 'point',
+        kind: 'post',
+        id: 'post1',
+        lat: 47.5,
+        lon: 19.0,
+        publicName: 'Bob',
+        image: null,
+        highlighted: false,
+        postContent: 'Hello',
+      },
     ]
     const mockTags = [{ id: 'cltagabc000000000000001', name: 'Biokert', slug: 'biokert' }]
     mockGet.mockResolvedValue({ data: { success: true, features: mockFeatures, tags: mockTags } })
 
     const bounds = { south: 47, north: 49, west: 16, east: 20 }
-    await store.findClustersForMapBounds(bounds, 6)
+    await store.findPoisForMapBounds(bounds)
 
     expect(mockGet).toHaveBeenCalledWith(
-      '/find/clusters',
+      '/find/bounds',
       expect.objectContaining({
         params: expect.objectContaining({
           south: expect.any(Number),
           north: expect.any(Number),
           west: expect.any(Number),
           east: expect.any(Number),
-          zoom: 6,
         }),
       })
     )
-    expect(store.clusterFeatures).toHaveLength(2)
+    // Zoom is no longer part of the bounds request — the spreading happens
+    // client-side at render time.
+    const params = mockGet.mock.calls[0]![1].params
+    expect(params.zoom).toBeUndefined()
+    expect(store.poiFeatures).toHaveLength(2)
     expect(store.availableTags).toHaveLength(1)
     expect(store.availableTags[0]!.name).toBe('Biokert')
   })
 
-  it('always refetches on zoom change even if bounds are cached', async () => {
+  it('reuses cached bounds for an enclosed viewport', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
-    const bounds = { south: 47, north: 49, west: 16, east: 20 }
+    const outer = { south: 47, north: 49, west: 16, east: 20 }
+    const inner = { south: 47.3, north: 48.8, west: 16.3, east: 19.7 }
 
-    await store.findClustersForMapBounds(bounds, 6)
-    mockGet.mockClear()
+    await store.findPoisForMapBounds(outer)
+    expect(mockGet).toHaveBeenCalledTimes(1)
 
-    // Same bounds, different zoom — must refetch
-    await store.findClustersForMapBounds(bounds, 8)
-    expect(mockGet).toHaveBeenCalled()
+    // Inner is contained in the padded outer → no refetch.
+    await store.findPoisForMapBounds(inner)
+    expect(mockGet).toHaveBeenCalledTimes(1)
   })
 
   it('cancels in-flight request on new call', async () => {
@@ -123,13 +136,13 @@ describe('findClustersForMapBounds', () => {
 
     const bounds = { south: 47, north: 49, west: 16, east: 20 }
 
-    const p1 = store.findClustersForMapBounds(bounds, 6)
-    const p2 = store.findClustersForMapBounds(bounds, 7)
+    const p1 = store.findPoisForMapBounds(bounds)
+    const p2 = store.findPoisForMapBounds(bounds)
 
     resolveFirst!({ data: { success: true, features: [], tags: [] } })
     await Promise.all([p1, p2])
 
-    expect(store.clusterFeatures).toEqual([])
+    expect(store.poiFeatures).toEqual([])
   })
 })
 
@@ -164,7 +177,7 @@ describe('fetchProfileForPopup', () => {
   })
 })
 
-describe('findClustersForMapBounds with layer kinds', () => {
+describe('findPoisForMapBounds with layer kinds', () => {
   let store: ReturnType<typeof useFindProfileStore>
   const bounds = { south: 45, north: 48, west: 16, east: 23 }
 
@@ -178,10 +191,10 @@ describe('findClustersForMapBounds with layer kinds', () => {
   it('sends all enabled layers as comma-separated kinds param by default', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
-    await store.findClustersForMapBounds(bounds, 7)
+    await store.findPoisForMapBounds(bounds)
 
     expect(mockGet).toHaveBeenCalledWith(
-      '/find/clusters',
+      '/find/bounds',
       expect.objectContaining({
         params: expect.objectContaining({ kinds: 'profile,post,event,community' }),
       })
@@ -193,10 +206,10 @@ describe('findClustersForMapBounds with layer kinds', () => {
 
     store.selectedLayers = ['post']
 
-    await store.findClustersForMapBounds(bounds, 7)
+    await store.findPoisForMapBounds(bounds)
 
     expect(mockGet).toHaveBeenCalledWith(
-      '/find/clusters',
+      '/find/bounds',
       expect.objectContaining({
         params: expect.objectContaining({ kinds: 'post' }),
       })
@@ -206,25 +219,25 @@ describe('findClustersForMapBounds with layer kinds', () => {
   it('skips network when same kinds + same viewport are already cached', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
-    await store.findClustersForMapBounds(bounds, 7)
+    await store.findPoisForMapBounds(bounds)
     expect(mockGet).toHaveBeenCalledTimes(1)
 
-    await store.findClustersForMapBounds(bounds, 7)
+    await store.findPoisForMapBounds(bounds)
     expect(mockGet).toHaveBeenCalledTimes(1)
   })
 
   it('refetches when kinds changes even with the same viewport', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
 
-    await store.findClustersForMapBounds(bounds, 7)
+    await store.findPoisForMapBounds(bounds)
     expect(mockGet).toHaveBeenCalledTimes(1)
 
     store.selectedLayers = ['profile']
 
-    await store.findClustersForMapBounds(bounds, 7)
+    await store.findPoisForMapBounds(bounds)
     expect(mockGet).toHaveBeenCalledTimes(2)
     expect(mockGet).toHaveBeenLastCalledWith(
-      '/find/clusters',
+      '/find/bounds',
       expect.objectContaining({
         params: expect.objectContaining({ kinds: 'profile' }),
       })
