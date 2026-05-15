@@ -79,6 +79,15 @@ beforeEach(async () => {
     delete: vi.fn(),
     count: vi.fn(),
   }
+  mockPrisma.userContent = {
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  }
   // createMockPrisma's $transaction captures its inner mock object before our
   // image / userContentImage extensions land. Re-bind it to the live mockPrisma
   // so transactions see the full surface.
@@ -209,6 +218,50 @@ describe('ImageService.attachToProfile', () => {
   })
 })
 
+describe('attachToUserContent', () => {
+  it('inserts join row + updates Image.position; does NOT touch Profile.hasFace', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-1',
+      ownerProfileId: 'profile-1',
+      profileGallery: null,
+      userContentGallery: null,
+    } as any)
+    mockPrisma.userContent.findUnique.mockResolvedValue({
+      id: 'content-1',
+      postedById: 'profile-1',
+    } as any)
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+
+    await svc.attachToUserContent('img-1', 'content-1')
+
+    expect(mockPrisma.userContentImage.create).toHaveBeenCalledWith({
+      data: { imageId: 'img-1', userContentId: 'content-1' },
+    })
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'img-1' },
+      data: { position: 0 },
+    })
+    expect(mockPrisma.profile.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects when content owner does not match image owner', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-1',
+      ownerProfileId: 'profile-1',
+      profileGallery: null,
+      userContentGallery: null,
+    } as any)
+    mockPrisma.userContent.findUnique.mockResolvedValue({
+      id: 'content-1',
+      postedById: 'profile-OTHER',
+    } as any)
+
+    await expect(svc.attachToUserContent('img-1', 'content-1')).rejects.toThrow(/owner/i)
+  })
+})
+
 describe('ImageService.deleteImage', () => {
   // TODO(Task 7): re-enable / rewrite when deleteImage is refactored to detect which join exists.
   it.skip('deletes the row, syncs Profile.hasFace, and cleans up files', async () => {
@@ -281,56 +334,102 @@ describe('ImageService.deleteImage', () => {
   })
 })
 
-describe('ImageService.reorderImages', () => {
-  // TODO(Task 6): re-enable / rewrite when reorderImages is rewritten to update Image.position instead of ProfileImage.position.
-  it.skip('updates positions atomically, syncs Profile.hasFace, and returns sorted list', async () => {
-    const items = [
-      { id: 'img1', position: 1 },
-      { id: 'img2', position: 0 },
-    ]
-    mockPrisma.profileImage.findMany.mockResolvedValue([{ id: 'img1' }, { id: 'img2' }])
-    mockPrisma.profileImage.update
-      .mockResolvedValueOnce({ id: 'img1', position: 1 })
-      .mockResolvedValueOnce({ id: 'img2', position: 0 })
-    mockPrisma.profileImage.findFirst.mockResolvedValue({ hasFace: true })
-
-    const result = await service.reorderImages('p1', items)
-
+describe('listProfileGallery', () => {
+  it('returns Image rows ordered by position via the join', async () => {
+    const svc = service
+    mockPrisma.profileImage.findMany.mockResolvedValue([
+      { image: { id: 'a', position: 0 } },
+      { image: { id: 'b', position: 1 } },
+    ] as any)
+    const result = await svc.listProfileGallery('profile-1')
+    expect(result.map((i: any) => i.id)).toEqual(['a', 'b'])
     expect(mockPrisma.profileImage.findMany).toHaveBeenCalledWith({
-      where: { profileId: 'p1', id: { in: ['img1', 'img2'] } },
-      select: { id: true },
+      where: { profileId: 'profile-1' },
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
     })
-    expect(mockPrisma.$transaction).toHaveBeenCalled()
-    expect(mockPrisma.profileImage.update).toHaveBeenCalledWith({
-      where: { id: 'img1' },
-      data: { position: 1 },
+  })
+})
+
+describe('listUserContentGallery', () => {
+  it('returns Image rows ordered by position via the join', async () => {
+    const svc = service
+    mockPrisma.userContentImage.findMany.mockResolvedValue([
+      { image: { id: 'x', position: 0 } },
+    ] as any)
+    const result = await svc.listUserContentGallery('content-1')
+    expect(result.map((i: any) => i.id)).toEqual(['x'])
+    expect(mockPrisma.userContentImage.findMany).toHaveBeenCalledWith({
+      where: { userContentId: 'content-1' },
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
     })
-    expect(mockPrisma.profileImage.update).toHaveBeenCalledWith({
-      where: { id: 'img2' },
+  })
+})
+
+describe('reorderProfileGallery', () => {
+  it('updates Image.position for each item, syncs Profile.hasFace, returns sorted gallery', async () => {
+    const svc = service
+    mockPrisma.profileImage.findMany
+      .mockResolvedValueOnce([{ imageId: 'i1' }, { imageId: 'i2' }] as any) // validation lookup
+      .mockResolvedValueOnce([
+        { image: { id: 'i1', position: 0 } },
+        { image: { id: 'i2', position: 1 } },
+      ] as any) // listProfileGallery final read
+    mockPrisma.image.update.mockResolvedValue({} as any)
+    mockPrisma.profileImage.findFirst.mockResolvedValue({ image: { hasFace: true } } as any)
+
+    const result = await svc.reorderProfileGallery('profile-1', [
+      { id: 'i1', position: 0 },
+      { id: 'i2', position: 1 },
+    ])
+
+    expect(mockPrisma.image.update).toHaveBeenCalledTimes(2)
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'i1' },
       data: { position: 0 },
     })
-    expect(mockPrisma.profileImage.findFirst).toHaveBeenCalledWith({
-      where: { profileId: 'p1', position: 0 },
-      select: { hasFace: true },
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'i2' },
+      data: { position: 1 },
     })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
-      where: { id: 'p1' },
+      where: { id: 'profile-1' },
       data: { hasFace: true },
     })
-    // Sorted ascending by position.
-    expect(result.map((r: any) => r.id)).toEqual(['img2', 'img1'])
+    expect(result.map((i: any) => i.id)).toEqual(['i1', 'i2'])
   })
 
-  it('throws when an item id does not belong to the profile', async () => {
-    const items = [
-      { id: 'img1', position: 0 },
-      { id: 'foreign', position: 1 },
-    ]
-    mockPrisma.profileImage.findMany.mockResolvedValue([{ id: 'img1' }])
+  it('rejects when an image id is not in the profile gallery', async () => {
+    const svc = service
+    mockPrisma.profileImage.findMany.mockResolvedValueOnce([{ imageId: 'i1' }] as any)
+    await expect(
+      svc.reorderProfileGallery('profile-1', [
+        { id: 'i1', position: 0 },
+        { id: 'i-other', position: 1 },
+      ])
+    ).rejects.toThrow(/Invalid image ID/)
+  })
+})
 
-    await expect(service.reorderImages('p1', items)).rejects.toThrow('Invalid image ID')
-    expect(mockPrisma.$transaction).not.toHaveBeenCalled()
-    expect(mockPrisma.profileImage.update).not.toHaveBeenCalled()
+describe('reorderUserContentGallery', () => {
+  it('updates Image.position for each item; does NOT touch Profile.hasFace', async () => {
+    const svc = service
+    mockPrisma.userContentImage.findMany
+      .mockResolvedValueOnce([{ imageId: 'i1' }] as any)
+      .mockResolvedValueOnce([{ image: { id: 'i1', position: 0 } }] as any)
+    mockPrisma.image.update.mockResolvedValue({} as any)
+
+    const result = await svc.reorderUserContentGallery('content-1', [
+      { id: 'i1', position: 0 },
+    ])
+
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'i1' },
+      data: { position: 0 },
+    })
+    expect(mockPrisma.profile.update).not.toHaveBeenCalled()
+    expect(result.map((i: any) => i.id)).toEqual(['i1'])
   })
 })
 

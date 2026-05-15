@@ -45,13 +45,34 @@ export class ImageService {
   }
 
   /**
-   * List all images for a profile, ordered by position
+   * List all images attached to a Profile gallery, ordered by Image.position.
    */
-  async listImages(profileId: string): Promise<ProfileImage[]> {
-    return prisma.profileImage.findMany({
+  async listProfileGallery(profileId: string): Promise<Image[]> {
+    const rows = await prisma.profileImage.findMany({
       where: { profileId },
-      orderBy: { position: 'asc' },
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
     })
+    return rows.map((r) => r.image)
+  }
+
+  /**
+   * List all images attached to a UserContent gallery, ordered by Image.position.
+   */
+  async listUserContentGallery(userContentId: string): Promise<Image[]> {
+    const rows = await prisma.userContentImage.findMany({
+      where: { userContentId },
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
+    })
+    return rows.map((r) => r.image)
+  }
+
+  /**
+   * @deprecated Use listProfileGallery. Kept temporarily so existing route handlers compile.
+   */
+  async listImages(profileId: string): Promise<Image[]> {
+    return this.listProfileGallery(profileId)
   }
 
   /**
@@ -129,6 +150,33 @@ export class ImageService {
       await tx.profileImage.create({ data: { imageId, profileId } })
       await tx.image.update({ where: { id: imageId }, data: { position } })
       await syncProfileHasFace(tx, profileId)
+    })
+  }
+
+  /**
+   * Attach an existing Image to a UserContent gallery. Validates that the content's
+   * author matches the image owner, computes the new position, and inserts the join
+   * row in one transaction. Profile.hasFace is intentionally NOT touched here.
+   */
+  async attachToUserContent(imageId: string, userContentId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+    if (!image) throw new Error('Image not found')
+    if (image.profileGallery || image.userContentGallery) {
+      throw new Error('Image already attached')
+    }
+    const content = await prisma.userContent.findUnique({ where: { id: userContentId } })
+    if (!content) throw new Error('UserContent not found')
+    if (content.postedById !== image.ownerProfileId) {
+      throw new Error('Image owner mismatch with content author')
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const position = await tx.userContentImage.count({ where: { userContentId } })
+      await tx.userContentImage.create({ data: { imageId, userContentId } })
+      await tx.image.update({ where: { id: imageId }, data: { position } })
     })
   }
 
@@ -267,34 +315,57 @@ export class ImageService {
   }
 
   /**
-   * Reorder images by updating their positions
-   * @param profileId - ID of the profile whose images are being reordered
-   * @param items - Array of image IDs and their new positions
-   * Returns the updated images sorted by position
+   * Reorder images in a Profile gallery by updating Image.position via the join.
+   * Re-syncs Profile.hasFace and returns the gallery sorted by position.
    */
-  async reorderImages(profileId: string, items: ImagePosition[]) {
+  async reorderProfileGallery(profileId: string, items: ImagePosition[]): Promise<Image[]> {
     const valid = await prisma.profileImage.findMany({
-      where: { profileId, id: { in: items.map((i) => i.id) } },
-      select: { id: true },
+      where: { profileId, imageId: { in: items.map((i) => i.id) } },
+      select: { imageId: true },
     })
-
-    const validIds = new Set(valid.map((v) => v.id))
+    const validIds = new Set(valid.map((v) => v.imageId))
     if (items.some((i) => !validIds.has(i.id))) {
       throw new Error('Invalid image ID')
     }
 
     return prisma.$transaction(async (tx) => {
-      const updated = []
       for (const item of items) {
-        updated.push(
-          await tx.profileImage.update({
-            where: { id: item.id },
-            data: { position: item.position },
-          })
-        )
+        await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
       await syncProfileHasFace(tx, profileId)
-      return updated.sort((a, b) => a.position - b.position)
+      return this.listProfileGallery(profileId)
     })
+  }
+
+  /**
+   * Reorder images in a UserContent gallery by updating Image.position via the join.
+   * Profile.hasFace is intentionally NOT touched here.
+   */
+  async reorderUserContentGallery(
+    userContentId: string,
+    items: ImagePosition[]
+  ): Promise<Image[]> {
+    const valid = await prisma.userContentImage.findMany({
+      where: { userContentId, imageId: { in: items.map((i) => i.id) } },
+      select: { imageId: true },
+    })
+    const validIds = new Set(valid.map((v) => v.imageId))
+    if (items.some((i) => !validIds.has(i.id))) {
+      throw new Error('Invalid image ID')
+    }
+
+    return prisma.$transaction(async (tx) => {
+      for (const item of items) {
+        await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
+      }
+      return this.listUserContentGallery(userContentId)
+    })
+  }
+
+  /**
+   * @deprecated Use reorderProfileGallery. Kept temporarily so existing route handlers compile.
+   */
+  async reorderImages(profileId: string, items: ImagePosition[]): Promise<Image[]> {
+    return this.reorderProfileGallery(profileId, items)
   }
 }
