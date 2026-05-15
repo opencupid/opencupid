@@ -268,6 +268,7 @@ model Image {
   isModerated Boolean @default(false)
   isFlagged   Boolean @default(false)
 
+  /// Order within whichever gallery (Profile or UserContent) currently owns this image; 0 = primary. Meaningful only when the image is attached.
   position Int    @default(0)
   altText  String @default("")
 
@@ -278,7 +279,6 @@ model Image {
   userContentGallery UserContentImage?
 
   @@index([ownerProfileId])
-  @@index([position])
 }
 
 model ProfileImage {
