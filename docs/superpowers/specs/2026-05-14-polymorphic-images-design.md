@@ -323,3 +323,4 @@ Frontend:
 - Attaching images to `Message`. Current `MessageAttachment` continues to handle audio voice messages unchanged. When images on messages are wanted, the design extends by adding a `MessageImage` join table; the rest of the system needs no further changes.
 - Cross-owner image sharing / reference counting / orphan sweeper worker.
 - Moving `position`/`altText` to join rows. Single-owner rule makes the current location correct.
+- UserContent image gallery UI (frontend). The backend supports it via the owner-scoped routes, but the existing `ImageUpload.vue` / `ImageEditor.vue` components are tightly coupled to the profile `imageStore`. Decoupling them needs UX work (props-based store injection, plus a save-then-attach flow because new posts have no id yet). Deferred to a follow-up PR.

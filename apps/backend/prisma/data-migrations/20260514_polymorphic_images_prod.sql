@@ -76,6 +76,7 @@ BEGIN
   IF src_count <> dst_count THEN
     RAISE EXCEPTION 'ProfileImage backfill mismatch: src=%, dst=%', src_count, dst_count;
   END IF;
+  RAISE NOTICE 'ProfileImage backfill verified: % rows', dst_count;
 END $$;
 
 -- 7. Drop the legacy profileId column from Image
