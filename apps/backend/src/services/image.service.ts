@@ -6,7 +6,7 @@ import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/
 
 import { generateContentHash } from '@/utils/hash'
 import { ImagePosition } from '@zod/image/image.dto'
-import type { Image, ProfileImage } from '@zod/generated'
+import type { Image } from '@zod/generated'
 
 import sharp from 'sharp'
 
@@ -260,60 +260,66 @@ export class ImageService {
   }
 
   /**
-   * Update an existing ProfileImage's metadata
-   * @param image - The ProfileImage object with updated fields
-   * Returns number of records updated (0 or 1)
+   * Patch an Image's editable metadata. Owner-checked; works for images attached
+   * to either a Profile or a UserContent gallery (or unattached).
    */
-  async updateImage(image: ProfileImage): Promise<ProfileImage> {
-    return prisma.profileImage.update({
-      where: { id: image.id },
-      data: {
-        altText: image.altText,
-      },
+  async updateImage(
+    imageId: string,
+    requesterProfileId: string,
+    patch: { altText?: string }
+  ): Promise<Image> {
+    const image = await prisma.image.findUnique({ where: { id: imageId } })
+    if (!image) throw new Error('Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new Error('Image owner mismatch')
+    }
+    return prisma.image.update({
+      where: { id: imageId },
+      data: { altText: patch.altText ?? image.altText },
     })
   }
 
   /**
-   * Delete a ProfileImage record
-   * @param profileId - ID of the profile that owns the image
-   * @param imageId - ID of the image to delete
-   * Returns true if successful, false if not
+   * Delete an Image. Detects whether it lives in a Profile or UserContent gallery
+   * (or is unattached), drops the matching join, drops the Image, re-syncs
+   * Profile.hasFace when applicable, then unlinks the on-disk variants.
    */
-  async deleteImage(profileId: string, imageId: string): Promise<boolean> {
-    const image = await prisma.profileImage.findUnique({
-      where: { id: imageId, profileId },
+  async deleteImage(imageId: string, requesterProfileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
     })
-    if (!image) {
-      console.warn('Image not found or does not belong to profile')
-      return false
-    }
-    try {
-      await prisma.$transaction(async (tx) => {
-        await tx.profileImage.delete({ where: { id: image.id } })
-        await syncProfileHasFace(tx, profileId)
-      })
-    } catch (err) {
-      console.error('Error deleting image from database:', err)
-      return false
+    if (!image) throw new Error('Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new Error('Image owner mismatch')
     }
 
-    // Delete all generated image files from the filesystem
+    await prisma.$transaction(async (tx) => {
+      if (image.profileGallery) {
+        await tx.profileImage.delete({ where: { imageId } })
+      } else if (image.userContentGallery) {
+        await tx.userContentImage.delete({ where: { imageId } })
+      }
+      await tx.image.delete({ where: { id: imageId } })
+      if (image.profileGallery) {
+        await syncProfileHasFace(tx, image.profileGallery.profileId)
+      }
+    })
+
+    // File cleanup, post-commit, best-effort.
     const baseFile = path.join(getMediaRoot(), imageBasePath(image.storagePath))
     const filesToDelete = [
       `${baseFile}-original.jpg`,
       `${baseFile}-face.jpg`,
       ...variants.map((size) => `${baseFile}-${size.name}.webp`),
     ]
-
     for (const f of filesToDelete) {
       try {
         await fs.promises.unlink(f)
       } catch (err) {
-        // Log but continue deleting other variants
         console.warn('Error deleting file:', err)
       }
     }
-    return true
   }
 
   /**

@@ -262,75 +262,82 @@ describe('attachToUserContent', () => {
   })
 })
 
-describe('ImageService.deleteImage', () => {
-  // TODO(Task 7): re-enable / rewrite when deleteImage is refactored to detect which join exists.
-  it.skip('deletes the row, syncs Profile.hasFace, and cleans up files', async () => {
-    mockPrisma.profileImage.findUnique.mockResolvedValue({
-      id: 'img1',
-      profileId: 'p1',
-      storagePath: 'p1/abc',
-    })
-    mockPrisma.profileImage.findFirst.mockResolvedValue({ hasFace: true })
+describe('deleteImage', () => {
+  it('deletes a profile-gallery image: drops join, drops Image, syncs hasFace, unlinks files', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-1',
+      ownerProfileId: 'profile-1',
+      storagePath: 'profile-1/abcd',
+      profileGallery: { profileId: 'profile-1' },
+      userContentGallery: null,
+    } as any)
+    mockPrisma.profileImage.findFirst.mockResolvedValue({
+      image: { hasFace: true },
+    } as any)
 
-    const ok = await service.deleteImage('p1', 'img1')
+    await svc.deleteImage('img-1', 'profile-1')
 
-    expect(ok).toBe(true)
-    expect(mockPrisma.profileImage.findUnique).toHaveBeenCalledWith({
-      where: { id: 'img1', profileId: 'p1' },
-    })
-    expect(mockPrisma.$transaction).toHaveBeenCalled()
-    expect(mockPrisma.profileImage.delete).toHaveBeenCalledWith({ where: { id: 'img1' } })
-    expect(mockPrisma.profileImage.findFirst).toHaveBeenCalledWith({
-      where: { profileId: 'p1', position: 0 },
-      select: { hasFace: true },
-    })
+    expect(mockPrisma.profileImage.delete).toHaveBeenCalledWith({ where: { imageId: 'img-1' } })
+    expect(mockPrisma.image.delete).toHaveBeenCalledWith({ where: { id: 'img-1' } })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
-      where: { id: 'p1' },
+      where: { id: 'profile-1' },
       data: { hasFace: true },
     })
-    // Filesystem cleanup runs after the transaction commits.
-    expect(mockUnlink).toHaveBeenCalled()
   })
 
-  it('returns false and skips the transaction when the image is not found', async () => {
-    mockPrisma.profileImage.findUnique.mockResolvedValue(null)
+  it('deletes a usercontent-gallery image: drops join + Image, does NOT touch Profile.hasFace', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-2',
+      ownerProfileId: 'profile-1',
+      storagePath: 'profile-1/efgh',
+      profileGallery: null,
+      userContentGallery: { userContentId: 'content-1' },
+    } as any)
 
-    const ok = await service.deleteImage('p1', 'missing')
+    await svc.deleteImage('img-2', 'profile-1')
 
-    expect(ok).toBe(false)
-    expect(mockPrisma.$transaction).not.toHaveBeenCalled()
-    expect(mockPrisma.profileImage.delete).not.toHaveBeenCalled()
-    expect(mockUnlink).not.toHaveBeenCalled()
+    expect(mockPrisma.userContentImage.delete).toHaveBeenCalledWith({ where: { imageId: 'img-2' } })
+    expect(mockPrisma.image.delete).toHaveBeenCalledWith({ where: { id: 'img-2' } })
+    expect(mockPrisma.profile.update).not.toHaveBeenCalled()
   })
 
-  it('returns false and skips file cleanup when the DB delete fails', async () => {
-    mockPrisma.profileImage.findUnique.mockResolvedValue({
-      id: 'img1',
-      profileId: 'p1',
-      storagePath: 'p1/abc',
-    })
-    mockPrisma.profileImage.delete.mockRejectedValue(new Error('boom'))
+  it('rejects when requester is not the image owner', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-3',
+      ownerProfileId: 'profile-OTHER',
+      profileGallery: null,
+      userContentGallery: null,
+    } as any)
 
-    const ok = await service.deleteImage('p1', 'img1')
+    await expect(svc.deleteImage('img-3', 'profile-1')).rejects.toThrow(/owner/i)
+  })
+})
 
-    expect(ok).toBe(false)
-    expect(mockUnlink).not.toHaveBeenCalled()
+describe('updateImage', () => {
+  it('patches altText for the owner', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-1',
+      ownerProfileId: 'profile-1',
+      altText: 'old',
+    } as any)
+    mockPrisma.image.update.mockResolvedValue({ id: 'img-1', altText: 'new' } as any)
+
+    const result = await svc.updateImage('img-1', 'profile-1', { altText: 'new' })
+    expect(result.altText).toBe('new')
   })
 
-  it('writes hasFace=false when no position-0 image remains after delete', async () => {
-    mockPrisma.profileImage.findUnique.mockResolvedValue({
-      id: 'img1',
-      profileId: 'p1',
-      storagePath: 'p1/abc',
-    })
-    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+  it('rejects non-owner', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-1',
+      ownerProfileId: 'profile-OTHER',
+    } as any)
 
-    await service.deleteImage('p1', 'img1')
-
-    expect(mockPrisma.profile.update).toHaveBeenCalledWith({
-      where: { id: 'p1' },
-      data: { hasFace: false },
-    })
+    await expect(svc.updateImage('img-1', 'profile-1', { altText: 'x' })).rejects.toThrow(/owner/i)
   })
 })
 
