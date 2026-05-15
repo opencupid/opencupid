@@ -70,14 +70,13 @@ const SEARCH_FOCUS_ZOOM = 12
 /**
  * Tuned for place-level (city-granularity) data. At the default zoom (8)
  * a city-sized cluster of POIs sits within a few pixels of each other;
- * the spreader pushes them apart on a circle / spiral so each is
- * separately hoverable. At `MAP_MAX_ZOOM` (the deepest a viewer can
- * zoom into) markers are shown at their true coordinates.
+ * the spreader lays them out on a grid centered on the cluster centroid
+ * so each is separately hoverable. At `MAP_MAX_ZOOM` (the deepest a
+ * viewer can zoom into) markers are shown at their true coordinates.
  *
  * Invariants this config maintains:
- *  - `maxSpreadRadius >= pixelThreshold * 2` so the lowest-zoom spread
- *    actually separates colocated marker icons (40 px each) without leaving
- *    them re-overlapping.
+ *  - `maxSpreadRadius >= pixelThreshold * 2` so adjacent grid cells at
+ *    the lowest zoom don't re-overlap the 40 px marker icons.
  *  - `minZoomToSpread + maxZoomCutoffOffset <= MAP_MAX_ZOOM` so the
  *    cutoff is reachable and spreading actually disables at street level.
  *    With MAP_MAX_ZOOM=12, an offset of 4 disables spreading at zoom 12.
@@ -87,8 +86,6 @@ const SPREAD_CONFIG: SpreadingConfig = {
   minZoomToSpread: 8,
   maxZoomCutoffOffset: 4,
   maxSpreadRadius: 48,
-  spiralRadiusMultiplier: 1.6,
-  circleSpiralSwitchover: 8,
 }
 
 // ---------------------------------------------------------------------------

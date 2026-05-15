@@ -4,13 +4,13 @@ import type { Map as LMap, LatLng } from 'leaflet'
  * Density-based marker spreading.
  *
  * Given a set of geocoded points and a Leaflet map, group points that
- * overlap in pixel space and lay each group out on a deterministic spiral
- * (or circle, for small groups) centered on the cluster centroid. Replaces
- * the previous supercluster + overlapping-marker-spiderfier combination: no
- * server-side index, no click-to-expand badges, no per-zoom rebuild.
+ * overlap in pixel space and lay each group out on a deterministic grid
+ * centered on the cluster centroid. Replaces the previous supercluster +
+ * overlapping-marker-spiderfier combination: no server-side index, no
+ * click-to-expand badges, no per-zoom rebuild.
  *
  * The pixel-space test is what makes this zoom-responsive — far apart at
- * city zoom, indistinguishable at city zoom, naturally tight at street
+ * country zoom, indistinguishable at city zoom, naturally tight at street
  * zoom. At zoom levels where the algorithm can't usefully resolve overlap
  * (above `minZoomToSpread + maxZoomCutoffOffset`) the spread is disabled
  * outright and markers render at their true coordinates.
@@ -53,18 +53,12 @@ export interface SpreadingConfig {
    * with `minZoomToSpread = 11` spreading turns off at zoom 15+.
    */
   maxZoomCutoffOffset?: number
-  /** Maximum spread radius in pixels at the lowest zoom. Default 50. */
+  /**
+   * Cell spacing in pixels at the lowest zoom — distance between adjacent
+   * markers in the grid. Should be at least `pixelThreshold * 2` so spread
+   * markers don't visually re-overlap. Default 50.
+   */
   maxSpreadRadius?: number
-  /**
-   * How fast the spiral arms grow per step, in radius-multiples. Used by
-   * `calculateSpiralOffsets`. Default 2.
-   */
-  spiralRadiusMultiplier?: number
-  /**
-   * Threshold below which the layout is a circle rather than a spiral.
-   * Default 8 — circles read more cleanly for small groups.
-   */
-  circleSpiralSwitchover?: number
 }
 
 interface ResolvedConfig {
@@ -72,8 +66,6 @@ interface ResolvedConfig {
   minZoomToSpread: number
   maxZoomCutoffOffset: number
   maxSpreadRadius: number
-  spiralRadiusMultiplier: number
-  circleSpiralSwitchover: number
 }
 
 export const DEFAULT_SPREADING_CONFIG: ResolvedConfig = {
@@ -81,8 +73,6 @@ export const DEFAULT_SPREADING_CONFIG: ResolvedConfig = {
   minZoomToSpread: 11,
   maxZoomCutoffOffset: 4,
   maxSpreadRadius: 50,
-  spiralRadiusMultiplier: 2,
-  circleSpiralSwitchover: 8,
 }
 
 export function resolveConfig(config?: SpreadingConfig): ResolvedConfig {
@@ -91,8 +81,8 @@ export function resolveConfig(config?: SpreadingConfig): ResolvedConfig {
 
 /**
  * A density group: a cluster of markers tight enough in pixel space to
- * overlap. `centroid` is the unweighted screen-space midpoint, used as the
- * anchor for the spiral layout.
+ * overlap. `centroid` is the unweighted screen-space midpoint, used as
+ * the anchor for the grid layout.
  */
 export interface OverlapGroup<T> {
   groupId: string
@@ -223,46 +213,32 @@ export function detectOverlapGroups<T>(
 }
 
 /**
- * Deterministic spiral / circle layout in pixel space.
+ * Deterministic square-ish grid layout in pixel space.
  *
- * Small groups (< switchover) are laid out evenly on a circle of radius
- * `baseRadius`. Larger groups follow an Archimedean spiral that grows by
- * `radiusMultiplier` per turn. The pattern is purely geometric — no
- * randomness — so the same input always renders the same layout.
+ * The grid is built with `cols = ceil(sqrt(count))` and `rows =
+ * ceil(count / cols)`, then centered on (0, 0). Cells are spaced
+ * `cellSize` pixels apart on both axes. The trailing row may have empty
+ * slots when `count` doesn't fill the grid exactly — markers fill in
+ * row-major order, top-down, left-to-right. The pattern is purely
+ * geometric — no randomness — so the same input always renders the same
+ * layout.
  */
-export function calculateSpiralOffsets(
-  count: number,
-  baseRadius: number,
-  options: { radiusMultiplier?: number; switchover?: number } = {}
-): { x: number; y: number }[] {
+export function calculateGridOffsets(count: number, cellSize: number): { x: number; y: number }[] {
   if (count <= 0) return []
   if (count === 1) return [{ x: 0, y: 0 }]
 
-  const switchover = options.switchover ?? DEFAULT_SPREADING_CONFIG.circleSpiralSwitchover
-  const radiusMultiplier =
-    options.radiusMultiplier ?? DEFAULT_SPREADING_CONFIG.spiralRadiusMultiplier
+  const cols = Math.ceil(Math.sqrt(count))
+  const rows = Math.ceil(count / cols)
+  // Center the grid on (0, 0): the leftmost column sits at
+  // -(cols - 1) / 2 * cellSize, the topmost row at -(rows - 1) / 2.
+  const xOrigin = -((cols - 1) * cellSize) / 2
+  const yOrigin = -((rows - 1) * cellSize) / 2
 
   const offsets: { x: number; y: number }[] = []
-
-  if (count <= switchover) {
-    // Even circle. Start at the top (-π/2) so the first marker sits
-    // directly above the centroid, which reads as the "primary" pin.
-    const startAngle = -Math.PI / 2
-    for (let i = 0; i < count; i++) {
-      const angle = startAngle + (i * 2 * Math.PI) / count
-      offsets.push({ x: Math.cos(angle) * baseRadius, y: Math.sin(angle) * baseRadius })
-    }
-    return offsets
-  }
-
-  // Archimedean spiral: r = baseRadius + step * angle, with step chosen so
-  // adjacent turns are `radiusMultiplier * baseRadius` apart.
-  const step = (radiusMultiplier * baseRadius) / (2 * Math.PI)
-  const angleStep = (2 * Math.PI) / switchover
   for (let i = 0; i < count; i++) {
-    const angle = -Math.PI / 2 + i * angleStep
-    const r = baseRadius + step * (angle + Math.PI / 2)
-    offsets.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r })
+    const row = Math.floor(i / cols)
+    const col = i % cols
+    offsets.push({ x: xOrigin + col * cellSize, y: yOrigin + row * cellSize })
   }
   return offsets
 }
@@ -283,8 +259,8 @@ export function spreadRadiusForZoom(zoom: number, config: ResolvedConfig): numbe
  * Apply density-based spreading to a marker set in place of a new
  * collection — never mutating the originals. Markers that don't overlap
  * keep their original coordinates and `isSpread: false`. Markers in
- * overlap groups have `current` reprojected to the spiral position and
- * `isSpread: true`.
+ * overlap groups have `current` reprojected to a grid position around
+ * the cluster centroid and `isSpread: true`.
  */
 export function spreadMarkers<T>(
   markers: SpreadMarker<T>[],
@@ -314,16 +290,14 @@ export function spreadMarkers<T>(
   }
 
   const idToSpread = new Map<string, LatLngLike>()
-  // Trust the configured radius — no implicit floor. Callers are responsible
-  // for choosing `maxSpreadRadius` large enough that spread markers don't
-  // visually re-overlap (rule of thumb: at least `pixelThreshold * 2`).
-  const radius = spreadRadiusForZoom(zoomLevel, cfg)
+  // Cell spacing for the grid at the current zoom. No implicit floor:
+  // callers are responsible for choosing `maxSpreadRadius` large enough
+  // that adjacent grid cells don't visually re-overlap (rule of thumb:
+  // at least `pixelThreshold * 2`).
+  const cellSize = spreadRadiusForZoom(zoomLevel, cfg)
 
   for (const group of groups) {
-    const offsets = calculateSpiralOffsets(group.markers.length, radius, {
-      radiusMultiplier: cfg.spiralRadiusMultiplier,
-      switchover: cfg.circleSpiralSwitchover,
-    })
+    const offsets = calculateGridOffsets(group.markers.length, cellSize)
     // Sort group members by id so the offset assignment is deterministic
     // across renders, irrespective of input array order.
     const sorted = [...group.markers].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))

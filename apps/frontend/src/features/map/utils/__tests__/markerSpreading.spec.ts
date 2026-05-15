@@ -3,7 +3,7 @@ import type { Map as LMap } from 'leaflet'
 
 import {
   DEFAULT_SPREADING_CONFIG,
-  calculateSpiralOffsets,
+  calculateGridOffsets,
   detectOverlapGroups,
   spreadMarkers,
   spreadRadiusForZoom,
@@ -40,37 +40,58 @@ function makeMarker(id: string, lat: number, lng: number): SpreadMarker<{ name: 
   }
 }
 
-describe('calculateSpiralOffsets', () => {
+describe('calculateGridOffsets', () => {
   it('returns an empty array for count 0', () => {
-    expect(calculateSpiralOffsets(0, 10)).toEqual([])
+    expect(calculateGridOffsets(0, 10)).toEqual([])
   })
 
   it('returns a single zero-offset for count 1', () => {
-    expect(calculateSpiralOffsets(1, 10)).toEqual([{ x: 0, y: 0 }])
+    expect(calculateGridOffsets(1, 10)).toEqual([{ x: 0, y: 0 }])
   })
 
-  it('lays small groups on an evenly-spaced circle', () => {
-    const offsets = calculateSpiralOffsets(4, 10, { switchover: 8 })
-    expect(offsets).toHaveLength(4)
-    for (const o of offsets) {
-      expect(Math.sqrt(o.x * o.x + o.y * o.y)).toBeCloseTo(10, 5)
-    }
-    // First marker points straight up (-y in screen coords)
-    expect(offsets[0]!.x).toBeCloseTo(0, 5)
-    expect(offsets[0]!.y).toBeCloseTo(-10, 5)
+  it('lays a 2-marker group on a single horizontal row', () => {
+    const offsets = calculateGridOffsets(2, 10)
+    expect(offsets).toEqual([
+      { x: -5, y: 0 },
+      { x: 5, y: 0 },
+    ])
   })
 
-  it('switches to spiral for groups above switchover', () => {
-    const offsets = calculateSpiralOffsets(12, 10, { switchover: 8, radiusMultiplier: 2 })
-    expect(offsets).toHaveLength(12)
-    // Later offsets sit farther from origin than the base radius
-    const lastR = Math.hypot(offsets[11]!.x, offsets[11]!.y)
-    expect(lastR).toBeGreaterThan(10)
+  it('lays a 4-marker group on a centered 2x2 grid', () => {
+    const offsets = calculateGridOffsets(4, 10)
+    expect(offsets).toEqual([
+      { x: -5, y: -5 },
+      { x: 5, y: -5 },
+      { x: -5, y: 5 },
+      { x: 5, y: 5 },
+    ])
+  })
+
+  it('lays a 9-marker group on a centered 3x3 grid', () => {
+    const offsets = calculateGridOffsets(9, 10)
+    expect(offsets).toHaveLength(9)
+    // Center cell at origin
+    expect(offsets[4]).toEqual({ x: 0, y: 0 })
+    // Top-left and bottom-right corners
+    expect(offsets[0]).toEqual({ x: -10, y: -10 })
+    expect(offsets[8]).toEqual({ x: 10, y: 10 })
+  })
+
+  it('fills row-major with a partially-empty trailing row for non-square counts', () => {
+    // count=5 → cols=ceil(sqrt(5))=3, rows=ceil(5/3)=2 → 3-cell top row,
+    // 2-cell bottom row (cell at col 2 of row 1 left empty).
+    const offsets = calculateGridOffsets(5, 10)
+    expect(offsets).toHaveLength(5)
+    expect(offsets[0]).toEqual({ x: -10, y: -5 })
+    expect(offsets[1]).toEqual({ x: 0, y: -5 })
+    expect(offsets[2]).toEqual({ x: 10, y: -5 })
+    expect(offsets[3]).toEqual({ x: -10, y: 5 })
+    expect(offsets[4]).toEqual({ x: 0, y: 5 })
   })
 
   it('produces deterministic output for the same inputs', () => {
-    const a = calculateSpiralOffsets(7, 20)
-    const b = calculateSpiralOffsets(7, 20)
+    const a = calculateGridOffsets(7, 20)
+    const b = calculateGridOffsets(7, 20)
     expect(a).toEqual(b)
   })
 })
