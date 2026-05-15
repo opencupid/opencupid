@@ -11,7 +11,7 @@ const imageService = ImageService.getInstance()
 async function main() {
   await ImageProcessor.initialize()
 
-  const images = await prisma.profileImage.findMany()
+  const images = await prisma.image.findMany()
 
   console.log(`Found ${images.length} images to reprocess`)
 
@@ -35,7 +35,7 @@ async function main() {
       console.log(`Reprocessing ${img.id}`)
       const result = await imageService.reprocessImage(originalFile, outputDir, baseName)
 
-      await prisma.profileImage.update({
+      await prisma.image.update({
         where: { id: img.id },
         data: {
           blurhash: result.blurhash,
