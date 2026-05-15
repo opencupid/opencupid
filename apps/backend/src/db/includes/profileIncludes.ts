@@ -22,8 +22,9 @@ export function translationWhereClause(term: string, locale: string) {
 
 export function profileImageInclude() {
   return {
-    profileImages: {
-      orderBy: { position: 'asc' },
+    galleryImages: {
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
     },
   } satisfies Prisma.ProfileInclude
 }

@@ -4,7 +4,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapProfileSummary: (profile: any) => ({
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile.profileImages ?? [],
+    profileImages: (profile.galleryImages ?? []).map((g: any) => g.image),
     location: profile.location ?? { country: '' },
   }),
 }))
@@ -28,7 +28,7 @@ const baseRow = {
   postedBy: {
     id: 'clprofile000000000001',
     publicName: 'X',
-    profileImages: [],
+    galleryImages: [],
   },
 } as unknown as UserContentMetadataRow
 

@@ -89,11 +89,12 @@ export class ClusterService {
           kind: 'profile' as const,
           id: p.id,
           publicName: p.publicName ?? '',
-          image: p.profileImages?.[0]
+          image: p.galleryImages?.[0]
             ? {
-                blurhash: p.profileImages[0].blurhash ?? null,
-                url: imageService.getImageUrls(p.profileImages[0]).find((v) => v.size === 'thumb')
-                  ?.url,
+                blurhash: p.galleryImages[0].image.blurhash ?? null,
+                url: imageService
+                  .getImageUrls(p.galleryImages[0].image)
+                  .find((v) => v.size === 'thumb')?.url,
               }
             : null,
           highlighted: matchSet.has(p.id),
@@ -126,11 +127,11 @@ export class ClusterService {
           kind: c.kind,
           id: c.id,
           publicName: c.postedBy?.publicName ?? '',
-          image: c.postedBy?.profileImages?.[0]
+          image: c.postedBy?.galleryImages?.[0]
             ? {
-                blurhash: c.postedBy.profileImages[0].blurhash ?? null,
+                blurhash: c.postedBy.galleryImages[0].image.blurhash ?? null,
                 url: imageService
-                  .getImageUrls(c.postedBy.profileImages[0])
+                  .getImageUrls(c.postedBy.galleryImages[0].image)
                   .find((v) => v.size === 'thumb')?.url,
               }
             : null,

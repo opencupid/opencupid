@@ -6,9 +6,9 @@ import { ImageService } from '@/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
 import { rateLimitConfig, sendError } from '../helpers'
 import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
-import { ReorderProfileImagesPayloadSchema } from '@zod/profile/profileimage.dto'
+import { ReorderImagesPayloadSchema } from '@zod/image/image.dto'
 import { appConfig } from '@/lib/appconfig'
-import type { ImageApiResponse } from '@zod/profile/profileimage.dto'
+import type { ImageApiResponse } from '@zod/image/image.dto'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
@@ -139,7 +139,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
    * @returns {ImageApiResponse} Updated list of profile images in new order
    */
   fastify.patch('/order', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { images } = ReorderProfileImagesPayloadSchema.parse(req.body)
+    const { images } = ReorderImagesPayloadSchema.parse(req.body)
 
     try {
       const updated = await imageService.reorderImages(req.session.profileId, images)

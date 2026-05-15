@@ -2,6 +2,7 @@ import z from 'zod'
 import {
   ConversationSchema,
   HiddenProfileSchema,
+  ImageSchema,
   LikedProfileSchema,
   LocalizedProfileFieldSchema,
   ProfileImageSchema,
@@ -24,14 +25,24 @@ export const DbProfileSchema = ProfileSchema.extend({
 export type DbProfile = z.infer<typeof DbProfileSchema>
 
 export const DbProfileWithImagesSchema = DbProfileSchema.extend({
-  profileImages: z.array(ProfileImageSchema).default([]),
+  galleryImages: z
+    .array(
+      ProfileImageSchema.extend({
+        image: ImageSchema,
+      })
+    )
+    .default([]),
 })
 export type DbProfileWithImages = z.infer<typeof DbProfileWithImagesSchema>
 
 export const DbMinimalProfileSchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  profileImages: z.array(z.object({ storagePath: z.string() })),
+  galleryImages: z.array(
+    z.object({
+      image: z.object({ storagePath: z.string() }),
+    })
+  ),
   country: z.string().nullable().optional(),
   cityName: z.string().nullable().optional(),
   lat: z.number().nullable().optional(),

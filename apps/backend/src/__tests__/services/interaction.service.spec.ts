@@ -43,8 +43,8 @@ describe('InteractionService.like', () => {
     })
 
     mockPrisma.profile.findUniqueOrThrow
-      .mockResolvedValueOnce({ id: toId, profileImages: [] })
-      .mockResolvedValueOnce({ id: fromId, profileImages: [] })
+      .mockResolvedValueOnce({ id: toId, galleryImages: [] })
+      .mockResolvedValueOnce({ id: fromId, galleryImages: [] })
     mockPrisma.likedProfile.findUnique.mockResolvedValue(null)
 
     const result = await service.like(fromId, toId)
@@ -67,8 +67,8 @@ describe('InteractionService.like', () => {
     })
 
     mockPrisma.profile.findUniqueOrThrow
-      .mockResolvedValueOnce({ id: toId, profileImages: [] })
-      .mockResolvedValueOnce({ id: fromId, profileImages: [] })
+      .mockResolvedValueOnce({ id: toId, galleryImages: [] })
+      .mockResolvedValueOnce({ id: fromId, galleryImages: [] })
     mockPrisma.likedProfile.findUnique.mockResolvedValue(null)
 
     const result = await service.like(fromId, toId)
@@ -97,8 +97,8 @@ describe('InteractionService.like', () => {
 
     // Mock profile fetches
     mockPrisma.profile.findUniqueOrThrow
-      .mockResolvedValueOnce({ id: toId, profileImages: [] })
-      .mockResolvedValueOnce({ id: fromId, profileImages: [] })
+      .mockResolvedValueOnce({ id: toId, galleryImages: [] })
+      .mockResolvedValueOnce({ id: fromId, galleryImages: [] })
 
     // Mock finding a mutual like (indicating a match)
     mockPrisma.likedProfile.findUnique.mockResolvedValue({
@@ -133,8 +133,8 @@ describe('InteractionService.like', () => {
 
     // Mock profile fetches
     mockPrisma.profile.findUniqueOrThrow
-      .mockResolvedValueOnce({ id: toId, profileImages: [] })
-      .mockResolvedValueOnce({ id: fromId, profileImages: [] })
+      .mockResolvedValueOnce({ id: toId, galleryImages: [] })
+      .mockResolvedValueOnce({ id: fromId, galleryImages: [] })
 
     // Mock no mutual like (no match)
     mockPrisma.likedProfile.findUnique.mockResolvedValue(null)

@@ -90,7 +90,7 @@ describe('GET /bounds', () => {
     const postedBy = {
       id: 'author1',
       publicName: 'Author',
-      profileImages: [],
+      galleryImages: [],
       country: null,
       cityName: null,
       lat: null,
@@ -225,7 +225,7 @@ describe('GET /:id (unified detail)', () => {
       postedBy: {
         id: 'someone',
         publicName: 'X',
-        profileImages: [],
+        galleryImages: [],
         conversationAsA: [],
         conversationAsB: [],
       },
@@ -267,7 +267,7 @@ describe('GET /:id (unified detail)', () => {
       postedBy: {
         id: 'someone',
         publicName: 'Y',
-        profileImages: [],
+        galleryImages: [],
         conversationAsA: [],
         conversationAsB: [],
       },
@@ -304,7 +304,7 @@ describe('GET /:id (unified detail)', () => {
       postedBy: {
         id: 'someone',
         publicName: 'Z',
-        profileImages: [],
+        galleryImages: [],
         conversationAsA: [],
         conversationAsB: [],
       },
@@ -341,7 +341,7 @@ describe('GET /:id (unified detail)', () => {
       postedBy: {
         id: 'p1',
         publicName: 'X',
-        profileImages: [],
+        galleryImages: [],
         conversationAsA: [],
         conversationAsB: [],
       },

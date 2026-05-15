@@ -31,14 +31,14 @@ export interface BoundsBox {
 }
 
 const profileSummaryInclude = {
-  postedBy: { include: { profileImages: true } },
+  postedBy: { include: { galleryImages: { include: { image: true } } } },
 } as const
 
 const ownerHydratedInclude = {
   post: true,
   event: true,
   community: true,
-  postedBy: { include: { profileImages: true } },
+  postedBy: { include: { galleryImages: { include: { image: true } } } },
 } as const
 
 export type UserContentMetadataRow = Prisma.UserContentGetPayload<{

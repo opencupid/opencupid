@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { ProfileSchema, UserSchema } from '../generated'
 
 import { PublicTagSchema, type PublicTag } from '../tag/tag.dto'
-import { PublicProfileImageSchema } from './profileimage.dto'
+import { PublicImageSchema } from '@zod/image/image.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import {
   baseFields,
@@ -41,7 +41,7 @@ export const ProfileUnionSchema = z.discriminatedUnion('isDatingActive', [
 export const PublicProfileSchema = ProfileUnionSchema.and(
   z.object({
     location: LocationSchema,
-    profileImages: z.array(PublicProfileImageSchema).default([]),
+    profileImages: z.array(PublicImageSchema).default([]),
     tags: z.array(PublicTagSchema).default([]),
     introSocial: z.string().default(''),
     introDating: z.string().default(''),
@@ -64,7 +64,7 @@ export const OwnerProfileSchema = OwnerScalarsSchema.extend({
   introSocialLocalized: LocalizedStringSchema,
   introDatingLocalized: LocalizedStringSchema,
 
-  profileImages: z.array(PublicProfileImageSchema).default([]),
+  profileImages: z.array(PublicImageSchema).default([]),
   tags: z.array(PublicTagSchema).default([]),
   location: LocationSchema,
 })
@@ -127,7 +127,7 @@ export type UpdateProfileOptInPayload = z.infer<typeof UpdateProfileOptInPayload
 export const ProfileSummarySchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  profileImages: z.array(PublicProfileImageSchema),
+  profileImages: z.array(PublicImageSchema),
   location: LocationSchema,
 })
 

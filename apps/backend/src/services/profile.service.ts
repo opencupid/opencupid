@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 
-import { Profile, ProfileImage } from '@zod/generated'
+import { Profile, Image } from '@zod/generated'
 import {
   type ProfileOptInSettings,
   type UpdateProfileOptInPayload,
@@ -503,14 +503,15 @@ export class ProfileService {
 
   async getBlockedProfiles(
     profileId: string
-  ): Promise<{ id: string; publicName: string; profileImages: ProfileImage[] }[]> {
+  ): Promise<{ id: string; publicName: string; galleryImages: { image: Image }[] }[]> {
     const result = await prisma.profile.findUnique({
       where: { id: profileId },
       include: {
         blockedProfiles: {
           include: {
-            profileImages: {
-              orderBy: { position: 'asc' },
+            galleryImages: {
+              include: { image: true },
+              orderBy: { image: { position: 'asc' } },
             },
           },
         },
