@@ -194,7 +194,8 @@ model Profile {
   hasKids      HasKids?
 
   tags          Tag[]          @relation("ProfileTags")
-  profileImages ProfileImage[] @relation("ProfileImages")
+  ownedImages   Image[]        @relation("OwnedImages") // lifecycle (cascade-delete)
+  galleryImages ProfileImage[] @relation("ProfileGallery") // gallery membership
 
   // Dating preferences
   prefAgeMin Int?
@@ -252,29 +253,50 @@ model LocalizedProfileField {
   @@unique([profileId, field, locale])
 }
 
-model ProfileImage {
-  id        String  @id @default(cuid())
-  profileId String
-  profile   Profile @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
+model Image {
+  id             String  @id @default(cuid())
+  ownerProfileId String
+  ownerProfile   Profile @relation("OwnedImages", fields: [ownerProfileId], references: [id], onDelete: Cascade)
 
-  position    Int     @default(0) // order of images, 0 is the primary profile image
-  altText     String  @default("")
   storagePath String  @unique
-  url         String?
+  mimeType    String
   width       Int?
   height      Int?
-  mimeType    String
+  contentHash String?
+  blurhash    String?
+  hasFace     Boolean @default(false)
+  isModerated Boolean @default(false)
+  isFlagged   Boolean @default(false)
+
+  position Int    @default(0)
+  altText  String @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  contentHash String?
-  blurhash    String?
-  isModerated Boolean @default(false)
-  isFlagged   Boolean @default(false)
-  hasFace     Boolean @default(false)
+  profileGallery     ProfileImage?
+  userContentGallery UserContentImage?
 
-  @@index([profileId, position])
+  @@index([ownerProfileId])
+  @@index([position])
+}
+
+model ProfileImage {
+  imageId   String  @id
+  image     Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile @relation("ProfileGallery", fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+model UserContentImage {
+  imageId       String      @id
+  image         Image       @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  userContentId String
+  userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
+
+  @@index([userContentId])
 }
 
 model Conversation {
@@ -407,6 +429,7 @@ model UserContent {
   post      PostContent?
   event     EventContent?
   community CommunityContent?
+  images    UserContentImage[]
 
   @@index([postedById])
   @@index([kind])
