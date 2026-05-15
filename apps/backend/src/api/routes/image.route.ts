@@ -1,18 +1,21 @@
 import { z } from 'zod'
-import { FastifyPluginAsync } from 'fastify'
+import { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import multipart, { MultipartValue } from '@fastify/multipart'
 
+import { prisma } from '@/lib/prisma'
 import { ProfileService } from '@/services/profile.service'
 import { ImageService } from '@/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
 import { rateLimitConfig, sendError, sendForbiddenError } from '../helpers'
 import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
 import { ReorderProfileImagesPayloadSchema } from '@zod/profile/profileimage.dto'
+import { ImageOwnerRouteParamsSchema } from '@zod/image/image.dto'
+import type { ImageOwner, ImageOwnerRouteParams } from '@zod/image/image.dto'
 import { appConfig } from '@/lib/appconfig'
 import type { ImageApiResponse } from '@zod/profile/profileimage.dto'
 
-// Route params for ID lookups
-const IdLookupParamsSchema = z.object({
+// Adds an Image ID to the owner-scoped route params.
+const OwnerImageParamsSchema = ImageOwnerRouteParamsSchema.extend({
   id: z.string().cuid(),
 })
 
@@ -35,37 +38,72 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   const imageService = ImageService.getInstance()
 
   /**
-   * GET /me
-   * Returns all profile images for the authenticated user (owner view with private metadata).
-   * @returns {ImageApiResponse}
+   * Resolve a flat URL-param shape into a typed `ImageOwner` after verifying
+   * the authenticated requester is authorized to act on that owner.
+   *
+   * Authorization rules:
+   * - `profile`: the requester's own profile id must match `ownerId`.
+   * - `userContent`: the UserContent record's `postedById` must equal the
+   *   requester's profile id.
+   *
+   * Returns `null` when authorization fails (route handler converts to 403).
    */
-  fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+  async function resolveOwner(
+    req: FastifyRequest,
+    params: ImageOwnerRouteParams
+  ): Promise<ImageOwner | null> {
+    const profile = await profileService.getProfileByUserId(req.user.userId)
+    if (!profile) return null
+
+    if (params.ownerType === 'profile') {
+      if (profile.id !== params.ownerId) return null
+      return { type: 'profile', profileId: params.ownerId }
+    }
+
+    const uc = await prisma.userContent.findUnique({ where: { id: params.ownerId } })
+    if (!uc || uc.postedById !== profile.id) return null
+    return { type: 'userContent', userContentId: params.ownerId }
+  }
+
+  /**
+   * GET /:ownerType/:ownerId
+   * Lists images for the given owner.
+   */
+  fastify.get('/:ownerType/:ownerId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const params = ImageOwnerRouteParamsSchema.parse(req.params)
+    const owner = await resolveOwner(req, params)
+    if (!owner) return sendForbiddenError(reply)
+
     try {
-      const rawImages = await imageService.listImages(req.user.userId)
+      const rawImages = await imageService.listImages(owner)
       const images = mapProfileImagesToOwner(rawImages)
       const response: ImageApiResponse = { success: true, images }
       return reply.code(200).send(response)
     } catch (err) {
       fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to fetch user images')
+      return sendError(reply, 500, 'Failed to fetch images')
     }
   })
+
   /**
-   * POST /
-   * Uploads a profile image (multipart). Validates file type and size.
+   * POST /:ownerType/:ownerId
+   * Uploads an image (multipart) and appends it to the owner's gallery.
    * @body {File} file - Image file (multipart)
    * @body {string} [captionText] - Optional image caption (form field)
-   * @returns {ImageApiResponse} Updated list of all profile images
+   * @returns {ImageApiResponse} Updated list of all owner images
    */
   fastify.post(
-    '/',
+    '/:ownerType/:ownerId',
     {
       onRequest: [fastify.authenticate],
       config: rateLimitConfig(fastify, '1 minute', 10),
     },
     async (req, reply) => {
-      let files
+      const params = ImageOwnerRouteParamsSchema.parse(req.params)
+      const owner = await resolveOwner(req, params)
+      if (!owner) return sendForbiddenError(reply)
 
+      let files
       try {
         files = await req.saveRequestFiles({
           tmpdir: uploadTmpDir(),
@@ -98,22 +136,18 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
           : fileUpload.fields.captionText) as MultipartValue
       ).value ?? '') as string
 
-      const profile = await profileService.getProfileByUserId(req.user.userId)
-      if (!profile) {
-        return sendError(reply, 404, 'No user profile to link the image to')
-      }
-
       try {
         const stored = await imageService.storeImage(
           req.user.userId,
           fileUpload.filepath,
-          captionText
+          captionText,
+          owner
         )
         if (!stored) {
           return sendError(reply, 500, 'Failed to store image')
         }
-        const updated = await profileService.addProfileImage(profile.id, stored.id)
-        const images = mapProfileImagesToOwner(updated.profileImages)
+        const updated = await imageService.listImages(owner)
+        const images = mapProfileImagesToOwner(updated)
         const response: ImageApiResponse = { success: true, images }
         return reply.code(200).send(response)
       } catch (err) {
@@ -124,51 +158,61 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   /**
-   * DELETE /:id
-   * Deletes a profile image by its profile-image ID.
-   * @param {string} id - ProfileImage ID (CUID)
-   * @returns {ImageApiResponse} Updated list of remaining profile images
+   * DELETE /:ownerType/:ownerId/:id
+   * Deletes image `:id` from the owner's gallery.
+   * @returns {ImageApiResponse} Updated list of remaining owner images
    */
-  fastify.delete('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { id: profileImageId } = IdLookupParamsSchema.parse(req.params)
+  fastify.delete(
+    '/:ownerType/:ownerId/:id',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const { ownerType, ownerId, id: imageId } = OwnerImageParamsSchema.parse(req.params)
+      const owner = await resolveOwner(req, { ownerType, ownerId })
+      if (!owner) return sendForbiddenError(reply)
 
-    try {
-      const ok = await imageService.deleteImage(req.session.profileId, profileImageId)
-      if (!ok) {
+      try {
+        const ok = await imageService.deleteImage(owner, imageId)
+        if (!ok) {
+          return sendError(reply, 404, 'Image not found or not owned')
+        }
+        const updated = await imageService.listImages(owner)
+        const images = mapProfileImagesToOwner(updated)
+        const response: ImageApiResponse = { success: true, images }
+        return reply.code(200).send(response)
+      } catch (err) {
+        fastify.log.error(err)
         return sendError(reply, 500, 'Failed to delete image')
       }
-      const updated = await imageService.listImages(req.user.userId)
-      if (!updated) {
-        return sendError(reply, 400, 'No user profile found to update after image deletion')
-      }
-      const images = mapProfileImagesToOwner(updated)
-      const response: ImageApiResponse = { success: true, images }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return sendError(reply, 500, 'Failed to delete image')
     }
-  })
+  )
 
   /**
-   * PATCH /order
-   * Reorders profile images by setting new position values.
+   * PATCH /:ownerType/:ownerId/order
+   * Reorders the owner's images by setting new position values.
    * @body {ReorderProfileImagesPayload} { images: [{ id, position }] }
-   * @returns {ImageApiResponse} Updated list of profile images in new order
+   * @returns {ImageApiResponse} Updated list of images in new order
    */
-  fastify.patch('/order', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { images } = ReorderProfileImagesPayloadSchema.parse(req.body)
+  fastify.patch(
+    '/:ownerType/:ownerId/order',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const params = ImageOwnerRouteParamsSchema.parse(req.params)
+      const owner = await resolveOwner(req, params)
+      if (!owner) return sendForbiddenError(reply)
 
-    try {
-      const updated = await imageService.reorderImages(req.session.profileId, images)
-      const ownerImages = mapProfileImagesToOwner(updated)
-      const response: ImageApiResponse = { success: true, images: ownerImages }
-      return reply.code(200).send(response)
-    } catch (err) {
-      fastify.log.error(err)
-      return reply.code(500).send({ success: false })
+      const { images: items } = ReorderProfileImagesPayloadSchema.parse(req.body)
+
+      try {
+        const updated = await imageService.reorderImages(owner, items)
+        const ownerImages = mapProfileImagesToOwner(updated)
+        const response: ImageApiResponse = { success: true, images: ownerImages }
+        return reply.code(200).send(response)
+      } catch (err) {
+        fastify.log.error(err)
+        return reply.code(500).send({ success: false })
+      }
     }
-  })
+  )
 }
 
 export default imageRoutes
