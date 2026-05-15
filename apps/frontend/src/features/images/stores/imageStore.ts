@@ -16,6 +16,10 @@ function profileScopedPath(profileId: string, segment = ''): string {
   return `/image/profile/${profileId}${segment}`
 }
 
+function currentProfileId(): string | null {
+  return useOwnerProfileStore().profile?.id ?? null
+}
+
 export const useImageStore = defineStore('image', {
   state: () => ({
     images: [] as OwnerProfileImage[],
@@ -23,13 +27,8 @@ export const useImageStore = defineStore('image', {
   }),
 
   actions: {
-    requireProfileId(): string | null {
-      const profileId = useOwnerProfileStore().profile?.id
-      return profileId ?? null
-    },
-
     async uploadProfileImage(file: File, captionText: string): Promise<ImageStoreResponse> {
-      const profileId = this.requireProfileId()
+      const profileId = currentProfileId()
       if (!profileId) return { success: false, message: 'No profile in session' }
 
       const formData = new FormData()
@@ -65,7 +64,7 @@ export const useImageStore = defineStore('image', {
     },
 
     async deleteImage(image: OwnerProfileImage): Promise<ImageStoreResponse> {
-      const profileId = this.requireProfileId()
+      const profileId = currentProfileId()
       if (!profileId) return { success: false, message: 'No profile in session' }
 
       try {
@@ -87,7 +86,7 @@ export const useImageStore = defineStore('image', {
     },
 
     async reorderImages(imagesForUpdate: ProfileImagePosition[]): Promise<ImageStoreResponse> {
-      const profileId = this.requireProfileId()
+      const profileId = currentProfileId()
       if (!profileId) return { success: false, message: 'No profile in session' }
 
       try {
@@ -112,7 +111,7 @@ export const useImageStore = defineStore('image', {
     },
 
     async fetchImages(): Promise<ImageStoreResponse> {
-      const profileId = this.requireProfileId()
+      const profileId = currentProfileId()
       if (!profileId) return { success: false, message: 'No profile in session' }
 
       try {
