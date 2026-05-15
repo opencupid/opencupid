@@ -117,13 +117,13 @@ type ImageOwner =
 
 Method changes:
 
-| Method                                  | Change                                                                                                                                                                                       |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `storeImage(userId, fileUpload, owner)` | Creates `Image` row + matching join row in one transaction. Position is the count of existing siblings *within the owner's gallery*, not within the user's total uploads.                    |
-| `listImages(owner)`                     | Returns images for one owner, ordered by `image.position`. Replaces `listImages(userId)`.                                                                                                    |
-| `deleteImage(owner, imageId)`           | Verifies join row matches the given owner. Deletes join row + Image row + files in one transaction. Calls `syncProfileHasFace` only when `owner.type === 'profile'`.                         |
-| `reorderImages(owner, items)`           | Filters target Images by join-row owner before updating `position`.                                                                                                                          |
-| `getImage(id, userId)`                  | Unchanged; scoped by uploader.                                                                                                                                                               |
+| Method                                  | Change                                                                                                                                                                    |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `storeImage(userId, fileUpload, owner)` | Creates `Image` row + matching join row in one transaction. Position is the count of existing siblings _within the owner's gallery_, not within the user's total uploads. |
+| `listImages(owner)`                     | Returns images for one owner, ordered by `image.position`. Replaces `listImages(userId)`.                                                                                 |
+| `deleteImage(owner, imageId)`           | Verifies join row matches the given owner. Deletes join row + Image row + files in one transaction. Calls `syncProfileHasFace` only when `owner.type === 'profile'`.      |
+| `reorderImages(owner, items)`           | Filters target Images by join-row owner before updating `position`.                                                                                                       |
+| `getImage(id, userId)`                  | Unchanged; scoped by uploader.                                                                                                                                            |
 
 ### Mappers
 
@@ -247,7 +247,7 @@ Notes:
 
 - The checksum is the SHA-256 of the committed `migration.sql` content. The runbook says to compute it (`sha256sum migration.sql`) and paste it in before running. If the dev migration is amended later, the prod SQL's checksum must be updated to match the final committed version.
 - The transaction is all-or-nothing. If the row-count verification fails, everything rolls back.
-- The verification step has access to `Image."profileId"` *because* the column hasn't been dropped yet — Steps 3, 4, and 5 are sequenced specifically so verification reads the legacy column inside the same transaction that drops it.
+- The verification step has access to `Image."profileId"` _because_ the column hasn't been dropped yet — Steps 3, 4, and 5 are sequenced specifically so verification reads the legacy column inside the same transaction that drops it.
 
 ### Deploy runbook entry
 

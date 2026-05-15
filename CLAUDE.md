@@ -79,20 +79,20 @@ packages/
 
 ### Key frontend routes
 
-| Route                          | View                                               |
-| ------------------------------ | -------------------------------------------------- |
-| `/home`                        | User home / dashboard                              |
-| `/auth`                        | Login (email entry)                                |
-| `/auth/otp`                    | OTP token entry                                    |
-| `/browse`                      | Browse profiles (social)                           |
-| `/profile/:profileId`   | Public profile                                     |
-| `/me`                          | My profile                                         |
-| `/me/edit`                     | Edit profile                                       |
-| `/inbox`                       | Conversation list                                  |
-| `/inbox/:conversationId`       | Messaging                                          |
-| `/posts`                       | Posts                                              |
-| `/settings`                    | Settings                                           |
-| `/onboarding`                  | Onboarding (only when profile `isActive` is false) |
+| Route                    | View                                               |
+| ------------------------ | -------------------------------------------------- |
+| `/home`                  | User home / dashboard                              |
+| `/auth`                  | Login (email entry)                                |
+| `/auth/otp`              | OTP token entry                                    |
+| `/browse`                | Browse profiles (social)                           |
+| `/profile/:profileId`    | Public profile                                     |
+| `/me`                    | My profile                                         |
+| `/me/edit`               | Edit profile                                       |
+| `/inbox`                 | Conversation list                                  |
+| `/inbox/:conversationId` | Messaging                                          |
+| `/posts`                 | Posts                                              |
+| `/settings`              | Settings                                           |
+| `/onboarding`            | Onboarding (only when profile `isActive` is false) |
 
 ## Tests
 
@@ -345,14 +345,14 @@ The `vue-mcp` MCP server (configured in `.mcp.json`) connects to the running fro
 
 Available tools:
 
-| Tool | Use for |
-|------|---------|
-| `get-component-state` | Inspect a component's props, reactive state, computed values, and injected stores |
-| `get-pinia-tree` | List all registered Pinia stores |
-| `get-pinia-state` | Inspect a specific Pinia store's full state |
-| `get-router-info` | Get current route, params, query, matched routes |
-| `edit-component-state` | Live-edit reactive state at runtime for testing |
-| `highlight-component` | Visually highlight a component in the browser |
+| Tool                   | Use for                                                                           |
+| ---------------------- | --------------------------------------------------------------------------------- |
+| `get-component-state`  | Inspect a component's props, reactive state, computed values, and injected stores |
+| `get-pinia-tree`       | List all registered Pinia stores                                                  |
+| `get-pinia-state`      | Inspect a specific Pinia store's full state                                       |
+| `get-router-info`      | Get current route, params, query, matched routes                                  |
+| `edit-component-state` | Live-edit reactive state at runtime for testing                                   |
+| `highlight-component`  | Visually highlight a component in the browser                                     |
 
 **Known limitation:** `get-component-tree` exceeds Claude Code's 25k token response limit on non-trivial apps — use `get-component-state` on specific components instead.
 

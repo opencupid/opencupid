@@ -31,7 +31,7 @@ export const UserContentImagesResponseSchema = z.object({
 })
 
 export const UserContentImageApiResponseSchema = ApiSuccessSchema.merge(
-  UserContentImagesResponseSchema,
+  UserContentImagesResponseSchema
 )
 
 export type UserContentImageApiResponse = z.infer<typeof UserContentImageApiResponseSchema>

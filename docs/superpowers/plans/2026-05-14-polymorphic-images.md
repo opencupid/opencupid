@@ -13,12 +13,14 @@
 ## File Structure
 
 **Backend — created:**
+
 - `apps/backend/prisma/migrations/20260514120000_polymorphic_images/migration.sql` — destructive dev/CI migration (rename + create join tables + drop legacy column).
 - `apps/backend/prisma/data-migrations/20260514_polymorphic_images_prod.sql` — hand-authored prod migration (preserves data, writes `_prisma_migrations` row).
 - `apps/backend/src/api/routes/image.route.ts` — rewritten to use owner-scoped paths.
 - `apps/backend/src/__tests__/api/usercontent-image.route.spec.ts` — new route tests for UserContent owner.
 
 **Backend — modified:**
+
 - `apps/backend/prisma/schema.prisma` — rename model + add join models + back-relations.
 - `apps/backend/src/services/image.service.ts` — generalize over `ImageOwner`.
 - `apps/backend/src/services/profile.service.ts` — update include shape.
@@ -30,20 +32,24 @@
 - Test files in `apps/backend/src/__tests__/...` matching the 27-file footprint from the spec.
 
 **Shared Zod — modified:**
+
 - `packages/shared/zod/profile/profileimage.dto.ts` — `ProfileImage` DTO is now built from `Image` model.
 - `packages/shared/zod/profile/profile.form.ts`, `profile.db.ts`, `profile.dto.ts` — type renames.
 - `packages/shared/zod/generated/*` — regenerated via `prisma generate`.
 
 **Shared Zod — created:**
+
 - `packages/shared/zod/image/image.dto.ts` — generalized Image DTO (server side type for ImageOwner, wire DTO).
 - `packages/shared/zod/image/usercontent-image.dto.ts` — UserContentImage-specific wire types.
 
 **Frontend — modified:**
+
 - `apps/frontend/src/features/images/stores/imageStore.ts` — parameterized by owner.
 - `apps/frontend/src/features/images/__tests__/*` — fixture updates.
 - `apps/frontend/src/features/myprofile/...` and `apps/frontend/src/features/browse/...` — fixture updates only (DTO stable).
 
 **Frontend — created (UserContent gallery surface):**
+
 - New consumer in the UserContent editing feature (location TBD by inspection during Task 11 — likely `apps/frontend/src/features/posts/...`).
 
 ---
@@ -51,6 +57,7 @@
 ## Task 1: Update Prisma schema with new models
 
 **Files:**
+
 - Modify: `apps/backend/prisma/schema.prisma`
 
 - [ ] **Step 1: Replace the `ProfileImage` block with the renamed `Image` block**
@@ -169,6 +176,7 @@ git commit -m "feat(schema): split ProfileImage into Image + join tables"
 ## Task 2: Write the destructive dev/CI Prisma migration
 
 **Files:**
+
 - Create: `apps/backend/prisma/migrations/20260514120000_polymorphic_images/migration.sql`
 
 - [ ] **Step 1: Create the migration directory and file**
@@ -271,6 +279,7 @@ git commit -m "feat(db): add polymorphic images dev migration"
 ## Task 3: Write the prod migration SQL
 
 **Files:**
+
 - Create: `apps/backend/prisma/data-migrations/20260514_polymorphic_images_prod.sql`
 
 - [ ] **Step 1: Create the data-migrations directory and file**
@@ -383,7 +392,7 @@ COMMIT;
 
 Open `CLAUDE.md`, find the "Production deployment" section. After step 4 ("Deploy on host") add a new step before step 5 ("Run migrations"):
 
-```markdown
+````markdown
 4b. **Run polymorphic-images data migration** (only for the release containing this change):
 
     Compute the SHA-256 of the dev migration SQL, then paste it into the data-migration file before running:
@@ -397,7 +406,7 @@ Open `CLAUDE.md`, find the "Production deployment" section. After step 4 ("Deplo
       psql -U $POSTGRES_USER -d $POSTGRES_DB \
       < ~/opencupid/apps/backend/prisma/data-migrations/20260514_polymorphic_images_prod.sql
     ```
-```
+````
 
 - [ ] **Step 3: Commit**
 
@@ -411,6 +420,7 @@ git commit -m "feat(db): add prod migration SQL for polymorphic images"
 ## Task 4: Update the shared Zod DTOs
 
 **Files:**
+
 - Modify: `packages/shared/zod/profile/profileimage.dto.ts`
 - Modify: `packages/shared/zod/profile/profile.form.ts`, `profile.db.ts`, `profile.dto.ts` (type renames only)
 - Create: `packages/shared/zod/image/image.dto.ts`
@@ -469,7 +479,7 @@ Create `packages/shared/zod/image/usercontent-image.dto.ts` with `PublicUserCont
 ```ts
 import { z } from 'zod'
 import { ImageSchema } from '@zod/generated'
-import { VariantsSchema } from '@zod/profile/profileimage.dto'  // reuse
+import { VariantsSchema } from '@zod/profile/profileimage.dto' // reuse
 
 export const PublicUserContentImageSchema = ImageSchema.pick({
   id: true,
@@ -523,6 +533,7 @@ git commit -m "feat(zod): generalize Image DTOs across Profile and UserContent"
 ## Task 5: Refactor `image.service.ts` over `ImageOwner`
 
 **Files:**
+
 - Modify: `apps/backend/src/services/image.service.ts`
 - Test: `apps/backend/src/__tests__/services/image.service.spec.ts`
 
@@ -541,7 +552,9 @@ import { prisma } from '@/lib/prisma'
 
 describe('ImageService', () => {
   let service: ImageService
-  beforeEach(() => { service = ImageService.getInstance() })
+  beforeEach(() => {
+    service = ImageService.getInstance()
+  })
 })
 ```
 
@@ -607,36 +620,50 @@ Append:
 describe('storeImage owner linkage', () => {
   it('creates a ProfileImage join row when owner.type === profile', async () => {
     const createImage = vi.spyOn(prisma.image, 'create').mockResolvedValue({ id: 'img1' } as any)
-    const createJoin = vi.spyOn(prisma.profileImage, 'create').mockResolvedValue({ id: 'pi1' } as any)
+    const createJoin = vi
+      .spyOn(prisma.profileImage, 'create')
+      .mockResolvedValue({ id: 'pi1' } as any)
     vi.spyOn(prisma, '$transaction').mockImplementation(async (cb: any) =>
       cb({ image: { create: createImage }, profileImage: { create: createJoin } })
     )
     vi.spyOn(service as any, 'processImage').mockResolvedValue({
-      mime: 'image/jpeg', blurhash: 'x', hasFace: false, variants: { original: '/tmp/orig.jpg' },
+      mime: 'image/jpeg',
+      blurhash: 'x',
+      hasFace: false,
+      variants: { original: '/tmp/orig.jpg' },
     })
 
     await service.storeImage('u1', '/tmp/up.jpg', '', { type: 'profile', profileId: 'pa' })
 
-    expect(createJoin).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ imageId: 'img1', profileId: 'pa' }),
-    }))
+    expect(createJoin).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ imageId: 'img1', profileId: 'pa' }),
+      })
+    )
   })
 
   it('creates a UserContentImage join row when owner.type === userContent', async () => {
     const createImage = vi.spyOn(prisma.image, 'create').mockResolvedValue({ id: 'img2' } as any)
-    const createJoin = vi.spyOn(prisma.userContentImage, 'create').mockResolvedValue({ id: 'uci1' } as any)
+    const createJoin = vi
+      .spyOn(prisma.userContentImage, 'create')
+      .mockResolvedValue({ id: 'uci1' } as any)
     vi.spyOn(prisma, '$transaction').mockImplementation(async (cb: any) =>
       cb({ image: { create: createImage }, userContentImage: { create: createJoin } })
     )
     vi.spyOn(service as any, 'processImage').mockResolvedValue({
-      mime: 'image/jpeg', blurhash: 'x', hasFace: false, variants: { original: '/tmp/orig.jpg' },
+      mime: 'image/jpeg',
+      blurhash: 'x',
+      hasFace: false,
+      variants: { original: '/tmp/orig.jpg' },
     })
 
     await service.storeImage('u1', '/tmp/up.jpg', '', { type: 'userContent', userContentId: 'uc1' })
 
-    expect(createJoin).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ imageId: 'img2', userContentId: 'uc1' }),
-    }))
+    expect(createJoin).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ imageId: 'img2', userContentId: 'uc1' }),
+      })
+    )
   })
 })
 ```
@@ -711,7 +738,7 @@ async storeImage(
 Update the import line near the top:
 
 ```ts
-import type { Image } from '@zod/generated'  // was: import type { ProfileImage } from '@zod/generated'
+import type { Image } from '@zod/generated' // was: import type { ProfileImage } from '@zod/generated'
 ```
 
 - [ ] **Step 9: Run the tests to verify they pass**
@@ -828,6 +855,7 @@ git commit -m "refactor(image.service): generalize over ImageOwner"
 ## Task 6: Update `profile.service.ts` and `search.service.ts` include shapes
 
 **Files:**
+
 - Modify: `apps/backend/src/services/profile.service.ts`
 - Modify: `apps/backend/src/services/search.service.ts`
 
@@ -842,7 +870,11 @@ For every result, the desired replacement is `profileImages: { include: { image:
 For each match, replace `profileImages: true` (or any current include shape) with:
 
 ```ts
-profileImages: { include: { image: true } }
+profileImages: {
+  include: {
+    image: true
+  }
+}
 ```
 
 Where the code later accesses `profile.profileImages` and treats elements as the old `ProfileImage` shape (with `storagePath`, `position`, etc.), change to `profile.profileImages.map(pi => pi.image)`.
@@ -864,6 +896,7 @@ git commit -m "refactor(services): use new profileImages join include shape"
 ## Task 7: Update mappers
 
 **Files:**
+
 - Modify: `apps/backend/src/api/mappers/image.mappers.ts`
 - Modify: `apps/backend/src/api/mappers/profile.mappers.ts`
 - Modify: `apps/backend/src/__tests__/api/profile.mappers.spec.ts`, `apps/backend/src/__tests__/api/mappers.spec.ts`
@@ -904,7 +937,7 @@ import type { Image, ProfileImage as ProfileImageJoin } from '@prisma/client'
 export function mapProfileJoinRowsToOwner(
   rows: (ProfileImageJoin & { image: Image })[]
 ): OwnerProfileImage[] {
-  return rows.map(r => toOwnerProfileImage(r.image))
+  return rows.map((r) => toOwnerProfileImage(r.image))
 }
 ```
 
@@ -915,7 +948,16 @@ Leave the original `mapProfileImagesToOwner` taking `Image[]` — callers in `pr
 Open `apps/backend/src/__tests__/api/profile.mappers.spec.ts` and `mappers.spec.ts`. Fixture builders that construct `profileImages: [{ storagePath: ... }]` directly are now constructing join-row shapes. Wrap each old-shape object:
 
 ```ts
-profileImages: [{ id: 'pi1', imageId: 'i1', profileId: 'p1', image: { /* old shape */ } }]
+profileImages: [
+  {
+    id: 'pi1',
+    imageId: 'i1',
+    profileId: 'p1',
+    image: {
+      /* old shape */
+    },
+  },
+]
 ```
 
 - [ ] **Step 4: Run mapper tests**
@@ -935,6 +977,7 @@ git commit -m "refactor(mappers): flatten profileImages join rows"
 ## Task 8: Rewrite `image.route.ts` for owner-scoped paths
 
 **Files:**
+
 - Modify: `apps/backend/src/api/routes/image.route.ts`
 - Modify: `apps/backend/src/api/index.ts`
 - Test: `apps/backend/src/__tests__/api/image.route.spec.ts` (existing), `usercontent-image.route.spec.ts` (new)
@@ -954,6 +997,7 @@ Leave the prefix as `/image`. Routes inside `image.route.ts` will mount on `/:ow
 If `apps/backend/src/__tests__/api/image.route.spec.ts` does not exist, scaffold it following the pattern of other route specs in that directory (look at e.g. `profile.route.spec.ts` for the Fastify build-and-inject pattern).
 
 Add tests covering:
+
 - `POST /image/profile/:profileId` with multipart upload — 200 if the authenticated user owns the profile, 403 otherwise.
 - `POST /image/userContent/:userContentId` — 200 if the authenticated user's profile equals `userContent.postedById`, 403 otherwise.
 - `GET /image/profile/:profileId` — returns image list for the authorized owner.
@@ -985,11 +1029,16 @@ const OwnerParamsSchema = ImageOwnerRouteParamsSchema
 const OwnerImageParamsSchema = OwnerParamsSchema.extend({ id: z.string().cuid() })
 
 const imageRoutes: FastifyPluginAsync = async (fastify) => {
-  await fastify.register(multipart, { /* same opts as before */ })
+  await fastify.register(multipart, {
+    /* same opts as before */
+  })
   const profileService = ProfileService.getInstance()
   const imageService = ImageService.getInstance()
 
-  async function resolveOwner(req: any, params: { ownerType: 'profile' | 'userContent'; ownerId: string }): Promise<ImageOwner | null> {
+  async function resolveOwner(
+    req: any,
+    params: { ownerType: 'profile' | 'userContent'; ownerId: string }
+  ): Promise<ImageOwner | null> {
     if (params.ownerType === 'profile') {
       const profile = await profileService.getProfileByUserId(req.user.userId)
       if (!profile || profile.id !== params.ownerId) return null
@@ -1010,50 +1059,67 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.code(200).send({ success: true, images: images.map(toOwnerProfileImage) })
   })
 
-  fastify.post('/:ownerType/:ownerId', {
-    onRequest: [fastify.authenticate],
-    config: rateLimitConfig(fastify, '1 minute', 10),
-  }, async (req, reply) => {
-    const params = OwnerParamsSchema.parse(req.params)
-    const owner = await resolveOwner(req, params)
-    if (!owner) return sendForbiddenError(reply)
+  fastify.post(
+    '/:ownerType/:ownerId',
+    {
+      onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 10),
+    },
+    async (req, reply) => {
+      const params = OwnerParamsSchema.parse(req.params)
+      const owner = await resolveOwner(req, params)
+      if (!owner) return sendForbiddenError(reply)
 
-    let files
-    try {
-      files = await req.saveRequestFiles({
-        tmpdir: uploadTmpDir(),
-        limits: { fileSize: appConfig.IMAGE_MAX_SIZE, files: 1, fields: 1 },
-      })
-    } catch (err: any) {
-      fastify.log.warn('Upload error:', err, err.code)
-      return sendError(reply, 400, 'Upload failed')
+      let files
+      try {
+        files = await req.saveRequestFiles({
+          tmpdir: uploadTmpDir(),
+          limits: { fileSize: appConfig.IMAGE_MAX_SIZE, files: 1, fields: 1 },
+        })
+      } catch (err: any) {
+        fastify.log.warn('Upload error:', err, err.code)
+        return sendError(reply, 400, 'Upload failed')
+      }
+
+      const file = files[0]
+      const captionText = (file.fields?.captionText as any)?.value ?? ''
+      const { image } = await imageService.storeImage(
+        req.user.userId,
+        file.filepath,
+        captionText,
+        owner
+      )
+      const list = await imageService.listImages(owner)
+      return reply.code(200).send({ success: true, images: list.map(toOwnerProfileImage) })
     }
+  )
 
-    const file = files[0]
-    const captionText = (file.fields?.captionText as any)?.value ?? ''
-    const { image } = await imageService.storeImage(req.user.userId, file.filepath, captionText, owner)
-    const list = await imageService.listImages(owner)
-    return reply.code(200).send({ success: true, images: list.map(toOwnerProfileImage) })
-  })
+  fastify.delete(
+    '/:ownerType/:ownerId/:id',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const params = OwnerImageParamsSchema.parse(req.params)
+      const owner = await resolveOwner(req, params)
+      if (!owner) return sendForbiddenError(reply)
+      const ok = await imageService.deleteImage(owner, params.id)
+      if (!ok) return sendError(reply, 404, 'Not found')
+      const list = await imageService.listImages(owner)
+      return reply.code(200).send({ success: true, images: list.map(toOwnerProfileImage) })
+    }
+  )
 
-  fastify.delete('/:ownerType/:ownerId/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const params = OwnerImageParamsSchema.parse(req.params)
-    const owner = await resolveOwner(req, params)
-    if (!owner) return sendForbiddenError(reply)
-    const ok = await imageService.deleteImage(owner, params.id)
-    if (!ok) return sendError(reply, 404, 'Not found')
-    const list = await imageService.listImages(owner)
-    return reply.code(200).send({ success: true, images: list.map(toOwnerProfileImage) })
-  })
-
-  fastify.patch('/:ownerType/:ownerId/order', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const params = OwnerParamsSchema.parse(req.params)
-    const owner = await resolveOwner(req, params)
-    if (!owner) return sendForbiddenError(reply)
-    const body = ReorderProfileImagesPayloadSchema.parse(req.body)
-    const list = await imageService.reorderImages(owner, body.items)
-    return reply.code(200).send({ success: true, images: list.map(toOwnerProfileImage) })
-  })
+  fastify.patch(
+    '/:ownerType/:ownerId/order',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const params = OwnerParamsSchema.parse(req.params)
+      const owner = await resolveOwner(req, params)
+      if (!owner) return sendForbiddenError(reply)
+      const body = ReorderProfileImagesPayloadSchema.parse(req.body)
+      const list = await imageService.reorderImages(owner, body.items)
+      return reply.code(200).send({ success: true, images: list.map(toOwnerProfileImage) })
+    }
+  )
 }
 
 export default imageRoutes
@@ -1086,6 +1152,7 @@ git commit -m "feat(api): owner-scoped image routes"
 ## Task 9: Update frontend `imageStore.ts` to be owner-parameterized
 
 **Files:**
+
 - Modify: `apps/frontend/src/features/images/stores/imageStore.ts`
 - Modify: `apps/frontend/src/features/images/__tests__/*`
 - Modify: every component file that calls `useImageStore()` (let inspection drive)
@@ -1126,9 +1193,10 @@ function ownerPath(owner: ImageOwnerKey): string {
 }
 
 export const useImageStore = (owner: ImageOwnerKey) => {
-  const id = owner.type === 'profile'
-    ? `image:profile:${owner.profileId}`
-    : `image:userContent:${owner.userContentId}`
+  const id =
+    owner.type === 'profile'
+      ? `image:profile:${owner.profileId}`
+      : `image:userContent:${owner.userContentId}`
 
   return defineStore(id, {
     state: () => ({
@@ -1145,7 +1213,9 @@ export const useImageStore = (owner: ImageOwnerKey) => {
           return { success: true }
         } catch (err) {
           return { success: false, message: 'Failed to load images' }
-        } finally { this.isLoading = false }
+        } finally {
+          this.isLoading = false
+        }
       },
 
       async uploadImage(file: File, captionText: string): Promise<ImageStoreResponse> {
@@ -1154,18 +1224,24 @@ export const useImageStore = (owner: ImageOwnerKey) => {
         formData.append('captionText', captionText)
         try {
           this.isLoading = true
-          const { data } = await safeApiCall(() => api.post<ImageApiResponse>(ownerPath(owner), formData))
+          const { data } = await safeApiCall(() =>
+            api.post<ImageApiResponse>(ownerPath(owner), formData)
+          )
           const { images } = ImageApiResponseSchema.parse(data)
           this.images = images
           return { success: true }
         } catch (err) {
           return { success: false, message: 'Upload failed' }
-        } finally { this.isLoading = false }
+        } finally {
+          this.isLoading = false
+        }
       },
 
       async deleteImage(imageId: string): Promise<ImageStoreResponse> {
         try {
-          const { data } = await safeApiCall(() => api.delete<ImageApiResponse>(`${ownerPath(owner)}/${imageId}`))
+          const { data } = await safeApiCall(() =>
+            api.delete<ImageApiResponse>(`${ownerPath(owner)}/${imageId}`)
+          )
           const { images } = ImageApiResponseSchema.parse(data)
           this.images = images
           return { success: true }
@@ -1176,7 +1252,9 @@ export const useImageStore = (owner: ImageOwnerKey) => {
 
       async reorder(items: ProfileImagePosition[]): Promise<ImageStoreResponse> {
         try {
-          const { data } = await safeApiCall(() => api.patch<ImageApiResponse>(`${ownerPath(owner)}/order`, { items }))
+          const { data } = await safeApiCall(() =>
+            api.patch<ImageApiResponse>(`${ownerPath(owner)}/order`, { items })
+          )
           const { images } = ImageApiResponseSchema.parse(data)
           this.images = images
           return { success: true }
@@ -1218,6 +1296,7 @@ git commit -m "feat(frontend): owner-parameterized image store"
 ## Task 10: Update `scripts/reprocess-images.ts`
 
 **Files:**
+
 - Modify: `apps/backend/scripts/reprocess-images.ts`
 
 - [ ] **Step 1: Read the script**
@@ -1249,6 +1328,7 @@ git commit -m "refactor(scripts): reprocess-images uses Image accessor"
 ## Task 11: Add UserContent image gallery to the post/event/community editing UI
 
 **Files:**
+
 - Inspection task: find the existing UserContent editing component(s) and add an `<ImageUpload>` consumer.
 - Modify: at minimum `apps/frontend/src/features/posts/...` or wherever UserContent edit lives.
 

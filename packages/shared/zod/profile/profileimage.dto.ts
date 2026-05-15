@@ -69,4 +69,3 @@ export const ImageApiResponseSchema = ApiSuccessSchema.merge(ProfileImagesRespon
 export type ImageApiResponse = z.infer<typeof ImageApiResponseSchema>
 
 export type ProfileImagesResponse = z.infer<typeof ProfileImagesResponseSchema>
-
