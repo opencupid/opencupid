@@ -370,6 +370,7 @@ describe('listUserContentGallery', () => {
 describe('reorderProfileGallery', () => {
   it('updates Image.position for each item, syncs Profile.hasFace, returns sorted gallery', async () => {
     const svc = service
+    mockPrisma.profileImage.count.mockResolvedValue(2) // matches items.length
     mockPrisma.profileImage.findMany
       .mockResolvedValueOnce([{ imageId: 'i1' }, { imageId: 'i2' }] as any) // validation lookup
       .mockResolvedValueOnce([
@@ -402,6 +403,7 @@ describe('reorderProfileGallery', () => {
 
   it('rejects when an image id is not in the profile gallery', async () => {
     const svc = service
+    mockPrisma.profileImage.count.mockResolvedValue(2) // 2 items submitted, 2 in gallery, but one is invalid
     mockPrisma.profileImage.findMany.mockResolvedValueOnce([{ imageId: 'i1' }] as any)
     await expect(
       svc.reorderProfileGallery('profile-1', [
@@ -410,19 +412,29 @@ describe('reorderProfileGallery', () => {
       ])
     ).rejects.toThrow(/Invalid image ID/)
   })
+
+  it('rejects when items length does not match gallery length', async () => {
+    const svc = service
+    mockPrisma.profileImage.count.mockResolvedValue(3) // gallery has 3
+    await expect(
+      svc.reorderProfileGallery('profile-1', [
+        { id: 'i1', position: 0 },
+        { id: 'i2', position: 1 },
+      ])
+    ).rejects.toThrow(/every image in the gallery/i)
+  })
 })
 
 describe('reorderUserContentGallery', () => {
   it('updates Image.position for each item; does NOT touch Profile.hasFace', async () => {
     const svc = service
+    mockPrisma.userContentImage.count.mockResolvedValue(1)
     mockPrisma.userContentImage.findMany
       .mockResolvedValueOnce([{ imageId: 'i1' }] as any)
       .mockResolvedValueOnce([{ image: { id: 'i1', position: 0 } }] as any)
     mockPrisma.image.update.mockResolvedValue({} as any)
 
-    const result = await svc.reorderUserContentGallery('content-1', [
-      { id: 'i1', position: 0 },
-    ])
+    const result = await svc.reorderUserContentGallery('content-1', [{ id: 'i1', position: 0 }])
 
     expect(mockPrisma.image.update).toHaveBeenCalledWith({
       where: { id: 'i1' },
@@ -431,5 +443,12 @@ describe('reorderUserContentGallery', () => {
     expect(mockPrisma.profile.update).not.toHaveBeenCalled()
     expect(result.map((i: any) => i.id)).toEqual(['i1'])
   })
-})
 
+  it('rejects when items length does not match gallery length', async () => {
+    const svc = service
+    mockPrisma.userContentImage.count.mockResolvedValue(2)
+    await expect(
+      svc.reorderUserContentGallery('content-1', [{ id: 'i1', position: 0 }])
+    ).rejects.toThrow(/every image in the gallery/i)
+  })
+})

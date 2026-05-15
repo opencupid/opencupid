@@ -164,13 +164,15 @@ export class ImageService {
       include: { profileGallery: true, userContentGallery: true },
     })
     if (!image) throw new Error('Image not found')
-    if (image.profileGallery || image.userContentGallery) {
-      throw new Error('Image already attached')
-    }
+
     const content = await prisma.userContent.findUnique({ where: { id: userContentId } })
     if (!content) throw new Error('UserContent not found')
     if (content.postedById !== image.ownerProfileId) {
       throw new Error('Image owner mismatch with content author')
+    }
+
+    if (image.profileGallery || image.userContentGallery) {
+      throw new Error('Image already attached')
     }
 
     await prisma.$transaction(async (tx) => {
@@ -319,6 +321,11 @@ export class ImageService {
    * Re-syncs Profile.hasFace and returns the gallery sorted by position.
    */
   async reorderProfileGallery(profileId: string, items: ImagePosition[]): Promise<Image[]> {
+    const galleryCount = await prisma.profileImage.count({ where: { profileId } })
+    if (items.length !== galleryCount) {
+      throw new Error('Reorder must include every image in the gallery exactly once')
+    }
+
     const valid = await prisma.profileImage.findMany({
       where: { profileId, imageId: { in: items.map((i) => i.id) } },
       select: { imageId: true },
@@ -328,23 +335,25 @@ export class ImageService {
       throw new Error('Invalid image ID')
     }
 
-    return prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
       await syncProfileHasFace(tx, profileId)
-      return this.listProfileGallery(profileId)
     })
+    return this.listProfileGallery(profileId)
   }
 
   /**
    * Reorder images in a UserContent gallery by updating Image.position via the join.
    * Profile.hasFace is intentionally NOT touched here.
    */
-  async reorderUserContentGallery(
-    userContentId: string,
-    items: ImagePosition[]
-  ): Promise<Image[]> {
+  async reorderUserContentGallery(userContentId: string, items: ImagePosition[]): Promise<Image[]> {
+    const galleryCount = await prisma.userContentImage.count({ where: { userContentId } })
+    if (items.length !== galleryCount) {
+      throw new Error('Reorder must include every image in the gallery exactly once')
+    }
+
     const valid = await prisma.userContentImage.findMany({
       where: { userContentId, imageId: { in: items.map((i) => i.id) } },
       select: { imageId: true },
@@ -354,12 +363,12 @@ export class ImageService {
       throw new Error('Invalid image ID')
     }
 
-    return prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
-      return this.listUserContentGallery(userContentId)
     })
+    return this.listUserContentGallery(userContentId)
   }
 
   /**
