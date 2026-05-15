@@ -5,8 +5,8 @@ import { prisma } from '../lib/prisma'
 import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/media'
 
 import { generateContentHash } from '@/utils/hash'
-import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
-import type { ProfileImage } from '@zod/generated'
+import { ImagePosition } from '@zod/image/image.dto'
+import type { Image, ProfileImage } from '@zod/generated'
 
 import sharp from 'sharp'
 
@@ -68,56 +68,74 @@ export class ImageService {
   }
 
   /**
-   * Store an image uploaded for a profile.
-   * Creates the ProfileImage row and re-syncs Profile.hasFace in one transaction,
-   * so the invariant Profile.hasFace == position-0 image's hasFace always holds.
+   * Create an Image row for a freshly uploaded file. Does NOT attach it to any gallery —
+   * the caller (route handler) composes createImage + attachTo* in one transaction.
+   *
+   * @param opts.detectFace  When false, skips OpenCV face detection (~100ms saved).
+   *                         Use true for profile uploads, false for UserContent uploads.
    */
-  async storeImage(
-    profileId: string,
+  async createImage(
+    ownerProfileId: string,
     tmpImagePath: string,
-    captionText: string
-  ): Promise<ProfileImage> {
-    let imageLocation
+    altText: string,
+    opts: { detectFace: boolean }
+  ): Promise<Image> {
+    const imageLocation = await makeImageLocation(ownerProfileId)
+    const processed = await this.processImage(
+      tmpImagePath,
+      imageLocation.absPath,
+      imageLocation.base,
+      { detectFace: opts.detectFace }
+    )
+    const contentHash = await generateContentHash(processed.variants.original)
 
-    try {
-      imageLocation = await makeImageLocation(profileId)
-    } catch (err: any) {
-      console.error('Failed to create dest dir', err)
-      throw new Error('Failed to create dest dir')
-    }
-
-    try {
-      const processed = await this.processImage(
-        tmpImagePath,
-        imageLocation.absPath,
-        imageLocation.base
-      )
-      const contentHash = await generateContentHash(processed.variants.original)
-
-      return await prisma.$transaction(async (tx) => {
-        const position = await tx.profileImage.count({ where: { profileId } })
-        const created = await tx.profileImage.create({
-          data: {
-            profileId,
-            mimeType: processed.mime,
-            altText: captionText,
-            storagePath: path.join(imageLocation.relPath, imageLocation.base),
-            isModerated: false,
-            contentHash,
-            blurhash: processed.blurhash,
-            hasFace: processed.hasFace,
-            position,
-          },
-        })
-        await syncProfileHasFace(tx, profileId)
-        return created
-      })
-    } catch (err: any) {
-      console.error('Failed to process image', err)
-      throw new Error(`Failed to process image ${tmpImagePath}: ${err.message}`)
-    }
+    return prisma.image.create({
+      data: {
+        ownerProfileId,
+        mimeType: processed.mime,
+        altText,
+        storagePath: path.join(imageLocation.relPath, imageLocation.base),
+        contentHash,
+        blurhash: processed.blurhash,
+        hasFace: processed.hasFace,
+        width: processed.width ?? null,
+        height: processed.height ?? null,
+        position: 0,
+      },
+    })
   }
-  async processImage(filePath: string, outputDir: string, baseName: string) {
+
+  /**
+   * Attach an existing Image to a Profile gallery. Validates ownership, computes the new
+   * position, and re-syncs Profile.hasFace in one transaction.
+   */
+  async attachToProfile(imageId: string, profileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+    if (!image) throw new Error('Image not found')
+    if (image.ownerProfileId !== profileId) {
+      throw new Error('Image owner mismatch')
+    }
+    if (image.profileGallery || image.userContentGallery) {
+      throw new Error('Image already attached')
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const position = await tx.profileImage.count({ where: { profileId } })
+      await tx.profileImage.create({ data: { imageId, profileId } })
+      await tx.image.update({ where: { id: imageId }, data: { position } })
+      await syncProfileHasFace(tx, profileId)
+    })
+  }
+
+  async processImage(
+    filePath: string,
+    outputDir: string,
+    baseName: string,
+    opts: { detectFace: boolean } = { detectFace: true }
+  ) {
     await fs.promises.mkdir(outputDir, { recursive: true })
 
     const buffer = await fs.promises.readFile(filePath)
@@ -129,7 +147,7 @@ export class ImageService {
     await orientFix.keepIccProfile().jpeg({ quality: 100 }).toFile(originalPath)
 
     const processor = new ImageProcessor(await orientFix.toBuffer())
-    await processor.analyze()
+    await processor.analyze({ detectFace: opts.detectFace })
 
     const blurhash = await processor.encodeBlurhash()
 
@@ -252,7 +270,7 @@ export class ImageService {
    * @param items - Array of image IDs and their new positions
    * Returns the updated images sorted by position
    */
-  async reorderImages(profileId: string, items: ProfileImagePosition[]) {
+  async reorderImages(profileId: string, items: ImagePosition[]) {
     const valid = await prisma.profileImage.findMany({
       where: { profileId, id: { in: items.map((i) => i.id) } },
       select: { id: true },
