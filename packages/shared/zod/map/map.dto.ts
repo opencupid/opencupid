@@ -5,9 +5,9 @@ import { USER_CONTENT_KINDS } from '../../maps'
 /**
  * A single POI on the map: a profile, post, event or community located at
  * a real geographic coordinate. The map is fully bounds-driven — the
- * backend returns every visible POI in the viewport and the frontend
- * applies density-based spreading at render time when they overlap in
- * pixel space.
+ * backend returns visible POIs in the viewport (subject to the upstream
+ * row cap in the profile/content fetchers) and the frontend applies
+ * density-based spreading at render time when they overlap in pixel space.
  */
 export const PointFeatureSchema = z.object({
   type: z.literal('point'),

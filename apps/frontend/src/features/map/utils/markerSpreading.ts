@@ -314,7 +314,10 @@ export function spreadMarkers<T>(
   }
 
   const idToSpread = new Map<string, LatLngLike>()
-  const radius = Math.max(cfg.pixelThreshold * 2, spreadRadiusForZoom(zoomLevel, cfg))
+  // Trust the configured radius — no implicit floor. Callers are responsible
+  // for choosing `maxSpreadRadius` large enough that spread markers don't
+  // visually re-overlap (rule of thumb: at least `pixelThreshold * 2`).
+  const radius = spreadRadiusForZoom(zoomLevel, cfg)
 
   for (const group of groups) {
     const offsets = calculateSpiralOffsets(group.markers.length, radius, {

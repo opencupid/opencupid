@@ -589,6 +589,11 @@ describe('OsmPoiMap', () => {
 
       expect(markerA.setLatLng).toHaveBeenCalled()
       expect(markerB.setLatLng).toHaveBeenCalled()
+
+      // Restore the shared getZoom mock so later tests in the suite are
+      // not silently driven into the no-spread cutoff path. vi.clearAllMocks
+      // in beforeEach clears call history but not return values.
+      mapInstance.getZoom.mockReturnValue(10)
     })
 
     it('places colocated markers at distinct lat/lng on creation', async () => {
