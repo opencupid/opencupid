@@ -7,8 +7,8 @@ vi.mock('@/lib/mobile-detect', () => ({ detectMobile: vi.fn().mockReturnValue(fa
 vi.mock('@/assets/icons/files/avatar-upload.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/ui/ErrorComponent.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../components/UploadButton.vue', () => ({ default: { template: '<input />' } }))
-vi.mock('../stores/imageStore', () => ({
-  useImageStore: () => ({ uploadProfileImage: vi.fn().mockResolvedValue({ success: true }) }),
+vi.mock('../stores/profileImageStore', () => ({
+  useProfileImageStore: () => ({ upload: vi.fn().mockResolvedValue({ success: true }) }),
 }))
 
 import ImageUpload from '../components/ImageUpload.vue'

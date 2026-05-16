@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { VueDraggableNext } from 'vue-draggable-next'
-import { useImageStore } from '@/features/images/stores/imageStore'
+import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
 
 import type { OwnerProfileImage } from '@zod/profile/profileimage.dto'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
@@ -13,7 +13,7 @@ import IconPhoto from '@/assets/icons/interface/photo.svg'
 
 import { useI18n } from 'vue-i18n'
 
-const imageStore = useImageStore()
+const imageStore = useProfileImageStore()
 
 const props = defineProps({
   maxImages: {
@@ -42,7 +42,7 @@ const model = computed({
 async function handleDelete(image: OwnerProfileImage) {
   isRemoving.value[image.id] = true
 
-  const res = await imageStore.deleteImage(image)
+  const res = await imageStore.remove(image)
   if (!res.success) {
     error.value = res.message
     isRemoving.value[image.id] = false
@@ -57,7 +57,7 @@ const handleReorder = async (event: any) => {
     id: img.id,
     position,
   }))
-  await imageStore.reorderImages(newOrder)
+  await imageStore.reorder(newOrder)
 }
 
 /**
@@ -69,7 +69,7 @@ function checkMove(evt: any) {
 }
 
 onMounted(async () => {
-  await imageStore.fetchImages()
+  await imageStore.load()
 })
 
 const placeholderSlots = computed(() => {
