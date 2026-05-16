@@ -1,0 +1,80 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+
+const show = defineModel<boolean>()
+
+const props = defineProps<{
+  userIdentifier: string | null
+  loading: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'confirm', confirmInput: string): void
+}>()
+
+const confirmInput = ref('')
+
+const isConfirmed = computed(
+  () =>
+    !!props.userIdentifier &&
+    confirmInput.value.trim().toLowerCase() === props.userIdentifier.toLowerCase()
+)
+
+function emitConfirm() {
+  if (!isConfirmed.value) return
+  emit('confirm', confirmInput.value.trim())
+}
+
+function onHidden() {
+  show.value = false
+  confirmInput.value = ''
+}
+</script>
+
+<template>
+  <BModal
+    size="md"
+    fullscreen="sm"
+    centered
+    button-size="md"
+    :show="show"
+    :focus="false"
+    :busy="loading"
+    :title="$t('settings.close_account_dialog_title')"
+    :ok-title="$t('settings.close_account_ok_button')"
+    :cancel-title="$t('uicomponents.dialog_cancel_button')"
+    :ok-disabled="!isConfirmed"
+    ok-variant="danger"
+    cancel-variant="link"
+    cancel-class="link-secondary"
+    header-variant="danger"
+    initial-animation
+    @ok.prevent="emitConfirm"
+    @cancel="show = false"
+    @hidden="onHidden"
+  >
+    <BOverlay
+      :show="loading"
+      class="w-100"
+    >
+      <p>{{ $t('settings.close_account_dialog_message') }}</p>
+      <div class="mb-3">
+        <label
+          for="close-account-confirm"
+          class="form-label"
+        >
+          {{ $t('settings.close_account_confirm_label') }}
+        </label>
+        <input
+          id="close-account-confirm"
+          v-model="confirmInput"
+          type="text"
+          class="form-control"
+          autocomplete="off"
+          :placeholder="userIdentifier ?? ''"
+          @keydown.enter.prevent="emitConfirm"
+        />
+      </div>
+    </BOverlay>
+  </BModal>
+</template>

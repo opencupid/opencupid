@@ -71,3 +71,10 @@ export const VerifyTokenPayloadSchema = z.object({
   token: z.string().length(6),
 })
 export type VerifyTokenPayload = z.infer<typeof VerifyTokenPayloadSchema>
+
+// Identifier typed by the user to confirm account deletion. The route checks
+// it against the authenticated user's email (or phonenumber) case-insensitively.
+export const DeleteAccountPayloadSchema = z.object({
+  confirmIdentifier: z.string().min(1),
+})
+export type DeleteAccountPayload = z.infer<typeof DeleteAccountPayloadSchema>

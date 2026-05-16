@@ -53,7 +53,10 @@ export function mapConversationContext(
 
   // Did the viewer start this conversation? (profile.id is the target,
   // so initiator !== target means the viewer initiated.)
-  const iStarted = !!conversation && conversation.initiatorProfileId !== profile.id
+  const iStarted =
+    !!conversation &&
+    conversation.initiatorProfileId != null &&
+    conversation.initiatorProfileId !== profile.id
 
   // Is the conversation still waiting for the target's first reply? PENDING
   // (held due to viewer-side quarantine) reads the same as INITIATED from the

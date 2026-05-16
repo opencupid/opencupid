@@ -235,7 +235,9 @@ export class ProfileTrustService {
         })
         for (const convo of pendings) {
           const recipientId = convo.profileAId === profileId ? convo.profileBId : convo.profileAId
-          await messageService.promoteConversation(tx, convo.id, recipientId)
+          if (recipientId) {
+            await messageService.promoteConversation(tx, convo.id, recipientId)
+          }
         }
       },
       { isolationLevel: 'Serializable' }

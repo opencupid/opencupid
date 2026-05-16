@@ -112,7 +112,6 @@ export type PublicPostDetailResponse = ApiSuccess<{ post: PublicPostDetail }>
 export type CreatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type UpdatePostResponse = ApiSuccess<{ post: OwnerPost }>
 export type DeletePostResponse = ApiSuccess<{}>
-
 // Unified user-content responses
 export type MyContentResponse = ApiSuccess<{ items: OwnerUserContent[] }>
 export type ContentBoundsResponse = ApiSuccess<{ items: UserContentMetadata[] }>
@@ -141,3 +140,6 @@ export type BrowseBoundsResponse = ApiSuccess<{
   posts: PublicPostWithProfile[]
   tags: PublicTag[]
 }>
+
+// User responses
+export type DeleteAccountResponse = ApiSuccess<{}>
