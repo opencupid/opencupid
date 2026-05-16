@@ -219,7 +219,7 @@ describe('BrowseProfiles view', () => {
           BContainer,
           InviteCtaShareDialog,
           NotificationDot: { template: '<span><slot /></span>' },
-          ProfileImage: true,
+          GalleryImage: true,
           Teleport: true,
         },
         mocks: { $t: (k: string) => k },

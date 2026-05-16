@@ -2,7 +2,7 @@
 import { ref, watchEffect } from 'vue'
 
 import ImageTag from './ImageTag.vue'
-import { type ImageVariant } from '@zod/profile/profileimage.dto'
+import { type ImageVariant } from '@zod/image/image.dto'
 import { type VariantName } from './types'
 
 // Props & Emits

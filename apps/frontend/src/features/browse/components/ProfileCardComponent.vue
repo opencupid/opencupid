@@ -6,7 +6,7 @@ export default { __test_loadedUrls: loadedUrls }
 <script setup lang="ts">
 import { computed, inject, ref, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import GalleryImage from '@/features/images/components/GalleryImage.vue'
 import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
@@ -46,7 +46,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
         :blurhash="primaryBlurhash"
         class="blurhash-placeholder"
       />
-      <ProfileImage
+      <GalleryImage
         :profile="profile"
         className=""
         variant="card"

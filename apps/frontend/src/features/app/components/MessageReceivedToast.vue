@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import GalleryImage from '@/features/images/components/GalleryImage.vue'
 import { computed } from 'vue'
 defineEmits<{
   (e: 'closeToast'): void
@@ -46,7 +46,7 @@ const cleanMessageContent = computed(() => {
 <template>
   <div class="d-flex align-items-start clickable">
     <div class="profile-thumbnail me-2 flex-shrink-0">
-      <ProfileImage
+      <GalleryImage
         :profile="message.sender"
         variant="thumb"
       />

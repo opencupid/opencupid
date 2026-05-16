@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import GalleryImage from '@/features/images/components/GalleryImage.vue'
 import NotificationDot from '@/features/shared/ui/NotificationDot.vue'
 import IconMessage from '@/assets/icons/interface/message.svg'
 import IconUser from '@/assets/icons/interface/user.svg'
@@ -52,7 +52,7 @@ function openCreateCommunity() {
       :aria-label="$t('nav.profile')"
       @click="$emit('open:profile')"
     >
-      <ProfileImage
+      <GalleryImage
         v-if="ownerProfileStore.profile?.profileImages?.length"
         :profile="ownerProfileStore.profile"
         variant="thumb"

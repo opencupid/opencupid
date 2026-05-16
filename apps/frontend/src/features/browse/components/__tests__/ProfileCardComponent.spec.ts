@@ -2,9 +2,9 @@ import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-vi.mock('@/features/images/components/ProfileImage.vue', () => ({
+vi.mock('@/features/images/components/GalleryImage.vue', () => ({
   default: {
-    name: 'ProfileImage',
+    name: 'GalleryImage',
     template: '<div class="profile-image-stub" />',
     props: ['profile', 'variant', 'className'],
     emits: ['load'],
@@ -93,7 +93,7 @@ describe('ProfileCardComponent', () => {
 
   it('image starts hidden and fades in after load', async () => {
     const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
+    const profileImage = wrapper.findComponent({ name: 'GalleryImage' })
 
     expect(profileImage.classes()).toContain('card-image')
     expect(profileImage.classes()).not.toContain('card-image-loaded')
@@ -108,7 +108,7 @@ describe('ProfileCardComponent', () => {
     getLoadedUrls().add('/img0')
 
     const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
+    const profileImage = wrapper.findComponent({ name: 'GalleryImage' })
 
     expect(profileImage.classes()).toContain('card-image-loaded')
     expect(profileImage.classes()).toContain('card-image-cached')
@@ -117,7 +117,7 @@ describe('ProfileCardComponent', () => {
   it('populates the cache after image loads', async () => {
     const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
 
-    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
+    const profileImage = wrapper.findComponent({ name: 'GalleryImage' })
     await profileImage.vm.$emit('load')
     await wrapper.vm.$nextTick()
 

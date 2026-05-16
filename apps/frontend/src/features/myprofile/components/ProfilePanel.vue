@@ -11,7 +11,7 @@ import DatingPrefs from './DatingPrefs.vue'
 import DatingWizard from './DatingWizard.vue'
 
 import Settings from '@/features/settings/components/Settings.vue'
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import GalleryImage from '@/features/images/components/GalleryImage.vue'
 import PostsOrchestrator from '@/features/posts/components/PostsOrchestrator.vue'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
@@ -61,7 +61,7 @@ function handleClose() {
           v-if="ownerProfileStore.profile?.profileImages?.length"
           class="owner-profile-avatar flex-shrink-0 overflow-hidden rounded-circle"
         >
-          <ProfileImage
+          <GalleryImage
             :profile="ownerProfileStore.profile"
             variant="thumb"
             class="img-fluid w-100 h-100"

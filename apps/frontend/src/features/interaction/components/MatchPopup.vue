@@ -2,7 +2,7 @@
 import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 import { type PublicProfile } from '@zod/profile/profile.dto'
 
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import GalleryImage from '@/features/images/components/GalleryImage.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 import { ref } from 'vue'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
@@ -57,14 +57,14 @@ const handleSubmitted = () => {
       </h6>
       <div class="d-flex flex-row align-items-center justify-content-center mb-4">
         <div class="image-wrapper">
-          <ProfileImage
+          <GalleryImage
             :profile="match.from.profile"
             variant="thumb"
           />
         </div>
 
         <div class="image-wrapper right">
-          <ProfileImage
+          <GalleryImage
             :profile="match.to.profile"
             variant="thumb"
           />

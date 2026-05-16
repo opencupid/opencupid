@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import GalleryImage from '@/features/images/components/GalleryImage.vue'
 import { type InteractionEdge } from '@zod/interaction/interaction.dto'
 // import { useI18n } from 'vue-i18n';
 // const { t } = useI18n()
@@ -17,7 +17,7 @@ defineProps<{
 <template>
   <div class="d-flex align-items-center clickable">
     <div class="profile-thumbnail me-2">
-      <ProfileImage
+      <GalleryImage
         :profile="edge.profile"
         variant="thumb"
       />

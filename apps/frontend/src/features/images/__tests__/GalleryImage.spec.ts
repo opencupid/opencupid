@@ -1,16 +1,16 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect } from 'vitest'
-import ProfileImage from '../components/ProfileImage.vue'
+import GalleryImage from '../components/GalleryImage.vue'
 
 const ImageTag = {
   props: ['image', 'className'],
   template: '<div class="image-tag">{{ image.variants[0].url }}</div>',
 }
 
-describe('ProfileImage', () => {
+describe('GalleryImage', () => {
   it('renders first image from profile', () => {
     const profile = { profileImages: [{ variants: [{ size: 'original', url: '/one.jpg' }] }] }
-    const wrapper = mount(ProfileImage, {
+    const wrapper = mount(GalleryImage, {
       props: { profile },
       global: { stubs: { ImageTag } },
     })
@@ -19,7 +19,7 @@ describe('ProfileImage', () => {
 
   it('updates when profile prop changes', async () => {
     const profile = { profileImages: [{ variants: [{ size: 'original', url: '/one.jpg' }] }] }
-    const wrapper = mount(ProfileImage, {
+    const wrapper = mount(GalleryImage, {
       props: { profile },
       global: { stubs: { ImageTag } },
     })
