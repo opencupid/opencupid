@@ -294,7 +294,9 @@ export class MessageService {
           existingConversation.profileAId === existingConversation.initiatorProfileId
             ? existingConversation.profileBId
             : existingConversation.profileAId
-        await this.promoteConversation(tx, existingConversation.id, recipientId)
+        if (recipientId) {
+          await this.promoteConversation(tx, existingConversation.id, recipientId)
+        }
       }
       await this.acceptConversationOnReply(tx, existingConversation.id)
 
