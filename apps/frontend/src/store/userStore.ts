@@ -51,10 +51,14 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function deleteAccount(): Promise<StoreVoidSuccess | StoreError> {
+  async function deleteAccount(
+    confirmIdentifier: string
+  ): Promise<StoreVoidSuccess | StoreError> {
     isLoading.value = true
     try {
-      await safeApiCall(() => api.delete<DeleteAccountResponse>('/users/me'))
+      await safeApiCall(() =>
+        api.delete<DeleteAccountResponse>('/users/me', { data: { confirmIdentifier } })
+      )
       return storeSuccess()
     } catch (error) {
       return storeError(error, 'Failed to delete account')

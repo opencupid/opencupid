@@ -54,9 +54,9 @@ function handleLogout() {
   authStore.logout()
 }
 
-async function handleCloseAccount() {
+async function handleCloseAccount(confirmInput: string) {
   isClosingAccount.value = true
-  const result = await userStore.deleteAccount()
+  const result = await userStore.deleteAccount(confirmInput)
   isClosingAccount.value = false
   showCloseAccountDialog.value = false
   if (result.success) {
