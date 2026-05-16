@@ -485,9 +485,10 @@ export class MessageService {
   /**
    * Best-effort PENDING → INITIATED promotion plus the missing participant row, atomic
    * with the caller's tx. count===0 is a silent no-op: the row was already promoted by
-   * a peer, moved to DISCARDED by SPAM_BURST, blocked by the recipient, or never
-   * existed — in every case the caller's intent is already satisfied or the row should
-   * not be revived, so skipping the participant insert is the right behavior.
+   * a peer, transitioned to a terminal/blocked state (recipient blocked, admin
+   * moderation, etc.), or never existed — in every case the caller's intent is already
+   * satisfied or the row should not be revived, so skipping the participant insert is
+   * the right behavior.
    *
    * createMany + skipDuplicates keeps participant insertion idempotent under worker
    * re-runs and route races (otherwise P2002 on @@unique([profileId, conversationId])).

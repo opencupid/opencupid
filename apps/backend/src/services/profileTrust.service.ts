@@ -3,9 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { MessageService } from '@/services/messaging.service'
 
 // Tunable threshold — number of active INITIATED+PENDING conversations (sender = profile)
-// that trips the SPAM_BURST flag. Module-local by design; promote to appConfig
-// only if runtime tuning becomes routine.
+// within the burst window that trips the SPAM_BURST flag. Module-local by design;
+// promote to appConfig only if runtime tuning becomes routine.
 export const SPAM_BURST_THRESHOLD = 3
+
+// Burst window. The count is scoped to conversations created within this many ms
+// of "now". Matches the PROFILE_UNVETTED window so both quarantine windows are
+// symmetric. Without this bound, an all-time count punishes users with old
+// unanswered intros forever — that's unresponsiveness, not burst spam.
+export const SPAM_BURST_WINDOW_MS = 24 * 60 * 60 * 1000
 
 // Shared builder so every enqueue site uses the same BullMQ dedup key. If the clear
 // path here and the clear-unvetted-window worker (Task 6) drifted to different
@@ -61,10 +67,9 @@ export class ProfileTrustService {
    * that the heuristic threshold-down branch uses, so held messages get released
    * the same way regardless of who closed the flag.
    *
-   * Note: heuristic SPAM_BURST flags can be cleared this way too, but the
-   * already-DISCARDED conversations stay terminal — clearing the flag does not
-   * revive them. The next reconcile pass may re-flag if the threshold is still
-   * breached.
+   * Heuristic SPAM_BURST flags can be cleared this way too — held conversations
+   * (PENDING, including any demoted from INITIATED while the flag was on) are
+   * released to recipients by promote-pendings the same way as PROFILE_UNVETTED.
    *
    * Returns a result code; the caller maps it to its protocol-specific response.
    */
@@ -147,24 +152,36 @@ export class ProfileTrustService {
 
   /**
    * Convergence function for SPAM_BURST. Drives the world toward the invariant:
-   * "a SPAM_BURST-flagged profile has zero INITIATED or PENDING conversations as initiator".
-   * ACCEPTED conversations stand — those represent mutual engagement from the recipient.
+   * "a SPAM_BURST-flagged profile has zero recent INITIATED initiator-side conversations".
+   * "Recent" = created within SPAM_BURST_WINDOW_MS. ACCEPTED conversations stand —
+   * those represent mutual engagement from the recipient. PENDING is the held-state
+   * primitive: rows that originated as PENDING (sender quarantined at send time) and
+   * rows demoted by this function both wait for promote-pendings on flag clear.
    *
-   * Cases:
-   * - count >= threshold AND not flagged: write flag AND DISCARD active rows (INITIATED+PENDING).
-   * - count >= threshold AND already flagged: DISCARD any active rows that slipped through
-   *   a race (e.g. a send that crossed the hasTrustFlag check at the route before the flag
-   *   landed). Idempotent: updateMany hits zero rows in the steady state.
+   * Cases (count is windowed by SPAM_BURST_WINDOW_MS):
+   * - count >= threshold AND not flagged: write flag AND demote in-window INITIATED → PENDING.
+   * - count >= threshold AND already flagged: demote any in-window INITIATED that slipped
+   *   through a race (e.g. a send that crossed the hasTrustFlag check at the route before
+   *   the flag landed). Idempotent: updateMany hits zero rows in the steady state.
    * - count < threshold AND already flagged: clear the flag AND enqueue promote-pendings
    *   so held messages (if any) can be delivered.
    * - count < threshold AND not flagged: no-op.
+   *
+   * Demotion is non-destructive — PENDING rows are filtered out of inbox queries the
+   * same way DISCARDED ones used to be, but they remain restorable. The flag-clear
+   * branch reuses the existing promote-pendings worker to release them. Out-of-window
+   * INITIATED rows are left untouched: hiding a weeks-old intro from a recipient who's
+   * already had it in inbox would be a surprise UX side-effect of a fresh burst.
    */
   async reconcileSpamBurst(profileId: string): Promise<void> {
-    // Only the count drives the threshold decision; we don't need every ID in memory.
+    // Window-scoped count. Old unanswered intros are unresponsiveness, not burst spam,
+    // and shouldn't keep a profile flagged forever.
+    const since = new Date(Date.now() - SPAM_BURST_WINDOW_MS)
     const count = await prisma.conversation.count({
       where: {
         initiatorProfileId: profileId,
         status: { in: ['INITIATED', 'PENDING'] },
+        createdAt: { gte: since },
       },
     })
     const alreadyFlagged = await this.hasTrustFlag(profileId, 'SPAM_BURST')
@@ -180,15 +197,18 @@ export class ProfileTrustService {
           },
         })
       }
-      // Enforce the invariant regardless of whether we just wrote the flag or it
-      // was already there — closes the race window between the route's pre-tx
-      // quarantine check and the tx commit.
+      // Enforce the invariant by demoting in-window INITIATED to PENDING. Runs whether
+      // we just wrote the flag or it was already there — closes the race between the
+      // route's pre-tx quarantine check and tx commit. PENDING (not DISCARDED) keeps
+      // the messages recoverable via promote-pendings when the flag clears. PENDING
+      // rows are already in the held state, so they're not in the predicate.
       await prisma.conversation.updateMany({
         where: {
           initiatorProfileId: profileId,
-          status: { in: ['INITIATED', 'PENDING'] },
+          status: 'INITIATED',
+          createdAt: { gte: since },
         },
-        data: { status: 'DISCARDED' },
+        data: { status: 'PENDING' },
       })
     } else if (alreadyFlagged) {
       await prisma.profileTrustFlag.updateMany({
