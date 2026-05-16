@@ -82,16 +82,22 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       try {
         await userService.deleteAccount(req.user.userId)
-        // Clear all refresh tokens and session (same as logout)
-        await refreshTokenService.deleteAllForUser(req.user.userId)
-        await req.deleteSession()
-        reply.clearCookie('__media_token', { path: '/user-content/' })
-        const response: DeleteAccountResponse = { success: true }
-        return reply.code(200).send(response)
       } catch (error) {
         fastify.log.error({ err: error }, 'Error deleting account')
         return sendError(reply, 500, 'Failed to delete account')
       }
+      // Post-delete session cleanup is best-effort: the account is already gone,
+      // so cleanup failures must not surface as 500 (which would block the
+      // frontend from running its logout/redirect path).
+      try {
+        await refreshTokenService.deleteAllForUser(req.user.userId)
+        await req.deleteSession()
+        reply.clearCookie('__media_token', { path: '/user-content/' })
+      } catch (error) {
+        fastify.log.warn({ err: error }, 'Post-delete session cleanup failed')
+      }
+      const response: DeleteAccountResponse = { success: true }
+      return reply.code(200).send(response)
     }
   )
 }
