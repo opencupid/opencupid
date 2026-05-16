@@ -61,7 +61,7 @@ type ImageLocation = {
 }
 
 export async function makeImageLocation(storagePrefix: string): Promise<ImageLocation> {
-  // Generate a CUID for the ProfileImage
+  // Unique base name for the image's variant files on disk.
   const base = cuid.slug()
 
   const mediaRoot = getMediaRoot()
