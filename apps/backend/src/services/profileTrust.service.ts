@@ -299,6 +299,7 @@ export class ProfileTrustService {
     const released: ReleasedConversation[] = []
     for (const convo of pendings) {
       const recipientId = convo.profileAId === profileId ? convo.profileBId : convo.profileAId
+      if (!recipientId) continue
       if (await messageService.promoteConversation(tx, convo.id, recipientId)) {
         released.push({ conversationId: convo.id, recipientId })
       }

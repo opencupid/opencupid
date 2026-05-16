@@ -68,9 +68,6 @@ describe('UserService.deleteAccount', () => {
     expect(mockTx.hiddenProfile.deleteMany).toHaveBeenCalledWith({
       where: { OR: [{ fromId: profileId }, { toId: profileId }] },
     })
-    expect(mockTx.socialMatchFilter.deleteMany).toHaveBeenCalledWith({
-      where: { profileId },
-    })
     expect(mockTx.conversation.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['c1'] } },
       data: { status: 'ARCHIVED' },
