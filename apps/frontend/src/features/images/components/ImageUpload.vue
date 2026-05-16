@@ -6,9 +6,12 @@ import { detectMobile } from '@/lib/mobile-detect'
 
 import UploadButton from './UploadButton.vue'
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
-import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
+import type { GalleryStore } from '@/features/images/stores/galleryStore'
 
-const imageStore = useProfileImageStore()
+const props = defineProps<{
+  store: GalleryStore
+}>()
+const imageStore = props.store
 const { t } = useI18n()
 
 // Upload state

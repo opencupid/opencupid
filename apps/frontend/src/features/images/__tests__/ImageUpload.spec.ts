@@ -7,15 +7,26 @@ vi.mock('@/lib/mobile-detect', () => ({ detectMobile: vi.fn().mockReturnValue(fa
 vi.mock('@/assets/icons/files/avatar-upload.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/ui/ErrorComponent.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('../components/UploadButton.vue', () => ({ default: { template: '<input />' } }))
-vi.mock('../stores/profileImageStore', () => ({
-  useProfileImageStore: () => ({ upload: vi.fn().mockResolvedValue({ success: true }) }),
-}))
 
 import ImageUpload from '../components/ImageUpload.vue'
+import type { GalleryStore } from '../stores/galleryStore'
+
+function makeStubStore(overrides: Partial<GalleryStore> = {}): GalleryStore {
+  return {
+    images: [],
+    isLoading: false,
+    load: vi.fn().mockResolvedValue({ success: true }),
+    upload: vi.fn().mockResolvedValue({ success: true }),
+    remove: vi.fn().mockResolvedValue({ success: true }),
+    reorder: vi.fn().mockResolvedValue({ success: true }),
+    ...overrides,
+  }
+}
 
 describe('ImageUpload', () => {
   it('opens modal and sets preview on file change', async () => {
     const wrapper = mount(ImageUpload, {
+      props: { store: makeStubStore() },
       global: {
         stubs: { BModal: true, BButton: { template: '<button></button>' }, FormKit: true },
       },

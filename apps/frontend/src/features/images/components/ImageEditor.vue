@@ -135,7 +135,7 @@ const isDeletable = computed(() => {
             v-if="remainingSlots > 0"
             class="col nodrag"
           >
-            <ImageUpload />
+            <ImageUpload :store="imageStore" />
           </div>
 
           <div
