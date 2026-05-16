@@ -10,9 +10,9 @@ export const ConversationSchema = z.object({
   id: z.cuid(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
-  profileAId: z.string(),
-  profileBId: z.string(),
-  initiatorProfileId: z.string(),
+  profileAId: z.string().nullable(),
+  profileBId: z.string().nullable(),
+  initiatorProfileId: z.string().nullable(),
   jitsiRoomId: z.string().nullable(),
 })
 
