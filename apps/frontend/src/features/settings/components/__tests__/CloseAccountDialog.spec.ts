@@ -58,11 +58,13 @@ describe('CloseAccountDialog', () => {
     expect((okBtn.element as HTMLButtonElement).disabled).toBe(false)
   })
 
-  it('emits confirm when ok button clicked with correct email', async () => {
+  it('emits confirm with the typed input when ok button clicked with correct email', async () => {
     const wrapper = mountDialog({ userIdentifier: 'user@example.com' })
-    await wrapper.find('input#close-account-confirm').setValue('user@example.com')
+    await wrapper.find('input#close-account-confirm').setValue('  USER@example.com  ')
     await wrapper.find('[data-testid="ok-btn"]').trigger('click')
-    expect(wrapper.emitted('confirm')).toBeTruthy()
+    const events = wrapper.emitted('confirm')
+    expect(events).toBeTruthy()
+    expect(events![0]).toEqual(['USER@example.com'])
   })
 
   it('does not emit confirm when ok button clicked with wrong email', async () => {

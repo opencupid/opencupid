@@ -8,22 +8,27 @@ const props = defineProps<{
   loading: boolean
 }>()
 
-defineEmits<{
-  (e: 'confirm'): void
+const emit = defineEmits<{
+  (e: 'confirm', confirmInput: string): void
 }>()
 
 const confirmInput = ref('')
-
-function onHidden() {
-  show.value = false
-  confirmInput.value = ''
-}
 
 const isConfirmed = computed(
   () =>
     !!props.userIdentifier &&
     confirmInput.value.trim().toLowerCase() === props.userIdentifier.toLowerCase()
 )
+
+function emitConfirm() {
+  if (!isConfirmed.value) return
+  emit('confirm', confirmInput.value.trim())
+}
+
+function onHidden() {
+  show.value = false
+  confirmInput.value = ''
+}
 </script>
 
 <template>
@@ -44,7 +49,7 @@ const isConfirmed = computed(
     cancel-class="link-secondary"
     header-variant="danger"
     initial-animation
-    @ok.prevent="$emit('confirm')"
+    @ok.prevent="emitConfirm"
     @cancel="show = false"
     @hidden="onHidden"
   >
@@ -67,7 +72,7 @@ const isConfirmed = computed(
           class="form-control"
           autocomplete="off"
           :placeholder="userIdentifier ?? ''"
-          @keydown.enter.prevent="isConfirmed && $emit('confirm')"
+          @keydown.enter.prevent="emitConfirm"
         />
       </div>
     </BOverlay>

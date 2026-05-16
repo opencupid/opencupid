@@ -9,6 +9,8 @@ import {
   SettingsUserSchema,
   UpdateUserLanguagePayloadSchema,
   type UpdateUserLanguagePayload,
+  DeleteAccountPayloadSchema,
+  type DeleteAccountPayload,
 } from '@zod/user/user.dto'
 
 const userRoutes: FastifyPluginAsync = async (fastify) => {
@@ -80,6 +82,23 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
       onRequest: [fastify.authenticate],
     },
     async (req, reply) => {
+      const body = validateBody<DeleteAccountPayload>(DeleteAccountPayloadSchema, req, reply)
+      if (!body) return
+
+      // Server-side confirmation: the typed identifier must match the
+      // authenticated user's email (or phonenumber for phone-auth accounts),
+      // case-insensitively. Defends against direct API misuse — the client
+      // dialog is not the only line of defence.
+      const user = await userService.getUserById(req.user.userId)
+      if (!user) return sendUnauthorizedError(reply)
+      const identifier = user.email ?? user.phonenumber ?? null
+      if (
+        !identifier ||
+        body.confirmIdentifier.trim().toLowerCase() !== identifier.toLowerCase()
+      ) {
+        return sendError(reply, 400, 'Confirmation identifier does not match')
+      }
+
       try {
         await userService.deleteAccount(req.user.userId)
       } catch (error) {
