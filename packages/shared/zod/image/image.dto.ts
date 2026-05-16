@@ -39,10 +39,7 @@ const ImagePositionSchema = z.object({
 export type ImagePosition = z.infer<typeof ImagePositionSchema>
 
 export const ReorderImagesPayloadSchema = z.object({
-  images: z
-    .array(ImagePositionSchema)
-    .nonempty('At least one image must be provided')
-    .min(1),
+  images: z.array(ImagePositionSchema).nonempty('At least one image must be provided').min(1),
 })
 export type ReorderImagesPayload = z.infer<typeof ReorderImagesPayloadSchema>
 
