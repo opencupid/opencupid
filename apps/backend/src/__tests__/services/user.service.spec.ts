@@ -176,7 +176,6 @@ describe('UserService.deleteAccount', () => {
     ])
     mockPrisma.likedProfile.deleteMany.mockResolvedValue({})
     mockPrisma.hiddenProfile.deleteMany.mockResolvedValue({})
-    mockPrisma.socialMatchFilter.deleteMany.mockResolvedValue({})
     mockPrisma.conversation.updateMany.mockResolvedValue({})
     mockPrisma.profile.delete.mockResolvedValue({})
     mockPrisma.user.delete.mockResolvedValue({})
@@ -196,7 +195,6 @@ describe('UserService.deleteAccount', () => {
     mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
     mockPrisma.likedProfile.deleteMany.mockResolvedValue({})
     mockPrisma.hiddenProfile.deleteMany.mockResolvedValue({})
-    mockPrisma.socialMatchFilter.deleteMany.mockResolvedValue({})
     mockPrisma.profile.delete.mockResolvedValue({})
     mockPrisma.user.delete.mockResolvedValue({})
 
