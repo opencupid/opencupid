@@ -187,7 +187,7 @@ export class ImageService {
 
     const originalPath = path.join(outputDir, `${baseName}-original.jpg`)
 
-    const orientFix = await sharp(buffer, { failOn: 'error' }).rotate() // auto-orient pixels
+    const orientFix = sharp(buffer, { failOn: 'error' }).rotate() // auto-orient pixels
 
     await orientFix.keepIccProfile().jpeg({ quality: 100 }).toFile(originalPath)
 
