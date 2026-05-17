@@ -26,10 +26,14 @@ RUN pnpm install --no-frozen-lockfile
 # Optional: for native Prisma CLI if needed
 # RUN apk add --no-cache libc6-compat
 
-# Generate Prisma client and build application
+# Generate Prisma client and build application.
+# Prisma 7's prisma.config.ts resolves env('DATABASE_URL') at config-load time,
+# so even `prisma generate` needs the var present. The build never connects —
+# a placeholder is fine and keeps real credentials out of the image.
 ENV PRISMA_DISABLE_WARNINGS=true
 ENV PRISMA_HIDE_UPDATE_MESSAGE=1
 ENV TURBO_NO_UPDATE_NOTIFIER=1
+ENV DATABASE_URL=postgres://build:build@localhost:5432/build
 RUN pnpm run prisma:generate && pnpm run build
 
 # Remove dev dependencies
