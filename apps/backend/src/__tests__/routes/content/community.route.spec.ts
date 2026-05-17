@@ -40,7 +40,7 @@ const makeRow = (postedById: string) => ({
   updatedAt: new Date(),
   postedById,
   community: { userContentId: communityId, yearFounded: 1998 },
-  postedBy: { id: postedById, publicName: 'X', galleryImages: [] },
+  postedBy: { id: postedById, publicName: 'X', profileImages: [] },
 })
 
 beforeEach(async () => {

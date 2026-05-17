@@ -6,7 +6,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapProfileSummary: vi.fn((p: any) => ({
     id: p.id,
     publicName: p.publicName,
-    profileImages: (p.galleryImages ?? []).map((g: any) => g.image),
+    profileImages: (p.profileImages ?? []).map((g: any) => g.image),
     location: p.location ?? { country: '' },
   })),
 }))
@@ -20,7 +20,7 @@ vi.mock('../../api/mappers/post.mappers', () => ({
     postedBy: {
       id: p.postedBy.id,
       publicName: p.postedBy.publicName,
-      profileImages: (p.postedBy.galleryImages ?? []).map((g: any) => g.image),
+      profileImages: (p.postedBy.profileImages ?? []).map((g: any) => g.image),
     },
   })),
 }))
@@ -82,7 +82,7 @@ describe('GET /search', () => {
         {
           id: 'p1',
           publicName: 'Alice',
-          galleryImages: [{ image: { storagePath: 'a/b' } }],
+          profileImages: [{ image: { storagePath: 'a/b' } }],
         },
       ],
       posts: [
@@ -93,7 +93,7 @@ describe('GET /search', () => {
           postedBy: {
             id: 'p1',
             publicName: 'Alice',
-            galleryImages: [{ image: { storagePath: 'a/b' } }],
+            profileImages: [{ image: { storagePath: 'a/b' } }],
           },
         },
       ],

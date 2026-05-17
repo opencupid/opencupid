@@ -17,8 +17,8 @@ import { toOwnerImage, toPublicImage } from './image.mappers'
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
   const tags = mapProfileTagsTranslated(db.tags, locale)
-  const images = db.galleryImages
-    ? mapProfileImagesToOwner(db.galleryImages.map((g) => g.image))
+  const images = db.profileImages
+    ? mapProfileImagesToOwner(db.profileImages.map((g) => g.image))
     : []
   const location = LocationSchema.parse(db)
 
@@ -67,8 +67,8 @@ export function mapProfileToPublic(
     isDatingActive: includeDatingContext,
   }
   const scalars = ProfileUnionSchema.parse(dProf)
-  const publicImages = dbProfile.galleryImages
-    ? mapProfileImagesToPublic(dbProfile.galleryImages.map((g) => g.image))
+  const publicImages = dbProfile.profileImages
+    ? mapProfileImagesToPublic(dbProfile.profileImages.map((g) => g.image))
     : []
   const publicTags = dbProfile.tags ? mapProfileTagsTranslated(dbProfile.tags, locale) : []
 
@@ -94,7 +94,7 @@ export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
   return {
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile?.galleryImages.map((g) => toPublicImage(g.image)),
+    profileImages: profile?.profileImages.map((g) => toPublicImage(g.image)),
     location: DbLocationToLocationDTO({
       country: profile.country ?? null,
       cityName: profile.cityName ?? null,

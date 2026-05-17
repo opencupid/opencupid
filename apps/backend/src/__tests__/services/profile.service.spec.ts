@@ -226,7 +226,7 @@ describe('ProfileService.canInteract', () => {
 
 describe('ProfileService.getBlockedProfiles', () => {
   it('returns blocked profiles list', async () => {
-    const blocked = [{ id: 'p2', publicName: 'Bob', galleryImages: [] }]
+    const blocked = [{ id: 'p2', publicName: 'Bob', profileImages: [] }]
     mockPrisma.profile.findUnique.mockResolvedValue({ blockedProfiles: blocked })
     const result = await service.getBlockedProfiles('p1')
     expect(result).toEqual(blocked)

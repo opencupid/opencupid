@@ -100,7 +100,7 @@ describe('SearchService.search — profiles (trigram)', () => {
     const router = installQueryRawRouter()
     router.setProfileResult([{ id: 'p1', rank: 0.8 }])
     mockPrisma.profile.findMany.mockResolvedValue([
-      { id: 'p1', publicName: 'Alice', galleryImages: [] },
+      { id: 'p1', publicName: 'Alice', profileImages: [] },
     ])
 
     await service.search('guitar', 'hu', 'me')
@@ -132,8 +132,8 @@ describe('SearchService.search — profiles (trigram)', () => {
     ])
     // findMany returns out of rank order — service must reorder.
     mockPrisma.profile.findMany.mockResolvedValue([
-      { id: 'p1', publicName: 'Alice', galleryImages: [] },
-      { id: 'p2', publicName: 'Bob', galleryImages: [] },
+      { id: 'p1', publicName: 'Alice', profileImages: [] },
+      { id: 'p2', publicName: 'Bob', profileImages: [] },
     ])
 
     const result = await service.search('guitar', 'en', 'me')
@@ -173,7 +173,7 @@ describe('SearchService.search — posts (trigram)', () => {
         lat: null,
         lon: null,
         post: { type: 'OFFER' },
-        postedBy: { id: 'p1', publicName: 'Alice', galleryImages: [] },
+        postedBy: { id: 'p1', publicName: 'Alice', profileImages: [] },
       },
       {
         id: 'post-b',
@@ -184,7 +184,7 @@ describe('SearchService.search — posts (trigram)', () => {
         lat: null,
         lon: null,
         post: { type: 'REQUEST' },
-        postedBy: { id: 'p2', publicName: 'Bob', galleryImages: [] },
+        postedBy: { id: 'p2', publicName: 'Bob', profileImages: [] },
       },
     ])
 

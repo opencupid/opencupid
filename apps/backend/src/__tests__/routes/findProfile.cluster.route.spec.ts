@@ -29,7 +29,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
     id: p.id,
     publicName: p.publicName,
     location: { country: p.country, cityName: p.cityName, lat: p.lat, lon: p.lon },
-    profileImages: (p.galleryImages ?? []).map((g: any) => g.image),
+    profileImages: (p.profileImages ?? []).map((g: any) => g.image),
     tags: p.tags ?? [],
   })),
 }))

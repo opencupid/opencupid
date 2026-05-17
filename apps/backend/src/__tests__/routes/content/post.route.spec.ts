@@ -41,7 +41,7 @@ const makeRow = (postedById: string) => ({
   updatedAt: new Date(),
   postedById,
   post: { userContentId: postId, type: 'OFFER' },
-  postedBy: { id: postedById, publicName: 'X', galleryImages: [] },
+  postedBy: { id: postedById, publicName: 'X', profileImages: [] },
 })
 
 beforeEach(async () => {

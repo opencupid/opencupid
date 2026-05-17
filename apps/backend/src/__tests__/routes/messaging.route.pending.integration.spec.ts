@@ -100,13 +100,13 @@ function buildPendingSummary() {
   const senderProfile = {
     id: senderProfileId,
     publicName: 'Sender',
-    galleryImages: [],
+    profileImages: [],
     isCallable: true,
   }
   const recipientProfile = {
     id: recipientProfileId,
     publicName: 'Recipient',
-    galleryImages: [],
+    profileImages: [],
     isCallable: true,
   }
   return {
@@ -175,7 +175,7 @@ beforeEach(async () => {
         sender: {
           id: senderProfileId,
           publicName: 'Sender',
-          galleryImages: [],
+          profileImages: [],
           isCallable: true,
         },
         attachment: null,

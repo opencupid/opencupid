@@ -29,7 +29,7 @@ Today, only `Profile` can have images. The `ProfileImage` model is owned by exac
 - **Attachment** — the gallery an image is currently displayed in. Carried on a per-context join table (`ProfileImage`, `UserContentImage`).
 - **Gallery** — an ordered collection of images attached to one parent (one `Profile`'s carousel, one `UserContent`'s gallery).
 
-Owner and attachment are independent. The Profile's own carousel is *one* attachment of *its owner's* uploaded images; a post's gallery is another attachment of (typically) the same owner's uploaded images.
+Owner and attachment are independent. The Profile's own carousel is _one_ attachment of _its owner's_ uploaded images; a post's gallery is another attachment of (typically) the same owner's uploaded images.
 
 ## §1 — Schema
 
@@ -68,7 +68,7 @@ model ProfileImage {
   imageId   String  @id
   image     Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
   profileId String
-  profile   Profile @relation("ProfileGallery", fields: [profileId], references: [id], onDelete: Cascade)
+  profile   Profile @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
   @@index([profileId])
 }
 
@@ -87,7 +87,7 @@ Back-relations to add:
 model Profile {
   // ... existing fields ...
   ownedImages   Image[]        @relation("OwnedImages")    // lifecycle (cascade-delete)
-  galleryImages ProfileImage[] @relation("ProfileGallery") // display
+  profileImages ProfileImage[] @relation("ProfileImages") // display
 }
 
 model UserContent {
@@ -96,7 +96,7 @@ model UserContent {
 }
 ```
 
-The existing `profileImages ProfileImage[] @relation("ProfileImages")` on `Profile` is removed; `galleryImages` replaces it (different relation name to make the new semantics explicit and to avoid silent breakage in any code that still uses the old name).
+The existing `profileImages ProfileImage[] @relation("ProfileImages")` on `Profile` is removed; `profileImages` replaces it (different relation name to make the new semantics explicit and to avoid silent breakage in any code that still uses the old name).
 
 ### Why position/altText on Image
 
@@ -137,7 +137,11 @@ class ImageService {
   // Detach == destroy. Caller doesn't need to know which gallery.
   async deleteImage(imageId: string, requesterProfileId: string): Promise<void>
 
-  async updateImage(imageId: string, requesterProfileId: string, patch: { altText?: string }): Promise<Image>
+  async updateImage(
+    imageId: string,
+    requesterProfileId: string,
+    patch: { altText?: string }
+  ): Promise<Image>
 }
 ```
 

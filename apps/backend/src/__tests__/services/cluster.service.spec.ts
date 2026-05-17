@@ -47,7 +47,7 @@ const makeProfile = (id: string, lat: number, lon: number, name = 'User') => ({
   country: 'HU',
   cityName: 'Budapest',
   localized: [],
-  galleryImages: [
+  profileImages: [
     {
       image: {
         id: 'img-1',
@@ -91,7 +91,7 @@ const makePost = (
     publicName: 'PostAuthor',
     lat: ownerLat ?? null,
     lon: ownerLon ?? null,
-    galleryImages: [
+    profileImages: [
       {
         image: {
           id: `post-img-${id}`,
@@ -128,7 +128,7 @@ const makeEvent = (
     publicName: 'EventAuthor',
     lat: ownerLat ?? null,
     lon: ownerLon ?? null,
-    galleryImages: [
+    profileImages: [
       {
         image: {
           id: `event-img-${id}`,

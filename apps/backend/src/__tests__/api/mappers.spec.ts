@@ -81,7 +81,7 @@ describe('mappers', () => {
       lon: -74.006,
       createdAt: new Date(),
       updatedAt: new Date(),
-      galleryImages: [],
+      profileImages: [],
       tags: [],
       localized: [],
     }

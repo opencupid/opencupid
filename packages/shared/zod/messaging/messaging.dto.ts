@@ -136,8 +136,8 @@ export type ConversationParticipantWithConversationSummary =
     include: {
       conversation: {
         include: {
-          profileA: { include: { galleryImages: { include: { image: true } } } }
-          profileB: { include: { galleryImages: { include: { image: true } } } }
+          profileA: { include: { profileImages: { include: { image: true } } } }
+          profileB: { include: { profileImages: { include: { image: true } } } }
           participants: {
             select: {
               profileId: true

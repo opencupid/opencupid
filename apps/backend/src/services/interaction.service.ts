@@ -12,7 +12,7 @@ import {
 
 function toLikeEdge(
   profile: Prisma.ProfileGetPayload<{
-    include: { galleryImages: { include: { image: true } } }
+    include: { profileImages: { include: { image: true } } }
   }>,
   createdAt: Date,
   isMatch: boolean,

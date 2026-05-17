@@ -38,7 +38,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapProfileSummary: vi.fn((p) => ({
     id: p.id,
     publicName: p.publicName,
-    profileImages: (p.galleryImages ?? []).map((g: any) => g.image),
+    profileImages: (p.profileImages ?? []).map((g: any) => g.image),
     location: p.location ?? { country: '' },
   })),
   mapProfileToPublic: vi.fn((db, _dating, _locale) => ({
@@ -104,7 +104,7 @@ beforeEach(async () => {
 describe('GET /me', () => {
   it('returns 200 with owner profile', async () => {
     const handler = fastify.routes['GET /me']
-    const dbProfile = { id: 'p1', publicName: 'Alice', tags: [], galleryImages: [], localized: [] }
+    const dbProfile = { id: 'p1', publicName: 'Alice', tags: [], profileImages: [], localized: [] }
     mockProfileService.getProfileCompleteByUserId.mockResolvedValue(dbProfile)
 
     await handler(makeReq(), reply as any)
@@ -265,7 +265,7 @@ describe('GET /blocked', () => {
   it('returns blocked profiles list', async () => {
     const handler = fastify.routes['GET /blocked']
     mockProfileService.getBlockedProfiles.mockResolvedValue([
-      { id: 'p2', publicName: 'Bob', galleryImages: [] },
+      { id: 'p2', publicName: 'Bob', profileImages: [] },
     ])
 
     await handler(makeReq(), reply as any)
@@ -282,7 +282,7 @@ describe('PATCH /me', () => {
       id: 'p1',
       publicName: 'Updated',
       tags: [],
-      galleryImages: [],
+      profileImages: [],
       localized: [],
     }
     mockProfileService.updateCompleteProfile.mockResolvedValue(updatedDb)
@@ -400,7 +400,7 @@ describe('POST /me (onboarding)', () => {
     lat: 47.497,
     lon: 19.04,
     tags: [],
-    galleryImages: [],
+    profileImages: [],
     localized: [],
   }
 

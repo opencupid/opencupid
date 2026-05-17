@@ -64,7 +64,7 @@ model ProfileImage {
   imageId   String  @id
   image     Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
   profileId String
-  profile   Profile @relation("ProfileGallery", fields: [profileId], references: [id], onDelete: Cascade)
+  profile   Profile @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
 }
@@ -91,7 +91,7 @@ Replace with:
 
 ```prisma
   ownedImages   Image[]        @relation("OwnedImages")    // lifecycle (cascade-delete)
-  galleryImages ProfileImage[] @relation("ProfileGallery") // gallery membership
+  profileImages ProfileImage[] @relation("ProfileImages") // gallery membership
 ```
 
 - [ ] **Step 3: Update `UserContent` model relations**
@@ -335,10 +335,7 @@ const ImagePositionSchema = z.object({
 export type ImagePosition = z.infer<typeof ImagePositionSchema>
 
 export const ReorderImagesPayloadSchema = z.object({
-  images: z
-    .array(ImagePositionSchema)
-    .nonempty('At least one image must be provided')
-    .min(1),
+  images: z.array(ImagePositionSchema).nonempty('At least one image must be provided').min(1),
 })
 export type ReorderImagesPayload = z.infer<typeof ReorderImagesPayloadSchema>
 
@@ -372,7 +369,7 @@ This produces the list of files that need updating in subsequent tasks. Save thi
 pnpm --filter @opencupid/shared exec tsc --noEmit
 ```
 
-Expected: no errors from the new DTO file. (It's OK to see errors in *other* files that still import from the old path — those get fixed in later tasks.)
+Expected: no errors from the new DTO file. (It's OK to see errors in _other_ files that still import from the old path — those get fixed in later tasks.)
 
 - [ ] **Step 5: Commit**
 
@@ -416,7 +413,9 @@ describe('createImage', () => {
       position: 0,
     } as any)
 
-    const result = await svc.createImage('profile-1', '/tmp/upload.jpg', 'cap', { detectFace: true })
+    const result = await svc.createImage('profile-1', '/tmp/upload.jpg', 'cap', {
+      detectFace: true,
+    })
 
     expect(result.id).toBe('img-1')
     expect(result.ownerProfileId).toBe('profile-1')
@@ -428,8 +427,12 @@ describe('createImage', () => {
   it('skips face detect when detectFace=false', async () => {
     const svc = ImageService.getInstance()
     const procSpy = vi.spyOn(svc, 'processImage').mockResolvedValue({
-      width: 100, height: 100, mime: 'image/jpeg',
-      variants: { original: '/tmp/o.jpg' }, blurhash: 'L00', hasFace: false,
+      width: 100,
+      height: 100,
+      mime: 'image/jpeg',
+      variants: { original: '/tmp/o.jpg' },
+      blurhash: 'L00',
+      hasFace: false,
     } as any)
     mockPrisma.image.create.mockResolvedValue({ id: 'img-2', hasFace: false } as any)
 
@@ -1162,12 +1165,7 @@ Replace contents of `apps/backend/src/api/mappers/image.mappers.ts` with:
 ```ts
 import { Image } from '@prisma/client'
 import { ImageService } from '@/services/image.service'
-import {
-  PublicImage,
-  PublicImageSchema,
-  OwnerImage,
-  OwnerImageSchema,
-} from '@zod/image/image.dto'
+import { PublicImage, PublicImageSchema, OwnerImage, OwnerImageSchema } from '@zod/image/image.dto'
 
 export interface MinimalImage {
   storagePath: string
@@ -1215,19 +1213,17 @@ The signatures stay the same name (since callers use these names), but the param
 
 - [ ] **Step 3: Find and fix the `db.profileImages` reads**
 
-Inside `profile.mappers.ts`, find `db.profileImages` references (Steps in `mapDbProfileToOwnerProfile`, `mapProfileSummary`, etc.). The Prisma include now returns `galleryImages: Array<{ image: Image, ... }>`. Update each:
+Inside `profile.mappers.ts`, find `db.profileImages` references (Steps in `mapDbProfileToOwnerProfile`, `mapProfileSummary`, etc.). The Prisma include now returns `profileImages: Array<{ image: Image, ... }>`. Update each:
 
 ```ts
 // Before:
 const images = db.profileImages ? mapProfileImagesToOwner(db.profileImages) : []
 
 // After:
-const images = db.galleryImages
-  ? mapProfileImagesToOwner(db.galleryImages.map((g) => g.image))
-  : []
+const images = db.profileImages ? mapProfileImagesToOwner(db.profileImages.map((g) => g.image)) : []
 ```
 
-Apply the same shape to every read: `dbProfile.galleryImages.map(g => g.image)` becomes the input to the mappers.
+Apply the same shape to every read: `dbProfile.profileImages.map(g => g.image)` becomes the input to the mappers.
 
 - [ ] **Step 4: Update Prisma includes for `Profile` queries**
 
@@ -1240,10 +1236,14 @@ grep -rn 'profileImages: true\|profileImages:' apps/backend/src --include='*.ts'
 For every match, change to:
 
 ```ts
-galleryImages: { include: { image: true } }
+profileImages: {
+  include: {
+    image: true
+  }
+}
 ```
 
-(The relation field name on `Profile` is now `galleryImages` per Task 1, Step 2.)
+(The relation field name on `Profile` is now `profileImages` per Task 1, Step 2.)
 
 - [ ] **Step 5: Update the type alias `DbProfileWithImages`**
 
@@ -1257,7 +1257,7 @@ Update the type to include the new shape:
 
 ```ts
 export type DbProfileWithImages = Prisma.ProfileGetPayload<{
-  include: { galleryImages: { include: { image: true } } /* ...other existing includes */ }
+  include: { profileImages: { include: { image: true } } /* ...other existing includes */ }
 }>
 ```
 
@@ -1396,7 +1396,10 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
           try {
             await imageService.deleteImage(createdId, req.session.profileId)
           } catch (cleanupErr) {
-            fastify.log.error({ err: cleanupErr, imageId: createdId }, 'Failed to clean up orphan image')
+            fastify.log.error(
+              { err: cleanupErr, imageId: createdId },
+              'Failed to clean up orphan image'
+            )
           }
         }
         return sendError(reply, 500, 'Failed to store image')
@@ -1611,7 +1614,10 @@ const contentImageRoutes: FastifyPluginAsync = async (fastify) => {
           try {
             await imageService.deleteImage(createdId, req.session.profileId)
           } catch (cleanupErr) {
-            fastify.log.error({ err: cleanupErr, imageId: createdId }, 'Failed to clean up orphan image')
+            fastify.log.error(
+              { err: cleanupErr, imageId: createdId },
+              'Failed to clean up orphan image'
+            )
           }
         }
         return sendError(reply, 500, 'Failed to store image')
@@ -1935,7 +1941,19 @@ describe('useUserContentImageStore', () => {
 
   it('load() GETs /content/:id/image and stores the result', async () => {
     ;(api.get as any).mockResolvedValue({
-      data: { success: true, images: [{ id: 'i1', mimeType: 'image/jpeg', altText: '', position: 0, blurhash: 'L0', variants: [{ size: 'original', url: '/x' }] }] },
+      data: {
+        success: true,
+        images: [
+          {
+            id: 'i1',
+            mimeType: 'image/jpeg',
+            altText: '',
+            position: 0,
+            blurhash: 'L0',
+            variants: [{ size: 'original', url: '/x' }],
+          },
+        ],
+      },
     })
     const store = useUserContentImageStore('content-1')
     const res = await store.load()
@@ -2018,7 +2036,10 @@ export const useUserContentImageStore = (contentId: string) =>
           return { success: true }
         } catch (err: any) {
           this.images = []
-          return { success: false, message: err.response?.data?.message || 'Failed to fetch images' }
+          return {
+            success: false,
+            message: err.response?.data?.message || 'Failed to fetch images',
+          }
         } finally {
           this.isLoading = false
         }
@@ -2167,7 +2188,9 @@ Open `apps/frontend/src/features/images/__tests__/` and find the test file mount
 ```ts
 // Inside the test setup, replace any pinia/imageStore manipulation with a stub store object that satisfies GalleryStore.
 const stubStore: GalleryStore = {
-  images: [/* fixture */],
+  images: [
+    /* fixture */
+  ],
   isLoading: false,
   load: vi.fn().mockResolvedValue({ success: true }),
   upload: vi.fn().mockResolvedValue({ success: true }),

@@ -22,7 +22,7 @@ export function translationWhereClause(term: string, locale: string) {
 
 export function profileImageInclude() {
   return {
-    galleryImages: {
+    profileImages: {
       include: { image: true },
       orderBy: { image: { position: 'asc' } },
     },

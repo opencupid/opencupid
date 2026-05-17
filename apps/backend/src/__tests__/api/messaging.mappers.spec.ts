@@ -26,12 +26,12 @@ const msg: any = {
   content: 'hi',
   createdAt: new Date(),
   messageType: 'text/plain',
-  sender: { id: 'p1', publicName: 'Me', galleryImages: [] },
+  sender: { id: 'p1', publicName: 'Me', profileImages: [] },
   attachment: null,
 }
 
-const profileMe = { id: 'p1', publicName: 'Me', galleryImages: [], isCallable: true }
-const profileThem = { id: 'p2', publicName: 'Them', galleryImages: [], isCallable: true }
+const profileMe = { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true }
+const profileThem = { id: 'p2', publicName: 'Them', profileImages: [], isCallable: true }
 
 const participant: any = {
   id: 'cp1',

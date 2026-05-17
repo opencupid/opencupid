@@ -86,7 +86,7 @@ describe('InteractionService.getLikesSent', () => {
   it('returns mapped edges', async () => {
     mockPrisma.likedProfile.findMany.mockResolvedValue([
       {
-        to: { id: 'p2', publicName: 'Alice', galleryImages: [] },
+        to: { id: 'p2', publicName: 'Alice', profileImages: [] },
         createdAt: new Date('2025-01-01'),
       },
     ])
@@ -101,7 +101,7 @@ describe('InteractionService.getMatches', () => {
   it('returns matched edges with isNew filter', async () => {
     mockPrisma.likedProfile.findMany.mockResolvedValue([
       {
-        to: { id: 'p2', publicName: 'Bob', galleryImages: [] },
+        to: { id: 'p2', publicName: 'Bob', profileImages: [] },
         createdAt: new Date('2025-01-01'),
       },
     ])

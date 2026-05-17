@@ -179,7 +179,7 @@ describe('GET /:id', () => {
       senderId: 'p1',
       content: 'hi',
       createdAt: new Date(),
-      sender: { galleryImages: [] },
+      sender: { profileImages: [] },
     }
     mockMessageService.listMessagesForConversation.mockResolvedValue({
       messages: [msg],

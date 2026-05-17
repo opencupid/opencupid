@@ -5,7 +5,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapProfileSummary: (profile: any) => ({
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: (profile.galleryImages ?? []).map((g: any) => g.image),
+    profileImages: (profile.profileImages ?? []).map((g: any) => g.image),
     location: profile.location ?? { country: '' },
   }),
 }))
@@ -15,7 +15,7 @@ import { mapDbPostToPublic, mapDbPostToOwner } from '../../api/mappers/post.mapp
 const basePostedBy = {
   id: 'clprofile000000000001',
   publicName: 'Test User',
-  galleryImages: [],
+  profileImages: [],
 }
 
 const baseDbPost: any = {

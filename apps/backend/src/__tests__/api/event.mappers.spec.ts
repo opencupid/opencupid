@@ -4,7 +4,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapProfileSummary: (profile: any) => ({
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: (profile.galleryImages ?? []).map((g: any) => g.image),
+    profileImages: (profile.profileImages ?? []).map((g: any) => g.image),
     location: profile.location ?? { country: '' },
   }),
 }))
@@ -27,7 +27,7 @@ const baseDbEvent: any = {
   postedBy: {
     id: 'clprofile000000000001',
     publicName: 'Test User',
-    galleryImages: [],
+    profileImages: [],
   },
   event: {
     userContentId: 'cuevent00000000000001',

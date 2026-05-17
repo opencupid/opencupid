@@ -6,7 +6,7 @@ import { conversationContextInclude } from '@/db/includes/profileIncludes'
 
 const communityWithMetadataInclude = {
   community: true,
-  postedBy: { include: { galleryImages: { include: { image: true } } } },
+  postedBy: { include: { profileImages: { include: { image: true } } } },
 } as const
 
 const communityWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -14,7 +14,7 @@ const communityWithMetadataAndContextInclude = (viewerProfileId: string) =>
     community: true,
     postedBy: {
       include: {
-        galleryImages: { include: { image: true } },
+        profileImages: { include: { image: true } },
         ...conversationContextInclude(viewerProfileId),
       },
     },

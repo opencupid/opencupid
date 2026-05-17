@@ -503,13 +503,13 @@ export class ProfileService {
 
   async getBlockedProfiles(
     profileId: string
-  ): Promise<{ id: string; publicName: string; galleryImages: { image: Image }[] }[]> {
+  ): Promise<{ id: string; publicName: string; profileImages: { image: Image }[] }[]> {
     const result = await prisma.profile.findUnique({
       where: { id: profileId },
       include: {
         blockedProfiles: {
           include: {
-            galleryImages: {
+            profileImages: {
               include: { image: true },
               orderBy: { image: { position: 'asc' } },
             },

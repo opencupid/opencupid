@@ -195,7 +195,7 @@ model Profile {
 
   tags          Tag[]          @relation("ProfileTags")
   ownedImages   Image[]        @relation("OwnedImages") // lifecycle (cascade-delete)
-  galleryImages ProfileImage[] @relation("ProfileGallery") // gallery membership
+  profileImages ProfileImage[] @relation("ProfileImages")
 
   // Dating preferences
   prefAgeMin Int?
@@ -285,7 +285,7 @@ model ProfileImage {
   imageId   String  @id
   image     Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
   profileId String
-  profile   Profile @relation("ProfileGallery", fields: [profileId], references: [id], onDelete: Cascade)
+  profile   Profile @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
 
   @@index([profileId])
 }

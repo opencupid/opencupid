@@ -60,7 +60,7 @@ async function main() {
 
   // Mirror Profile.hasFace from the now-current Image.hasFace via the Profile gallery's position-0 image.
   const profilesWithGallery = await prisma.profile.findMany({
-    where: { galleryImages: { some: {} } },
+    where: { profileImages: { some: {} } },
     select: { id: true },
   })
 

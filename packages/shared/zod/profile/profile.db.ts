@@ -25,7 +25,7 @@ export const DbProfileSchema = ProfileSchema.extend({
 export type DbProfile = z.infer<typeof DbProfileSchema>
 
 export const DbProfileWithImagesSchema = DbProfileSchema.extend({
-  galleryImages: z
+  profileImages: z
     .array(
       ProfileImageSchema.extend({
         image: ImageSchema,
@@ -38,7 +38,7 @@ export type DbProfileWithImages = z.infer<typeof DbProfileWithImagesSchema>
 export const DbMinimalProfileSchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  galleryImages: z.array(
+  profileImages: z.array(
     z.object({
       image: z.object({ storagePath: z.string() }),
     })

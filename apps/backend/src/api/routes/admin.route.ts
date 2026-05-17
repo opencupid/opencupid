@@ -1064,7 +1064,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
               roles: true,
             },
           },
-          galleryImages: {
+          profileImages: {
             select: { image: { select: { id: true, storagePath: true, position: true } } },
             orderBy: { image: { position: 'asc' } },
           },
@@ -1077,12 +1077,12 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (!profile) return sendError(reply, 404, 'Profile not found')
 
-      const { galleryImages, ...profileRest } = profile
+      const { profileImages, ...profileRest } = profile
       return reply.code(200).send({
         success: true,
         profile: {
           ...profileRest,
-          profileImages: galleryImages.map((g) => g.image),
+          profileImages: profileImages.map((g) => g.image),
           hasActiveTrustFlag: profile.trustFlags.length > 0,
         },
       })

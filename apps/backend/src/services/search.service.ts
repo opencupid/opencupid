@@ -151,7 +151,7 @@ export class SearchService {
     if (rows.length === 0) return []
 
     const ids = rows.map((r) => r.id)
-    // `galleryImages` is loaded with the joined Image so downstream mappers
+    // `profileImages` is loaded with the joined Image so downstream mappers
     // (toPublicImage) receive the full row — they need mimeType, altText,
     // position and blurhash, not just storagePath.
     const posts = await prisma.userContent.findMany({
@@ -169,7 +169,7 @@ export class SearchService {
           select: {
             id: true,
             publicName: true,
-            galleryImages: {
+            profileImages: {
               include: { image: true },
               orderBy: { image: { position: 'asc' } },
             },

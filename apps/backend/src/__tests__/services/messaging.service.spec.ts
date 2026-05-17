@@ -608,7 +608,7 @@ describe('MessageService.sendMessage (new primitive)', () => {
     content: 'hi',
     messageType: 'text/plain',
     createdAt: new Date(),
-    sender: { id: 'bob', publicName: 'Bob', galleryImages: [] },
+    sender: { id: 'bob', publicName: 'Bob', profileImages: [] },
     attachment: null,
   }
 
