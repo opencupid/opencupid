@@ -183,6 +183,13 @@ export class ProfileTrustService {
 
     if (count >= SPAM_BURST_THRESHOLD) {
       if (!alreadyFlagged) {
+        // TODO(race): non-idempotent under concurrent reconcile. The check-then-create
+        // window between hasTrustFlag() and create() lets two callers (e.g. inline post-send
+        // reconcile racing the cron reconcile-many on the same profile) both decide
+        // "create flag" and write two active SPAM_BURST rows. Consequence: hasTrustFlag
+        // still works, but admin clearFlag(flagId) only clears one row, leaving the other
+        // active. Fix: partial unique index on ProfileTrustFlag(profileId, reason) WHERE
+        // clearedAt IS NULL; treat P2002 here as "lost the race, flag already exists".
         await prisma.profileTrustFlag.create({
           data: {
             profileId,
