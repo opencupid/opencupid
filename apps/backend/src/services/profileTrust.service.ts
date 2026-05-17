@@ -1,4 +1,5 @@
 import type { TrustReasonType } from '@zod/generated/inputTypeSchemas/TrustReasonSchema'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { MessageService } from '@/services/messaging.service'
 
@@ -20,12 +21,6 @@ export const TRUST_WINDOW_MS = 24 * 60 * 60 * 1000
 // this many ms of "now". Without this bound, an all-time count punishes users
 // with old unanswered intros forever — that's unresponsiveness, not burst spam.
 export const SPAM_BURST_WINDOW_MS = TRUST_WINDOW_MS
-
-// Shared builder so every enqueue site uses the same BullMQ dedup key. If the clear
-// path here and the clear-unvetted-window worker (Task 6) drifted to different
-// formats, two promote-pendings jobs could race inside the serializable tx.
-// BullMQ rejects ':' in custom jobIds (Redis key separator); use '-' as separator.
-export const promotePendingsJobId = (profileId: string) => `promote-pendings-${profileId}`
 
 /**
  * Result of attempting to clear a flag. The service stays HTTP-agnostic;
@@ -71,42 +66,38 @@ export class ProfileTrustService {
   }
 
   /**
-   * Manual flag clear. Reuses the same promote-pendings enqueue path
-   * that the heuristic threshold-down branch uses, so held messages get released
-   * the same way regardless of who closed the flag.
+   * Manual (typically admin) flag clear. Atomic clear-and-release: in a single
+   * serializable tx, clears the named flag and — if no other active flag remains
+   * on the profile — promotes the profile's PENDING initiator-side conversations
+   * to INITIATED, making them visible to recipients.
    *
-   * Heuristic SPAM_BURST flags can be cleared this way too — held conversations
-   * (PENDING, including any demoted from INITIATED while the flag was on) are
-   * released to recipients by promote-pendings the same way as PROFILE_UNVETTED.
+   * Admin-initiated clears deserve zero-latency release; the inline promote
+   * delivers that. System-driven clears (heuristic threshold-down, unvetted-window
+   * cron) intentionally do not inline-promote — the trust-sweep cron handles them.
    *
    * Returns a result code; the caller maps it to its protocol-specific response.
    */
   async clearFlag(flagId: string, clearedBy: string): Promise<ClearFlagResult> {
-    const flag = await prisma.profileTrustFlag.findUnique({ where: { id: flagId } })
-    if (!flag) return 'not_found'
-    if (flag.clearedAt) return 'already_cleared'
+    return await prisma.$transaction(
+      async (tx) => {
+        const flag = await tx.profileTrustFlag.findUnique({ where: { id: flagId } })
+        if (!flag) return 'not_found' as ClearFlagResult
+        if (flag.clearedAt) return 'already_cleared' as ClearFlagResult
 
-    // Conditional write: only the call that actually transitions clearedAt
-    // null→now wins. A concurrent clearer's update affects 0 rows and we
-    // skip the enqueue, avoiding a duplicate promote-pendings job and
-    // timestamp drift on clearedAt/clearedBy.
-    const result = await prisma.profileTrustFlag.updateMany({
-      where: { id: flagId, clearedAt: null },
-      data: { clearedAt: new Date(), clearedBy },
-    })
-    if (result.count === 0) return 'already_cleared'
+        // Conditional write: only the call that actually transitions clearedAt
+        // null→now wins. A concurrent clearer's update affects 0 rows and we
+        // skip the inline promote, avoiding duplicate work and timestamp drift.
+        const result = await tx.profileTrustFlag.updateMany({
+          where: { id: flagId, clearedAt: null },
+          data: { clearedAt: new Date(), clearedBy },
+        })
+        if (result.count === 0) return 'already_cleared' as ClearFlagResult
 
-    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
-    await profileTrustQueue.add(
-      'promote-pendings',
-      { kind: 'promote-pendings', profileId: flag.profileId },
-      {
-        jobId: promotePendingsJobId(flag.profileId),
-        removeOnComplete: { count: 0 },
-        removeOnFail: { count: 100 },
-      }
+        await this.promotePendingsInTx(tx, flag.profileId)
+        return 'cleared' as ClearFlagResult
+      },
+      { isolationLevel: 'Serializable' }
     )
-    return 'cleared'
   }
 
   /**
@@ -169,14 +160,15 @@ export class ProfileTrustService {
    * Cases (count is windowed by SPAM_BURST_WINDOW_MS over INITIATED+PENDING):
    * - count >= threshold AND not flagged: write SPAM_BURST flag.
    * - count >= threshold AND already flagged: no-op (flag is in the right state).
-   * - count <  threshold AND already flagged: clear the flag AND enqueue
-   *   promote-pendings so any PENDING rows held under the flag get released.
+   * - count <  threshold AND already flagged: clear the flag. The trust-sweep
+   *   cron will release any held PENDING rows on its next tick.
    * - count <  threshold AND not flagged: no-op.
    *
    * The windowed count is the policy lever: old unanswered intros are
    * unresponsiveness, not burst spam, and shouldn't keep a profile flagged forever.
-   * Release of held PENDING messages on flag clear flows through the existing
-   * promote-pendings worker — same path as PROFILE_UNVETTED.
+   * System-driven clears (this branch, and the unvetted-window cron) do NOT
+   * inline-promote — releasing held messages is the sweeper's job, not the
+   * route's hot path. Admin-initiated clearFlag does inline-promote.
    */
   async reconcileSpamBurst(profileId: string): Promise<void> {
     const since = new Date(Date.now() - SPAM_BURST_WINDOW_MS)
@@ -191,6 +183,13 @@ export class ProfileTrustService {
 
     if (count >= SPAM_BURST_THRESHOLD) {
       if (!alreadyFlagged) {
+        // TODO(race): non-idempotent under concurrent reconcile. The check-then-create
+        // window between hasTrustFlag() and create() lets two callers (e.g. inline post-send
+        // reconcile racing the cron reconcile-many on the same profile) both decide
+        // "create flag" and write two active SPAM_BURST rows. Consequence: hasTrustFlag
+        // still works, but admin clearFlag(flagId) only clears one row, leaving the other
+        // active. Fix: partial unique index on ProfileTrustFlag(profileId, reason) WHERE
+        // clearedAt IS NULL; treat P2002 here as "lost the race, flag already exists".
         await prisma.profileTrustFlag.create({
           data: {
             profileId,
@@ -205,50 +204,59 @@ export class ProfileTrustService {
         where: { profileId, reason: 'SPAM_BURST', clearedAt: null },
         data: { clearedAt: new Date(), clearedBy: 'heuristic:spam_burst_below_threshold' },
       })
-      // Dynamic import — the profile-trust worker (Task 6) imports this service,
-      // so a top-level import of the queue would close a cycle once that lands.
-      const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
-      await profileTrustQueue.add(
-        'promote-pendings',
-        { kind: 'promote-pendings', profileId },
-        {
-          jobId: promotePendingsJobId(profileId),
-          // drop completed jobs immediately (minimize Redis footprint);
-          // retain last 100 failures for diagnostics.
-          removeOnComplete: { count: 0 },
-          removeOnFail: { count: 100 },
-        }
-      )
     }
   }
 
   /**
-   * Worker handler: if the profile has zero active flags, promote all its PENDING conversations.
-   * Runs in a serializable tx to close the race with reconcileSpamBurst writing DISCARDs.
-   * Per-row races are absorbed by promoteConversation's best-effort no-op; genuine R-W
-   * conflicts surface as 40001 at commit, retried by BullMQ (requires attempts > 1 — Prisma
-   * does not auto-retry). On retry `stillFlagged` short-circuits if SPAM_BURST landed.
+   * Public per-profile release: if the profile has zero active flags, promote
+   * all its initiator-side PENDING conversations to INITIATED. Runs in its own
+   * serializable tx — used by the trust-sweep cron, one tx per candidate.
+   *
+   * Per-row races are absorbed by promoteConversation's best-effort no-op
+   * (per-row `updateMany WHERE status: 'PENDING'`). Genuine R-W conflicts
+   * surface as 40001 at commit; the next 15-min sweeper tick re-picks up the
+   * profile because the SQL anti-join still matches, and `stillFlagged` inside
+   * `promotePendingsInTx` short-circuits if a flag landed in the meantime.
    */
   async promotePendingsIfClear(profileId: string): Promise<void> {
-    const messageService = MessageService.getInstance()
     await prisma.$transaction(
       async (tx) => {
-        const stillFlagged = await tx.profileTrustFlag.findFirst({
-          where: { profileId, clearedAt: null },
-          select: { id: true },
-        })
-        if (stillFlagged) return
-
-        const pendings = await tx.conversation.findMany({
-          where: { initiatorProfileId: profileId, status: 'PENDING' },
-          select: { id: true, profileAId: true, profileBId: true },
-        })
-        for (const convo of pendings) {
-          const recipientId = convo.profileAId === profileId ? convo.profileBId : convo.profileAId
-          await messageService.promoteConversation(tx, convo.id, recipientId)
-        }
+        await this.promotePendingsInTx(tx, profileId)
       },
       { isolationLevel: 'Serializable' }
     )
+  }
+
+  /**
+   * In-tx release helper. Idempotent: if any flag is still active for the
+   * profile, returns without promoting. Per-row update is conditional on
+   * `status: 'PENDING'`, so concurrent recipient replies (`accept_and_promote_pending`)
+   * that flipped the row to ACCEPTED leave it untouched.
+   *
+   * Callers must run this inside a serializable transaction — both the
+   * stillFlagged check and the row promotions need consistent isolation to
+   * avoid a partial release across a concurrent flag write.
+   */
+  private async promotePendingsInTx(
+    tx: Prisma.TransactionClient,
+    profileId: string
+  ): Promise<void> {
+    const stillFlagged = await tx.profileTrustFlag.findFirst({
+      where: { profileId, clearedAt: null },
+      select: { id: true },
+    })
+    if (stillFlagged) return
+
+    const pendings = await tx.conversation.findMany({
+      where: { initiatorProfileId: profileId, status: 'PENDING' },
+      select: { id: true, profileAId: true, profileBId: true },
+    })
+    if (pendings.length === 0) return
+
+    const messageService = MessageService.getInstance()
+    for (const convo of pendings) {
+      const recipientId = convo.profileAId === profileId ? convo.profileBId : convo.profileAId
+      await messageService.promoteConversation(tx, convo.id, recipientId)
+    }
   }
 }

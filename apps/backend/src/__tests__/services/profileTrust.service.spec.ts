@@ -133,7 +133,7 @@ describe('ProfileTrustService', () => {
       expect(queueAdd).not.toHaveBeenCalled()
     })
 
-    it('clears flag and enqueues promote-pendings when condition resolves', async () => {
+    it('clears flag (only) when condition resolves — release is sweeper-driven', async () => {
       conversationCount.mockResolvedValue(1) // below threshold
       mockedFindFirst.mockResolvedValue({ id: 'flag-1' } as any) // currently flagged
 
@@ -143,11 +143,8 @@ describe('ProfileTrustService', () => {
         where: { profileId: 'profile-1', reason: 'SPAM_BURST', clearedAt: null },
         data: { clearedAt: expect.any(Date), clearedBy: 'heuristic:spam_burst_below_threshold' },
       })
-      expect(queueAdd).toHaveBeenCalledWith(
-        'promote-pendings',
-        { kind: 'promote-pendings', profileId: 'profile-1' },
-        expect.objectContaining({ jobId: 'promote-pendings-profile-1' })
-      )
+      // No enqueue — the trust-sweep cron handles the release on its next tick.
+      expect(queueAdd).not.toHaveBeenCalled()
       expect(profileTrustFlagCreate).not.toHaveBeenCalled()
       expect(conversationUpdateMany).not.toHaveBeenCalled()
     })
@@ -361,94 +358,144 @@ describe('ProfileTrustService', () => {
   })
 
   describe('clearFlag', () => {
-    const flagFindUnique = vi.fn()
-    const flagUpdateMany = vi.fn()
-    const queueAdd = vi.fn()
+    // clearFlag wraps everything in a serializable $transaction: findUnique, conditional
+    // updateMany, inline promotePendingsInTx. Mock $transaction to pass through a tx object
+    // exposing the methods the implementation calls.
+    const transactionFn = vi.fn()
+    const txFlagFindUnique = vi.fn()
+    const txFlagUpdateMany = vi.fn()
+    const txFlagFindFirst = vi.fn()
+    const txConversationFindMany = vi.fn()
 
     beforeEach(() => {
-      ;(prisma as any).profileTrustFlag = {
-        ...(prisma as any).profileTrustFlag,
-        findUnique: flagFindUnique,
-        updateMany: flagUpdateMany,
-      }
-      vi.doMock('@/queues/profileTrustQueue', () => ({
-        profileTrustQueue: { add: queueAdd },
-      }))
-      flagFindUnique.mockReset()
-      flagUpdateMany.mockReset()
-      queueAdd.mockReset()
+      ;(prisma as any).$transaction = transactionFn
+      transactionFn.mockImplementation(async (cb: any) => {
+        return cb({
+          profileTrustFlag: {
+            findUnique: txFlagFindUnique,
+            updateMany: txFlagUpdateMany,
+            findFirst: txFlagFindFirst,
+          },
+          conversation: { findMany: txConversationFindMany },
+        })
+      })
+      txFlagFindUnique.mockReset()
+      txFlagUpdateMany.mockReset()
+      txFlagFindFirst.mockReset()
+      txConversationFindMany.mockReset()
+      promoteConversationMock.mockReset()
     })
 
-    it('writes clearedAt + clearedBy via conditional updateMany, enqueues promote-pendings, returns "cleared"', async () => {
-      flagFindUnique.mockResolvedValue({
+    it('clears the flag and inline-promotes PENDING when no other flags remain — returns "cleared"', async () => {
+      txFlagFindUnique.mockResolvedValue({
         id: 'f1',
         profileId: 'p1',
         clearedAt: null,
         flaggedBy: 'admin:manual',
       })
-      flagUpdateMany.mockResolvedValue({ count: 1 })
-      queueAdd.mockResolvedValue({})
+      txFlagUpdateMany.mockResolvedValue({ count: 1 })
+      txFlagFindFirst.mockResolvedValue(null) // no other active flag → inline promote runs
+      txConversationFindMany.mockResolvedValue([
+        { id: 'c1', profileAId: 'p1', profileBId: 'recipient' },
+      ])
 
       const result = await svc.clearFlag('f1', 'admin:manual')
 
       expect(result).toBe('cleared')
-      expect(flagUpdateMany).toHaveBeenCalledWith({
+      expect(txFlagUpdateMany).toHaveBeenCalledWith({
         where: { id: 'f1', clearedAt: null },
         data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
       })
-      expect(queueAdd).toHaveBeenCalledWith(
-        'promote-pendings',
-        { kind: 'promote-pendings', profileId: 'p1' },
-        expect.objectContaining({ jobId: 'promote-pendings-p1' })
+      // Inline promote ran inside the same tx (the mock tx is what gets passed through).
+      expect(promoteConversationMock).toHaveBeenCalledWith(expect.anything(), 'c1', 'recipient')
+    })
+
+    it('skips inline promote when another active flag remains on the profile', async () => {
+      txFlagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'admin:manual',
+      })
+      txFlagUpdateMany.mockResolvedValue({ count: 1 })
+      txFlagFindFirst.mockResolvedValue({ id: 'other-flag' } as any) // other flag still active
+
+      const result = await svc.clearFlag('f1', 'admin:manual')
+
+      expect(result).toBe('cleared')
+      expect(txConversationFindMany).not.toHaveBeenCalled()
+      expect(promoteConversationMock).not.toHaveBeenCalled()
+    })
+
+    it('uses Serializable isolation level', async () => {
+      txFlagFindUnique.mockResolvedValue({
+        id: 'f1',
+        profileId: 'p1',
+        clearedAt: null,
+        flaggedBy: 'admin:manual',
+      })
+      txFlagUpdateMany.mockResolvedValue({ count: 1 })
+      txFlagFindFirst.mockResolvedValue(null)
+      txConversationFindMany.mockResolvedValue([])
+
+      await svc.clearFlag('f1', 'admin:manual')
+
+      expect(transactionFn).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ isolationLevel: 'Serializable' })
       )
     })
 
     it('returns "not_found" when the flag is missing', async () => {
-      flagFindUnique.mockResolvedValue(null)
+      txFlagFindUnique.mockResolvedValue(null)
       expect(await svc.clearFlag('missing', 'admin:manual')).toBe('not_found')
-      expect(flagUpdateMany).not.toHaveBeenCalled()
+      expect(txFlagUpdateMany).not.toHaveBeenCalled()
+      expect(promoteConversationMock).not.toHaveBeenCalled()
     })
 
     it('returns "already_cleared" when the flag is already cleared at read time', async () => {
-      flagFindUnique.mockResolvedValue({
+      txFlagFindUnique.mockResolvedValue({
         id: 'f1',
         profileId: 'p1',
         clearedAt: new Date(),
         flaggedBy: 'admin:manual',
       })
       expect(await svc.clearFlag('f1', 'admin:manual')).toBe('already_cleared')
-      expect(flagUpdateMany).not.toHaveBeenCalled()
+      expect(txFlagUpdateMany).not.toHaveBeenCalled()
+      expect(promoteConversationMock).not.toHaveBeenCalled()
     })
 
     it('returns "already_cleared" when a concurrent caller wins the race (count=0)', async () => {
-      flagFindUnique.mockResolvedValue({
+      txFlagFindUnique.mockResolvedValue({
         id: 'f1',
         profileId: 'p1',
         clearedAt: null,
         flaggedBy: 'admin:manual',
       })
-      flagUpdateMany.mockResolvedValue({ count: 0 })
+      txFlagUpdateMany.mockResolvedValue({ count: 0 })
 
       const result = await svc.clearFlag('f1', 'admin:manual')
 
       expect(result).toBe('already_cleared')
-      expect(queueAdd).not.toHaveBeenCalled()
+      // No inline promote — we didn't actually clear anything.
+      expect(promoteConversationMock).not.toHaveBeenCalled()
     })
 
     it('clears heuristic-set flags too (admin override)', async () => {
-      flagFindUnique.mockResolvedValue({
+      txFlagFindUnique.mockResolvedValue({
         id: 'f1',
         profileId: 'p1',
         clearedAt: null,
         flaggedBy: 'heuristic:spam_burst',
       })
-      flagUpdateMany.mockResolvedValue({ count: 1 })
-      queueAdd.mockResolvedValue({})
+      txFlagUpdateMany.mockResolvedValue({ count: 1 })
+      txFlagFindFirst.mockResolvedValue(null)
+      txConversationFindMany.mockResolvedValue([])
 
       const result = await svc.clearFlag('f1', 'admin:manual')
 
       expect(result).toBe('cleared')
-      expect(flagUpdateMany).toHaveBeenCalledWith({
+      expect(txFlagUpdateMany).toHaveBeenCalledWith({
         where: { id: 'f1', clearedAt: null },
         data: { clearedAt: expect.any(Date), clearedBy: 'admin:manual' },
       })

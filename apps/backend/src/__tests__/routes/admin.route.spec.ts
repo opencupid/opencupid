@@ -26,6 +26,9 @@ const mockPrisma = vi.hoisted(() => {
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    conversation: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     tag: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -1606,10 +1609,6 @@ describe('POST /trust-flags/:id/clear', () => {
       flaggedBy: 'admin:manual',
     })
     mockPrisma.profileTrustFlag.updateMany.mockResolvedValue({ count: 1 })
-    // The service dynamically imports the queue; provide a mock so the import succeeds.
-    vi.doMock('@/queues/profileTrustQueue', () => ({
-      profileTrustQueue: { add: vi.fn().mockResolvedValue({}) },
-    }))
 
     const handler = fastify.routes['POST /trust-flags/:id/clear']
     await handler({ params: { id: 'f1' } }, reply)
@@ -1639,9 +1638,6 @@ describe('POST /trust-flags/:id/clear', () => {
       flaggedBy: 'heuristic:spam_burst',
     })
     mockPrisma.profileTrustFlag.updateMany.mockResolvedValue({ count: 1 })
-    vi.doMock('@/queues/profileTrustQueue', () => ({
-      profileTrustQueue: { add: vi.fn().mockResolvedValue({}) },
-    }))
 
     const handler = fastify.routes['POST /trust-flags/:id/clear']
     await handler({ params: { id: 'f1' } }, reply)
