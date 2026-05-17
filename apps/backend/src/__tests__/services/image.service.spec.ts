@@ -8,10 +8,11 @@ vi.mock('../../lib/prisma', () => ({
   },
 }))
 
+const mockMakeImageLocation = vi.fn()
 vi.mock('@/lib/media', () => ({
   getMediaRoot: () => '/media',
   imageBasePath: (storagePath: string) => `images/${storagePath}`,
-  makeImageLocation: vi.fn(),
+  makeImageLocation: mockMakeImageLocation,
   mediaUrl: (p: string) => `/media/${p}`,
 }))
 
@@ -27,8 +28,9 @@ vi.mock('../../services/imageprocessor', () => ({
   },
 }))
 
+const mockGenerateContentHash = vi.fn()
 vi.mock('@/utils/hash', () => ({
-  generateContentHash: vi.fn(),
+  generateContentHash: mockGenerateContentHash,
 }))
 
 vi.mock('sharp', () => {
@@ -167,5 +169,58 @@ describe('ImageService.reorderImages', () => {
     await expect(service.reorderImages('p1', items)).rejects.toThrow('Invalid image ID')
     expect(mockPrisma.$transaction).not.toHaveBeenCalled()
     expect(mockPrisma.profileImage.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('ImageService.storeImage', () => {
+  it('creates the row scoped to profileId and syncs Profile.hasFace in one transaction', async () => {
+    mockMakeImageLocation.mockResolvedValue({
+      base: 'abc',
+      relPath: 'p1',
+      absPath: '/media/images/p1',
+    })
+    mockGenerateContentHash.mockResolvedValue('hash-xyz')
+    const processSpy = vi.spyOn(service, 'processImage').mockResolvedValue({
+      mime: 'image/jpeg',
+      variants: { original: '/media/images/p1/abc-original.jpg' },
+      blurhash: 'LK',
+      hasFace: true,
+    } as any)
+    mockPrisma.profileImage.count.mockResolvedValue(2)
+    mockPrisma.profileImage.create.mockResolvedValue({
+      id: 'newimg',
+      profileId: 'p1',
+      position: 2,
+      hasFace: true,
+    })
+    mockPrisma.profileImage.findFirst.mockResolvedValue({ hasFace: true })
+
+    const result = await service.storeImage('p1', '/tmp/upload.jpg', 'caption')
+
+    expect(mockMakeImageLocation).toHaveBeenCalledWith('p1')
+    expect(mockPrisma.$transaction).toHaveBeenCalled()
+    expect(mockPrisma.profileImage.count).toHaveBeenCalledWith({ where: { profileId: 'p1' } })
+    expect(mockPrisma.profileImage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        profileId: 'p1',
+        position: 2,
+        hasFace: true,
+        contentHash: 'hash-xyz',
+        storagePath: 'p1/abc',
+        altText: 'caption',
+      }),
+    })
+    // syncProfileHasFace runs inside the same transaction.
+    expect(mockPrisma.profileImage.findFirst).toHaveBeenCalledWith({
+      where: { profileId: 'p1', position: 0 },
+      select: { hasFace: true },
+    })
+    expect(mockPrisma.profile.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: { hasFace: true },
+    })
+    expect(result).toMatchObject({ id: 'newimg', profileId: 'p1' })
+
+    processSpy.mockRestore()
   })
 })

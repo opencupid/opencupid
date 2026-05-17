@@ -158,8 +158,7 @@ model User {
   roles                   UserRole[] @default([user])
 
   // relations
-  profile      Profile?       @relation
-  ProfileImage ProfileImage[]
+  profile Profile? @relation
 
   requestsSent     ConnectionRequest[] @relation("RequestsSent")
   requestsReceived ConnectionRequest[] @relation("RequestsReceived")
@@ -254,11 +253,9 @@ model LocalizedProfileField {
 }
 
 model ProfileImage {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  profileId String?
-  profile   Profile? @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  profileId String
+  profile   Profile @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
 
   position    Int     @default(0) // order of images, 0 is the primary profile image
   altText     String  @default("")
@@ -277,7 +274,6 @@ model ProfileImage {
   isFlagged   Boolean @default(false)
   hasFace     Boolean @default(false)
 
-  @@index([userId])
   @@index([profileId, position])
 }
 

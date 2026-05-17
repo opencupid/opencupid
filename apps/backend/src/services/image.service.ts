@@ -45,18 +45,11 @@ export class ImageService {
   }
 
   /**
-   * Get a single image by ID for the authenticated user
+   * List all images for a profile, ordered by position
    */
-  async getImage(id: string, userId: string): Promise<ProfileImage | null> {
-    return prisma.profileImage.findFirst({ where: { id, userId } })
-  }
-
-  /**
-   * List all images for a given user, most recent last
-   */
-  async listImages(userId: string): Promise<ProfileImage[]> {
+  async listImages(profileId: string): Promise<ProfileImage[]> {
     return prisma.profileImage.findMany({
-      where: { userId },
+      where: { profileId },
       orderBy: { position: 'asc' },
     })
   }
@@ -75,52 +68,49 @@ export class ImageService {
   }
 
   /**
-   * Store an image uploaded by the user
-   * @param userId - ID of the user uploading the image
-   * @param fileUpload - The uploaded file object
-   * @param captionText - Optional caption or alt text for the image
-   * Returns the created ProfileImage record
+   * Store an image uploaded for a profile.
+   * Creates the ProfileImage row and re-syncs Profile.hasFace in one transaction,
+   * so the invariant Profile.hasFace == position-0 image's hasFace always holds.
    */
   async storeImage(
-    userId: string,
+    profileId: string,
     tmpImagePath: string,
     captionText: string
   ): Promise<ProfileImage> {
     let imageLocation
 
-    // create image subdir, generate basename
     try {
-      imageLocation = await makeImageLocation(userId)
+      imageLocation = await makeImageLocation(profileId)
     } catch (err: any) {
       console.error('Failed to create dest dir', err)
       throw new Error('Failed to create dest dir')
     }
 
     try {
-      // Process the image and save resized variants
       const processed = await this.processImage(
         tmpImagePath,
         imageLocation.absPath,
         imageLocation.base
       )
-      // compute the content hash of the original
       const contentHash = await generateContentHash(processed.variants.original)
-      // set position to be the last position
-      const position = await prisma.profileImage.count({ where: { userId } })
 
-      // Create a new ProfileImage record
-      return await prisma.profileImage.create({
-        data: {
-          userId: userId,
-          mimeType: processed.mime,
-          altText: captionText,
-          storagePath: path.join(imageLocation.relPath, imageLocation.base),
-          isModerated: false,
-          contentHash: contentHash,
-          blurhash: processed.blurhash,
-          hasFace: processed.hasFace,
-          position: position,
-        },
+      return await prisma.$transaction(async (tx) => {
+        const position = await tx.profileImage.count({ where: { profileId } })
+        const created = await tx.profileImage.create({
+          data: {
+            profileId,
+            mimeType: processed.mime,
+            altText: captionText,
+            storagePath: path.join(imageLocation.relPath, imageLocation.base),
+            isModerated: false,
+            contentHash,
+            blurhash: processed.blurhash,
+            hasFace: processed.hasFace,
+            position,
+          },
+        })
+        await syncProfileHasFace(tx, profileId)
+        return created
       })
     } catch (err: any) {
       console.error('Failed to process image', err)
