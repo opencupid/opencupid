@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
-import GalleryImage from '@/features/images/components/GalleryImage.vue'
+import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 
@@ -20,7 +20,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
     @click="$emit('click', item.id)"
   >
     <div class="ratio ratio-1x1">
-      <GalleryImage
+      <ProfileImage
         :profile="item"
         className=""
         variant="card"

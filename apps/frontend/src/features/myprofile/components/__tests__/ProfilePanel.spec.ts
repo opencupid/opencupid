@@ -55,7 +55,7 @@ vi.mock('@/lib/bootstrap', () => ({
 
 vi.mock('@/assets/icons/interface/setting-2.svg', () => ({ default: { template: '<span />' } }))
 vi.mock('@/assets/icons/interface/backward.svg', () => ({ default: { template: '<span />' } }))
-vi.mock('@/features/images/components/GalleryImage.vue', () => ({
+vi.mock('@/features/images/components/ProfileImage.vue', () => ({
   default: { template: '<span />' },
 }))
 
@@ -82,7 +82,7 @@ const globalConfig = {
     },
     DatingPrefs: { name: 'DatingPrefs', template: '<div />', emits: ['close'] },
     DatingWizard: { name: 'DatingWizard', template: '<div />', emits: ['close'] },
-    GalleryImage: { template: '<span />' },
+    ProfileImage: { template: '<span />' },
     IconSetting2: { template: '<span />' },
     IconBackward: { template: '<span />' },
     PanelHeader: {
