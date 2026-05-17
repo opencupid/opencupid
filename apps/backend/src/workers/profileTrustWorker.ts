@@ -16,12 +16,6 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
   const svc = ProfileTrustService.getInstance()
   const data = job.data
 
-  if (data.kind === 'reconcile-one') {
-    await svc.reconcileSpamBurst(data.profileId)
-    await job.log(`reconciled ${data.profileId}`)
-    return
-  }
-
   if (data.kind === 'promote-pendings') {
     await svc.promotePendingsIfClear(data.profileId)
     await job.log(`promoted pendings (if clear) for ${data.profileId}`)

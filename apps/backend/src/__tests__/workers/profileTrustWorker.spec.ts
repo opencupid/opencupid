@@ -37,16 +37,6 @@ beforeEach(() => {
 })
 
 describe('processProfileTrustJob', () => {
-  describe('reconcile-one', () => {
-    it('calls reconcileSpamBurst with the payload profileId', async () => {
-      await processProfileTrustJob(
-        mockJob<ProfileTrustJobData>({ kind: 'reconcile-one', profileId: 'p1' })
-      )
-      expect(reconcileSpamBurst).toHaveBeenCalledTimes(1)
-      expect(reconcileSpamBurst).toHaveBeenCalledWith('p1')
-    })
-  })
-
   describe('promote-pendings', () => {
     it('calls promotePendingsIfClear with the payload profileId', async () => {
       await processProfileTrustJob(

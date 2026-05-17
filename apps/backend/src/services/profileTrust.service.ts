@@ -159,31 +159,26 @@ export class ProfileTrustService {
   }
 
   /**
-   * Convergence function for SPAM_BURST. Drives the world toward the invariant:
-   * "a SPAM_BURST-flagged profile has zero recent INITIATED initiator-side conversations".
-   * "Recent" = created within SPAM_BURST_WINDOW_MS. ACCEPTED conversations stand —
-   * those represent mutual engagement from the recipient. PENDING is the held-state
-   * primitive: rows that originated as PENDING (sender quarantined at send time) and
-   * rows demoted by this function both wait for promote-pendings on flag clear.
+   * Maintains the SPAM_BURST flag based on a windowed burst count. The flag's only
+   * effect is to gate *future* sends via the route's `hasTrustFlag` check —
+   * quarantined sends are written as PENDING (sender-only participant), so recipients
+   * don't see them. Existing rows are not touched here: a row that was already
+   * INITIATED stays INITIATED and remains visible to its recipient. ACCEPTED rows
+   * stand — mutual engagement outranks the heuristic.
    *
-   * Cases (count is windowed by SPAM_BURST_WINDOW_MS):
-   * - count >= threshold AND not flagged: write flag AND demote in-window INITIATED → PENDING.
-   * - count >= threshold AND already flagged: demote any in-window INITIATED that slipped
-   *   through a race (e.g. a send that crossed the hasTrustFlag check at the route before
-   *   the flag landed). Idempotent: updateMany hits zero rows in the steady state.
-   * - count < threshold AND already flagged: clear the flag AND enqueue promote-pendings
-   *   so held messages (if any) can be delivered.
-   * - count < threshold AND not flagged: no-op.
+   * Cases (count is windowed by SPAM_BURST_WINDOW_MS over INITIATED+PENDING):
+   * - count >= threshold AND not flagged: write SPAM_BURST flag.
+   * - count >= threshold AND already flagged: no-op (flag is in the right state).
+   * - count <  threshold AND already flagged: clear the flag AND enqueue
+   *   promote-pendings so any PENDING rows held under the flag get released.
+   * - count <  threshold AND not flagged: no-op.
    *
-   * Demotion is non-destructive — PENDING rows are filtered out of inbox queries the
-   * same way DISCARDED ones used to be, but they remain restorable. The flag-clear
-   * branch reuses the existing promote-pendings worker to release them. Out-of-window
-   * INITIATED rows are left untouched: hiding a weeks-old intro from a recipient who's
-   * already had it in inbox would be a surprise UX side-effect of a fresh burst.
+   * The windowed count is the policy lever: old unanswered intros are
+   * unresponsiveness, not burst spam, and shouldn't keep a profile flagged forever.
+   * Release of held PENDING messages on flag clear flows through the existing
+   * promote-pendings worker — same path as PROFILE_UNVETTED.
    */
   async reconcileSpamBurst(profileId: string): Promise<void> {
-    // Window-scoped count. Old unanswered intros are unresponsiveness, not burst spam,
-    // and shouldn't keep a profile flagged forever.
     const since = new Date(Date.now() - SPAM_BURST_WINDOW_MS)
     const count = await prisma.conversation.count({
       where: {
@@ -205,19 +200,6 @@ export class ProfileTrustService {
           },
         })
       }
-      // Enforce the invariant by demoting in-window INITIATED to PENDING. Runs whether
-      // we just wrote the flag or it was already there — closes the race between the
-      // route's pre-tx quarantine check and tx commit. PENDING (not DISCARDED) keeps
-      // the messages recoverable via promote-pendings when the flag clears. PENDING
-      // rows are already in the held state, so they're not in the predicate.
-      await prisma.conversation.updateMany({
-        where: {
-          initiatorProfileId: profileId,
-          status: 'INITIATED',
-          createdAt: { gte: since },
-        },
-        data: { status: 'PENDING' },
-      })
     } else if (alreadyFlagged) {
       await prisma.profileTrustFlag.updateMany({
         where: { profileId, reason: 'SPAM_BURST', clearedAt: null },
