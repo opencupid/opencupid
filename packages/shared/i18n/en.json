@@ -106,8 +106,8 @@
     },
     "labels": {
       "content": "What's happening?",
-      "starts_at": "When",
-      "venue": "Where",
+      "starts_at": "When?",
+      "venue": "Where?",
       "visibility": "Show this event"
     },
     "messages": {
@@ -389,7 +389,7 @@
       "pronouns_label": "They refer to me as...",
       "relationship_label": "I am...",
       "save_changes_hint": "Done editing",
-      "tab_posts": "Posts",
+      "tab_posts": "My posts",
       "tab_profile": "Profile",
       "tag_add_placeholder": "Add this as new tag",
       "tag_no_results": "Can't find anything similar.",

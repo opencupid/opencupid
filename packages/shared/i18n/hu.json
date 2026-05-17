@@ -23,7 +23,7 @@
     "unknown_error": "Váratlan hiba történt. Kérlek, próbáld újra később."
   },
   "authentication": {
-    "logout": "Kilépés"
+    "logout": "Kilépek"
   },
   "calls": {
     "accept": "Fogadás",
@@ -110,8 +110,8 @@
     },
     "labels": {
       "content": "Mi történik?",
-      "starts_at": "Mikor",
-      "venue": "Hol",
+      "starts_at": "Mikor?",
+      "venue": "Hol?",
       "visibility": "Mutasd ezt az eseményt"
     },
     "messages": {
@@ -187,10 +187,10 @@
   "map": {
     "layer_control": {
       "aria_label": "Térképrétegek",
-      "communities": "Communities",
+      "communities": "Közösségek",
       "events": "Események",
       "people": "Komák",
-      "posts": "Hirdetések"
+      "posts": "Keres-kínál"
     }
   },
   "matches": {
@@ -302,9 +302,9 @@
     "actions": {
       "cancel": "Mégse",
       "contact": "Kapcsolatfelvétel",
-      "create": "Mehet",
-      "create_advert_cta_title": "Hirdetést adok fel",
-      "create_community_cta_title": "Create a community",
+      "create": "Feltöltöm",
+      "create_advert_cta_title": "Keres-kínál hirdetés",
+      "create_community_cta_title": "Közösséget hozok létre",
       "create_cta_title": "Feladok egy hirdetést",
       "create_event_cta_title": "Eseményt szervezek",
       "delete": "Törlés",
@@ -313,7 +313,7 @@
       "save": "Hirdetés mentése",
       "show": "Mutasd a hirdetést"
     },
-    "create_title": "Új hirdetés",
+    "create_title": "Keres-kínál hirdetés",
     "edit_title": "Hirdetés szerkesztése",
     "labels": {
       "content": "Tartalom",
@@ -362,7 +362,7 @@
       "dating_mode_view": "Párkereső nézet",
       "dating_mode_view_hint_active": "Ezt látják azok, akikkel kölcsönösen megfeleltek egymás preferenciáinak.",
       "dating_profile_tab": "Profilom",
-      "edit_button_hint": "Változtatás",
+      "edit_button_hint": "Szerkesztés",
       "edit_titles": {
         "gender_identity": "Nemem",
         "hasKids": "Gyerekek",
@@ -393,8 +393,8 @@
       "pronouns_label": "Úgy hivatkoznak rám, mint...",
       "relationship_label": "Én...",
       "save_changes_hint": "Kész a szerkesztés",
-      "tab_posts": "Hirdetések",
-      "tab_profile": "Profil",
+      "tab_posts": "Hirdetéseim",
+      "tab_profile": "Profilom",
       "tag_add_placeholder": "Új címke",
       "tag_no_results": "Nem találtam hasonlót.",
       "tag_search_placeholder": "Érdeklődési körök..."
@@ -435,12 +435,12 @@
   },
   "settings": {
     "calls_opt_in_hint": "Ezt minden tagnál külön is letilthatod. Ha egyáltalán nem szeretnél videóhívásokat fogadni, vedd ki a pipát.",
-    "email_notifications_opt_in": "e-mail értesítést új üzenetről",
-    "newsletter_opt_in": "Szívesen kapok alkalmi hírlevelet",
+    "email_notifications_opt_in": "e-mail",
+    "newsletter_opt_in": "Kérek alkalmi hírlevelet",
     "newsletter_opt_in_hint": "Közösségi hírek, új funkciók, ilyesmi. Bármikor leiratkozhatsz.",
     "notifications_label": "Értesítések",
-    "notifications_opt_in": "Ha üzenetet, lájkot vagy találatot kapok...",
-    "push_notify_messages": "Mobil értesítés  új üzenetről",
+    "notifications_opt_in": "Ha üzenetet kapok, vagy rám mosolyog valaki...",
+    "push_notify_messages": "mobil értesítés (push)",
     "title": "Beállítások"
   },
   "uicomponents": {
