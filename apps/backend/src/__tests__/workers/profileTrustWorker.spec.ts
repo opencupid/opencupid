@@ -5,7 +5,7 @@ vi.mock('../../lib/prisma', () => ({
   prisma: {
     profileTrustFlag: {
       findMany: vi.fn(),
-      update: vi.fn(),
+      updateMany: vi.fn(),
     },
     profile: {
       findMany: vi.fn(),
@@ -37,16 +37,6 @@ beforeEach(() => {
 })
 
 describe('processProfileTrustJob', () => {
-  describe('reconcile-one', () => {
-    it('calls reconcileSpamBurst with the payload profileId', async () => {
-      await processProfileTrustJob(
-        mockJob<ProfileTrustJobData>({ kind: 'reconcile-one', profileId: 'p1' })
-      )
-      expect(reconcileSpamBurst).toHaveBeenCalledTimes(1)
-      expect(reconcileSpamBurst).toHaveBeenCalledWith('p1')
-    })
-  })
-
   describe('promote-pendings', () => {
     it('calls promotePendingsIfClear with the payload profileId', async () => {
       await processProfileTrustJob(
@@ -64,11 +54,11 @@ describe('processProfileTrustJob', () => {
         { id: 'f2', profileId: 'p2' },
       ] as any)
       vi.mocked(profileTrustQueue.add).mockResolvedValue({} as any)
-      vi.mocked(prisma.profileTrustFlag.update).mockResolvedValue({} as any)
+      vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 1 } as any)
 
       await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
 
-      expect(prisma.profileTrustFlag.update).toHaveBeenCalledTimes(2)
+      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledTimes(2)
       expect(profileTrustQueue.add).toHaveBeenCalledTimes(2)
       expect(profileTrustQueue.add).toHaveBeenCalledWith(
         'promote-pendings',
@@ -82,10 +72,28 @@ describe('processProfileTrustJob', () => {
       )
     })
 
+    it('clear write is conditional on clearedAt:null (preserves attribution if admin won the race)', async () => {
+      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([
+        { id: 'f1', profileId: 'p1' },
+      ] as any)
+      vi.mocked(profileTrustQueue.add).mockResolvedValue({} as any)
+      // count=0 simulates "admin already cleared this flag between findMany and update"
+      vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 0 } as any)
+
+      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
+
+      // updateMany was issued with the race-safety guard.
+      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
+        where: { id: 'f1', clearedAt: null },
+        data: { clearedAt: expect.any(Date), clearedBy: 'system:unvetted_window' },
+      })
+      // The 0-row outcome is not treated as a failure — no throw, loop continues.
+    })
+
     it('skips the scan when nothing is aged', async () => {
       vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([] as any)
       await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
-      expect(prisma.profileTrustFlag.update).not.toHaveBeenCalled()
+      expect(prisma.profileTrustFlag.updateMany).not.toHaveBeenCalled()
       expect(profileTrustQueue.add).not.toHaveBeenCalled()
     })
 
@@ -113,16 +121,16 @@ describe('processProfileTrustJob', () => {
       vi.mocked(profileTrustQueue.add)
         .mockRejectedValueOnce(new Error('redis blip'))
         .mockResolvedValueOnce({} as any)
-      vi.mocked(prisma.profileTrustFlag.update).mockResolvedValue({} as any)
+      vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 1 } as any)
 
       await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
 
       // Both profiles must be attempted (proves loop continues after failure).
       expect(profileTrustQueue.add).toHaveBeenCalledTimes(2)
       // Only p2 reached the update step (p1's update skipped by the thrown enqueue).
-      expect(prisma.profileTrustFlag.update).toHaveBeenCalledTimes(1)
-      expect(prisma.profileTrustFlag.update).toHaveBeenCalledWith({
-        where: { id: 'f2' },
+      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledTimes(1)
+      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
+        where: { id: 'f2', clearedAt: null },
         data: { clearedAt: expect.any(Date), clearedBy: 'system:unvetted_window' },
       })
     })

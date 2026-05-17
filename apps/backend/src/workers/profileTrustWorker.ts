@@ -1,20 +1,20 @@
 import type { Job } from 'bullmq'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { ProfileTrustService, promotePendingsJobId } from '@/services/profileTrust.service'
+import {
+  ProfileTrustService,
+  promotePendingsJobId,
+  TRUST_WINDOW_MS,
+} from '@/services/profileTrust.service'
 import { profileTrustQueue, type ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
-const UNVETTED_WINDOW_MS = 24 * 60 * 60 * 1000 // 24h
+// PROFILE_UNVETTED soft-quarantine length. Shares TRUST_WINDOW_MS with SPAM_BURST
+// by design — see the constant's definition for the symmetry rationale.
+const UNVETTED_WINDOW_MS = TRUST_WINDOW_MS
 
 export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Promise<void> {
   const svc = ProfileTrustService.getInstance()
   const data = job.data
-
-  if (data.kind === 'reconcile-one') {
-    await svc.reconcileSpamBurst(data.profileId)
-    await job.log(`reconciled ${data.profileId}`)
-    return
-  }
 
   if (data.kind === 'promote-pendings') {
     await svc.promotePendingsIfClear(data.profileId)
@@ -51,8 +51,12 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
             removeOnFail: { count: 100 },
           }
         )
-        await prisma.profileTrustFlag.update({
-          where: { id },
+        // Conditional clear: if an admin (or any other path) cleared this flag
+        // between findMany and now, the updateMany affects 0 rows and we leave
+        // their clearedAt/clearedBy attribution intact. Mirrors the pattern in
+        // ProfileTrustService.clearFlag.
+        await prisma.profileTrustFlag.updateMany({
+          where: { id, clearedAt: null },
           data: { clearedAt: new Date(), clearedBy: 'system:unvetted_window' },
         })
       } catch (err) {

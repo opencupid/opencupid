@@ -31,7 +31,6 @@ import {
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 import { InteractionService } from '@/services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
-import { profileTrustQueue } from '@/queues/profileTrustQueue'
 import { ProfileTrustService } from '@/services/profileTrust.service'
 import { appConfig } from '@/lib/appconfig'
 import i18next from 'i18next'
@@ -170,24 +169,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     // isNew=true is a no-op when already cleared.
     await interactionService.markMatchAsSeen(senderProfileId, recipientProfileId)
 
-    // Enqueue SPAM_BURST reconcile when the sender added a new row to their count.
-    // BullMQ forbids ':' in custom jobIds (Redis key separator) and throws
-    // synchronously from validateOptions, so a .catch() on the returned Promise
-    // wouldn't contain it — wrap in try/catch to keep enqueue failures out of the
-    // user-facing response.
+    // Run SPAM_BURST reconcile inline when the sender added a new row to their count.
+    // Wrapped in try/catch so a reconcile failure can't surface to the user — their
+    // send already succeeded; convergence is non-user-facing best-effort.
     if (outcome === 'pending' || outcome === 'new_conversation') {
       try {
-        await profileTrustQueue.add(
-          'reconcile-one',
-          { kind: 'reconcile-one', profileId: senderProfileId },
-          {
-            jobId: `trust-${senderProfileId}`,
-            removeOnComplete: { count: 0 },
-            removeOnFail: { count: 100 },
-          }
-        )
+        await trustService.reconcileSpamBurst(senderProfileId)
       } catch (err) {
-        fastify.log.error({ err, senderProfileId }, 'profile-trust enqueue failed')
+        fastify.log.error({ err, senderProfileId }, 'profile-trust reconcile failed')
       }
     }
 

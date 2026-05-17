@@ -491,8 +491,8 @@ describe('MessageService.promoteConversation', () => {
 
   it('is a silent no-op when count===0 (peer-promoted, DISCARDED, BLOCKED, or absent)', async () => {
     // The status filter on PENDING absorbs every concurrent transition without
-    // a probe: peer-promoter, SPAM_BURST → DISCARDED, recipient → BLOCKED, or
-    // a row that no longer exists all collapse to count===0 → return without
+    // a probe: peer-promoter, recipient → BLOCKED, an admin/moderation DISCARD,
+    // or a row that no longer exists all collapse to count===0 → return without
     // inserting the participant (the prior promoter inserted it, or the row
     // shouldn't be revived).
     const updateMany = vi.fn().mockResolvedValue({ count: 0 })

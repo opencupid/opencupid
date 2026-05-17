@@ -134,6 +134,7 @@ beforeEach(async () => {
   reply = new MockReply()
   mockTrustService = {
     hasTrustFlag: vi.fn().mockResolvedValue(false),
+    reconcileSpamBurst: vi.fn().mockResolvedValue(undefined),
   }
   mockMessageService = {
     listMessagesForConversation: vi.fn(),
@@ -1166,11 +1167,9 @@ describe('profile-trust integration', () => {
   })
 
   // PENDING outcome: quarantined sender writes a new convo → PENDING, no recipient side effects.
-  it('quarantined sender: PENDING outcome suppresses notifications, enqueues reconcile', async () => {
+  it('quarantined sender: PENDING outcome suppresses notifications, runs reconcile', async () => {
     const { broadcastToProfile } = await import('../../utils/wsUtils')
-    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
     ;(broadcastToProfile as any).mockClear()
-    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
 
     mockTrustService.hasTrustFlag.mockResolvedValue(true)
     mockMessageService.resolveConversation.mockResolvedValue({
@@ -1196,12 +1195,8 @@ describe('profile-trust integration', () => {
     )
     expect(newMessageCalls).toHaveLength(0)
     expect(mockNotifierService.notifyProfile).not.toHaveBeenCalled()
-    // But reconcile WAS enqueued.
-    expect(spy).toHaveBeenCalledWith(
-      'reconcile-one',
-      { kind: 'reconcile-one', profileId: senderProfileId },
-      expect.objectContaining({ jobId: `trust-${senderProfileId}` })
-    )
+    // But reconcile WAS run.
+    expect(mockTrustService.reconcileSpamBurst).toHaveBeenCalledWith(senderProfileId)
     // resolveConversation received createAsPending: true
     expect(mockMessageService.resolveConversation).toHaveBeenCalledWith(
       fastify.prisma,
@@ -1209,15 +1204,10 @@ describe('profile-trust integration', () => {
       'ck1234567890abcd12345678',
       { createAsPending: true }
     )
-
-    spy.mockRestore()
   })
 
   // accept_and_promote_pending: recipient (not quarantined) replies into sender's PENDING.
-  it('accept_and_promote_pending: promote + accept, notify, no enqueue', async () => {
-    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
-    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
-
+  it('accept_and_promote_pending: promote + accept, notify, no reconcile', async () => {
     // Bob (p1) is sending into a PENDING initiated by Alice ('other-user').
     mockTrustService.hasTrustFlag.mockResolvedValue(false)
     mockMessageService.resolveConversation.mockResolvedValue({
@@ -1246,53 +1236,36 @@ describe('profile-trust integration', () => {
       'conv1'
     )
     expect(mockNotifierService.notifyProfile).toHaveBeenCalled()
-    // Sender did NOT add a new row to their own count — no enqueue.
-    expect(spy).not.toHaveBeenCalled()
-
-    spy.mockRestore()
+    // Sender did NOT add a new row to their own count — no reconcile.
+    expect(mockTrustService.reconcileSpamBurst).not.toHaveBeenCalled()
   })
 
-  // Test B — enqueue called on new_conversation
-  it('enqueues reconcile-one job when outcome is new_conversation', async () => {
-    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
-    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
-
+  // Test B — reconcile called on new_conversation
+  it('runs reconcileSpamBurst when outcome is new_conversation', async () => {
     const handler = fastify.routes['POST /message']
     mockNewConversationSend()
 
     await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
-    expect(spy).toHaveBeenCalledTimes(1)
-    expect(spy).toHaveBeenCalledWith(
-      'reconcile-one',
-      { kind: 'reconcile-one', profileId: senderProfileId },
-      expect.objectContaining({ jobId: `trust-${senderProfileId}` })
-    )
-
-    spy.mockRestore()
+    expect(mockTrustService.reconcileSpamBurst).toHaveBeenCalledTimes(1)
+    expect(mockTrustService.reconcileSpamBurst).toHaveBeenCalledWith(senderProfileId)
   })
 
-  // Test C — enqueue NOT called on other outcomes (reply)
-  it('does not enqueue when outcome is reply', async () => {
-    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
-    const spy = vi.spyOn(profileTrustQueue, 'add').mockResolvedValue({} as any)
-
+  // Test C — reconcile NOT called on other outcomes (reply)
+  it('does not run reconcileSpamBurst when outcome is reply', async () => {
     const handler = fastify.routes['POST /message']
     mockReplySend()
 
     await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
-    expect(spy).not.toHaveBeenCalled()
-
-    spy.mockRestore()
+    expect(mockTrustService.reconcileSpamBurst).not.toHaveBeenCalled()
   })
 
-  // Test D — send succeeds even when enqueue rejects
-  it('returns 200 even when enqueue throws (fire-and-forget)', async () => {
-    const { profileTrustQueue } = await import('@/queues/profileTrustQueue')
-    const spy = vi.spyOn(profileTrustQueue, 'add').mockRejectedValue(new Error('redis down'))
+  // Test D — send succeeds even when reconcile rejects (best-effort)
+  it('returns 200 even when reconcileSpamBurst throws (best-effort)', async () => {
+    mockTrustService.reconcileSpamBurst.mockRejectedValue(new Error('db down'))
 
     const handler = fastify.routes['POST /message']
     mockNewConversationSend()
@@ -1300,8 +1273,6 @@ describe('profile-trust integration', () => {
     await handler({ session: { profileId: senderProfileId }, body: validBody } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
-
-    spy.mockRestore()
   })
 })
 

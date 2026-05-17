@@ -24,7 +24,7 @@ vi.mock('@/services/messaging.service', () => ({
 }))
 
 import { prisma } from '../../lib/prisma'
-import { ProfileTrustService } from '../../services/profileTrust.service'
+import { ProfileTrustService, SPAM_BURST_WINDOW_MS } from '../../services/profileTrust.service'
 
 const mockedFindFirst = vi.mocked(prisma.profileTrustFlag.findFirst)
 
@@ -102,7 +102,7 @@ describe('ProfileTrustService', () => {
       queueAdd.mockReset()
     })
 
-    it('writes flag AND DISCARDs active (INITIATED+PENDING) when threshold reached and not already flagged', async () => {
+    it('writes flag when threshold reached and not already flagged', async () => {
       conversationCount.mockResolvedValue(3)
       mockedFindFirst.mockResolvedValue(null) // hasTrustFlag returns false
 
@@ -116,35 +116,19 @@ describe('ProfileTrustService', () => {
           flaggedBy: 'heuristic:spam_burst',
         }),
       })
-      expect(conversationUpdateMany).toHaveBeenCalledWith({
-        where: {
-          initiatorProfileId: 'profile-1',
-          status: { in: ['INITIATED', 'PENDING'] },
-        },
-        data: { status: 'DISCARDED' },
-      })
+      // Existing rows are not touched — flag-and-gate, not flag-and-converge.
+      expect(conversationUpdateMany).not.toHaveBeenCalled()
     })
 
-    it('DISCARDs race-survivors when at threshold and already flagged (convergence)', async () => {
-      // Models the race: a send crossed the route's pre-tx hasTrustFlag check BEFORE
-      // the flag landed, so when reconcile runs next, it sees count >= threshold AND
-      // alreadyFlagged. The just-created INITIATED must still be DISCARDed.
+    it('is a no-op when at threshold and already flagged (idempotent)', async () => {
       conversationCount.mockResolvedValue(3)
       mockedFindFirst.mockResolvedValue({ id: 'flag-1' } as any) // already flagged
 
       await svc.reconcileSpamBurst('profile-1')
 
-      // No new flag written — idempotent.
+      // No second flag, no row-status writes, not in the clear branch.
       expect(profileTrustFlagCreate).not.toHaveBeenCalled()
-      // But active-row DISCARD DOES run — this is the convergence guarantee.
-      expect(conversationUpdateMany).toHaveBeenCalledWith({
-        where: {
-          initiatorProfileId: 'profile-1',
-          status: { in: ['INITIATED', 'PENDING'] },
-        },
-        data: { status: 'DISCARDED' },
-      })
-      // Not in the clear branch.
+      expect(conversationUpdateMany).not.toHaveBeenCalled()
       expect(profileTrustFlagUpdateMany).not.toHaveBeenCalled()
       expect(queueAdd).not.toHaveBeenCalled()
     })
@@ -179,13 +163,64 @@ describe('ProfileTrustService', () => {
       expect(queueAdd).not.toHaveBeenCalled()
     })
 
-    it('threshold-counting query includes both INITIATED and PENDING', async () => {
+    it('threshold-counting query includes both INITIATED and PENDING and a createdAt window', async () => {
       conversationCount.mockResolvedValue(0)
       mockedFindFirst.mockResolvedValue(null)
       await svc.reconcileSpamBurst('profile-1')
       expect(conversationCount).toHaveBeenCalledWith({
-        where: { initiatorProfileId: 'profile-1', status: { in: ['INITIATED', 'PENDING'] } },
+        where: {
+          initiatorProfileId: 'profile-1',
+          status: { in: ['INITIATED', 'PENDING'] },
+          createdAt: { gte: expect.any(Date) },
+        },
       })
+    })
+
+    it('threshold window is 24 hours back from now', async () => {
+      // Freeze time so we can assert the exact `gte` boundary.
+      const FROZEN_NOW = new Date('2026-05-15T09:13:23.161Z')
+      vi.useFakeTimers()
+      vi.setSystemTime(FROZEN_NOW)
+      try {
+        conversationCount.mockResolvedValue(0)
+        mockedFindFirst.mockResolvedValue(null)
+        await svc.reconcileSpamBurst('profile-1')
+
+        const expectedSince = new Date(FROZEN_NOW.getTime() - SPAM_BURST_WINDOW_MS)
+        const call = conversationCount.mock.calls[0][0] as any
+        expect((call.where.createdAt as { gte: Date }).gte.toISOString()).toBe(
+          expectedSince.toISOString()
+        )
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('regression: never writes any conversation-row change on any code path', async () => {
+      // Guards against accidental reintroduction of row-touching enforcement. Under
+      // the flag-and-gate policy, reconcileSpamBurst maintains the SPAM_BURST flag
+      // only — existing conversation rows are never modified by this function.
+      // Sweeps the full case matrix (below/at/over threshold × flagged/not).
+      for (const [count, flagged] of [
+        [0, false],
+        [1, false],
+        [2, false],
+        [3, false],
+        [5, false],
+        [50, false],
+        [0, true],
+        [1, true],
+        [2, true],
+        [3, true],
+        [5, true],
+        [50, true],
+      ] as const) {
+        conversationUpdateMany.mockReset()
+        conversationCount.mockResolvedValue(count)
+        mockedFindFirst.mockResolvedValue(flagged ? ({ id: 'flag-1' } as any) : null)
+        await svc.reconcileSpamBurst('profile-1')
+        expect(conversationUpdateMany).not.toHaveBeenCalled()
+      }
     })
   })
 
