@@ -111,27 +111,28 @@ export function detectOverlapGroups<T extends MarkerInput>(
 }
 
 /**
- * Deterministic pixel offsets for placing `count` markers in a Vogel
- * (sunflower) spiral within a disc of `radius` pixels. The same `count`
- * always produces the same offsets in the same order — necessary so
- * markers don't dance around between recomputations.
+ * Deterministic pixel offsets for placing `count` markers on a grid inside
+ * an invisible square rectangle of side `2 * radius`, centred on the origin.
+ * The grid is roughly square — `cols = ceil(sqrt(count))`, `rows =
+ * ceil(count / cols)` — and markers occupy cell centres in row-major order.
  *
- * The 0.5 phase shift on `t` keeps every marker off the centre, so even
- * a 2-element group has both ends visibly displaced from the colocation
- * point (and from each other).
+ * Same `count` always produces the same offsets in the same order, so
+ * markers don't dance around between recomputations.
  */
-export function calculateSpiralOffsets(
-  count: number,
-  radius: number
-): { dx: number; dy: number }[] {
+export function calculateGridOffsets(count: number, radius: number): { dx: number; dy: number }[] {
   if (count <= 0) return []
-  const golden = Math.PI * (3 - Math.sqrt(5))
+  const cols = Math.max(1, Math.ceil(Math.sqrt(count)))
+  const rows = Math.max(1, Math.ceil(count / cols))
+  const cellW = (2 * radius) / cols
+  const cellH = (2 * radius) / rows
   const offsets: { dx: number; dy: number }[] = []
   for (let i = 0; i < count; i++) {
-    const t = (i + 0.5) / count
-    const r = radius * Math.sqrt(t)
-    const a = (i + 1) * golden
-    offsets.push({ dx: r * Math.cos(a), dy: r * Math.sin(a) })
+    const col = i % cols
+    const row = Math.floor(i / cols)
+    offsets.push({
+      dx: -radius + (col + 0.5) * cellW,
+      dy: -radius + (row + 0.5) * cellH,
+    })
   }
   return offsets
 }
@@ -139,8 +140,9 @@ export function calculateSpiralOffsets(
 /**
  * Compute the spread plan for the given marker set at the given zoom.
  * Markers not in any overlapping group are returned at their original
- * coordinates (`spread: false`); overlapping markers are arranged in a
- * spiral around the group's container-pixel centroid (`spread: true`).
+ * coordinates (`spread: false`); overlapping markers are arranged on a
+ * grid inside an invisible square rectangle centred on the group's
+ * container-pixel centroid (`spread: true`).
  *
  * Centroid is computed in pixel space — averaging lat/lng directly would
  * skew north for groups spanning high-latitude tiles.
@@ -177,7 +179,7 @@ export function spreadMarkers<T extends MarkerInput>(
     cx /= groupPoints.length
     cy /= groupPoints.length
 
-    const offsets = calculateSpiralOffsets(group.length, offsetPx)
+    const offsets = calculateGridOffsets(group.length, offsetPx)
     for (let i = 0; i < group.length; i++) {
       const off = offsets[i]!
       const member = group[i]!

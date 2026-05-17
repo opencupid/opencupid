@@ -14,7 +14,7 @@ vi.mock('leaflet', () => {
 import type { Map as LMap } from 'leaflet'
 import {
   DEFAULT_SPREAD_CONFIG,
-  calculateSpiralOffsets,
+  calculateGridOffsets,
   detectOverlapGroups,
   offsetForZoom,
   spreadMarkers,
@@ -52,32 +52,48 @@ describe('offsetForZoom', () => {
   })
 })
 
-describe('calculateSpiralOffsets', () => {
+describe('calculateGridOffsets', () => {
   it('returns an empty array for non-positive counts', () => {
-    expect(calculateSpiralOffsets(0, 50)).toEqual([])
-    expect(calculateSpiralOffsets(-3, 50)).toEqual([])
+    expect(calculateGridOffsets(0, 50)).toEqual([])
+    expect(calculateGridOffsets(-3, 50)).toEqual([])
   })
 
-  it('places every marker off the centre', () => {
-    for (const n of [1, 2, 3, 5, 10]) {
-      const offsets = calculateSpiralOffsets(n, 50)
+  it('places every offset inside the bounding rectangle of side 2*radius', () => {
+    const radius = 50
+    for (const n of [1, 2, 3, 4, 5, 9, 16]) {
+      const offsets = calculateGridOffsets(n, radius)
       expect(offsets).toHaveLength(n)
       for (const { dx, dy } of offsets) {
-        expect(Math.hypot(dx, dy)).toBeGreaterThan(0)
+        expect(Math.abs(dx)).toBeLessThanOrEqual(radius + 1e-9)
+        expect(Math.abs(dy)).toBeLessThanOrEqual(radius + 1e-9)
       }
     }
   })
 
-  it('keeps every offset within the requested radius', () => {
-    const radius = 50
-    for (const { dx, dy } of calculateSpiralOffsets(20, radius)) {
-      expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(radius + 1e-9)
+  it('produces distinct positions for every marker in the group', () => {
+    for (const n of [2, 3, 4, 7, 12]) {
+      const offsets = calculateGridOffsets(n, 50)
+      const keys = offsets.map((o) => `${o.dx},${o.dy}`)
+      expect(new Set(keys).size).toBe(n)
     }
   })
 
+  it('arranges 4 markers at the corners of a 2x2 grid', () => {
+    const radius = 50
+    const offsets = calculateGridOffsets(4, radius)
+    // cellW = cellH = radius. Cell centres at (±radius/2, ±radius/2).
+    const half = radius / 2
+    expect(offsets).toEqual([
+      { dx: -half, dy: -half },
+      { dx: half, dy: -half },
+      { dx: -half, dy: half },
+      { dx: half, dy: half },
+    ])
+  })
+
   it('is deterministic — identical inputs produce identical offsets', () => {
-    const a = calculateSpiralOffsets(7, 50)
-    const b = calculateSpiralOffsets(7, 50)
+    const a = calculateGridOffsets(7, 50)
+    const b = calculateGridOffsets(7, 50)
     expect(a).toEqual(b)
   })
 })
