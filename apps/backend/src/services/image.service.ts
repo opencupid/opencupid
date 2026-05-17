@@ -303,7 +303,6 @@ export class ImageService {
     const baseFile = path.join(getMediaRoot(), imageBasePath(image.storagePath))
     const filesToDelete = [
       `${baseFile}-original.jpg`,
-      `${baseFile}-face.jpg`,
       ...variants.map((size) => `${baseFile}-${size.name}.webp`),
     ]
     for (const f of filesToDelete) {
