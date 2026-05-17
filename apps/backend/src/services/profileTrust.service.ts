@@ -205,9 +205,11 @@ export class ProfileTrustService {
    * all its initiator-side PENDING conversations to INITIATED. Runs in its own
    * serializable tx — used by the trust-sweep cron, one tx per candidate.
    *
-   * Per-row races are absorbed by promoteConversation's best-effort no-op;
-   * genuine R-W conflicts surface as 40001 at commit, retried by BullMQ.
-   * On retry `stillFlagged` short-circuits if a new flag landed.
+   * Per-row races are absorbed by promoteConversation's best-effort no-op
+   * (per-row `updateMany WHERE status: 'PENDING'`). Genuine R-W conflicts
+   * surface as 40001 at commit; the next 15-min sweeper tick re-picks up the
+   * profile because the SQL anti-join still matches, and `stillFlagged` inside
+   * `promotePendingsInTx` short-circuits if a flag landed in the meantime.
    */
   async promotePendingsIfClear(profileId: string): Promise<void> {
     await prisma.$transaction(
