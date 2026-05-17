@@ -1,9 +1,30 @@
--- Rename existing constraints out of the way so the new ProfileImage table can
--- use the canonical names (avoids _pkey1 / _fkey1 auto-suffixing).
-ALTER TABLE "ProfileImage" RENAME CONSTRAINT "ProfileImage_pkey" TO "ProfileImage_old_pkey";
-ALTER TABLE "ProfileImage" RENAME CONSTRAINT "ProfileImage_profileId_fkey" TO "ProfileImage_old_profileId_fkey";
+-- DropIndex
+DROP INDEX "ProfileImage_profileId_position_idx";
 
--- 1) New Image table
+-- DropIndex
+DROP INDEX "ProfileImage_storagePath_key";
+
+-- AlterTable
+ALTER TABLE "ProfileImage" DROP CONSTRAINT "ProfileImage_pkey",
+DROP COLUMN "altText",
+DROP COLUMN "blurhash",
+DROP COLUMN "contentHash",
+DROP COLUMN "createdAt",
+DROP COLUMN "hasFace",
+DROP COLUMN "height",
+DROP COLUMN "id",
+DROP COLUMN "isFlagged",
+DROP COLUMN "isModerated",
+DROP COLUMN "mimeType",
+DROP COLUMN "position",
+DROP COLUMN "storagePath",
+DROP COLUMN "updatedAt",
+DROP COLUMN "url",
+DROP COLUMN "width",
+ADD COLUMN     "imageId" TEXT NOT NULL,
+ADD CONSTRAINT "ProfileImage_pkey" PRIMARY KEY ("imageId");
+
+-- CreateTable
 CREATE TABLE "Image" (
     "id" TEXT NOT NULL,
     "ownerProfileId" TEXT NOT NULL,
@@ -24,50 +45,7 @@ CREATE TABLE "Image" (
     CONSTRAINT "Image_pkey" PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "Image_storagePath_key" ON "Image"("storagePath");
-CREATE INDEX "Image_ownerProfileId_idx" ON "Image"("ownerProfileId");
-
-ALTER TABLE "Image" ADD CONSTRAINT "Image_ownerProfileId_fkey"
-    FOREIGN KEY ("ownerProfileId") REFERENCES "Profile"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
-
--- 2) Backfill Image from ProfileImage (IDs preserved)
-INSERT INTO "Image" ("id", "ownerProfileId", "storagePath", "mimeType",
-                     "width", "height", "contentHash", "blurhash", "hasFace",
-                     "isModerated", "isFlagged", "position", "altText",
-                     "createdAt", "updatedAt")
-SELECT "id", "profileId", "storagePath", "mimeType",
-       "width", "height", "contentHash", "blurhash", "hasFace",
-       "isModerated", "isFlagged", "position", "altText",
-       "createdAt", "updatedAt"
-FROM "ProfileImage";
-
--- 3) Rebuild ProfileImage as a thin join table
-ALTER TABLE "ProfileImage" RENAME TO "ProfileImage_old";
-
-CREATE TABLE "ProfileImage" (
-    "imageId" TEXT NOT NULL,
-    "profileId" TEXT NOT NULL,
-
-    CONSTRAINT "ProfileImage_pkey" PRIMARY KEY ("imageId")
-);
-
-CREATE INDEX "ProfileImage_profileId_idx" ON "ProfileImage"("profileId");
-
-ALTER TABLE "ProfileImage" ADD CONSTRAINT "ProfileImage_imageId_fkey"
-    FOREIGN KEY ("imageId") REFERENCES "Image"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "ProfileImage" ADD CONSTRAINT "ProfileImage_profileId_fkey"
-    FOREIGN KEY ("profileId") REFERENCES "Profile"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
-
-INSERT INTO "ProfileImage" ("imageId", "profileId")
-SELECT "id", "profileId" FROM "ProfileImage_old";
-
-DROP TABLE "ProfileImage_old";
-
--- 4) New empty UserContentImage join table
+-- CreateTable
 CREATE TABLE "UserContentImage" (
     "imageId" TEXT NOT NULL,
     "userContentId" TEXT NOT NULL,
@@ -75,12 +53,26 @@ CREATE TABLE "UserContentImage" (
     CONSTRAINT "UserContentImage_pkey" PRIMARY KEY ("imageId")
 );
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Image_storagePath_key" ON "Image"("storagePath");
+
+-- CreateIndex
+CREATE INDEX "Image_ownerProfileId_idx" ON "Image"("ownerProfileId");
+
+-- CreateIndex
 CREATE INDEX "UserContentImage_userContentId_idx" ON "UserContentImage"("userContentId");
 
-ALTER TABLE "UserContentImage" ADD CONSTRAINT "UserContentImage_imageId_fkey"
-    FOREIGN KEY ("imageId") REFERENCES "Image"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "ProfileImage_profileId_idx" ON "ProfileImage"("profileId");
 
-ALTER TABLE "UserContentImage" ADD CONSTRAINT "UserContentImage_userContentId_fkey"
-    FOREIGN KEY ("userContentId") REFERENCES "UserContent"("id")
-    ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey
+ALTER TABLE "Image" ADD CONSTRAINT "Image_ownerProfileId_fkey" FOREIGN KEY ("ownerProfileId") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ProfileImage" ADD CONSTRAINT "ProfileImage_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserContentImage" ADD CONSTRAINT "UserContentImage_imageId_fkey" FOREIGN KEY ("imageId") REFERENCES "Image"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserContentImage" ADD CONSTRAINT "UserContentImage_userContentId_fkey" FOREIGN KEY ("userContentId") REFERENCES "UserContent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
