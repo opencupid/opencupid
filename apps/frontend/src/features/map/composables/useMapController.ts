@@ -1,5 +1,4 @@
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
-import { OverlappingMarkerSpiderfier } from 'ts-overlapping-marker-spiderfier-leaflet'
 import { nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated, ref, watch } from 'vue'
 import type { Component, Ref } from 'vue'
 
@@ -17,6 +16,7 @@ import {
   hydratePoiIcon,
   MAP_MAX_ZOOM,
 } from '../utils/mapUtils'
+import { DEFAULT_SPREAD_CONFIG, spreadMarkers, type SpreadConfig } from '../utils/markerSpreading'
 import { MAP_DEFAULT_ZOOM } from '@shared/maps'
 
 // ---------------------------------------------------------------------------
@@ -37,6 +37,13 @@ export interface MapProps {
   initialCenter: [number, number]
   highlightedLocation?: [number, number] | null
   fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
+  /**
+   * Overrides for the density-based marker spreading. Any unset fields fall
+   * back to DEFAULT_SPREAD_CONFIG. Passing `null` is not supported — to
+   * disable spreading entirely, set `disableAtZoom` lower than any zoom the
+   * map can reach.
+   */
+  spreadConfig?: Partial<SpreadConfig>
 }
 
 type MapEmit = {
@@ -65,14 +72,9 @@ function supportsHover(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// OMS tuning constants
+// Tuning constants
 // ---------------------------------------------------------------------------
 
-const SPIDERFY_COLOCATION_THRESHOLD_M = 10
-const OMS_CIRCLE_FOOT_SEPARATION = 65
-const OMS_SPIRAL_FOOT_SEPARATION = 50
-const OMS_SPIRAL_LENGTH_START = 16
-const OMS_SPIRAL_LENGTH_FACTOR = 12
 const BOUNDS_DEBOUNCE_MS = 500
 const SEARCH_FOCUS_ZOOM = 12
 
@@ -100,7 +102,6 @@ export function useMapController(
   let phase: MapPhase = 'uninitialized'
   const deferred: DeferredWork = {}
   let map: LMap
-  let oms: OverlappingMarkerSpiderfier
   let pois: DiffableLayer<MapPoi>
   let clusters: DiffableLayer<MapCluster>
   let pointLayer: L.LayerGroup
@@ -108,14 +109,8 @@ export function useMapController(
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
-  // One-shot continuation invoked the next time an items batch arrives.
-  // Used by the max-zoom cluster click to spiderfy as soon as the leaves
-  // land, and only then. A second click overwrites the slot; an items
-  // batch with no matching leaves consumes it silently. Bounding the
-  // intent to the first batch after the click means a stale flag can't
-  // fire a phantom spiderfy minutes later if the user has panned away.
-  let pendingItemsCallback: (() => void) | null = null
   let markerConfig: MarkerConfig | null = null
+  const spreadConfig: SpreadConfig = { ...DEFAULT_SPREAD_CONFIG, ...props.spreadConfig }
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
 
@@ -169,6 +164,9 @@ export function useMapController(
     L.control.zoom({ position: 'bottomright' }).addTo(map)
 
     map.on('moveend', emitBounds)
+    map.on('moveend', recomputeSpreading)
+    map.on('zoomend', recomputeSpreading)
+    map.on('resize', recomputeSpreading)
 
     resizeObserver = new ResizeObserver(() => {
       const size = map.getSize()
@@ -194,17 +192,6 @@ export function useMapController(
   function initLayers(): void {
     pointLayer = L.layerGroup().addTo(map)
     clusterLayer = L.layerGroup().addTo(map)
-
-    oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true, circleSpiralSwitchover: 5 })
-    oms.circleFootSeparation = OMS_CIRCLE_FOOT_SEPARATION
-    oms.spiralFootSeparation = OMS_SPIRAL_FOOT_SEPARATION
-    oms.spiralLengthStart = OMS_SPIRAL_LENGTH_START
-    oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
-
-    oms.addListener('click', (marker) => {
-      const id = pois.getId(marker as LMarker)
-      if (id !== undefined) emit('item:select', String(id))
-    })
 
     // POI data is treated as immutable per id for the lifetime of a session
     // (the GUI is not expected to reflect mid-session DB changes). No
@@ -284,6 +271,12 @@ export function useMapController(
       ),
       keyboard: true,
     })
+
+    // OMS previously owned this click; without it, every marker emits
+    // item:select directly. The hover-bound click below additionally
+    // closes the popup on desktops — that's a popup-UX concern, kept
+    // separate from selection.
+    m.on('click', () => emit('item:select', String(item.id)))
 
     if (resolvePopup && supportsHover()) {
       const classes = ['item-popup', `item-popup-${item.kind}`]
@@ -366,11 +359,10 @@ export function useMapController(
 
     m.on('click', () => {
       if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
+        // At max zoom the supercluster index can't subdivide further. Drop the
+        // cluster icon and rely on density-based spreading to make the
+        // colocated leaves individually clickable once they arrive.
         clusters.update(clusters.allItems().filter((c) => c.id !== cluster.id))
-        const target = L.latLng(cluster.lat, cluster.lon)
-        // Bind the spiderfy intent to this click's closure. The next items
-        // batch consumes it; a second click before that overwrites it.
-        pendingItemsCallback = () => triggerSpiderfy(target)
         map.setView([cluster.lat, cluster.lon], MAP_MAX_ZOOM)
       } else {
         map.flyTo([cluster.lat, cluster.lon], cluster.expansionZoom, {
@@ -386,24 +378,33 @@ export function useMapController(
 
   function doUpdateMarkers(items: MapPoi[]): void {
     if (!markerConfig) return
-    const { added, removed } = pois.update(items)
-
-    for (const m of removed) oms.removeMarker(m)
-    for (const m of added) oms.addMarker(m)
-
-    if (pendingItemsCallback) {
-      const cb = pendingItemsCallback
-      pendingItemsCallback = null
-      cb()
-    }
+    pois.update(items)
+    recomputeSpreading()
   }
 
-  function triggerSpiderfy(target: L.LatLng): void {
-    const match = [...pois.values()].find(
-      (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
-    )
-    if (!match) return
-    ;(oms as any).spiderListener(match)
+  /**
+   * Re-plan marker positions: detect overlapping groups in container-pixel
+   * space and spiral them out by a zoom-scaled radius. Cheap enough to run
+   * synchronously on every map view change (the algorithm is O(n²) in the
+   * on-screen marker count, which the pipeline keeps below a few hundred).
+   */
+  function recomputeSpreading(): void {
+    if (phase !== 'ready' || !map) return
+    const size = map.getSize()
+    if (size.x === 0 || size.y === 0) return
+
+    const items = pois.allItems()
+    if (items.length === 0) return
+
+    const inputs = items.map((it) => ({ id: it.id, lat: it.lat, lng: it.lon }))
+    const plans = spreadMarkers(inputs, map, map.getZoom(), spreadConfig)
+    for (const plan of plans) {
+      const marker = pois.get(plan.marker.id)
+      if (!marker) continue
+      const current = marker.getLatLng()
+      if (current.lat === plan.lat && current.lng === plan.lng) continue
+      marker.setLatLng([plan.lat, plan.lng])
+    }
   }
 
   function updateMarkers(items: MapPoi[], config: MarkerConfig): void {
