@@ -10,6 +10,7 @@ import { ReorderImagesPayloadSchema } from '@zod/image/image.dto'
 import { appConfig } from '@/lib/appconfig'
 import type { ImageApiResponse } from '@zod/image/image.dto'
 
+// Route params for ID lookups
 const IdLookupParamsSchema = z.object({
   id: z.string().cuid(),
 })
@@ -18,13 +19,13 @@ const UpdateImageBodySchema = z.object({ altText: z.string().optional() })
 const imageRoutes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(multipart, {
     limits: {
-      fieldNameSize: 100,
-      fieldSize: 100,
-      fields: 10,
-      fileSize: appConfig.IMAGE_MAX_SIZE,
-      files: 1,
-      headerPairs: 2000,
-      parts: 1000,
+      fieldNameSize: 100, // Max field name size in bytes
+      fieldSize: 100, // Max field value size in bytes
+      fields: 10, // Max number of non-file fields
+      fileSize: appConfig.IMAGE_MAX_SIZE, // Max file size in bytes
+      files: 1, // Max number of file fields
+      headerPairs: 2000, // Max number of header key=>value pairs
+      parts: 1000, // For multipart forms, the max number of parts (fields + files)
     },
     attachFieldsToBody: false,
   })
@@ -64,20 +65,29 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (req, reply) => {
       let files
+
       try {
         files = await req.saveRequestFiles({
           tmpdir: uploadTmpDir(),
-          limits: { fileSize: appConfig.IMAGE_MAX_SIZE, files: 1, fields: 1 },
+          limits: {
+            fileSize: appConfig.IMAGE_MAX_SIZE,
+            files: 1,
+            fields: 1,
+          },
         })
       } catch (err: any) {
         fastify.log.warn('Upload error:', err, err.code)
+
         const reason =
           err.code === 'FST_REQ_FILE_TOO_LARGE' ? 'IMAGE_TOO_LARGE' : 'IMAGE_UPLOAD_FAILED'
+
         return sendError(reply, 400, reason)
       }
 
       if (files.length === 0) return sendError(reply, 400, 'No file uploaded')
+
       const fileUpload = files[0]
+      // Validate file type
       if (!fileUpload.mimetype.startsWith('image/')) {
         return sendError(reply, 400, 'Uploaded file must be an image')
       }
