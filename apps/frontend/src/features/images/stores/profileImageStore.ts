@@ -1,4 +1,3 @@
-import z from 'zod'
 import { defineStore } from 'pinia'
 import { api, axios, safeApiCall } from '@/lib/api'
 import type { ApiError } from '@zod/apiResponse.dto'
@@ -93,9 +92,6 @@ export const useProfileImageStore = defineStore('profileImage', {
 
 function mapStoreError(err: unknown): GalleryStoreResponse {
   const out: ApiError = { success: false, message: 'An unexpected error occurred' }
-  if (err instanceof z.ZodError) {
-    // shape preserved for parity with prior implementation
-  }
   if (axios.isAxiosError(err) && err.response) {
     const resp = err.response.data as Partial<ApiError>
     out.message = resp.message ?? out.message
