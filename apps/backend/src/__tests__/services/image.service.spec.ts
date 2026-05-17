@@ -28,23 +28,6 @@ vi.mock('../../services/imageprocessor', () => ({
   },
 }))
 
-// syncProfileHasFace lives in profile.service, whose transitive imports
-// (zod profile.dto -> renamed profileimage.dto) currently fail to resolve
-// mid-refactor. Mock it so this spec can load image.service in isolation.
-vi.mock('../../services/profile.service', () => ({
-  syncProfileHasFace: vi.fn(async (tx: any, profileId: string) => {
-    const top = await tx.profileImage.findFirst({
-      where: { profileId },
-      include: { image: { select: { hasFace: true } } },
-      orderBy: { image: { position: 'asc' } },
-    })
-    await tx.profile.update({
-      where: { id: profileId },
-      data: { hasFace: top?.image?.hasFace ?? false },
-    })
-  }),
-}))
-
 const mockGenerateContentHash = vi.fn()
 vi.mock('@/utils/hash', () => ({
   generateContentHash: mockGenerateContentHash,
