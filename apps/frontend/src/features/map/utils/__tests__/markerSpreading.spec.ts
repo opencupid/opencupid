@@ -16,7 +16,6 @@ import {
   DEFAULT_SPREAD_CONFIG,
   calculateGridOffsets,
   detectOverlapGroups,
-  offsetForZoom,
   spreadMarkers,
   type SpreadConfig,
 } from '../markerSpreading'
@@ -39,35 +38,19 @@ function makeFakeMap(scale = 10): LMap {
   } as unknown as LMap
 }
 
-describe('offsetForZoom', () => {
-  it('equals baseOffsetPx at referenceZoom', () => {
-    expect(offsetForZoom(11, DEFAULT_SPREAD_CONFIG)).toBe(50)
-  })
-
-  it('doubles per zoom step out, halves per zoom step in', () => {
-    expect(offsetForZoom(10, DEFAULT_SPREAD_CONFIG)).toBe(100)
-    expect(offsetForZoom(9, DEFAULT_SPREAD_CONFIG)).toBe(200)
-    expect(offsetForZoom(12, DEFAULT_SPREAD_CONFIG)).toBe(25)
-    expect(offsetForZoom(13, DEFAULT_SPREAD_CONFIG)).toBe(12.5)
-  })
-})
-
 describe('calculateGridOffsets', () => {
   it('returns an empty array for non-positive counts', () => {
     expect(calculateGridOffsets(0, 50)).toEqual([])
     expect(calculateGridOffsets(-3, 50)).toEqual([])
   })
 
-  it('places every offset inside the bounding rectangle of side 2*radius', () => {
-    const radius = 50
-    for (const n of [1, 2, 3, 4, 5, 9, 16]) {
-      const offsets = calculateGridOffsets(n, radius)
-      expect(offsets).toHaveLength(n)
-      for (const { dx, dy } of offsets) {
-        expect(Math.abs(dx)).toBeLessThanOrEqual(radius + 1e-9)
-        expect(Math.abs(dy)).toBeLessThanOrEqual(radius + 1e-9)
-      }
-    }
+  it('separates adjacent cells by exactly cellSize', () => {
+    const cellSize = 50
+    const offsets = calculateGridOffsets(4, cellSize)
+    // 2x2 grid: row 0 has the first two cells.
+    expect(
+      Math.hypot(offsets[1]!.dx - offsets[0]!.dx, offsets[1]!.dy - offsets[0]!.dy)
+    ).toBeCloseTo(cellSize, 9)
   })
 
   it('produces distinct positions for every marker in the group', () => {
@@ -78,11 +61,20 @@ describe('calculateGridOffsets', () => {
     }
   })
 
-  it('arranges 4 markers at the corners of a 2x2 grid', () => {
-    const radius = 50
-    const offsets = calculateGridOffsets(4, radius)
-    // cellW = cellH = radius. Cell centres at (±radius/2, ±radius/2).
-    const half = radius / 2
+  it('centres the grid on the origin', () => {
+    // For any count, sums of dx and dy across a full row-major block cancel.
+    // Use 4 (a complete 2x2) so the grid is exactly symmetric.
+    const offsets = calculateGridOffsets(4, 50)
+    const sx = offsets.reduce((s, o) => s + o.dx, 0)
+    const sy = offsets.reduce((s, o) => s + o.dy, 0)
+    expect(sx).toBeCloseTo(0, 9)
+    expect(sy).toBeCloseTo(0, 9)
+  })
+
+  it('arranges 4 markers at the corners of a 2x2 grid with pitch cellSize', () => {
+    const cellSize = 50
+    const offsets = calculateGridOffsets(4, cellSize)
+    const half = cellSize / 2
     expect(offsets).toEqual([
       { dx: -half, dy: -half },
       { dx: half, dy: -half },
@@ -177,6 +169,27 @@ describe('spreadMarkers', () => {
     // Each marker is now at a unique lat/lng.
     const keys = plan.map((p) => `${p.lat},${p.lng}`)
     expect(new Set(keys).size).toBe(plan.length)
+  })
+
+  it('keeps adjacent leaves at least markerSizePx apart in pixel space', () => {
+    // 10 colocated markers — the previous fixed-radius layout would squash
+    // them inside a 100x100px box (overlap). The leaf-count-driven layout
+    // pitches every cell at markerSizePx + gapPx instead.
+    const markers = Array.from({ length: 10 }, (_, i) => ({ id: i, lat: 0, lng: 0 }))
+    const plan = spreadMarkers(markers, map, 11, DEFAULT_SPREAD_CONFIG)
+    expect(plan.every((p) => p.spread)).toBe(true)
+
+    // The fake map projects 1° lat/lng → 10 px, so re-projecting the planned
+    // lat/lng lands us back in pixel space for direct distance assertions.
+    const positions = plan.map((p) => ({ x: p.lng * 10, y: p.lat * 10 }))
+    const minPitch = DEFAULT_SPREAD_CONFIG.markerSizePx
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const dx = positions[i]!.x - positions[j]!.x
+        const dy = positions[i]!.y - positions[j]!.y
+        expect(Math.hypot(dx, dy)).toBeGreaterThanOrEqual(minPitch - 1e-6)
+      }
+    }
   })
 
   it('produces stable plans across calls with the same inputs', () => {

@@ -1,5 +1,7 @@
 import L, { type Map as LMap } from 'leaflet'
 
+import { POI_ICON_SIZE } from './mapUtils'
+
 /**
  * Minimal shape a marker must expose for the spreading algorithm. Decoupled
  * from `MapPoi` so the utilities are reusable for any lat/lng-bearing record.
@@ -16,6 +18,12 @@ export interface MarkerInput {
  * Spreading configuration. All distances are container-pixel units —
  * the projection-aware unit is what overlap actually looks like to the user,
  * independent of latitude or projection distortions.
+ *
+ * The grid cell pitch is `markerSizePx + gapPx`, which guarantees that no
+ * two spread markers visually overlap as long as the icon diameter doesn't
+ * exceed `markerSizePx`. The bounding rectangle is then derived from the
+ * leaf count (cols × cellPitch, rows × cellPitch) rather than the other way
+ * round, so dense clusters naturally fan out further than sparse ones.
  */
 export interface SpreadConfig {
   /**
@@ -26,14 +34,15 @@ export interface SpreadConfig {
    */
   overlapThresholdPx: number
   /**
-   * Base spread radius (px) used at `referenceZoom`. Per-zoom radius scales
-   * inversely with zoom: a marker drift that's natural at city view should
-   * compress at street view, where the underlying geography itself supplies
-   * separation.
+   * Visual diameter of a marker icon, in container pixels. Sets the minimum
+   * cell pitch so adjacent markers in a spread group don't visually collide.
    */
-  baseOffsetPx: number
-  /** Zoom level at which the spread radius equals `baseOffsetPx`. */
-  referenceZoom: number
+  markerSizePx: number
+  /**
+   * Edge-to-edge gap between adjacent markers in a spread group. Larger gaps
+   * push markers further apart at the cost of taking more screen real estate.
+   */
+  gapPx: number
   /**
    * At and above this zoom, spreading is bypassed entirely — markers render
    * at their true coordinates. Allows the user to drill into true positions
@@ -44,8 +53,8 @@ export interface SpreadConfig {
 
 export const DEFAULT_SPREAD_CONFIG: SpreadConfig = {
   overlapThresholdPx: 20,
-  baseOffsetPx: 50,
-  referenceZoom: 11,
+  markerSizePx: POI_ICON_SIZE,
+  gapPx: 10,
   disableAtZoom: 15,
 }
 
@@ -56,15 +65,6 @@ export interface PositionPlan<T> {
   lng: number
   /** True iff the marker has been displaced from its original geocoded position. */
   spread: boolean
-}
-
-/**
- * Spread radius (px) for a given zoom, scaling inversely with zoom from
- * `baseOffsetPx` at `referenceZoom`. Each zoom-out doubles the radius;
- * each zoom-in halves it.
- */
-export function offsetForZoom(zoom: number, config: SpreadConfig): number {
-  return config.baseOffsetPx * Math.pow(2, config.referenceZoom - zoom)
 }
 
 /**
@@ -111,27 +111,34 @@ export function detectOverlapGroups<T extends MarkerInput>(
 }
 
 /**
- * Deterministic pixel offsets for placing `count` markers on a grid inside
- * an invisible square rectangle of side `2 * radius`, centred on the origin.
- * The grid is roughly square — `cols = ceil(sqrt(count))`, `rows =
- * ceil(count / cols)` — and markers occupy cell centres in row-major order.
+ * Deterministic pixel offsets for placing `count` markers on a grid centred
+ * on the origin. Cell pitch is `cellSize` in both axes, so the enclosing
+ * invisible rectangle has size `cols * cellSize × rows * cellSize` where
+ * `cols = ceil(sqrt(count))` and `rows = ceil(count / cols)`. Markers
+ * occupy cell centres in row-major order.
  *
  * Same `count` always produces the same offsets in the same order, so
- * markers don't dance around between recomputations.
+ * markers don't dance around between recomputations. Sizing the bounding
+ * box from the leaf count (rather than fixing it ahead of time) means
+ * every member of a cluster fits at non-overlapping pitch, no matter how
+ * dense the cluster is.
  */
-export function calculateGridOffsets(count: number, radius: number): { dx: number; dy: number }[] {
+export function calculateGridOffsets(
+  count: number,
+  cellSize: number
+): { dx: number; dy: number }[] {
   if (count <= 0) return []
   const cols = Math.max(1, Math.ceil(Math.sqrt(count)))
   const rows = Math.max(1, Math.ceil(count / cols))
-  const cellW = (2 * radius) / cols
-  const cellH = (2 * radius) / rows
+  const xOrigin = -((cols - 1) * cellSize) / 2
+  const yOrigin = -((rows - 1) * cellSize) / 2
   const offsets: { dx: number; dy: number }[] = []
   for (let i = 0; i < count; i++) {
     const col = i % cols
     const row = Math.floor(i / cols)
     offsets.push({
-      dx: -radius + (col + 0.5) * cellW,
-      dy: -radius + (row + 0.5) * cellH,
+      dx: xOrigin + col * cellSize,
+      dy: yOrigin + row * cellSize,
     })
   }
   return offsets
@@ -141,8 +148,8 @@ export function calculateGridOffsets(count: number, radius: number): { dx: numbe
  * Compute the spread plan for the given marker set at the given zoom.
  * Markers not in any overlapping group are returned at their original
  * coordinates (`spread: false`); overlapping markers are arranged on a
- * grid inside an invisible square rectangle centred on the group's
- * container-pixel centroid (`spread: true`).
+ * grid centred on the group's container-pixel centroid, with cell pitch
+ * `markerSizePx + gapPx` so no two leaves visually overlap (`spread: true`).
  *
  * Centroid is computed in pixel space — averaging lat/lng directly would
  * skew north for groups spanning high-latitude tiles.
@@ -164,7 +171,7 @@ export function spreadMarkers<T extends MarkerInput>(
   const groups = detectOverlapGroups(markers, map, config.overlapThresholdPx)
   if (groups.length === 0) return plan
 
-  const offsetPx = offsetForZoom(zoom, config)
+  const cellSize = config.markerSizePx + config.gapPx
   const planById = new Map<string | number, PositionPlan<T>>()
   for (const p of plan) planById.set(p.marker.id, p)
 
@@ -179,7 +186,7 @@ export function spreadMarkers<T extends MarkerInput>(
     cx /= groupPoints.length
     cy /= groupPoints.length
 
-    const offsets = calculateGridOffsets(group.length, offsetPx)
+    const offsets = calculateGridOffsets(group.length, cellSize)
     for (let i = 0; i < group.length; i++) {
       const off = offsets[i]!
       const member = group[i]!
