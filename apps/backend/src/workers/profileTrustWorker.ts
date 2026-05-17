@@ -51,8 +51,12 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
             removeOnFail: { count: 100 },
           }
         )
-        await prisma.profileTrustFlag.update({
-          where: { id },
+        // Conditional clear: if an admin (or any other path) cleared this flag
+        // between findMany and now, the updateMany affects 0 rows and we leave
+        // their clearedAt/clearedBy attribution intact. Mirrors the pattern in
+        // ProfileTrustService.clearFlag.
+        await prisma.profileTrustFlag.updateMany({
+          where: { id, clearedAt: null },
           data: { clearedAt: new Date(), clearedBy: 'system:unvetted_window' },
         })
       } catch (err) {
