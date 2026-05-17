@@ -1,10 +1,16 @@
 import type { Job } from 'bullmq'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { ProfileTrustService, promotePendingsJobId } from '@/services/profileTrust.service'
+import {
+  ProfileTrustService,
+  promotePendingsJobId,
+  TRUST_WINDOW_MS,
+} from '@/services/profileTrust.service'
 import { profileTrustQueue, type ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
-const UNVETTED_WINDOW_MS = 24 * 60 * 60 * 1000 // 24h
+// PROFILE_UNVETTED soft-quarantine length. Shares TRUST_WINDOW_MS with SPAM_BURST
+// by design — see the constant's definition for the symmetry rationale.
+const UNVETTED_WINDOW_MS = TRUST_WINDOW_MS
 
 export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Promise<void> {
   const svc = ProfileTrustService.getInstance()

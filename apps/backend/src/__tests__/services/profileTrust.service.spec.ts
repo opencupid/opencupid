@@ -24,7 +24,7 @@ vi.mock('@/services/messaging.service', () => ({
 }))
 
 import { prisma } from '../../lib/prisma'
-import { ProfileTrustService } from '../../services/profileTrust.service'
+import { ProfileTrustService, SPAM_BURST_WINDOW_MS } from '../../services/profileTrust.service'
 
 const mockedFindFirst = vi.mocked(prisma.profileTrustFlag.findFirst)
 
@@ -204,7 +204,7 @@ describe('ProfileTrustService', () => {
         mockedFindFirst.mockResolvedValue(null)
         await svc.reconcileSpamBurst('profile-1')
 
-        const expectedSince = new Date(FROZEN_NOW.getTime() - 24 * 60 * 60 * 1000)
+        const expectedSince = new Date(FROZEN_NOW.getTime() - SPAM_BURST_WINDOW_MS)
         const call = conversationCount.mock.calls[0][0] as any
         expect((call.where.createdAt as { gte: Date }).gte.toISOString()).toBe(
           expectedSince.toISOString()
@@ -226,7 +226,7 @@ describe('ProfileTrustService', () => {
         mockedFindFirst.mockResolvedValue(null)
         await svc.reconcileSpamBurst('profile-1')
 
-        const expectedSince = new Date(FROZEN_NOW.getTime() - 24 * 60 * 60 * 1000)
+        const expectedSince = new Date(FROZEN_NOW.getTime() - SPAM_BURST_WINDOW_MS)
         const countCall = conversationCount.mock.calls[0][0] as any
         const updateCall = conversationUpdateMany.mock.calls[0][0] as any
         expect((countCall.where.createdAt as { gte: Date }).gte.toISOString()).toBe(

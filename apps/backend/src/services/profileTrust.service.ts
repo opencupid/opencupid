@@ -7,11 +7,19 @@ import { MessageService } from '@/services/messaging.service'
 // promote to appConfig only if runtime tuning becomes routine.
 export const SPAM_BURST_THRESHOLD = 3
 
-// Burst window. The count is scoped to conversations created within this many ms
-// of "now". Matches the PROFILE_UNVETTED window so both quarantine windows are
-// symmetric. Without this bound, an all-time count punishes users with old
-// unanswered intros forever — that's unresponsiveness, not burst spam.
-export const SPAM_BURST_WINDOW_MS = 24 * 60 * 60 * 1000
+// Shared trust-quarantine window. Both the PROFILE_UNVETTED soft-quarantine
+// (new-account vetting) and the SPAM_BURST burst-count predicate use this
+// length. Symmetric by design: a fresh account graduates after 24h of normal
+// behavior, and burst detection only counts the last 24h of sends — so a user
+// who behaves normally after their first day is never penalized for ancient
+// unanswered intros. If the two ever need to diverge, the diverging consumer
+// should declare its own constant and this one keeps the shared meaning.
+export const TRUST_WINDOW_MS = 24 * 60 * 60 * 1000
+
+// Burst window. Scopes the SPAM_BURST count to conversations created within
+// this many ms of "now". Without this bound, an all-time count punishes users
+// with old unanswered intros forever — that's unresponsiveness, not burst spam.
+export const SPAM_BURST_WINDOW_MS = TRUST_WINDOW_MS
 
 // Shared builder so every enqueue site uses the same BullMQ dedup key. If the clear
 // path here and the clear-unvetted-window worker (Task 6) drifted to different
