@@ -155,12 +155,15 @@ export class ImageService {
       throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
     }
 
-    await prisma.$transaction(async (tx) => {
-      const position = await tx.profileImage.count({ where: { profileId } })
-      await tx.profileImage.create({ data: { imageId, profileId } })
-      await tx.image.update({ where: { id: imageId }, data: { position } })
-      await syncProfileHasFace(tx, profileId)
-    })
+    await prisma.$transaction(
+      async (tx) => {
+        const position = await tx.profileImage.count({ where: { profileId } })
+        await tx.profileImage.create({ data: { imageId, profileId } })
+        await tx.image.update({ where: { id: imageId }, data: { position } })
+        await syncProfileHasFace(tx, profileId)
+      },
+      { isolationLevel: 'Serializable' }
+    )
   }
 
   /**
@@ -185,11 +188,14 @@ export class ImageService {
       throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
     }
 
-    await prisma.$transaction(async (tx) => {
-      const position = await tx.userContentImage.count({ where: { userContentId } })
-      await tx.userContentImage.create({ data: { imageId, userContentId } })
-      await tx.image.update({ where: { id: imageId }, data: { position } })
-    })
+    await prisma.$transaction(
+      async (tx) => {
+        const position = await tx.userContentImage.count({ where: { userContentId } })
+        await tx.userContentImage.create({ data: { imageId, userContentId } })
+        await tx.image.update({ where: { id: imageId }, data: { position } })
+      },
+      { isolationLevel: 'Serializable' }
+    )
   }
 
   async processImage(
