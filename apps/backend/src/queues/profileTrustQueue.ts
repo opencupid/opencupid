@@ -7,8 +7,13 @@ export type ProfileTrustJobData =
   | { kind: 'clear-unvetted-window' }
   | { kind: 'reconcile-many'; allProfiles?: boolean }
 
-const DAILY_CRON = '0 3 * * *' // daily at 03:00 UTC
-const UNVETTED_WINDOW_CRON = '*/15 * * * *' // every 15 minutes
+// Both schedulers tick on the same 15-min cadence. SPAM_BURST release
+// (reconcile-many) and PROFILE_UNVETTED ageing + PENDING promote
+// (clear-unvetted-window) must share cadence: the sweep's Phase 2 AND-composes
+// all active flags, so the slower clear path bottlenecks release for compound
+// cases. Worst-case promote SLA is one tick = 15 min, not 24h + 15 min.
+const RECONCILE_CRON = '*/15 * * * *'
+const UNVETTED_WINDOW_CRON = '*/15 * * * *'
 
 export const profileTrustQueue = new Queue<ProfileTrustJobData>('profile-trust', {
   connection: bullConnection,
@@ -23,11 +28,11 @@ export const profileTrustQueue = new Queue<ProfileTrustJobData>('profile-trust',
   },
 })
 
-/** Register the repeatable daily + unvetted-window jobs. Safe to call on every startup. */
+/** Register the repeatable reconcile + unvetted-window jobs. Safe to call on every startup. */
 export async function registerProfileTrustJobs(): Promise<void> {
   await profileTrustQueue.upsertJobScheduler(
-    'profile-trust-daily',
-    { pattern: DAILY_CRON },
+    'profile-trust-reconcile',
+    { pattern: RECONCILE_CRON },
     { name: 'reconcile-many', data: { kind: 'reconcile-many' } }
   )
   await profileTrustQueue.upsertJobScheduler(
@@ -36,7 +41,7 @@ export async function registerProfileTrustJobs(): Promise<void> {
     { name: 'clear-unvetted-window', data: { kind: 'clear-unvetted-window' } }
   )
   logger.info(
-    { queue: 'profile-trust', daily: DAILY_CRON, unvetted_window: UNVETTED_WINDOW_CRON },
+    { queue: 'profile-trust', reconcile: RECONCILE_CRON, unvetted_window: UNVETTED_WINDOW_CRON },
     'profile-trust cron registered'
   )
 }
