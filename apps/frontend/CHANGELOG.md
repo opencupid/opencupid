@@ -1,5 +1,46 @@
 # frontend
 
+## 0.63.0
+
+### Minor Changes
+
+- e4dc613: feat(community): add Community user-content GUI surface — card, full-view, edit dialog, map icon + popup, speed-dial pill, layer toggle, and routes (#TBD).
+- 6415c7f: GUI iteration on top of the Community feature (#1454):
+  - Tonal accent-color system (theme.scss): new `--bs-event` and `--bs-community` semantic tokens with formula-derived `-light` variants. Community map marker restyled to a colored circle with the embracing-figures icon.
+  - MapLayerControl: 2x2 grid with per-kind semantic outline colors (outline-event, outline-community, outline-post-it).
+  - Speed-dial refactored with @floating-ui/vue: placement auto-adapts to viewport room (opens upward by default, downward when there's no room above), repositions on scroll/resize. SpeedDial and UserContentCreateSpeedDial extracted as reusable components; the latter exposes triggerClass/actionClass props for re-skinning per call site.
+  - Owner-drawer toolbar gains the create speed-dial alongside the Inbox and Profile buttons.
+  - After any post/event/community CRUD, the BrowseProfiles map invalidates its cluster cache and refetches via a new `usercontent:mutated` bus event.
+  - Hungarian translations for the community.\* i18n namespace (#1456).
+
+- a6c8853: Bump Node runtime baseline from 22 to 24. Updates Dockerfile base images,
+  GitHub Actions matrices, devcontainer image, `@tsconfig/node22` →
+  `@tsconfig/node24`, and `@types/node` to 24.x across the workspace. Held
+  back from the latest 25.x line because Node 24 is the current LTS.
+- 83f964f: Add a `community` user-content kind with a nullable `yearFounded` attribute. Refactor the cluster point-properties type to reuse the canonical `UserContentKind`, and tighten the polymorphic dispatch sites to exhaustive switches so future kinds fail compilation when unhandled. Also documents the eight-stage process for adding a new user-content type in `docs/user-content-howto.md`.
+- a6c8853: Migrate to zod 4 and zod-prisma-types 3.5.x. Update central validation utilities to use `z.flattenError` and `z.treeifyError`. Adjust `z.ZodType` generics to the new 2-arg signature.
+- 3b17fda: NearbyFeatures shows mixed posts, events, and communities from the viewport in one strip, with per-kind teaser components. /content/posts/bounds is removed; the unified /content/bounds endpoint is the single source.
+
+### Patch Changes
+
+- a6c8853: Remove the deprecated `@types/dompurify` dev dependency. DOMPurify v3 ships
+  its own types, so no replacement is needed.
+- fd0b872: Replace singleton geocoding Pinia store with per-instance `useGeocoder` composable so concurrent call sites (SearchBar, LocationSelector) no longer share results.
+- 2645f61: Conversation list previews now show only the first paragraph of a message.
+- a6c8853: Bump patch and minor versions across the monorepo (Renovate-style catch-up):
+  vue 3.5.34, vitest 4.1.5, fastify 5.8.5, @sentry/_ 10.52, axios 1.16,
+  bullmq 5.76.6, prettier 3.8.3, eslint 10.3.0, typescript-eslint 8.59.2,
+  @vueuse/_ 14.3.0, @playwright/test 1.59.1, dompurify 3.4.2, dotenv 17.4.2,
+  ioredis 5.10.1, sass 1.99.0, ws 8.20.0, `zod-prisma-types` 3.3.11
+  (emits zod-v4 syntax, paired with the zod 4 migration in this stack),
+  plus other patch bumps. No major versions.
+- a6c8853: Bump dev tooling-only major versions: turbo 2.9.10, npm-run-all2 8, nyc 18,
+  c8 11, tsc-watch 7, rollup-plugin-visualizer 7, chrome-devtools-mcp 0.25,
+  @sentry/cli 3.4, @lingual/i18n-check 0.9. No runtime impact.
+- 57d08e1: Remove orphaned i18n keys from `packages/shared/i18n/{en,hu}.json` that were no
+  longer referenced by any `t()`/`$t()` call in the codebase.
+- cb9ce1a: Shrink generated zod schemas: enable `createInputTypes = false` + `useMultipleFiles = true` on `zod-prisma-types`. Drops ~96% of generated LOC (18 155 → 723 lines across 62 small files). No runtime behavior change; 14 type-only imports migrated to deep paths to work around upstream issue #249.
+
 ## 0.62.0
 
 ### Minor Changes

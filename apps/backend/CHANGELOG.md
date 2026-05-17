@@ -1,5 +1,37 @@
 # backend
 
+## 0.63.0
+
+### Minor Changes
+
+- a6c8853: Bump Node runtime baseline from 22 to 24. Updates Dockerfile base images,
+  GitHub Actions matrices, devcontainer image, `@tsconfig/node22` →
+  `@tsconfig/node24`, and `@types/node` to 24.x across the workspace. Held
+  back from the latest 25.x line because Node 24 is the current LTS.
+- 83f964f: Add a `community` user-content kind with a nullable `yearFounded` attribute. Refactor the cluster point-properties type to reuse the canonical `UserContentKind`, and tighten the polymorphic dispatch sites to exhaustive switches so future kinds fail compilation when unhandled. Also documents the eight-stage process for adding a new user-content type in `docs/user-content-howto.md`.
+- a6c8853: Remove unused `prisma-zod-generator` devDependency. The Prisma schema generator block uses `zod-prisma-types` (already at v3); `prisma-zod-generator@0.8.13` was dead weight and pulled in pre-Prisma-7 dependencies incompatible with the new stack.
+- a6c8853: Migrate to zod 4 and zod-prisma-types 3.5.x. Update central validation utilities to use `z.flattenError` and `z.treeifyError`. Adjust `z.ZodType` generics to the new 2-arg signature.
+- a6c8853: Migrate to Prisma 7 with the `@prisma/adapter-pg` driver adapter and `prisma.config.ts` (datasource URL moved out of `schema.prisma`). `packages/shared` bumps `@prisma/client` to 7.x to keep workspace types consistent.
+- 3b17fda: NearbyFeatures shows mixed posts, events, and communities from the viewport in one strip, with per-kind teaser components. /content/posts/bounds is removed; the unified /content/bounds endpoint is the single source.
+
+### Patch Changes
+
+- a6c8853: Bump patch and minor versions across the monorepo (Renovate-style catch-up):
+  vue 3.5.34, vitest 4.1.5, fastify 5.8.5, @sentry/_ 10.52, axios 1.16,
+  bullmq 5.76.6, prettier 3.8.3, eslint 10.3.0, typescript-eslint 8.59.2,
+  @vueuse/_ 14.3.0, @playwright/test 1.59.1, dompurify 3.4.2, dotenv 17.4.2,
+  ioredis 5.10.1, sass 1.99.0, ws 8.20.0, `zod-prisma-types` 3.3.11
+  (emits zod-v4 syntax, paired with the zod 4 migration in this stack),
+  plus other patch bumps. No major versions.
+- a6c8853: Bump dev tooling-only major versions: turbo 2.9.10, npm-run-all2 8, nyc 18,
+  c8 11, tsc-watch 7, rollup-plugin-visualizer 7, chrome-devtools-mcp 0.25,
+  @sentry/cli 3.4, @lingual/i18n-check 0.9. No runtime impact.
+- 4b8b057: refactor(messaging): replace promote-pendings queue with state-driven trust-sweep
+- 57d08e1: Remove orphaned i18n keys from `packages/shared/i18n/{en,hu}.json` that were no
+  longer referenced by any `t()`/`$t()` call in the codebase.
+- cb9ce1a: Shrink generated zod schemas: enable `createInputTypes = false` + `useMultipleFiles = true` on `zod-prisma-types`. Drops ~96% of generated LOC (18 155 → 723 lines across 62 small files). No runtime behavior change; 14 type-only imports migrated to deep paths to work around upstream issue #249.
+- 59273f0: Fix SPAM_BURST: hold messages instead of destroying them, and scope the threshold to a 24h window. Held messages are now released to recipients when the flag clears, and old unanswered intros no longer count toward the burst threshold.
+
 ## 0.62.0
 
 ### Minor Changes

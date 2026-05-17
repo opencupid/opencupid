@@ -1,5 +1,25 @@
 # @opencupid/shared
 
+## 0.11.0
+
+### Minor Changes
+
+- 83f964f: Add a `community` user-content kind with a nullable `yearFounded` attribute. Refactor the cluster point-properties type to reuse the canonical `UserContentKind`, and tighten the polymorphic dispatch sites to exhaustive switches so future kinds fail compilation when unhandled. Also documents the eight-stage process for adding a new user-content type in `docs/user-content-howto.md`.
+- a6c8853: Migrate to zod 4 and zod-prisma-types 3.5.x. Update central validation utilities to use `z.flattenError` and `z.treeifyError`. Adjust `z.ZodType` generics to the new 2-arg signature.
+- a6c8853: Migrate to Prisma 7 with the `@prisma/adapter-pg` driver adapter and `prisma.config.ts` (datasource URL moved out of `schema.prisma`). `packages/shared` bumps `@prisma/client` to 7.x to keep workspace types consistent.
+
+### Patch Changes
+
+- 6415c7f: GUI iteration on top of the Community feature (#1454):
+  - Tonal accent-color system (theme.scss): new `--bs-event` and `--bs-community` semantic tokens with formula-derived `-light` variants. Community map marker restyled to a colored circle with the embracing-figures icon.
+  - MapLayerControl: 2x2 grid with per-kind semantic outline colors (outline-event, outline-community, outline-post-it).
+  - Speed-dial refactored with @floating-ui/vue: placement auto-adapts to viewport room (opens upward by default, downward when there's no room above), repositions on scroll/resize. SpeedDial and UserContentCreateSpeedDial extracted as reusable components; the latter exposes triggerClass/actionClass props for re-skinning per call site.
+  - Owner-drawer toolbar gains the create speed-dial alongside the Inbox and Profile buttons.
+  - After any post/event/community CRUD, the BrowseProfiles map invalidates its cluster cache and refetches via a new `usercontent:mutated` bus event.
+  - Hungarian translations for the community.\* i18n namespace (#1456).
+
+- cb9ce1a: Shrink generated zod schemas: enable `createInputTypes = false` + `useMultipleFiles = true` on `zod-prisma-types`. Drops ~96% of generated LOC (18 155 → 723 lines across 62 small files). No runtime behavior change; 14 type-only imports migrated to deep paths to work around upstream issue #249.
+
 ## 0.10.0
 
 ### Minor Changes

@@ -1,7 +1,7 @@
 {
   "name": "@opencupid/backend",
   "main": "dist/api.js",
-  "version": "0.62.0",
+  "version": "0.63.0",
   "scripts": {
     "dev": "vite build && rm -rf dist && concurrently -n api,worker -c blue,magenta --kill-others-on-fail \"tsup src/api.ts --watch --no-clean --onSuccess 'node --inspect dist/api.js'\" \"tsup src/worker.ts --watch --no-clean --onSuccess 'node dist/worker.js'\"",
     "build": "vite build && tsup && tsup --config tsup.scripts.config.ts",
