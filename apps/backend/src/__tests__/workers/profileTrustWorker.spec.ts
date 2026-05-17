@@ -12,12 +12,8 @@ vi.mock('../../lib/prisma', () => ({
     },
   },
 }))
-vi.mock('../../queues/profileTrustQueue', () => ({
-  profileTrustQueue: { add: vi.fn() },
-}))
 
 import { prisma } from '../../lib/prisma'
-import { profileTrustQueue } from '../../queues/profileTrustQueue'
 import { ProfileTrustService } from '../../services/profileTrust.service'
 import { processProfileTrustJob } from '../../workers/profileTrustWorker'
 import type { ProfileTrustJobData } from '../../queues/profileTrustQueue'
@@ -37,68 +33,104 @@ beforeEach(() => {
 })
 
 describe('processProfileTrustJob', () => {
-  describe('promote-pendings', () => {
-    it('calls promotePendingsIfClear with the payload profileId', async () => {
-      await processProfileTrustJob(
-        mockJob<ProfileTrustJobData>({ kind: 'promote-pendings', profileId: 'p1' })
-      )
-      expect(promotePendingsIfClear).toHaveBeenCalledTimes(1)
-      expect(promotePendingsIfClear).toHaveBeenCalledWith('p1')
-    })
-  })
-
-  describe('clear-unvetted-window', () => {
-    it('clears aged PROFILE_UNVETTED flags and enqueues promote-pendings per profile', async () => {
+  describe('clear-unvetted-window (trust-sweep)', () => {
+    it('phase 1: clears aged PROFILE_UNVETTED flags conditionally', async () => {
       vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([
         { id: 'f1', profileId: 'p1' },
         { id: 'f2', profileId: 'p2' },
       ] as any)
-      vi.mocked(profileTrustQueue.add).mockResolvedValue({} as any)
       vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 1 } as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([] as any)
 
       await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
 
       expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledTimes(2)
-      expect(profileTrustQueue.add).toHaveBeenCalledTimes(2)
-      expect(profileTrustQueue.add).toHaveBeenCalledWith(
-        'promote-pendings',
-        { kind: 'promote-pendings', profileId: 'p1' },
-        expect.objectContaining({ jobId: 'promote-pendings-p1' })
-      )
-      expect(profileTrustQueue.add).toHaveBeenCalledWith(
-        'promote-pendings',
-        { kind: 'promote-pendings', profileId: 'p2' },
-        expect.objectContaining({ jobId: 'promote-pendings-p2' })
-      )
-    })
-
-    it('clear write is conditional on clearedAt:null (preserves attribution if admin won the race)', async () => {
-      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([
-        { id: 'f1', profileId: 'p1' },
-      ] as any)
-      vi.mocked(profileTrustQueue.add).mockResolvedValue({} as any)
-      // count=0 simulates "admin already cleared this flag between findMany and update"
-      vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 0 } as any)
-
-      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
-
-      // updateMany was issued with the race-safety guard.
       expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
         where: { id: 'f1', clearedAt: null },
         data: { clearedAt: expect.any(Date), clearedBy: 'system:unvetted_window' },
       })
-      // The 0-row outcome is not treated as a failure — no throw, loop continues.
+      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
+        where: { id: 'f2', clearedAt: null },
+        data: { clearedAt: expect.any(Date), clearedBy: 'system:unvetted_window' },
+      })
     })
 
-    it('skips the scan when nothing is aged', async () => {
+    it('phase 1: clear write is conditional on clearedAt:null (preserves admin attribution on race)', async () => {
+      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([
+        { id: 'f1', profileId: 'p1' },
+      ] as any)
+      // count=0 simulates "admin already cleared this flag between findMany and update"
+      vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 0 } as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([] as any)
+
+      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
+
+      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
+        where: { id: 'f1', clearedAt: null },
+        data: { clearedAt: expect.any(Date), clearedBy: 'system:unvetted_window' },
+      })
+    })
+
+    it('phase 1: no longer enqueues anything (sweeper-only release)', async () => {
+      // The promote-pendings BullMQ queue kind has been deleted; phase 1 just
+      // clears flags. Phase 2 (sweep) handles release.
+      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([
+        { id: 'f1', profileId: 'p1' },
+      ] as any)
+      vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 1 } as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([] as any)
+
+      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
+
+      // phase 2 candidate scan happened but returned empty
+      expect(prisma.profile.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            trustFlags: { none: { clearedAt: null } },
+            Conversation: { some: { status: 'PENDING' } },
+          },
+        })
+      )
+      expect(promotePendingsIfClear).not.toHaveBeenCalled()
+    })
+
+    it('phase 2: sweeps profiles with no active flags + initiator-side PENDING', async () => {
       vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([{ id: 'p1' }, { id: 'p2' }] as any)
+
+      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
+
+      expect(promotePendingsIfClear).toHaveBeenCalledTimes(2)
+      expect(promotePendingsIfClear).toHaveBeenCalledWith('p1')
+      expect(promotePendingsIfClear).toHaveBeenCalledWith('p2')
+    })
+
+    it('phase 2: SQL anti-join filters out profiles with any active flag', async () => {
+      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([] as any)
+
+      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
+
+      expect(prisma.profile.findMany).toHaveBeenCalledWith({
+        where: {
+          trustFlags: { none: { clearedAt: null } },
+          Conversation: { some: { status: 'PENDING' } },
+        },
+        select: { id: true },
+      })
+    })
+
+    it('skips both phases when nothing is aged and no sweep candidates exist', async () => {
+      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([] as any)
       await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
       expect(prisma.profileTrustFlag.updateMany).not.toHaveBeenCalled()
-      expect(profileTrustQueue.add).not.toHaveBeenCalled()
+      expect(promotePendingsIfClear).not.toHaveBeenCalled()
     })
 
-    it('excludes admin-set flags from the auto-clear scan', async () => {
+    it('excludes admin-set flags from phase 1', async () => {
       vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([] as any)
       await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
       expect(prisma.profileTrustFlag.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -111,28 +143,31 @@ describe('processProfileTrustJob', () => {
       )
     })
 
-    it('continues when one profile fails', async () => {
+    it('phase 1 continues when one flag clear fails', async () => {
       vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([
         { id: 'f1', profileId: 'p1' },
         { id: 'f2', profileId: 'p2' },
       ] as any)
-      // With enqueue-before-update ordering, a failed enqueue on p1 short-circuits
-      // the update for p1 (flag stays set, next scan retries). p2 proceeds normally.
-      vi.mocked(profileTrustQueue.add)
-        .mockRejectedValueOnce(new Error('redis blip'))
-        .mockResolvedValueOnce({} as any)
-      vi.mocked(prisma.profileTrustFlag.updateMany).mockResolvedValue({ count: 1 } as any)
+      vi.mocked(prisma.profileTrustFlag.updateMany)
+        .mockRejectedValueOnce(new Error('db blip'))
+        .mockResolvedValueOnce({ count: 1 } as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([] as any)
 
       await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
 
-      // Both profiles must be attempted (proves loop continues after failure).
-      expect(profileTrustQueue.add).toHaveBeenCalledTimes(2)
-      // Only p2 reached the update step (p1's update skipped by the thrown enqueue).
-      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledTimes(1)
-      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledWith({
-        where: { id: 'f2', clearedAt: null },
-        data: { clearedAt: expect.any(Date), clearedBy: 'system:unvetted_window' },
-      })
+      expect(prisma.profileTrustFlag.updateMany).toHaveBeenCalledTimes(2)
+    })
+
+    it('phase 2 continues when one profile promote fails', async () => {
+      vi.mocked(prisma.profileTrustFlag.findMany).mockResolvedValue([] as any)
+      vi.mocked(prisma.profile.findMany).mockResolvedValue([{ id: 'p1' }, { id: 'p2' }] as any)
+      promotePendingsIfClear
+        .mockRejectedValueOnce(new Error('40001 serializable conflict'))
+        .mockResolvedValueOnce(undefined)
+
+      await processProfileTrustJob(mockJob<ProfileTrustJobData>({ kind: 'clear-unvetted-window' }))
+
+      expect(promotePendingsIfClear).toHaveBeenCalledTimes(2)
     })
   })
 

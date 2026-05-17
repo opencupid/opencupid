@@ -1,12 +1,8 @@
 import type { Job } from 'bullmq'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import {
-  ProfileTrustService,
-  promotePendingsJobId,
-  TRUST_WINDOW_MS,
-} from '@/services/profileTrust.service'
-import { profileTrustQueue, type ProfileTrustJobData } from '@/queues/profileTrustQueue'
+import { ProfileTrustService, TRUST_WINDOW_MS } from '@/services/profileTrust.service'
+import { type ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
 // PROFILE_UNVETTED soft-quarantine length. Shares TRUST_WINDOW_MS with SPAM_BURST
 // by design — see the constant's definition for the symmetry rationale.
@@ -16,14 +12,14 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
   const svc = ProfileTrustService.getInstance()
   const data = job.data
 
-  if (data.kind === 'promote-pendings') {
-    await svc.promotePendingsIfClear(data.profileId)
-    await job.log(`promoted pendings (if clear) for ${data.profileId}`)
-    return
-  }
-
   if (data.kind === 'clear-unvetted-window') {
+    // Two-phase trust-sweep: (1) age out PROFILE_UNVETTED flags, then
+    // (2) state-driven release of PENDING for any profile with zero active flags.
+    // The sweep replaces the deleted promote-pendings BullMQ queue — release is
+    // now a SQL-driven convergence step, not an event-driven side-channel.
     const cutoff = new Date(Date.now() - UNVETTED_WINDOW_MS)
+
+    // Phase 1 — clear aged PROFILE_UNVETTED flags (non-admin only).
     const flagsToClear = await prisma.profileTrustFlag.findMany({
       where: {
         reason: 'PROFILE_UNVETTED',
@@ -33,24 +29,9 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
       },
       select: { id: true, profileId: true },
     })
-    let failed = 0
+    let p1Failed = 0
     for (const { id, profileId } of flagsToClear) {
       try {
-        // Enqueue BEFORE clearing the flag. If enqueue fails we never clear, and
-        // the next 15-min scan re-finds the still-aged flag and retries. If enqueue
-        // succeeds but update then fails, the dedup jobId prevents duplicates and
-        // promotePendingsIfClear short-circuits on `stillFlagged`; the next scan
-        // will clear. Reverse order would strand PENDINGs on a cleared-but-unqueued
-        // failure (no retry path).
-        await profileTrustQueue.add(
-          'promote-pendings',
-          { kind: 'promote-pendings', profileId },
-          {
-            jobId: promotePendingsJobId(profileId),
-            removeOnComplete: { count: 0 },
-            removeOnFail: { count: 100 },
-          }
-        )
         // Conditional clear: if an admin (or any other path) cleared this flag
         // between findMany and now, the updateMany affects 0 rows and we leave
         // their clearedAt/clearedBy attribution intact. Mirrors the pattern in
@@ -60,16 +41,44 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
           data: { clearedAt: new Date(), clearedBy: 'system:unvetted_window' },
         })
       } catch (err) {
-        failed += 1
+        p1Failed += 1
         await job.log(
           `failed to clear ${profileId}: ${err instanceof Error ? err.message : String(err)}`
         )
-        logger.error({ err, profileId }, 'clear-unvetted-window per-profile failure')
+        logger.error({ err, profileId }, 'trust-sweep phase 1 (clear) failure')
       }
     }
+
+    // Phase 2 — sweep: promote PENDING for any profile with zero active flags
+    // and at least one initiator-side PENDING. The SQL anti-join encapsulates
+    // the convergence invariant; promotePendingsIfClear's own stillFlagged
+    // re-check inside its serializable tx absorbs a flag landing between this
+    // findMany and the per-profile tx start.
+    const sweepCandidates = await prisma.profile.findMany({
+      where: {
+        trustFlags: { none: { clearedAt: null } },
+        Conversation: { some: { status: 'PENDING' } },
+      },
+      select: { id: true },
+    })
+    let p2Failed = 0
+    for (const { id: profileId } of sweepCandidates) {
+      try {
+        await svc.promotePendingsIfClear(profileId)
+      } catch (err) {
+        p2Failed += 1
+        await job.log(
+          `failed to promote ${profileId}: ${err instanceof Error ? err.message : String(err)}`
+        )
+        logger.warn({ err, profileId }, 'trust-sweep phase 2 (promote) failure')
+      }
+    }
+
     await job.log(
-      `cleared ${flagsToClear.length - failed} PROFILE_UNVETTED flag(s)` +
-        (failed > 0 ? ` (${failed} failed)` : '')
+      `phase 1: cleared ${flagsToClear.length - p1Failed} PROFILE_UNVETTED flag(s)` +
+        (p1Failed > 0 ? ` (${p1Failed} failed)` : '') +
+        ` | phase 2: promoted ${sweepCandidates.length - p2Failed} profile(s)` +
+        (p2Failed > 0 ? ` (${p2Failed} failed)` : '')
     )
     return
   }

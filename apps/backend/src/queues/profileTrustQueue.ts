@@ -4,7 +4,6 @@ import { logger } from '@/lib/logger'
 
 // Job payload — discriminated union on `kind`.
 export type ProfileTrustJobData =
-  | { kind: 'promote-pendings'; profileId: string }
   | { kind: 'clear-unvetted-window' }
   | { kind: 'reconcile-many'; allProfiles?: boolean }
 
