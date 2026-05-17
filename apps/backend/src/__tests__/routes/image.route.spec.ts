@@ -1,14 +1,21 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import imageRoutes from '../../api/routes/image.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
+import { ImageServiceError } from '../../services/image.service'
 
 let fastify: MockFastify
 let reply: MockReply
 let mockImageService: any
 
-vi.mock('@/services/image.service', () => ({
-  ImageService: { getInstance: () => mockImageService },
-}))
+vi.mock('@/services/image.service', async () => {
+  const actual = await vi.importActual<typeof import('@/services/image.service')>(
+    '@/services/image.service'
+  )
+  return {
+    ImageService: { getInstance: () => mockImageService },
+    ImageServiceError: actual.ImageServiceError,
+  }
+})
 
 vi.mock('@/api/mappers/profile.mappers', () => ({
   mapProfileImagesToOwner: (images: any[]) => images, // identity for assertions
@@ -147,7 +154,9 @@ describe('image.route', () => {
     })
 
     it('owner mismatch → 403 Forbidden', async () => {
-      mockImageService.deleteImage.mockRejectedValue(new Error('Image owner mismatch'))
+      mockImageService.deleteImage.mockRejectedValue(
+        new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      )
 
       const handler = fastify.routes['DELETE /:id']
       await handler(makeReq({ params: { id: cuid } }), reply as any)
@@ -176,7 +185,9 @@ describe('image.route', () => {
     })
 
     it('owner mismatch → 403 Forbidden', async () => {
-      mockImageService.updateImage.mockRejectedValue(new Error('Image owner mismatch'))
+      mockImageService.updateImage.mockRejectedValue(
+        new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      )
 
       const handler = fastify.routes['PATCH /:id']
       await handler(makeReq({ params: { id: cuid }, body: { altText: 'whatever' } }), reply as any)
@@ -213,7 +224,10 @@ describe('image.route', () => {
 
     it('length mismatch → 400 INVALID_REORDER', async () => {
       mockImageService.reorderProfileGallery.mockRejectedValue(
-        new Error('Reorder must include every image in the gallery exactly once')
+        new ImageServiceError(
+          'INVALID_REORDER',
+          'Reorder must include every image in the gallery exactly once'
+        )
       )
 
       const handler = fastify.routes['PATCH /order']

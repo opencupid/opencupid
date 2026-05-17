@@ -2,14 +2,21 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import contentImageRoutes from '../../../api/routes/content/image.route'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
 import { prisma } from '../../../lib/prisma'
+import { ImageServiceError } from '../../../services/image.service'
 
 let fastify: MockFastify
 let reply: MockReply
 let mockImageService: any
 
-vi.mock('@/services/image.service', () => ({
-  ImageService: { getInstance: () => mockImageService },
-}))
+vi.mock('@/services/image.service', async () => {
+  const actual = await vi.importActual<typeof import('@/services/image.service')>(
+    '@/services/image.service'
+  )
+  return {
+    ImageService: { getInstance: () => mockImageService },
+    ImageServiceError: actual.ImageServiceError,
+  }
+})
 
 vi.mock('@/api/mappers/image.mappers', () => ({
   toOwnerImage: (image: any) => image, // identity for assertions
@@ -199,7 +206,10 @@ describe('content/image.route', () => {
 
     it('length mismatch → 400 INVALID_REORDER', async () => {
       mockImageService.reorderUserContentGallery.mockRejectedValue(
-        new Error('Reorder must include every image in the gallery exactly once')
+        new ImageServiceError(
+          'INVALID_REORDER',
+          'Reorder must include every image in the gallery exactly once'
+        )
       )
 
       const handler = fastify.routes['PATCH /:contentId/image/order']

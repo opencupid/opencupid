@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { FastifyPluginAsync } from 'fastify'
 import multipart, { MultipartValue } from '@fastify/multipart'
 
-import { ImageService } from '@/services/image.service'
+import { ImageService, ImageServiceError } from '@/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
 import { rateLimitConfig, sendError } from '../helpers'
 import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
@@ -148,9 +148,11 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
         images: mapProfileImagesToOwner(updated),
       }
       return reply.code(200).send(response)
-    } catch (err: any) {
+    } catch (err) {
       fastify.log.error(err)
-      if (/owner/i.test(err.message)) return sendError(reply, 403, 'Forbidden')
+      if (err instanceof ImageServiceError && err.code === 'OWNER_MISMATCH') {
+        return sendError(reply, 403, 'Forbidden')
+      }
       return sendError(reply, 500, 'Failed to delete image')
     }
   })
@@ -170,9 +172,11 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
         images: mapProfileImagesToOwner(updated),
       }
       return reply.code(200).send(response)
-    } catch (err: any) {
+    } catch (err) {
       fastify.log.error(err)
-      if (/owner/i.test(err.message)) return sendError(reply, 403, 'Forbidden')
+      if (err instanceof ImageServiceError && err.code === 'OWNER_MISMATCH') {
+        return sendError(reply, 403, 'Forbidden')
+      }
       return sendError(reply, 500, 'Failed to update image')
     }
   })
@@ -190,9 +194,9 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
         images: mapProfileImagesToOwner(updated),
       }
       return reply.code(200).send(response)
-    } catch (err: any) {
+    } catch (err) {
       fastify.log.error(err)
-      if (/Reorder must include every image/i.test(err.message)) {
+      if (err instanceof ImageServiceError && err.code === 'INVALID_REORDER') {
         return sendError(reply, 400, 'INVALID_REORDER')
       }
       return reply.code(500).send({ success: false })

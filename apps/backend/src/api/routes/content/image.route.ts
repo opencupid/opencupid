@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { FastifyPluginAsync } from 'fastify'
 import multipart, { MultipartValue } from '@fastify/multipart'
 
-import { ImageService } from '@/services/image.service'
+import { ImageService, ImageServiceError } from '@/services/image.service'
 import { prisma } from '@/lib/prisma'
 import { uploadTmpDir } from '@/lib/media'
 import { rateLimitConfig, sendError } from '../../helpers'
@@ -152,9 +152,9 @@ const contentImageRoutes: FastifyPluginAsync = async (fastify) => {
           images: updated.map(toOwnerImage),
         }
         return reply.code(200).send(response)
-      } catch (err: any) {
+      } catch (err) {
         fastify.log.error(err)
-        if (/Reorder must include every image/i.test(err.message)) {
+        if (err instanceof ImageServiceError && err.code === 'INVALID_REORDER') {
           return sendError(reply, 400, 'INVALID_REORDER')
         }
         return reply.code(500).send({ success: false })
