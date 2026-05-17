@@ -103,9 +103,7 @@ describe('image.route', () => {
       const handler = fastify.routes['POST /']
       await handler(makeUploadReq(), reply as any)
 
-      expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg', 'cap', {
-        detectFace: true,
-      })
+      expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg', 'cap')
       expect(mockImageService.attachToProfile).toHaveBeenCalledWith('img-new', 'p-1')
       expect(mockImageService.deleteImage).not.toHaveBeenCalled()
       expect(reply.statusCode).toBe(200)

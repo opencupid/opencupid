@@ -65,13 +65,9 @@ export class ImageProcessor {
     return ImageProcessor.detector
   }
 
-  async analyze(opts: { detectFace: boolean } = { detectFace: true }): Promise<void> {
+  async analyze(): Promise<void> {
     this.metadata = await this.sharpInstance.metadata()
-    if (opts.detectFace) {
-      this.faces = await this.detectFaces()
-    } else {
-      this.faces = []
-    }
+    this.faces = await this.detectFaces()
   }
 
   private async detectFaces(): Promise<FaceBox[]> {

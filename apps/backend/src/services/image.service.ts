@@ -103,22 +103,13 @@ export class ImageService {
    * the caller (route handler) composes createImage + attachTo* sequentially. If the
    * subsequent attach fails the route is responsible for compensating delete (atomicity is
    * not provided here; createImage opens its own write).
-   *
-   * @param opts.detectFace  When false, skips OpenCV face detection (~100ms saved).
-   *                         Use true for profile uploads, false for UserContent uploads.
    */
-  async createImage(
-    ownerProfileId: string,
-    tmpImagePath: string,
-    altText: string,
-    opts: { detectFace: boolean }
-  ): Promise<Image> {
+  async createImage(ownerProfileId: string, tmpImagePath: string, altText: string): Promise<Image> {
     const imageLocation = await makeImageLocation(ownerProfileId)
     const processed = await this.processImage(
       tmpImagePath,
       imageLocation.absPath,
-      imageLocation.base,
-      { detectFace: opts.detectFace }
+      imageLocation.base
     )
     const contentHash = await generateContentHash(processed.variants.original)
 
@@ -198,12 +189,7 @@ export class ImageService {
     )
   }
 
-  async processImage(
-    filePath: string,
-    outputDir: string,
-    baseName: string,
-    opts: { detectFace: boolean } = { detectFace: true }
-  ) {
+  async processImage(filePath: string, outputDir: string, baseName: string) {
     await fs.promises.mkdir(outputDir, { recursive: true })
 
     const buffer = await fs.promises.readFile(filePath)
@@ -215,7 +201,7 @@ export class ImageService {
     await orientFix.keepIccProfile().jpeg({ quality: 100 }).toFile(originalPath)
 
     const processor = new ImageProcessor(await orientFix.toBuffer())
-    await processor.analyze({ detectFace: opts.detectFace })
+    await processor.analyze()
 
     const blurhash = await processor.encodeBlurhash()
 

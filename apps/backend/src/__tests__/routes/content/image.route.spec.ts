@@ -123,7 +123,7 @@ describe('content/image.route', () => {
         ...overrides,
       })
 
-    it('happy path: createImage({ detectFace: false }) + attachToUserContent', async () => {
+    it('happy path: createImage + attachToUserContent', async () => {
       mockImageService.createImage.mockResolvedValue({ id: 'img-new' })
       mockImageService.attachToUserContent.mockResolvedValue(undefined)
       const galleryAfter = [{ id: 'img-new' }]
@@ -132,9 +132,7 @@ describe('content/image.route', () => {
       const handler = fastify.routes['POST /:contentId/image']
       await handler(makeUploadReq(), reply as any)
 
-      expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg', 'cap', {
-        detectFace: false,
-      })
+      expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg', 'cap')
       expect(mockImageService.attachToUserContent).toHaveBeenCalledWith('img-new', CONTENT_ID)
       expect(mockImageService.deleteImage).not.toHaveBeenCalled()
       expect(reply.statusCode).toBe(200)

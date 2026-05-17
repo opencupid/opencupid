@@ -102,8 +102,7 @@ const contentImageRoutes: FastifyPluginAsync = async (fastify) => {
         const created = await imageService.createImage(
           req.session.profileId,
           fileUpload.filepath,
-          captionText,
-          { detectFace: false }
+          captionText
         )
         createdId = created.id
         await imageService.attachToUserContent(created.id, contentId)

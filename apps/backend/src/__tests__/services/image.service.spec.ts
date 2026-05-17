@@ -82,7 +82,7 @@ beforeEach(async () => {
 })
 
 describe('ImageService.createImage', () => {
-  it('creates an unattached Image owned by ownerProfileId, runs face detect when requested', async () => {
+  it('creates an unattached Image owned by ownerProfileId', async () => {
     mockMakeImageLocation.mockResolvedValue({
       base: 'abcd',
       relPath: 'profile-1',
@@ -107,43 +107,13 @@ describe('ImageService.createImage', () => {
       position: 0,
     } as any)
 
-    const result = await service.createImage('profile-1', '/tmp/upload.jpg', 'cap', {
-      detectFace: true,
-    })
+    const result = await service.createImage('profile-1', '/tmp/upload.jpg', 'cap')
 
     expect(result.id).toBe('img-1')
     expect(result.ownerProfileId).toBe('profile-1')
     // Critical: no ProfileImage / UserContentImage row was inserted.
     expect(mockPrisma.profileImage.create).not.toHaveBeenCalled()
     expect(mockPrisma.userContentImage.create).not.toHaveBeenCalled()
-  })
-
-  it('skips face detect when detectFace=false', async () => {
-    mockMakeImageLocation.mockResolvedValue({
-      base: 'abcd',
-      relPath: 'profile-1',
-      absPath: '/media/images/profile-1',
-    })
-    mockGenerateContentHash.mockResolvedValue('hash-xyz')
-    const procSpy = vi.spyOn(service, 'processImage').mockResolvedValue({
-      width: 100,
-      height: 100,
-      mime: 'image/jpeg',
-      variants: { original: '/tmp/o.jpg' },
-      blurhash: 'L00',
-      hasFace: false,
-    } as any)
-    mockPrisma.image.create.mockResolvedValue({ id: 'img-2', hasFace: false } as any)
-
-    await service.createImage('profile-1', '/tmp/u.jpg', '', { detectFace: false })
-
-    // processImage is shared; the detect-face skip is enforced inside processImage via opts.
-    expect(procSpy).toHaveBeenCalledWith(
-      '/tmp/u.jpg',
-      expect.any(String),
-      expect.any(String),
-      expect.objectContaining({ detectFace: false })
-    )
   })
 })
 
