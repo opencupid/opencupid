@@ -496,7 +496,12 @@
       "contact": "Üzenet küldése",
       "copied": "Vágólapra másolva",
       "copy": "Szöveg másolása",
+      "manage_photos": "Manage photos",
+      "save_to_add_photos": "Save first to add photos",
       "share": "Megosztás"
+    },
+    "labels": {
+      "photos": "Photos"
     }
   }
 }

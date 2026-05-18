@@ -10,6 +10,10 @@ vi.mock('@/features/shared/profileform/LocationSelector.vue', () => ({
   default: { template: '<div class="loc-selector" />' },
 }))
 
+vi.mock('@/features/images/components/ContentImageButton.vue', () => ({
+  default: { template: '<div class="content-image-button" />' },
+}))
+
 const createCommunityMock = vi.fn().mockResolvedValue({
   success: true,
   data: { community: { id: 'c-new', kind: 'community', content: 'X', yearFounded: 2020 } },

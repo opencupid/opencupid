@@ -19,6 +19,7 @@ type PostForm = z.infer<typeof PostFormSchema>
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import PostTypeBadge from './PostTypeBadge.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
 
 import IconHide from '@/assets/icons/interface/hide.svg'
 import IconShow from '@/assets/icons/interface/unhide.svg'
@@ -167,6 +168,17 @@ const handleSubmit = async () => {
 
       <!-- submit button -->
     </PostIt>
+
+    <BFormGroup
+      :label="$t('userContent.labels.photos')"
+      class="mb-3 mt-3"
+    >
+      <ContentImageButton
+        :content-id="post?.id"
+        :is-edit="isEdit"
+      />
+    </BFormGroup>
+
     <div class="d-flex justify-content-end mt-3">
       <BButton
         type="button"

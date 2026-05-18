@@ -7,6 +7,7 @@ import type { OwnerCommunity } from '@zod/community/community.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
 
 const COMMUNITY_CONTENT_MAX_LENGTH = 300
 
@@ -151,6 +152,16 @@ const handleSubmit = async () => {
       <BFormCheckbox v-model="form.isVisible">
         {{ $t('community.labels.visibility') }}
       </BFormCheckbox>
+    </BFormGroup>
+
+    <BFormGroup
+      :label="$t('userContent.labels.photos')"
+      class="mb-3"
+    >
+      <ContentImageButton
+        :content-id="community?.id"
+        :is-edit="isEdit"
+      />
     </BFormGroup>
 
     <div class="d-flex justify-content-end mt-3">

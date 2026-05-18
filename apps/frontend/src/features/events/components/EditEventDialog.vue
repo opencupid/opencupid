@@ -10,6 +10,7 @@ import { VueDatePicker } from '@vuepic/vue-datepicker'
 import { enGB } from 'date-fns/locale/en-GB'
 import { hu as huLocale } from 'date-fns/locale/hu'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
 
 // XXX hardcoded locales - needs attention when adding new locale support to i18n
 const datepickerLocales = { en: enGB, hu: huLocale } as const
@@ -130,7 +131,9 @@ function nextHourFromNow(): Date {
         required
         rows="6"
       />
-      <div class="form-hint text-muted small position-absolute bottom-0 start-50 translate-middle-x">
+      <div
+        class="form-hint text-muted small position-absolute bottom-0 start-50 translate-middle-x"
+      >
         {{ form.content.length }}/{{ EVENT_CONTENT_MAX_LENGTH }}
       </div>
     </BFormGroup>
@@ -185,6 +188,16 @@ function nextHourFromNow(): Date {
       <BFormCheckbox v-model="form.isVisible">
         {{ $t('events.labels.visibility') }}
       </BFormCheckbox>
+    </BFormGroup>
+
+    <BFormGroup
+      :label="$t('userContent.labels.photos')"
+      class="mb-3"
+    >
+      <ContentImageButton
+        :content-id="event?.id"
+        :is-edit="isEdit"
+      />
     </BFormGroup>
 
     <div class="d-flex justify-content-end mt-3">
