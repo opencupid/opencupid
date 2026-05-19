@@ -298,3 +298,29 @@ describe('GET /nearby', () => {
     })
   })
 })
+
+import { CreatePostPayloadSchema } from '@zod/post/post.dto'
+
+describe('CreatePostPayloadSchema imageIds', () => {
+  it('accepts an array of up to 6 cuids', () => {
+    const ids = Array.from({ length: 6 }, (_, i) => `cmimg00000000000000000${i}`)
+    const parsed = CreatePostPayloadSchema.parse({
+      content: 'x'.repeat(20),
+      type: 'OFFER',
+      imageIds: ids,
+    })
+    expect(parsed.imageIds).toEqual(ids)
+  })
+
+  it('rejects more than 6 imageIds', () => {
+    const ids = Array.from({ length: 7 }, (_, i) => `cmimg00000000000000000${i}`)
+    expect(() =>
+      CreatePostPayloadSchema.parse({ content: 'x'.repeat(20), type: 'OFFER', imageIds: ids })
+    ).toThrow()
+  })
+
+  it('accepts payload without imageIds (backward compat)', () => {
+    const parsed = CreatePostPayloadSchema.parse({ content: 'x'.repeat(20), type: 'OFFER' })
+    expect(parsed.imageIds).toBeUndefined()
+  })
+})

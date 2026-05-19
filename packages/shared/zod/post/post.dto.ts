@@ -10,6 +10,7 @@ import {
 } from '../userContent/userContent.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { ProfileSummarySchema } from '@zod/profile/profile.dto'
+import { MAX_IMAGES_PER_GALLERY } from '../image/image.dto'
 
 const POST_KIND = z.literal('post')
 
@@ -43,6 +44,7 @@ export type PostSummary = z.infer<typeof PostSummarySchema>
 
 export const CreatePostPayloadSchema = BaseUserContentPayloadSchema.extend({
   type: PostTypeSchema,
+  imageIds: z.array(z.string().cuid()).max(MAX_IMAGES_PER_GALLERY).optional(),
 })
 export type CreatePostPayload = z.infer<typeof CreatePostPayloadSchema>
 
