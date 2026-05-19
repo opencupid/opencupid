@@ -69,6 +69,11 @@ export const useUserContentImageStore = (params: UserContentImageStoreParams) =>
           const created = ImageResponseSchema.parse(createData).image
           createdId = created.id
 
+          if (this.isDraft) {
+            this.images = [...this.images, created]
+            return storeSuccess()
+          }
+
           const { data: attachData } = await safeApiCall(() =>
             api.post<ImageApiResponse>(`/content/${contentId}/image/attach`, {
               imageId: created.id,
@@ -78,7 +83,7 @@ export const useUserContentImageStore = (params: UserContentImageStoreParams) =>
           this.images = images
           return storeSuccess()
         } catch (err: unknown) {
-          if (createdId) {
+          if (createdId && !this.isDraft) {
             try {
               await api.delete(`/image/${createdId}`)
             } catch {

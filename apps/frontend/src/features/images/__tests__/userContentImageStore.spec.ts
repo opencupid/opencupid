@@ -127,4 +127,30 @@ describe('draft mode', () => {
     expect(api.get).not.toHaveBeenCalled()
     expect(store.images).toEqual([])
   })
+
+  it('upload() POSTs /image only, stages the image locally', async () => {
+    ;(api.post as any).mockResolvedValueOnce({ data: { success: true, image: CREATED } })
+
+    const store = useUserContentImageStore({ draftKey: 'k2' })
+    const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
+    const res = await store.upload(file, 'cap')
+
+    expect(res.success).toBe(true)
+    expect((api.post as any).mock.calls).toHaveLength(1)
+    expect((api.post as any).mock.calls[0][0]).toBe('/image')
+    expect(store.images).toHaveLength(1)
+    expect(store.images[0].id).toBe(CREATED.id)
+    expect(api.delete).not.toHaveBeenCalled()
+  })
+
+  it('upload() does NOT call DELETE in draft mode when no second step exists', async () => {
+    ;(api.post as any).mockRejectedValueOnce(new Error('upload failed'))
+
+    const store = useUserContentImageStore({ draftKey: 'k3' })
+    const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
+    const res = await store.upload(file, 'cap')
+
+    expect(res.success).toBe(false)
+    expect(api.delete).not.toHaveBeenCalled()
+  })
 })
