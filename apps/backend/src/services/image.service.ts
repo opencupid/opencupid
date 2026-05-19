@@ -200,7 +200,7 @@ export class ImageService {
     tx: Prisma.TransactionClient,
     imageIds: string[],
     userContentId: string,
-    ownerProfileId: string,
+    ownerProfileId: string
   ): Promise<void> {
     if (imageIds.length === 0) return
 

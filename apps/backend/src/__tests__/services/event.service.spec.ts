@@ -16,7 +16,7 @@ vi.mock('../../services/image.service', () => ({
   ImageServiceError: class extends Error {
     constructor(
       public code: string,
-      message: string,
+      message: string
     ) {
       super(message)
     }

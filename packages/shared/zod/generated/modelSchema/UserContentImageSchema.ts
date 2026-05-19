@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 /////////////////////////////////////////
 // USER CONTENT IMAGE SCHEMA
@@ -11,4 +11,4 @@ export const UserContentImageSchema = z.object({
 
 export type UserContentImage = z.infer<typeof UserContentImageSchema>
 
-export default UserContentImageSchema;
+export default UserContentImageSchema

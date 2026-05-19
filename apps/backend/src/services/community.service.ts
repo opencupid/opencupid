@@ -56,7 +56,7 @@ export class CommunityService extends UserContentService {
           tx,
           imageIds,
           created.id,
-          profileId,
+          profileId
         )
       }
       return created

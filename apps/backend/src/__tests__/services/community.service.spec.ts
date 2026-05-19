@@ -16,7 +16,7 @@ vi.mock('../../services/image.service', () => ({
   ImageServiceError: class extends Error {
     constructor(
       public code: string,
-      message: string,
+      message: string
     ) {
       super(message)
     }
@@ -51,7 +51,7 @@ describe('CommunityService.create with imageIds', () => {
       mockPrisma,
       ['img-a', 'img-b', 'img-c'],
       'content-1',
-      'profile-1',
+      'profile-1'
     )
   })
 

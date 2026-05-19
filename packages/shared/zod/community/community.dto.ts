@@ -47,9 +47,11 @@ export const CreateCommunityPayloadSchema = BaseUserContentPayloadSchema.extend(
 })
 export type CreateCommunityPayload = z.infer<typeof CreateCommunityPayloadSchema>
 
-export const UpdateCommunityPayloadSchema = CreateCommunityPayloadSchema.omit({ imageIds: true }).partial().extend({
-  isVisible: z.boolean().optional(),
-})
+export const UpdateCommunityPayloadSchema = CreateCommunityPayloadSchema.omit({ imageIds: true })
+  .partial()
+  .extend({
+    isVisible: z.boolean().optional(),
+  })
 export type UpdateCommunityPayload = z.infer<typeof UpdateCommunityPayloadSchema>
 
 export const CommunityParamsSchema = z.object({ id: z.string().cuid() })

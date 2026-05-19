@@ -17,7 +17,10 @@ vi.mock('@/services/cluster.service', () => ({
 vi.mock('@/services/image.service', () => ({
   ImageService: { getInstance: () => ({}) },
   ImageServiceError: class extends Error {
-    constructor(public code: string, message: string) {
+    constructor(
+      public code: string,
+      message: string
+    ) {
       super(message)
     }
   },
@@ -101,7 +104,11 @@ describe('POST /', () => {
     await handler(
       {
         session: { profileId: ownerProfileId },
-        body: { content: 'hello world hello', type: 'OFFER', imageIds: ['cmimg00000000000000000a'] },
+        body: {
+          content: 'hello world hello',
+          type: 'OFFER',
+          imageIds: ['cmimg00000000000000000a'],
+        },
       } as any,
       reply as any
     )

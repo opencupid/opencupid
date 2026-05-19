@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 /////////////////////////////////////////
 // PROFILE IMAGE SCHEMA
@@ -11,4 +11,4 @@ export const ProfileImageSchema = z.object({
 
 export type ProfileImage = z.infer<typeof ProfileImageSchema>
 
-export default ProfileImageSchema;
+export default ProfileImageSchema

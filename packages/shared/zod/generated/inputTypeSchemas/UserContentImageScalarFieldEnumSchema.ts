@@ -1,5 +1,5 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-export const UserContentImageScalarFieldEnumSchema = z.enum(['imageId','userContentId']);
+export const UserContentImageScalarFieldEnumSchema = z.enum(['imageId', 'userContentId'])
 
-export default UserContentImageScalarFieldEnumSchema;
+export default UserContentImageScalarFieldEnumSchema

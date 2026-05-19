@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
-import { CreateCommunityPayloadSchema, UpdateCommunityPayloadSchema } from '@zod/community/community.dto'
+import {
+  CreateCommunityPayloadSchema,
+  UpdateCommunityPayloadSchema,
+} from '@zod/community/community.dto'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -18,7 +21,12 @@ vi.mock('@/services/cluster.service', () => ({
 vi.mock('@/services/image.service', () => ({
   ImageService: { getInstance: () => ({}) },
   ImageServiceError: class extends Error {
-    constructor(public code: string, message: string) { super(message) }
+    constructor(
+      public code: string,
+      message: string
+    ) {
+      super(message)
+    }
   },
 }))
 

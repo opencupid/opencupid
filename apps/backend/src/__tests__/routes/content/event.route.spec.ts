@@ -18,7 +18,12 @@ vi.mock('@/services/cluster.service', () => ({
 vi.mock('@/services/image.service', () => ({
   ImageService: { getInstance: () => ({}) },
   ImageServiceError: class extends Error {
-    constructor(public code: string, message: string) { super(message) }
+    constructor(
+      public code: string,
+      message: string
+    ) {
+      super(message)
+    }
   },
 }))
 

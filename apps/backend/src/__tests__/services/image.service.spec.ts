@@ -480,12 +480,7 @@ describe('attachManyToUserContentTx', () => {
     ] as any)
     mockPrisma.userContentImage.count.mockResolvedValue(0)
 
-    await svc.attachManyToUserContentTx(
-      mockPrisma,
-      ['img-a', 'img-b'],
-      'content-1',
-      'profile-1'
-    )
+    await svc.attachManyToUserContentTx(mockPrisma, ['img-a', 'img-b'], 'content-1', 'profile-1')
 
     expect(mockPrisma.userContentImage.create).toHaveBeenNthCalledWith(1, {
       data: { imageId: 'img-a', userContentId: 'content-1' },
@@ -511,12 +506,7 @@ describe('attachManyToUserContentTx', () => {
     ] as any)
     mockPrisma.userContentImage.count.mockResolvedValue(3)
 
-    await svc.attachManyToUserContentTx(
-      mockPrisma,
-      ['img-a', 'img-b'],
-      'content-1',
-      'profile-1'
-    )
+    await svc.attachManyToUserContentTx(mockPrisma, ['img-a', 'img-b'], 'content-1', 'profile-1')
 
     expect(mockPrisma.image.update).toHaveBeenNthCalledWith(1, {
       where: { id: 'img-a' },
@@ -544,7 +534,12 @@ describe('attachManyToUserContentTx', () => {
     const svc = service
     mockPrisma.image.findMany.mockResolvedValue([
       { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
-      { id: 'img-b', ownerProfileId: 'profile-OTHER', profileGallery: null, userContentGallery: null },
+      {
+        id: 'img-b',
+        ownerProfileId: 'profile-OTHER',
+        profileGallery: null,
+        userContentGallery: null,
+      },
     ] as any)
 
     await expect(
