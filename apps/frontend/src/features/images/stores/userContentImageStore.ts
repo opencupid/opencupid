@@ -4,6 +4,8 @@ import type { ApiError } from '@zod/apiResponse.dto'
 import {
   type ImageApiResponse,
   ImageApiResponseSchema,
+  type ImageResponse,
+  ImageResponseSchema,
   type OwnerImage,
   type ImagePosition,
 } from '@zod/image/image.dto'
@@ -44,15 +46,33 @@ export const useUserContentImageStore = (contentId: string) =>
         const formData = new FormData()
         formData.append('file', file)
         formData.append('captionText', captionText)
+        this.isLoading = true
+        let createdId: string | null = null
         try {
-          this.isLoading = true
-          const { data } = await safeApiCall(() =>
-            api.post<ImageApiResponse>(`/content/${contentId}/image`, formData)
+          const { data: createData } = await safeApiCall(() =>
+            api.post<ImageResponse>('/image', formData)
           )
-          const { images } = ImageApiResponseSchema.parse(data)
+          const created = ImageResponseSchema.parse(createData).image
+          createdId = created.id
+
+          const { data: attachData } = await safeApiCall(() =>
+            api.post<ImageApiResponse>(`/content/${contentId}/image/attach`, {
+              imageId: created.id,
+            })
+          )
+          const { images } = ImageApiResponseSchema.parse(attachData)
           this.images = images
           return { success: true }
         } catch (err: unknown) {
+          if (createdId) {
+            try {
+              // best-effort cleanup; intentionally bypasses safeApiCall — failures here are
+              // already in a failure path and would mask the original error
+              await api.delete(`/image/${createdId}`)
+            } catch {
+              // swallow
+            }
+          }
           const out: ApiError = { success: false, message: 'An unexpected error occurred' }
           if (axios.isAxiosError(err) && err.response) {
             const resp = err.response.data as Partial<ApiError>

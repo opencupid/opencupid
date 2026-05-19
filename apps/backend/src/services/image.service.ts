@@ -189,6 +189,53 @@ export class ImageService {
     )
   }
 
+  /**
+   * Drop a profile-gallery join row without deleting the underlying Image.
+   * Re-syncs Profile.hasFace inside the same transaction.
+   */
+  async detachFromProfile(imageId: string, requesterProfileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+    }
+    if (!image.profileGallery) {
+      throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a profile gallery')
+    }
+
+    const profileId = image.profileGallery.profileId
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.profileImage.delete({ where: { imageId } })
+        await syncProfileHasFace(tx, profileId)
+      },
+      { isolationLevel: 'Serializable' }
+    )
+  }
+
+  /**
+   * Drop a content-gallery join row without deleting the underlying Image.
+   * Profile.hasFace is intentionally NOT touched here (symmetry with attach).
+   */
+  async detachFromUserContent(imageId: string, requesterProfileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { userContentGallery: true },
+    })
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+    }
+    if (!image.userContentGallery) {
+      throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a content gallery')
+    }
+
+    await prisma.userContentImage.delete({ where: { imageId } })
+  }
+
   async processImage(filePath: string, outputDir: string, baseName: string) {
     await fs.promises.mkdir(outputDir, { recursive: true })
 

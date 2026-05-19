@@ -8,13 +8,16 @@ import { rateLimitConfig, sendError } from '../helpers'
 import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
 import { ReorderImagesPayloadSchema } from '@zod/image/image.dto'
 import { appConfig } from '@/lib/appconfig'
-import type { ImageApiResponse } from '@zod/image/image.dto'
+import type { ImageApiResponse, ImageResponse } from '@zod/image/image.dto'
+import { toOwnerImage } from '@/api/mappers/image.mappers'
 
 // Route params for ID lookups
 const IdLookupParamsSchema = z.object({
   id: z.string().cuid(),
 })
 const UpdateImageBodySchema = z.object({ altText: z.string().optional() })
+const AttachImageBodySchema = z.object({ imageId: z.string().cuid() })
+const ImageIdParamsSchema = z.object({ imageId: z.string().cuid() })
 
 const imageRoutes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(multipart, {
@@ -52,10 +55,10 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * POST /
-   * Uploads an image and attaches it to the caller's profile gallery.
-   * createImage and attachToProfile each open their own transaction; on attach
-   * failure we compensate by deleting the freshly-created Image. Window for
-   * an orphan is the latency between createImage and attachToProfile.
+   * Uploads an image owned by the caller. Does NOT attach it to any gallery —
+   * the caller follows up with POST /me/attach (profile) or
+   * POST /content/:contentId/image/attach (content). If the follow-up fails,
+   * the caller is responsible for issuing DELETE /image/:id to clean up.
    */
   fastify.post(
     '/',
@@ -65,7 +68,6 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (req, reply) => {
       let files
-
       try {
         files = await req.saveRequestFiles({
           tmpdir: uploadTmpDir(),
@@ -77,17 +79,13 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
         })
       } catch (err: any) {
         fastify.log.warn('Upload error:', err, err.code)
-
         const reason =
           err.code === 'FST_REQ_FILE_TOO_LARGE' ? 'IMAGE_TOO_LARGE' : 'IMAGE_UPLOAD_FAILED'
-
         return sendError(reply, 400, reason)
       }
 
       if (files.length === 0) return sendError(reply, 400, 'No file uploaded')
-
       const fileUpload = files[0]
-      // Validate file type
       if (!fileUpload.mimetype.startsWith('image/')) {
         return sendError(reply, 400, 'Uploaded file must be an image')
       }
@@ -98,40 +96,73 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
           : fileUpload.fields.captionText) as MultipartValue
       ).value ?? '') as string
 
-      let createdId: string | null = null
       try {
         const created = await imageService.createImage(
           req.session.profileId,
           fileUpload.filepath,
           captionText
         )
-        createdId = created.id
-        await imageService.attachToProfile(created.id, req.session.profileId)
-
-        const updated = await imageService.listProfileGallery(req.session.profileId)
-        const response: ImageApiResponse = {
+        const response: ImageResponse = {
           success: true,
-          images: mapProfileImagesToOwner(updated),
+          image: toOwnerImage(created),
         }
         return reply.code(200).send(response)
       } catch (err) {
         fastify.log.error({ err }, 'Error storing image')
-        if (createdId) {
-          // Compensate: delete the orphan Image (no join exists, so deleteImage
-          // just removes the row + files).
-          try {
-            await imageService.deleteImage(createdId, req.session.profileId)
-          } catch (cleanupErr) {
-            fastify.log.error(
-              { err: cleanupErr, imageId: createdId },
-              'Failed to clean up orphan image'
-            )
-          }
-        }
         return sendError(reply, 500, 'Failed to store image')
       }
     }
   )
+
+  /**
+   * POST /me/attach
+   * Attach an existing image (already owned by the caller) to the profile gallery.
+   */
+  fastify.post('/me/attach', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { imageId } = AttachImageBodySchema.parse(req.body)
+    try {
+      await imageService.attachToProfile(imageId, req.session.profileId)
+      const updated = await imageService.listProfileGallery(req.session.profileId)
+      const response: ImageApiResponse = {
+        success: true,
+        images: mapProfileImagesToOwner(updated),
+      }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error({ err }, 'Error attaching image to profile gallery')
+      if (err instanceof ImageServiceError) {
+        if (err.code === 'NOT_FOUND') return sendError(reply, 404, 'Image not found')
+        if (err.code === 'OWNER_MISMATCH') return sendError(reply, 403, 'Forbidden')
+        if (err.code === 'ALREADY_ATTACHED') return sendError(reply, 409, 'ALREADY_ATTACHED')
+      }
+      return sendError(reply, 500, 'Failed to attach image')
+    }
+  })
+
+  /**
+   * DELETE /me/:imageId
+   * Detach an image from the profile gallery. The Image row + files survive —
+   * use DELETE /:id to remove the image entirely.
+   */
+  fastify.delete('/me/:imageId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { imageId } = ImageIdParamsSchema.parse(req.params)
+    try {
+      await imageService.detachFromProfile(imageId, req.session.profileId)
+      const updated = await imageService.listProfileGallery(req.session.profileId)
+      const response: ImageApiResponse = {
+        success: true,
+        images: mapProfileImagesToOwner(updated),
+      }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error({ err }, 'Error detaching image from profile gallery')
+      if (err instanceof ImageServiceError) {
+        if (err.code === 'NOT_FOUND') return sendError(reply, 404, 'Image not found')
+        if (err.code === 'OWNER_MISMATCH') return sendError(reply, 403, 'Forbidden')
+      }
+      return sendError(reply, 500, 'Failed to detach image')
+    }
+  })
 
   /**
    * DELETE /:id

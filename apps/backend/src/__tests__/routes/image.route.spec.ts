@@ -21,6 +21,10 @@ vi.mock('@/api/mappers/profile.mappers', () => ({
   mapProfileImagesToOwner: (images: any[]) => images, // identity for assertions
 }))
 
+vi.mock('@/api/mappers/image.mappers', () => ({
+  toOwnerImage: (image: any) => image, // identity for assertions
+}))
+
 vi.mock('@/lib/appconfig', () => ({
   appConfig: { IMAGE_MAX_SIZE: 5 * 1024 * 1024, MEDIA_UPLOAD_DIR: '/tmp' },
 }))
@@ -47,6 +51,7 @@ beforeEach(async () => {
     listProfileGallery: vi.fn(),
     createImage: vi.fn(),
     attachToProfile: vi.fn(),
+    detachFromProfile: vi.fn(),
     deleteImage: vi.fn(),
     updateImage: vi.fn(),
     reorderProfileGallery: vi.fn(),
@@ -94,44 +99,55 @@ describe('image.route', () => {
         ...overrides,
       })
 
-    it('happy path: createImage + attachToProfile both succeed', async () => {
-      mockImageService.createImage.mockResolvedValue({ id: 'img-new' })
-      mockImageService.attachToProfile.mockResolvedValue(undefined)
-      const galleryAfter = [{ id: 'img-new' }]
-      mockImageService.listProfileGallery.mockResolvedValue(galleryAfter)
+    it('happy path: creates the image and returns the single created image (no attach)', async () => {
+      const created = { id: 'img-new', mimeType: 'image/jpeg', altText: 'cap', position: 0 }
+      mockImageService.createImage.mockResolvedValue(created)
 
       const handler = fastify.routes['POST /']
       await handler(makeUploadReq(), reply as any)
 
       expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg', 'cap')
-      expect(mockImageService.attachToProfile).toHaveBeenCalledWith('img-new', 'p-1')
-      expect(mockImageService.deleteImage).not.toHaveBeenCalled()
+      expect(mockImageService.attachToProfile).not.toHaveBeenCalled()
+      expect(mockImageService.listProfileGallery).not.toHaveBeenCalled()
       expect(reply.statusCode).toBe(200)
-      expect(reply.payload).toEqual({ success: true, images: galleryAfter })
+      expect(reply.payload).toEqual({ success: true, image: created })
     })
 
-    it('attach failure → compensating delete is called', async () => {
-      mockImageService.createImage.mockResolvedValue({ id: 'img-orphan' })
-      mockImageService.attachToProfile.mockRejectedValue(new Error('attach failed'))
-
-      const handler = fastify.routes['POST /']
-      await handler(makeUploadReq(), reply as any)
-
-      expect(mockImageService.deleteImage).toHaveBeenCalledWith('img-orphan', 'p-1')
-      expect(reply.statusCode).toBe(500)
-      expect(reply.payload).toMatchObject({ success: false })
-    })
-
-    it('createImage failure → no cleanup attempted', async () => {
+    it('createImage failure → 500, no compensating delete', async () => {
       mockImageService.createImage.mockRejectedValue(new Error('create failed'))
 
       const handler = fastify.routes['POST /']
       await handler(makeUploadReq(), reply as any)
 
-      expect(mockImageService.attachToProfile).not.toHaveBeenCalled()
       expect(mockImageService.deleteImage).not.toHaveBeenCalled()
       expect(reply.statusCode).toBe(500)
       expect(reply.payload).toMatchObject({ success: false })
+    })
+
+    it('rejects non-image mime types with 400', async () => {
+      const handler = fastify.routes['POST /']
+      await handler(
+        makeUploadReq({
+          saveRequestFiles: vi.fn().mockResolvedValue([{ ...fileFixture, mimetype: 'text/plain' }]),
+        }),
+        reply as any
+      )
+      expect(reply.statusCode).toBe(400)
+      expect(mockImageService.createImage).not.toHaveBeenCalled()
+    })
+
+    it('FST_REQ_FILE_TOO_LARGE → 400 IMAGE_TOO_LARGE', async () => {
+      const req = makeReq({
+        saveRequestFiles: vi
+          .fn()
+          .mockRejectedValue(
+            Object.assign(new Error('too large'), { code: 'FST_REQ_FILE_TOO_LARGE' })
+          ),
+      })
+      const handler = fastify.routes['POST /']
+      await handler(req, reply as any)
+      expect(reply.statusCode).toBe(400)
+      expect(reply.payload).toMatchObject({ success: false, message: 'IMAGE_TOO_LARGE' })
     })
   })
 
@@ -233,6 +249,85 @@ describe('image.route', () => {
 
       expect(reply.statusCode).toBe(400)
       expect(reply.payload).toMatchObject({ success: false, message: 'INVALID_REORDER' })
+    })
+  })
+
+  describe('POST /me/attach', () => {
+    const imageId = 'ckxyz0000000000000000atta'
+
+    it('happy path: calls attachToProfile and returns updated gallery', async () => {
+      mockImageService.attachToProfile.mockResolvedValue(undefined)
+      const galleryAfter = [{ id: imageId }]
+      mockImageService.listProfileGallery.mockResolvedValue(galleryAfter)
+
+      const handler = fastify.routes['POST /me/attach']
+      await handler(makeReq({ body: { imageId } }), reply as any)
+
+      expect(mockImageService.attachToProfile).toHaveBeenCalledWith(imageId, 'p-1')
+      expect(reply.statusCode).toBe(200)
+      expect(reply.payload).toEqual({ success: true, images: galleryAfter })
+    })
+
+    it('owner mismatch → 403', async () => {
+      mockImageService.attachToProfile.mockRejectedValue(
+        new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      )
+      const handler = fastify.routes['POST /me/attach']
+      await handler(makeReq({ body: { imageId } }), reply as any)
+      expect(reply.statusCode).toBe(403)
+    })
+
+    it('image not found → 404', async () => {
+      mockImageService.attachToProfile.mockRejectedValue(
+        new ImageServiceError('NOT_FOUND', 'Image not found')
+      )
+      const handler = fastify.routes['POST /me/attach']
+      await handler(makeReq({ body: { imageId } }), reply as any)
+      expect(reply.statusCode).toBe(404)
+    })
+
+    it('already attached → 409', async () => {
+      mockImageService.attachToProfile.mockRejectedValue(
+        new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
+      )
+      const handler = fastify.routes['POST /me/attach']
+      await handler(makeReq({ body: { imageId } }), reply as any)
+      expect(reply.statusCode).toBe(409)
+    })
+  })
+
+  describe('DELETE /me/:imageId', () => {
+    const imageId = 'ckxyz0000000000000000deta'
+
+    it('happy path: calls detachFromProfile and returns updated gallery', async () => {
+      mockImageService.detachFromProfile.mockResolvedValue(undefined)
+      const galleryAfter = [{ id: 'img-keep' }]
+      mockImageService.listProfileGallery.mockResolvedValue(galleryAfter)
+
+      const handler = fastify.routes['DELETE /me/:imageId']
+      await handler(makeReq({ params: { imageId } }), reply as any)
+
+      expect(mockImageService.detachFromProfile).toHaveBeenCalledWith(imageId, 'p-1')
+      expect(reply.statusCode).toBe(200)
+      expect(reply.payload).toEqual({ success: true, images: galleryAfter })
+    })
+
+    it('owner mismatch → 403', async () => {
+      mockImageService.detachFromProfile.mockRejectedValue(
+        new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      )
+      const handler = fastify.routes['DELETE /me/:imageId']
+      await handler(makeReq({ params: { imageId } }), reply as any)
+      expect(reply.statusCode).toBe(403)
+    })
+
+    it('image not in gallery → 404', async () => {
+      mockImageService.detachFromProfile.mockRejectedValue(
+        new ImageServiceError('NOT_FOUND', 'Image is not attached to a profile gallery')
+      )
+      const handler = fastify.routes['DELETE /me/:imageId']
+      await handler(makeReq({ params: { imageId } }), reply as any)
+      expect(reply.statusCode).toBe(404)
     })
   })
 })

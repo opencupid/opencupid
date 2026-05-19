@@ -4,6 +4,8 @@ import type { ApiError } from '@zod/apiResponse.dto'
 import {
   type ImageApiResponse,
   ImageApiResponseSchema,
+  type ImageResponse,
+  ImageResponseSchema,
   type OwnerImage,
   type ImagePosition,
 } from '@zod/image/image.dto'
@@ -21,13 +23,31 @@ export const useProfileImageStore = defineStore('profileImage', {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('captionText', captionText)
+      this.isLoading = true
+      let createdId: string | null = null
       try {
-        this.isLoading = true
-        const { data } = await safeApiCall(() => api.post<ImageApiResponse>('/image', formData))
-        const { images } = ImageApiResponseSchema.parse(data)
+        const { data: createData } = await safeApiCall(() =>
+          api.post<ImageResponse>('/image', formData)
+        )
+        const created = ImageResponseSchema.parse(createData).image
+        createdId = created.id
+
+        const { data: attachData } = await safeApiCall(() =>
+          api.post<ImageApiResponse>('/image/me/attach', { imageId: created.id })
+        )
+        const { images } = ImageApiResponseSchema.parse(attachData)
         this.images = images
         return { success: true }
       } catch (err: unknown) {
+        if (createdId) {
+          try {
+            // best-effort cleanup; intentionally bypasses safeApiCall — failures here are
+            // already in a failure path and would mask the original error
+            await api.delete(`/image/${createdId}`)
+          } catch {
+            // swallow
+          }
+        }
         return mapStoreError(err)
       } finally {
         this.isLoading = false

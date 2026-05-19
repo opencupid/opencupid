@@ -412,3 +412,112 @@ describe('reorderUserContentGallery', () => {
     ).rejects.toThrow(/every image in the gallery/i)
   })
 })
+
+describe('detachFromProfile', () => {
+  const IMG = 'img-1'
+  const ME = 'p-1'
+  const OTHER = 'p-other'
+
+  it('throws NOT_FOUND when image does not exist', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue(null)
+    await expect(service.detachFromProfile(IMG, ME)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    })
+  })
+
+  it('throws OWNER_MISMATCH when caller does not own the image', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: IMG,
+      ownerProfileId: OTHER,
+      profileGallery: { profileId: OTHER },
+    })
+    await expect(service.detachFromProfile(IMG, ME)).rejects.toMatchObject({
+      code: 'OWNER_MISMATCH',
+    })
+  })
+
+  it('throws NOT_FOUND when image is not in a profile gallery', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: IMG,
+      ownerProfileId: ME,
+      profileGallery: null,
+      userContentGallery: { userContentId: 'c-1' },
+    })
+    await expect(service.detachFromProfile(IMG, ME)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    })
+  })
+
+  it('happy path: drops the join, calls syncProfileHasFace, leaves the Image row', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: IMG,
+      ownerProfileId: ME,
+      profileGallery: { profileId: ME },
+    })
+    mockPrisma.profileImage.delete.mockResolvedValue(undefined)
+    mockPrisma.profileImage.findFirst.mockResolvedValue({
+      image: { hasFace: true },
+    } as any)
+
+    await service.detachFromProfile(IMG, ME)
+
+    expect(mockPrisma.profileImage.delete).toHaveBeenCalledWith({ where: { imageId: IMG } })
+    expect(mockPrisma.image.delete).not.toHaveBeenCalled()
+    // syncProfileHasFace ran: it read the top gallery image then updated Profile.hasFace
+    expect(mockPrisma.profile.update).toHaveBeenCalledWith({
+      where: { id: ME },
+      data: { hasFace: true },
+    })
+  })
+})
+
+describe('detachFromUserContent', () => {
+  const IMG = 'img-1'
+  const ME = 'p-1'
+  const CONTENT = 'c-1'
+
+  it('throws NOT_FOUND when image does not exist', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue(null)
+    await expect(service.detachFromUserContent(IMG, ME)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    })
+  })
+
+  it('throws OWNER_MISMATCH when caller does not own the image', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: IMG,
+      ownerProfileId: 'p-other',
+      userContentGallery: { userContentId: CONTENT },
+    })
+    await expect(service.detachFromUserContent(IMG, ME)).rejects.toMatchObject({
+      code: 'OWNER_MISMATCH',
+    })
+  })
+
+  it('throws NOT_FOUND when image is not in a content gallery', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: IMG,
+      ownerProfileId: ME,
+      userContentGallery: null,
+      profileGallery: { profileId: ME },
+    })
+    await expect(service.detachFromUserContent(IMG, ME)).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    })
+  })
+
+  it('happy path: drops the join, does NOT touch syncProfileHasFace, leaves the Image row', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: IMG,
+      ownerProfileId: ME,
+      userContentGallery: { userContentId: CONTENT },
+    })
+    mockPrisma.userContentImage.delete.mockResolvedValue(undefined)
+
+    await service.detachFromUserContent(IMG, ME)
+
+    expect(mockPrisma.userContentImage.delete).toHaveBeenCalledWith({ where: { imageId: IMG } })
+    expect(mockPrisma.image.delete).not.toHaveBeenCalled()
+    expect(mockPrisma.profile.update).not.toHaveBeenCalled()
+  })
+})

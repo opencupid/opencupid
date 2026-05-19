@@ -57,3 +57,8 @@ export const ImageApiResponseSchema = ApiSuccessSchema.merge(ImagesResponseSchem
 export type ImageApiResponse = z.infer<typeof ImageApiResponseSchema>
 
 export type ImagesResponse = z.infer<typeof ImagesResponseSchema>
+
+export const ImageResponseSchema = ApiSuccessSchema.extend({
+  image: OwnerImageSchema,
+})
+export type ImageResponse = z.infer<typeof ImageResponseSchema>
