@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, axios, safeApiCall } from '@/lib/api'
-import type { ApiError } from '@zod/apiResponse.dto'
+import { api, safeApiCall } from '@/lib/api'
 import {
   type ImageApiResponse,
   ImageApiResponseSchema,
@@ -9,6 +8,7 @@ import {
   type OwnerImage,
   type ImagePosition,
 } from '@zod/image/image.dto'
+import { storeSuccess, storeError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import type { GalleryStoreResponse } from './galleryStore'
 
@@ -37,7 +37,7 @@ export const useProfileImageStore = defineStore('profileImage', {
         )
         const { images } = ImageApiResponseSchema.parse(attachData)
         this.images = images
-        return { success: true }
+        return storeSuccess()
       } catch (err: unknown) {
         if (createdId) {
           try {
@@ -48,7 +48,7 @@ export const useProfileImageStore = defineStore('profileImage', {
             // swallow
           }
         }
-        return mapStoreError(err)
+        return storeError(err, 'Failed to upload image')
       } finally {
         this.isLoading = false
       }
@@ -60,9 +60,9 @@ export const useProfileImageStore = defineStore('profileImage', {
         const { data } = await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
         const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
-        return { success: true }
+        return storeSuccess()
       } catch (err) {
-        return { success: false, message: 'An unexpected error occurred' }
+        return storeError(err, 'Failed to delete image')
       } finally {
         this.isLoading = false
       }
@@ -76,10 +76,10 @@ export const useProfileImageStore = defineStore('profileImage', {
         )
         const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
-        return { success: true }
-      } catch {
+        return storeSuccess()
+      } catch (err) {
         this.images = []
-        return { success: false, message: 'An unexpected error occurred' }
+        return storeError(err, 'Failed to reorder images')
       } finally {
         this.isLoading = false
       }
@@ -91,14 +91,10 @@ export const useProfileImageStore = defineStore('profileImage', {
         const { data } = await safeApiCall(() => api.get<ImageApiResponse>('/image/me'))
         const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
-        return { success: true }
-      } catch (err: any) {
-        console.error('Failed to fetch profile images:', err)
+        return storeSuccess()
+      } catch (err) {
         this.images = []
-        return {
-          success: false,
-          message: err.response?.data?.message || 'Failed to fetch profile images',
-        }
+        return storeError(err, 'Failed to fetch profile images')
       } finally {
         this.isLoading = false
       }
@@ -109,18 +105,6 @@ export const useProfileImageStore = defineStore('profileImage', {
     },
   },
 })
-
-function mapStoreError(err: unknown): GalleryStoreResponse {
-  const out: ApiError = { success: false, message: 'An unexpected error occurred' }
-  if (axios.isAxiosError(err) && err.response) {
-    const resp = err.response.data as Partial<ApiError>
-    out.message = resp.message ?? out.message
-    if (resp.fieldErrors) out.fieldErrors = resp.fieldErrors
-  } else if (err instanceof Error) {
-    out.message = err.message
-  }
-  return out
-}
 
 bus.on('auth:logout', () => {
   useProfileImageStore().teardown()

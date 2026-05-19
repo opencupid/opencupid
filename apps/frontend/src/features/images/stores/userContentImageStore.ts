@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
-import { api, axios, safeApiCall } from '@/lib/api'
-import type { ApiError } from '@zod/apiResponse.dto'
+import { api, safeApiCall } from '@/lib/api'
 import {
   type ImageApiResponse,
   ImageApiResponseSchema,
@@ -9,6 +8,7 @@ import {
   type OwnerImage,
   type ImagePosition,
 } from '@zod/image/image.dto'
+import { storeSuccess, storeError } from '@/store/helpers'
 import type { GalleryStoreResponse } from './galleryStore'
 
 /**
@@ -30,13 +30,10 @@ export const useUserContentImageStore = (contentId: string) =>
           )
           const { images } = ImageApiResponseSchema.parse(data)
           this.images = images
-          return { success: true }
-        } catch (err: any) {
+          return storeSuccess()
+        } catch (err) {
           this.images = []
-          return {
-            success: false,
-            message: err.response?.data?.message || 'Failed to fetch images',
-          }
+          return storeError(err, 'Failed to fetch images')
         } finally {
           this.isLoading = false
         }
@@ -62,7 +59,7 @@ export const useUserContentImageStore = (contentId: string) =>
           )
           const { images } = ImageApiResponseSchema.parse(attachData)
           this.images = images
-          return { success: true }
+          return storeSuccess()
         } catch (err: unknown) {
           if (createdId) {
             try {
@@ -73,30 +70,22 @@ export const useUserContentImageStore = (contentId: string) =>
               // swallow
             }
           }
-          const out: ApiError = { success: false, message: 'An unexpected error occurred' }
-          if (axios.isAxiosError(err) && err.response) {
-            const resp = err.response.data as Partial<ApiError>
-            out.message = resp.message ?? out.message
-            if (resp.fieldErrors) out.fieldErrors = resp.fieldErrors
-          } else if (err instanceof Error) {
-            out.message = err.message
-          }
-          return out
+          return storeError(err, 'Failed to upload image')
         } finally {
           this.isLoading = false
         }
       },
 
       async remove(image: OwnerImage): Promise<GalleryStoreResponse> {
-        // DELETE goes through the unified /image/:id endpoint.
+        // DELETE goes through the unified /image/:id endpoint; we re-load the
+        // content gallery afterwards since the unified delete returns the
+        // profile gallery, not this one.
         try {
           this.isLoading = true
           await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
-          // Re-fetch to refresh local state (delete response from /image/:id is for the
-          // profile gallery; for content galleries we re-read the content's gallery).
           return await this.load()
-        } catch {
-          return { success: false, message: 'Failed to delete image' }
+        } catch (err) {
+          return storeError(err, 'Failed to delete image')
         } finally {
           this.isLoading = false
         }
@@ -110,9 +99,9 @@ export const useUserContentImageStore = (contentId: string) =>
           )
           const { images } = ImageApiResponseSchema.parse(data)
           this.images = images
-          return { success: true }
-        } catch {
-          return { success: false, message: 'Failed to reorder' }
+          return storeSuccess()
+        } catch (err) {
+          return storeError(err, 'Failed to reorder images')
         } finally {
           this.isLoading = false
         }

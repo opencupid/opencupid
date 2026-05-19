@@ -1,7 +1,7 @@
 import type { OwnerImage, ImagePosition } from '@zod/image/image.dto'
-import type { ApiSuccess, ApiError } from '@zod/apiResponse.dto'
+import type { StoreVoidSuccess, StoreError } from '@/store/helpers'
 
-export type GalleryStoreResponse = ApiSuccess<{}> | ApiError
+export type GalleryStoreResponse = StoreVoidSuccess | StoreError
 
 export interface GalleryStore {
   images: OwnerImage[]
