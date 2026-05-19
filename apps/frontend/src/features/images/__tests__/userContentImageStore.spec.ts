@@ -45,7 +45,7 @@ describe('useUserContentImageStore', () => {
         ],
       },
     })
-    const store = useUserContentImageStore('content-1')
+    const store = useUserContentImageStore({ contentId: 'content-1' })
     const res = await store.load()
     expect(res.success).toBe(true)
     expect(api.get).toHaveBeenCalledWith('/content/content-1/image')
@@ -57,7 +57,7 @@ describe('useUserContentImageStore', () => {
       .mockResolvedValueOnce({ data: { success: true, image: CREATED } })
       .mockResolvedValueOnce({ data: { success: true, images: [CREATED] } })
 
-    const store = useUserContentImageStore('content-1')
+    const store = useUserContentImageStore({ contentId: 'content-1' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
     const res = await store.upload(file, 'cap')
 
@@ -77,7 +77,7 @@ describe('useUserContentImageStore', () => {
       .mockRejectedValueOnce(new Error('attach failed'))
     ;(api.delete as any).mockResolvedValue({ data: { success: true, images: [] } })
 
-    const store = useUserContentImageStore('content-1')
+    const store = useUserContentImageStore({ contentId: 'content-1' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
     const res = await store.upload(file, 'cap')
 
@@ -88,7 +88,7 @@ describe('useUserContentImageStore', () => {
   it('upload() does NOT call DELETE when create fails', async () => {
     ;(api.post as any).mockRejectedValueOnce(new Error('create failed'))
 
-    const store = useUserContentImageStore('content-1')
+    const store = useUserContentImageStore({ contentId: 'content-1' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
     const res = await store.upload(file, 'cap')
 
@@ -98,7 +98,7 @@ describe('useUserContentImageStore', () => {
 
   it('reorder() PATCHes /content/:id/image/order', async () => {
     ;(api.patch as any).mockResolvedValue({ data: { success: true, images: [] } })
-    const store = useUserContentImageStore('content-1')
+    const store = useUserContentImageStore({ contentId: 'content-1' })
     await store.reorder([{ id: 'i1', position: 0 }])
     expect(api.patch).toHaveBeenCalledWith('/content/content-1/image/order', {
       images: [{ id: 'i1', position: 0 }],
@@ -108,7 +108,7 @@ describe('useUserContentImageStore', () => {
   it('remove() DELETEs /image/:id (unified endpoint)', async () => {
     ;(api.delete as any).mockResolvedValue({ data: { success: true, images: [] } })
     ;(api.get as any).mockResolvedValue({ data: { success: true, images: [] } })
-    const store = useUserContentImageStore('content-1')
+    const store = useUserContentImageStore({ contentId: 'content-1' })
     await store.remove({ id: 'i1' } as any)
     expect(api.delete).toHaveBeenCalledWith('/image/i1')
   })

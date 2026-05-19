@@ -11,15 +11,29 @@ import {
 import { storeSuccess, storeError } from '@/store/helpers'
 import type { GalleryStoreResponse } from './galleryStore'
 
+export type UserContentImageStoreParams = { contentId: string } | { draftKey: string }
+
+const storeKey = (params: UserContentImageStoreParams) =>
+  'contentId' in params
+    ? `userContentImage:${params.contentId}`
+    : `userContentImage:draft:${params.draftKey}`
+
 /**
- * Per-content store factory. Each UserContent gallery gets its own store instance
- * keyed by contentId. Multiple instances may coexist (one per editor mount).
+ * Per-content store factory. In "attached" mode (`{ contentId }`) it hits the
+ * server-side gallery endpoints. In "draft" mode (`{ draftKey }`) it stages
+ * uploads locally so the host EditDialog can submit the imageIds with its
+ * create payload. The draft store self-cleans abandoned uploads via
+ * `cleanup()` (called by ImageEditor.onUnmounted).
  */
-export const useUserContentImageStore = (contentId: string) =>
-  defineStore(`userContentImage:${contentId}`, {
+export const useUserContentImageStore = (params: UserContentImageStoreParams) => {
+  const isDraft = !('contentId' in params)
+  const contentId = 'contentId' in params ? params.contentId : null
+
+  return defineStore(storeKey(params), {
     state: () => ({
       images: [] as OwnerImage[],
       isLoading: false,
+      isDraft,
     }),
     actions: {
       async load(): Promise<GalleryStoreResponse> {
@@ -63,8 +77,6 @@ export const useUserContentImageStore = (contentId: string) =>
         } catch (err: unknown) {
           if (createdId) {
             try {
-              // best-effort cleanup; intentionally bypasses safeApiCall — failures here are
-              // already in a failure path and would mask the original error
               await api.delete(`/image/${createdId}`)
             } catch {
               // swallow
@@ -77,9 +89,6 @@ export const useUserContentImageStore = (contentId: string) =>
       },
 
       async remove(image: OwnerImage): Promise<GalleryStoreResponse> {
-        // DELETE goes through the unified /image/:id endpoint; we re-load the
-        // content gallery afterwards since the unified delete returns the
-        // profile gallery, not this one.
         try {
           this.isLoading = true
           await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
@@ -108,3 +117,4 @@ export const useUserContentImageStore = (contentId: string) =>
       },
     },
   })()
+}
