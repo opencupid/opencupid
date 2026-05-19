@@ -100,6 +100,10 @@ export const useUserContentImageStore = (params: UserContentImageStoreParams) =>
         try {
           this.isLoading = true
           await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
+          if (this.isDraft) {
+            this.images = this.images.filter((i) => i.id !== image.id)
+            return storeSuccess()
+          }
           return await this.load()
         } catch (err) {
           return storeError(err, 'Failed to delete image')

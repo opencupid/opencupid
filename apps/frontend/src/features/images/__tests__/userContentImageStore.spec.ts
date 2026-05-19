@@ -153,4 +153,19 @@ describe('draft mode', () => {
     expect(res.success).toBe(false)
     expect(api.delete).not.toHaveBeenCalled()
   })
+
+  it('remove() DELETEs /image/:id and removes from local images (no load follow-up)', async () => {
+    ;(api.delete as any).mockResolvedValue({ data: { success: true } })
+    ;(api.post as any).mockResolvedValueOnce({ data: { success: true, image: CREATED } })
+
+    const store = useUserContentImageStore({ draftKey: 'k4' })
+    await store.upload(new File(['x'], 'x.jpg'), 'cap')
+    expect(store.images).toHaveLength(1)
+
+    const removeRes = await store.remove(CREATED as any)
+    expect(removeRes.success).toBe(true)
+    expect(api.delete).toHaveBeenCalledWith(`/image/${CREATED.id}`)
+    expect(store.images).toHaveLength(0)
+    expect(api.get).not.toHaveBeenCalled()
+  })
 })
