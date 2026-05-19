@@ -22,6 +22,7 @@ vi.mock('@/api/mappers/post.mappers', () => ({
 }))
 
 import postRoutes from '../../../api/routes/content/post.route'
+import { CreatePostPayloadSchema } from '@zod/post/post.dto'
 
 const ownerProfileId = 'cmprofile00000000000o1'
 const otherProfileId = 'cmprofile00000000000v1'
@@ -298,8 +299,6 @@ describe('GET /nearby', () => {
     })
   })
 })
-
-import { CreatePostPayloadSchema } from '@zod/post/post.dto'
 
 describe('CreatePostPayloadSchema imageIds', () => {
   it('accepts an array of up to 6 cuids', () => {
