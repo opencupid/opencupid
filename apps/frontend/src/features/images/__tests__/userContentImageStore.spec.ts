@@ -113,3 +113,18 @@ describe('useUserContentImageStore', () => {
     expect(api.delete).toHaveBeenCalledWith('/image/i1')
   })
 })
+
+describe('draft mode', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('load() is a no-op (no network call, returns success, images empty)', async () => {
+    const store = useUserContentImageStore({ draftKey: 'k1' })
+    const res = await store.load()
+    expect(res.success).toBe(true)
+    expect(api.get).not.toHaveBeenCalled()
+    expect(store.images).toEqual([])
+  })
+})

@@ -37,6 +37,9 @@ export const useUserContentImageStore = (params: UserContentImageStoreParams) =>
     }),
     actions: {
       async load(): Promise<GalleryStoreResponse> {
+        if (this.isDraft) {
+          return storeSuccess()
+        }
         try {
           this.isLoading = true
           const { data } = await safeApiCall(() =>
