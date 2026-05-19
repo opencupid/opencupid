@@ -7,6 +7,7 @@ import type { OwnerCommunity } from '@zod/community/community.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
 
 const COMMUNITY_CONTENT_MAX_LENGTH = 300
 
@@ -50,6 +51,7 @@ const form = ref<CommunityForm>(
 )
 
 const isLoading = ref(false)
+const imageBtn = ref<InstanceType<typeof ContentImageButton> | null>(null)
 
 const YEAR_PICKER_WINDOW = 15
 const currentYear = new Date().getUTCFullYear()
@@ -87,9 +89,13 @@ const handleSubmit = async () => {
             content,
             yearFounded,
             ...location,
+            imageIds: imageBtn.value?.getImageIds() ?? [],
           })
 
     if (result.success && result.data) {
+      if (!props.isEdit) {
+        imageBtn.value?.markSaved()
+      }
       emit('saved', result.data.community)
     }
   } finally {
@@ -153,6 +159,12 @@ const handleSubmit = async () => {
       </BFormCheckbox>
     </BFormGroup>
 
+    <BFormGroup class="mb-3">
+      <ContentImageButton
+        ref="imageBtn"
+        :contentId="community?.id"
+      />
+    </BFormGroup>
     <div class="d-flex justify-content-end mt-3">
       <BButton
         type="button"

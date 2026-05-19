@@ -26,6 +26,14 @@ vi.mock('@/features/userContent/stores/userContentStore', () => ({
   }),
 }))
 
+vi.mock('@/features/images/components/ContentImageButton.vue', () => ({
+  default: {
+    template: '<div class="content-image-button" />',
+    setup: () => ({ getImageIds: () => [], markSaved: () => {} }),
+    expose: ['getImageIds', 'markSaved'],
+  },
+}))
+
 import EditCommunityDialog from '../EditCommunityDialog.vue'
 
 const stubs = {
