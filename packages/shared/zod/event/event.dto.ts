@@ -39,7 +39,7 @@ export const CreateEventPayloadSchema = BaseUserContentPayloadSchema.extend({
 })
 export type CreateEventPayload = z.infer<typeof CreateEventPayloadSchema>
 
-export const UpdateEventPayloadSchema = CreateEventPayloadSchema.partial().extend({
+export const UpdateEventPayloadSchema = CreateEventPayloadSchema.omit({ imageIds: true }).partial().extend({
   isVisible: z.boolean().optional(),
 })
 export type UpdateEventPayload = z.infer<typeof UpdateEventPayloadSchema>

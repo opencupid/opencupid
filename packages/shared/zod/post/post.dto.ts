@@ -48,7 +48,7 @@ export const CreatePostPayloadSchema = BaseUserContentPayloadSchema.extend({
 })
 export type CreatePostPayload = z.infer<typeof CreatePostPayloadSchema>
 
-export const UpdatePostPayloadSchema = CreatePostPayloadSchema.partial().extend({
+export const UpdatePostPayloadSchema = CreatePostPayloadSchema.omit({ imageIds: true }).partial().extend({
   isVisible: z.boolean().optional(),
 })
 export type UpdatePostPayload = z.infer<typeof UpdatePostPayloadSchema>

@@ -22,7 +22,7 @@ vi.mock('@/api/mappers/post.mappers', () => ({
 }))
 
 import postRoutes from '../../../api/routes/content/post.route'
-import { CreatePostPayloadSchema } from '@zod/post/post.dto'
+import { CreatePostPayloadSchema, UpdatePostPayloadSchema } from '@zod/post/post.dto'
 
 const ownerProfileId = 'cmprofile00000000000o1'
 const otherProfileId = 'cmprofile00000000000v1'
@@ -321,5 +321,14 @@ describe('CreatePostPayloadSchema imageIds', () => {
   it('accepts payload without imageIds (backward compat)', () => {
     const parsed = CreatePostPayloadSchema.parse({ content: 'x'.repeat(20), type: 'OFFER' })
     expect(parsed.imageIds).toBeUndefined()
+  })
+
+  it('UpdatePostPayloadSchema strips imageIds (create-only field)', () => {
+    const parsed = UpdatePostPayloadSchema.parse({
+      content: 'updated',
+      type: 'OFFER',
+      imageIds: ['cmimg00000000000000000a'],
+    } as any)
+    expect((parsed as any).imageIds).toBeUndefined()
   })
 })

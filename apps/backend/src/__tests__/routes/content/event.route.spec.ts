@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
-import { CreateEventPayloadSchema } from '@zod/event/event.dto'
+import { CreateEventPayloadSchema, UpdateEventPayloadSchema } from '@zod/event/event.dto'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -307,5 +307,14 @@ describe('CreateEventPayloadSchema imageIds', () => {
   it('accepts payload without imageIds', () => {
     const parsed = CreateEventPayloadSchema.parse(baseFields)
     expect(parsed.imageIds).toBeUndefined()
+  })
+
+  it('UpdateEventPayloadSchema strips imageIds (create-only field)', () => {
+    const parsed = UpdateEventPayloadSchema.parse({
+      content: 'updated',
+      startsAt: new Date('2030-01-01T10:00:00Z'),
+      imageIds: ['cmimg00000000000000000a'],
+    } as any)
+    expect((parsed as any).imageIds).toBeUndefined()
   })
 })

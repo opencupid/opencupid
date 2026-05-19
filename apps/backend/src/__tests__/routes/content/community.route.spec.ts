@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
-import { CreateCommunityPayloadSchema } from '@zod/community/community.dto'
+import { CreateCommunityPayloadSchema, UpdateCommunityPayloadSchema } from '@zod/community/community.dto'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -302,5 +302,13 @@ describe('CreateCommunityPayloadSchema imageIds', () => {
   it('accepts payload without imageIds', () => {
     const parsed = CreateCommunityPayloadSchema.parse(baseFields)
     expect(parsed.imageIds).toBeUndefined()
+  })
+
+  it('UpdateCommunityPayloadSchema strips imageIds (create-only field)', () => {
+    const parsed = UpdateCommunityPayloadSchema.parse({
+      content: 'updated',
+      imageIds: ['cmimg00000000000000000a'],
+    } as any)
+    expect((parsed as any).imageIds).toBeUndefined()
   })
 })
