@@ -10,4 +10,5 @@ export interface GalleryStore {
   upload(file: File, captionText: string): Promise<GalleryStoreResponse>
   remove(image: OwnerImage): Promise<GalleryStoreResponse>
   reorder(items: ImagePosition[]): Promise<GalleryStoreResponse>
+  cleanup?(): Promise<GalleryStoreResponse>
 }
