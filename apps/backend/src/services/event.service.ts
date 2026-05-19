@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { UserContentService, type ListOptions } from './userContent.service'
 import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { ImageService } from './image.service'
 
 const eventWithMetadataInclude = {
   event: true,
@@ -39,14 +40,26 @@ export class EventService extends UserContentService {
   }
 
   async create(profileId: string, data: CreateEventPayload): Promise<EventWithMetadata> {
-    return prisma.userContent.create({
-      data: {
-        ...this.baseCreateData(data),
-        kind: 'event',
-        postedById: profileId,
-        event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
-      },
-      include: eventWithMetadataInclude,
+    const { imageIds, ...contentData } = data
+    return prisma.$transaction(async (tx) => {
+      const created = await tx.userContent.create({
+        data: {
+          ...this.baseCreateData(contentData),
+          kind: 'event',
+          postedById: profileId,
+          event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
+        },
+        include: eventWithMetadataInclude,
+      })
+      if (imageIds && imageIds.length > 0) {
+        await ImageService.getInstance().attachManyToUserContentTx(
+          tx,
+          imageIds,
+          created.id,
+          profileId,
+        )
+      }
+      return created
     })
   }
 
