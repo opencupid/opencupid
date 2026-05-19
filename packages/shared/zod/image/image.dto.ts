@@ -1,6 +1,12 @@
 import { z } from 'zod'
 import { ImageSchema } from '../generated'
 
+/**
+ * Maximum images per gallery (profile or user content). Matches
+ * ImageEditor.maxImages on the frontend.
+ */
+export const MAX_IMAGES_PER_GALLERY = 6
+
 export const ImageVariantSchema = z.object({
   size: z.string(),
   url: z.string().min(1),
