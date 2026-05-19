@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { VueDraggableNext } from 'vue-draggable-next'
 import type { GalleryStore } from '@/features/images/stores/galleryStore'
@@ -73,6 +73,10 @@ function checkMove(evt: any) {
 
 onMounted(async () => {
   await imageStore.load()
+})
+
+onUnmounted(async () => {
+  await imageStore.cleanup?.()
 })
 
 const placeholderSlots = computed(() => {
