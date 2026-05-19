@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
+import EditableProfileContent from './EditableProfileContent.vue'
 
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import MyProfileSecondaryNav from './MyProfileSecondaryNav.vue'
@@ -18,17 +16,8 @@ const emit = defineEmits<{
   (e: 'datingmode:wizard'): void
 }>()
 
-const showModal = ref(false)
-const {
-  error,
-  isLoading,
-  viewState,
-  formData,
-  profilePreview,
-  isDatingOnboarded,
-  updateScopes,
-  updateProfile,
-} = useMyProfileViewModel(props.editMode)
+const { viewState, formData, profilePreview, isDatingOnboarded, updateScopes, updateProfile } =
+  useMyProfileViewModel(props.editMode)
 
 const openDatingPrefs = () => {
   if (!isDatingOnboarded.value) {
@@ -69,10 +58,8 @@ const toggleDating = async () => {
         :class="[viewState.currentScope, { editable: viewState.isEditable }]"
         class="scroll hide-scrollbar"
       >
-        <ProfileContent
+        <EditableProfileContent
           v-if="profilePreview"
-          :isLoading="isLoading"
-          @intent:field:edit="showModal = true"
           :profile="profilePreview"
         />
       </EditableFields>
