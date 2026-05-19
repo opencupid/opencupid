@@ -497,6 +497,10 @@
       "copied": "Vágólapra másolva",
       "copy": "Szöveg másolása",
       "share": "Megosztás"
+    },
+    "image_button": {
+      "label": "Képek",
+      "modal_title": "Képek kezelése"
     }
   }
 }
