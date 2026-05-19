@@ -19,6 +19,7 @@ type PostForm = z.infer<typeof PostFormSchema>
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import PostTypeBadge from './PostTypeBadge.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
+import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
 
 import IconHide from '@/assets/icons/interface/hide.svg'
 import IconShow from '@/assets/icons/interface/unhide.svg'
@@ -52,6 +53,7 @@ const form = ref<PostForm>(
 )
 
 const isLoading = ref(false)
+const imageBtn = ref<InstanceType<typeof ContentImageButton> | null>(null)
 
 const isFormValid = computed(() => {
   return (
@@ -70,10 +72,16 @@ const handleSubmit = async () => {
     const result =
       props.isEdit && post
         ? await contentStore.updatePost(post.id, { content, type, isVisible, ...location })
-        : await contentStore.createPost({ content, type, ...location })
+        : await contentStore.createPost({
+            content,
+            type,
+            ...location,
+            imageIds: imageBtn.value?.getImageIds() ?? [],
+          })
 
     if (result.success && result.data) {
       if (!props.isEdit) {
+        imageBtn.value?.markSaved()
         form.value = PostFormSchema.parse({ location: props.defaultLocation })
       }
       emit('saved', result.data.post)
@@ -167,6 +175,12 @@ const handleSubmit = async () => {
 
       <!-- submit button -->
     </PostIt>
+    <BFormGroup class="mb-2">
+      <ContentImageButton
+        ref="imageBtn"
+        :contentId="post?.id"
+      />
+    </BFormGroup>
     <div class="d-flex justify-content-end mt-3">
       <BButton
         type="button"
