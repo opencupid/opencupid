@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
+import { CreateCommunityPayloadSchema } from '@zod/community/community.dto'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -281,5 +282,25 @@ describe('GET /profile/:profileId', () => {
       ownerProfileId,
       expect.objectContaining({ limit: 5, offset: 10 })
     )
+  })
+})
+
+describe('CreateCommunityPayloadSchema imageIds', () => {
+  const baseFields = { content: 'x'.repeat(20) }
+
+  it('accepts up to 6 cuids', () => {
+    const ids = Array.from({ length: 6 }, (_, i) => `cmimg00000000000000000${i}`)
+    const parsed = CreateCommunityPayloadSchema.parse({ ...baseFields, imageIds: ids })
+    expect(parsed.imageIds).toEqual(ids)
+  })
+
+  it('rejects more than 6 imageIds', () => {
+    const ids = Array.from({ length: 7 }, (_, i) => `cmimg00000000000000000${i}`)
+    expect(() => CreateCommunityPayloadSchema.parse({ ...baseFields, imageIds: ids })).toThrow()
+  })
+
+  it('accepts payload without imageIds', () => {
+    const parsed = CreateCommunityPayloadSchema.parse(baseFields)
+    expect(parsed.imageIds).toBeUndefined()
   })
 })
