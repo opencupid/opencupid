@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
+import { CreateEventPayloadSchema } from '@zod/event/event.dto'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -286,5 +287,25 @@ describe('GET /profile/:profileId', () => {
       success: true,
       events: [expect.objectContaining({ _isOwn: false })],
     })
+  })
+})
+
+describe('CreateEventPayloadSchema imageIds', () => {
+  const baseFields = { content: 'x'.repeat(20), startsAt: new Date('2030-01-01T10:00:00Z') }
+
+  it('accepts up to 6 cuids', () => {
+    const ids = Array.from({ length: 6 }, (_, i) => `cmimg00000000000000000${i}`)
+    const parsed = CreateEventPayloadSchema.parse({ ...baseFields, imageIds: ids })
+    expect(parsed.imageIds).toEqual(ids)
+  })
+
+  it('rejects more than 6 imageIds', () => {
+    const ids = Array.from({ length: 7 }, (_, i) => `cmimg00000000000000000${i}`)
+    expect(() => CreateEventPayloadSchema.parse({ ...baseFields, imageIds: ids })).toThrow()
+  })
+
+  it('accepts payload without imageIds', () => {
+    const parsed = CreateEventPayloadSchema.parse(baseFields)
+    expect(parsed.imageIds).toBeUndefined()
   })
 })

@@ -9,6 +9,7 @@ import {
 } from '../userContent/userContent.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { ProfileSummarySchema } from '@zod/profile/profile.dto'
+import { MAX_IMAGES_PER_GALLERY } from '../image/image.dto'
 
 const EVENT_KIND = z.literal('event')
 
@@ -34,6 +35,7 @@ export type OwnerEvent = z.infer<typeof OwnerEventSchema>
 export const CreateEventPayloadSchema = BaseUserContentPayloadSchema.extend({
   startsAt: z.coerce.date(),
   venue: z.string().max(VENUE_MAX_LENGTH).nullable().optional(),
+  imageIds: z.array(z.string().cuid()).max(MAX_IMAGES_PER_GALLERY).optional(),
 })
 export type CreateEventPayload = z.infer<typeof CreateEventPayloadSchema>
 
