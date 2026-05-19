@@ -221,6 +221,8 @@ export class ImageService {
       }
     }
 
+    // Writes iterate `imageIds` (input order) — not the validated `images` set, which
+    // Prisma may return in arbitrary order — so positions follow caller-supplied order.
     const startPos = await tx.userContentImage.count({ where: { userContentId } })
     for (let i = 0; i < imageIds.length; i++) {
       const id = imageIds[i]

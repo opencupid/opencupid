@@ -503,6 +503,31 @@ describe('attachManyToUserContentTx', () => {
     })
   })
 
+  it('appends positions starting from existing gallery count', async () => {
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+      { id: 'img-b', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+    ] as any)
+    mockPrisma.userContentImage.count.mockResolvedValue(3)
+
+    await svc.attachManyToUserContentTx(
+      mockPrisma,
+      ['img-a', 'img-b'],
+      'content-1',
+      'profile-1'
+    )
+
+    expect(mockPrisma.image.update).toHaveBeenNthCalledWith(1, {
+      where: { id: 'img-a' },
+      data: { position: 3 },
+    })
+    expect(mockPrisma.image.update).toHaveBeenNthCalledWith(2, {
+      where: { id: 'img-b' },
+      data: { position: 4 },
+    })
+  })
+
   it('throws NOT_FOUND when one imageId is missing', async () => {
     const svc = service
     mockPrisma.image.findMany.mockResolvedValue([
