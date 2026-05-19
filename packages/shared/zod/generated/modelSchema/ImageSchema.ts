@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 /////////////////////////////////////////
 // IMAGE SCHEMA
@@ -27,4 +27,4 @@ export const ImageSchema = z.object({
 
 export type Image = z.infer<typeof ImageSchema>
 
-export default ImageSchema
+export default ImageSchema;
