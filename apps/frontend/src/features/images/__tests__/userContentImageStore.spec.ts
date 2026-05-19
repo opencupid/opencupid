@@ -168,4 +168,25 @@ describe('draft mode', () => {
     expect(store.images).toHaveLength(0)
     expect(api.get).not.toHaveBeenCalled()
   })
+
+  it('reorder() permutes local images, no network call', async () => {
+    const ID1 = 'ckabcdefghijklmnopqrstu01'
+    const ID2 = 'ckabcdefghijklmnopqrstu02'
+    ;(api.post as any)
+      .mockResolvedValueOnce({ data: { success: true, image: { ...CREATED, id: ID1 } } })
+      .mockResolvedValueOnce({ data: { success: true, image: { ...CREATED, id: ID2 } } })
+
+    const store = useUserContentImageStore({ draftKey: 'k5' })
+    await store.upload(new File(['x'], 'x.jpg'), 'cap')
+    await store.upload(new File(['y'], 'y.jpg'), 'cap')
+    expect(store.images.map((i) => i.id)).toEqual([ID1, ID2])
+
+    const res = await store.reorder([
+      { id: ID2, position: 0 },
+      { id: ID1, position: 1 },
+    ])
+    expect(res.success).toBe(true)
+    expect(store.images.map((i) => i.id)).toEqual([ID2, ID1])
+    expect(api.patch).not.toHaveBeenCalled()
+  })
 })

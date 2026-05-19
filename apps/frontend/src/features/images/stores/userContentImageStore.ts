@@ -113,6 +113,15 @@ export const useUserContentImageStore = (params: UserContentImageStoreParams) =>
       },
 
       async reorder(items: ImagePosition[]): Promise<GalleryStoreResponse> {
+        if (this.isDraft) {
+          const byId = new Map(this.images.map((i) => [i.id, i]))
+          const reordered = [...items]
+            .sort((a, b) => a.position - b.position)
+            .map((p) => byId.get(p.id))
+            .filter((i): i is OwnerImage => !!i)
+          this.images = reordered
+          return storeSuccess()
+        }
         try {
           this.isLoading = true
           const { data } = await safeApiCall(() =>
