@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
+import { CreateEventPayloadSchema, UpdateEventPayloadSchema } from '@zod/event/event.dto'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -13,6 +14,17 @@ vi.mock('@/services/event.service', () => ({
 }))
 vi.mock('@/services/cluster.service', () => ({
   ClusterService: { getInstance: () => mockCluster },
+}))
+vi.mock('@/services/image.service', () => ({
+  ImageService: { getInstance: () => ({}) },
+  ImageServiceError: class extends Error {
+    constructor(
+      public code: string,
+      message: string
+    ) {
+      super(message)
+    }
+  },
 }))
 
 vi.mock('@/api/mappers/event.mappers', () => ({
@@ -80,6 +92,28 @@ describe('POST /', () => {
       event: expect.objectContaining({ _isOwn: true }),
     })
     expect(mockCluster.evictAll).toHaveBeenCalled()
+  })
+
+  it('returns 400 when ImageServiceError is thrown by service.create', async () => {
+    const handler = fastify.routes['POST /']
+    const { ImageServiceError } = await import('@/services/image.service')
+    mockEventService.create.mockRejectedValue(
+      new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+    )
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        body: {
+          content: 'hello world hello',
+          startsAt: new Date('2030-01-01T10:00:00Z').toISOString(),
+          imageIds: ['cmimg00000000000000000a'],
+        },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
   })
 })
 
@@ -286,5 +320,34 @@ describe('GET /profile/:profileId', () => {
       success: true,
       events: [expect.objectContaining({ _isOwn: false })],
     })
+  })
+})
+
+describe('CreateEventPayloadSchema imageIds', () => {
+  const baseFields = { content: 'x'.repeat(20), startsAt: new Date('2030-01-01T10:00:00Z') }
+
+  it('accepts up to 6 cuids', () => {
+    const ids = Array.from({ length: 6 }, (_, i) => `cmimg00000000000000000${i}`)
+    const parsed = CreateEventPayloadSchema.parse({ ...baseFields, imageIds: ids })
+    expect(parsed.imageIds).toEqual(ids)
+  })
+
+  it('rejects more than 6 imageIds', () => {
+    const ids = Array.from({ length: 7 }, (_, i) => `cmimg00000000000000000${i}`)
+    expect(() => CreateEventPayloadSchema.parse({ ...baseFields, imageIds: ids })).toThrow()
+  })
+
+  it('accepts payload without imageIds', () => {
+    const parsed = CreateEventPayloadSchema.parse(baseFields)
+    expect(parsed.imageIds).toBeUndefined()
+  })
+
+  it('UpdateEventPayloadSchema strips imageIds (create-only field)', () => {
+    const parsed = UpdateEventPayloadSchema.parse({
+      content: 'updated',
+      startsAt: new Date('2030-01-01T10:00:00Z'),
+      imageIds: ['cmimg00000000000000000a'],
+    } as any)
+    expect((parsed as any).imageIds).toBeUndefined()
   })
 })

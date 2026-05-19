@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { UserContentService, type ListOptions } from './userContent.service'
 import type { CreateCommunityPayload, UpdateCommunityPayload } from '@zod/community/community.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { ImageService } from './image.service'
 
 const communityWithMetadataInclude = {
   community: true,
@@ -39,15 +40,30 @@ export class CommunityService extends UserContentService {
   }
 
   async create(profileId: string, data: CreateCommunityPayload): Promise<CommunityWithMetadata> {
-    return prisma.userContent.create({
-      data: {
-        ...this.baseCreateData(data),
-        kind: 'community',
-        postedById: profileId,
-        community: { create: { yearFounded: data.yearFounded ?? null } },
+    const { imageIds, ...contentData } = data
+    return prisma.$transaction(
+      async (tx) => {
+        const created = await tx.userContent.create({
+          data: {
+            ...this.baseCreateData(contentData),
+            kind: 'community',
+            postedById: profileId,
+            community: { create: { yearFounded: data.yearFounded ?? null } },
+          },
+          include: communityWithMetadataInclude,
+        })
+        if (imageIds && imageIds.length > 0) {
+          await ImageService.getInstance().attachManyToUserContentTx(
+            tx,
+            imageIds,
+            created.id,
+            profileId
+          )
+        }
+        return created
       },
-      include: communityWithMetadataInclude,
-    })
+      { isolationLevel: 'Serializable' }
+    )
   }
 
   async update(

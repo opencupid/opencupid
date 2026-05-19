@@ -1,6 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/media'
 
@@ -187,6 +188,62 @@ export class ImageService {
       },
       { isolationLevel: 'Serializable' }
     )
+  }
+
+  /**
+   * Bulk-attach images to a freshly-created UserContent inside a caller-supplied
+   * transaction. Pre-validates that every imageId exists, is owned by
+   * `ownerProfileId`, and is not yet attached to any gallery. Inserts join rows
+   * and assigns sequential positions in the order of `imageIds`.
+   */
+  async attachManyToUserContentTx(
+    tx: Prisma.TransactionClient,
+    imageIds: string[],
+    userContentId: string,
+    ownerProfileId: string
+  ): Promise<void> {
+    if (imageIds.length === 0) return
+
+    // De-dupe caller input; downstream length checks and writes assume uniqueness.
+    const uniqueIds = Array.from(new Set(imageIds))
+
+    const images = await tx.image.findMany({
+      where: { id: { in: uniqueIds } },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+
+    if (images.length !== uniqueIds.length) {
+      throw new ImageServiceError('NOT_FOUND', 'One or more images not found')
+    }
+    for (const img of images) {
+      if (img.ownerProfileId !== ownerProfileId) {
+        throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      }
+      if (img.profileGallery || img.userContentGallery) {
+        throw new ImageServiceError('ALREADY_ATTACHED', `Image ${img.id} already attached`)
+      }
+    }
+
+    // Writes iterate `uniqueIds` (deduped input order) — not the validated `images`
+    // set, which Prisma may return in arbitrary order — so positions follow
+    // caller-supplied order.
+    const startPos = await tx.userContentImage.count({ where: { userContentId } })
+    for (let i = 0; i < uniqueIds.length; i++) {
+      const id = uniqueIds[i]
+      try {
+        await tx.userContentImage.create({ data: { imageId: id, userContentId } })
+      } catch (err) {
+        // P2002 means another transaction attached this image between our
+        // pre-validation and write. The owner check upstream guarantees the
+        // racing attach was the same user; their position assignment stands.
+        // Skip without updating position so we don't overwrite theirs.
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          continue
+        }
+        throw err
+      }
+      await tx.image.update({ where: { id }, data: { position: startPos + i } })
+    }
   }
 
   /**

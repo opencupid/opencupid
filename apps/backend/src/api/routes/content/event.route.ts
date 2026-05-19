@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { createEvent as createIcsEvent, type EventAttributes } from 'ics'
 import { EventService } from '@/services/event.service'
 import { ClusterService } from '@/services/cluster.service'
+import { ImageServiceError } from '@/services/image.service'
 import {
   CreateEventPayloadSchema,
   UpdateEventPayloadSchema,
@@ -39,6 +40,9 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         cluster.evictAll()
         return reply.code(201).send({ success: true, event: mapDbEventToOwner(created) })
       } catch (err) {
+        if (err instanceof ImageServiceError) {
+          return sendError(reply, 400, err.message)
+        }
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to create event')
       }

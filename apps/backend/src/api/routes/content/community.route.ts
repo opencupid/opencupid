@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { CommunityService } from '@/services/community.service'
 import { ClusterService } from '@/services/cluster.service'
+import { ImageServiceError } from '@/services/image.service'
 import {
   CreateCommunityPayloadSchema,
   UpdateCommunityPayloadSchema,
@@ -36,6 +37,9 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
         cluster.evictAll()
         return reply.code(201).send({ success: true, community: mapDbCommunityToOwner(created) })
       } catch (err) {
+        if (err instanceof ImageServiceError) {
+          return sendError(reply, 400, err.message)
+        }
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to create community')
       }

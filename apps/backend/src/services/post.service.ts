@@ -7,6 +7,7 @@ import {
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { ImageService } from './image.service'
 
 const postWithMetadataInclude = {
   post: true,
@@ -43,15 +44,30 @@ export class PostService extends UserContentService {
   }
 
   async create(profileId: string, data: CreatePostPayload): Promise<PostWithMetadata> {
-    return prisma.userContent.create({
-      data: {
-        ...this.baseCreateData(data),
-        kind: 'post',
-        postedById: profileId,
-        post: { create: { type: data.type } },
+    const { imageIds, ...contentData } = data
+    return prisma.$transaction(
+      async (tx) => {
+        const created = await tx.userContent.create({
+          data: {
+            ...this.baseCreateData(contentData),
+            kind: 'post',
+            postedById: profileId,
+            post: { create: { type: data.type } },
+          },
+          include: postWithMetadataInclude,
+        })
+        if (imageIds && imageIds.length > 0) {
+          await ImageService.getInstance().attachManyToUserContentTx(
+            tx,
+            imageIds,
+            created.id,
+            profileId
+          )
+        }
+        return created
       },
-      include: postWithMetadataInclude,
-    })
+      { isolationLevel: 'Serializable' }
+    )
   }
 
   async update(

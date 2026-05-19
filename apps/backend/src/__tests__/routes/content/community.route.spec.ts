@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
+import {
+  CreateCommunityPayloadSchema,
+  UpdateCommunityPayloadSchema,
+} from '@zod/community/community.dto'
 
 vi.mock('@prisma/client', () => ({ Prisma: {}, PrismaClient: class {} }))
 
@@ -13,6 +17,17 @@ vi.mock('@/services/community.service', () => ({
 }))
 vi.mock('@/services/cluster.service', () => ({
   ClusterService: { getInstance: () => mockCluster },
+}))
+vi.mock('@/services/image.service', () => ({
+  ImageService: { getInstance: () => ({}) },
+  ImageServiceError: class extends Error {
+    constructor(
+      public code: string,
+      message: string
+    ) {
+      super(message)
+    }
+  },
 }))
 
 vi.mock('@/api/mappers/community.mappers', () => ({
@@ -80,6 +95,24 @@ describe('POST /', () => {
       community: expect.objectContaining({ _isOwn: true }),
     })
     expect(mockCluster.evictAll).toHaveBeenCalled()
+  })
+
+  it('returns 400 when ImageServiceError is thrown by service.create', async () => {
+    const handler = fastify.routes['POST /']
+    const { ImageServiceError } = await import('@/services/image.service')
+    mockCommunityService.create.mockRejectedValue(
+      new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
+    )
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        body: { content: 'hello world hello', imageIds: ['cmimg00000000000000000a'] },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
   })
 })
 
@@ -281,5 +314,33 @@ describe('GET /profile/:profileId', () => {
       ownerProfileId,
       expect.objectContaining({ limit: 5, offset: 10 })
     )
+  })
+})
+
+describe('CreateCommunityPayloadSchema imageIds', () => {
+  const baseFields = { content: 'x'.repeat(20) }
+
+  it('accepts up to 6 cuids', () => {
+    const ids = Array.from({ length: 6 }, (_, i) => `cmimg00000000000000000${i}`)
+    const parsed = CreateCommunityPayloadSchema.parse({ ...baseFields, imageIds: ids })
+    expect(parsed.imageIds).toEqual(ids)
+  })
+
+  it('rejects more than 6 imageIds', () => {
+    const ids = Array.from({ length: 7 }, (_, i) => `cmimg00000000000000000${i}`)
+    expect(() => CreateCommunityPayloadSchema.parse({ ...baseFields, imageIds: ids })).toThrow()
+  })
+
+  it('accepts payload without imageIds', () => {
+    const parsed = CreateCommunityPayloadSchema.parse(baseFields)
+    expect(parsed.imageIds).toBeUndefined()
+  })
+
+  it('UpdateCommunityPayloadSchema strips imageIds (create-only field)', () => {
+    const parsed = UpdateCommunityPayloadSchema.parse({
+      content: 'updated',
+      imageIds: ['cmimg00000000000000000a'],
+    } as any)
+    expect((parsed as any).imageIds).toBeUndefined()
   })
 })

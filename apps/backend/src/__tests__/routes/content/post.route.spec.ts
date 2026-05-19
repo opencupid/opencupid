@@ -14,6 +14,17 @@ vi.mock('@/services/post.service', () => ({
 vi.mock('@/services/cluster.service', () => ({
   ClusterService: { getInstance: () => mockCluster },
 }))
+vi.mock('@/services/image.service', () => ({
+  ImageService: { getInstance: () => ({}) },
+  ImageServiceError: class extends Error {
+    constructor(
+      public code: string,
+      message: string
+    ) {
+      super(message)
+    }
+  },
+}))
 
 vi.mock('@/api/mappers/post.mappers', () => ({
   mapDbPostToOwner: (row: any) => ({ ...row, _isOwn: true }),
@@ -22,6 +33,7 @@ vi.mock('@/api/mappers/post.mappers', () => ({
 }))
 
 import postRoutes from '../../../api/routes/content/post.route'
+import { CreatePostPayloadSchema, UpdatePostPayloadSchema } from '@zod/post/post.dto'
 
 const ownerProfileId = 'cmprofile00000000000o1'
 const otherProfileId = 'cmprofile00000000000v1'
@@ -80,6 +92,29 @@ describe('POST /', () => {
       post: expect.objectContaining({ _isOwn: true }),
     })
     expect(mockCluster.evictAll).toHaveBeenCalled()
+  })
+
+  it('returns 400 when ImageServiceError is thrown by service.create', async () => {
+    const handler = fastify.routes['POST /']
+    const { ImageServiceError } = await import('@/services/image.service')
+    mockPostService.create.mockRejectedValue(
+      new ImageServiceError('NOT_FOUND', 'One or more images not found')
+    )
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        body: {
+          content: 'hello world hello',
+          type: 'OFFER',
+          imageIds: ['cmimg00000000000000000a'],
+        },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload).toMatchObject({ success: false })
   })
 })
 
@@ -296,5 +331,38 @@ describe('GET /nearby', () => {
       success: true,
       posts: [expect.objectContaining({ _public: true })],
     })
+  })
+})
+
+describe('CreatePostPayloadSchema imageIds', () => {
+  it('accepts an array of up to 6 cuids', () => {
+    const ids = Array.from({ length: 6 }, (_, i) => `cmimg00000000000000000${i}`)
+    const parsed = CreatePostPayloadSchema.parse({
+      content: 'x'.repeat(20),
+      type: 'OFFER',
+      imageIds: ids,
+    })
+    expect(parsed.imageIds).toEqual(ids)
+  })
+
+  it('rejects more than 6 imageIds', () => {
+    const ids = Array.from({ length: 7 }, (_, i) => `cmimg00000000000000000${i}`)
+    expect(() =>
+      CreatePostPayloadSchema.parse({ content: 'x'.repeat(20), type: 'OFFER', imageIds: ids })
+    ).toThrow()
+  })
+
+  it('accepts payload without imageIds (backward compat)', () => {
+    const parsed = CreatePostPayloadSchema.parse({ content: 'x'.repeat(20), type: 'OFFER' })
+    expect(parsed.imageIds).toBeUndefined()
+  })
+
+  it('UpdatePostPayloadSchema strips imageIds (create-only field)', () => {
+    const parsed = UpdatePostPayloadSchema.parse({
+      content: 'updated',
+      type: 'OFFER',
+      imageIds: ['cmimg00000000000000000a'],
+    } as any)
+    expect((parsed as any).imageIds).toBeUndefined()
   })
 })

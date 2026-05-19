@@ -9,6 +9,7 @@ import {
 } from '../userContent/userContent.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { ProfileSummarySchema } from '@zod/profile/profile.dto'
+import { MAX_IMAGES_PER_GALLERY } from '../image/image.dto'
 
 const COMMUNITY_KIND = z.literal('community')
 
@@ -42,12 +43,15 @@ export type OwnerCommunity = z.infer<typeof OwnerCommunitySchema>
 
 export const CreateCommunityPayloadSchema = BaseUserContentPayloadSchema.extend({
   yearFounded: YearFoundedSchema.optional(),
+  imageIds: z.array(z.string().cuid()).max(MAX_IMAGES_PER_GALLERY).optional(),
 })
 export type CreateCommunityPayload = z.infer<typeof CreateCommunityPayloadSchema>
 
-export const UpdateCommunityPayloadSchema = CreateCommunityPayloadSchema.partial().extend({
-  isVisible: z.boolean().optional(),
-})
+export const UpdateCommunityPayloadSchema = CreateCommunityPayloadSchema.omit({ imageIds: true })
+  .partial()
+  .extend({
+    isVisible: z.boolean().optional(),
+  })
 export type UpdateCommunityPayload = z.infer<typeof UpdateCommunityPayloadSchema>
 
 export const CommunityParamsSchema = z.object({ id: z.string().cuid() })
