@@ -136,7 +136,9 @@ function nextHourFromNow(): Date {
         required
         rows="6"
       />
-      <div class="form-hint text-muted small position-absolute bottom-0 start-50 translate-middle-x">
+      <div
+        class="form-hint text-muted small position-absolute bottom-0 start-50 translate-middle-x"
+      >
         {{ form.content.length }}/{{ EVENT_CONTENT_MAX_LENGTH }}
       </div>
     </BFormGroup>

@@ -139,7 +139,7 @@ describe('draft mode', () => {
     expect((api.post as any).mock.calls).toHaveLength(1)
     expect((api.post as any).mock.calls[0][0]).toBe('/image')
     expect(store.images).toHaveLength(1)
-    expect(store.images[0].id).toBe(CREATED.id)
+    expect(store.images[0]!.id).toBe(CREATED.id)
     expect(api.delete).not.toHaveBeenCalled()
   })
 
@@ -192,8 +192,12 @@ describe('draft mode', () => {
 
   it('cleanup() best-effort DELETEs each staged image; survives a failure', async () => {
     ;(api.post as any)
-      .mockResolvedValueOnce({ data: { success: true, image: { ...CREATED, id: 'ckabcdefghijklmnopqrstu01' } } })
-      .mockResolvedValueOnce({ data: { success: true, image: { ...CREATED, id: 'ckabcdefghijklmnopqrstu02' } } })
+      .mockResolvedValueOnce({
+        data: { success: true, image: { ...CREATED, id: 'ckabcdefghijklmnopqrstu01' } },
+      })
+      .mockResolvedValueOnce({
+        data: { success: true, image: { ...CREATED, id: 'ckabcdefghijklmnopqrstu02' } },
+      })
     ;(api.delete as any)
       .mockRejectedValueOnce(new Error('boom'))
       .mockResolvedValueOnce({ data: { success: true } })
