@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { PostService } from '@/services/post.service'
 import { ClusterService } from '@/services/cluster.service'
+import { ImageServiceError } from '@/services/image.service'
 import {
   CreatePostPayloadSchema,
   UpdatePostPayloadSchema,
@@ -37,6 +38,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
         cluster.evictAll()
         return reply.code(201).send({ success: true, post: mapDbPostToOwner(created) })
       } catch (err) {
+        if (err instanceof ImageServiceError) {
+          return sendError(reply, 400, err.message)
+        }
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to create post')
       }

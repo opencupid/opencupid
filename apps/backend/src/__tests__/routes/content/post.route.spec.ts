@@ -14,6 +14,14 @@ vi.mock('@/services/post.service', () => ({
 vi.mock('@/services/cluster.service', () => ({
   ClusterService: { getInstance: () => mockCluster },
 }))
+vi.mock('@/services/image.service', () => ({
+  ImageService: { getInstance: () => ({}) },
+  ImageServiceError: class extends Error {
+    constructor(public code: string, message: string) {
+      super(message)
+    }
+  },
+}))
 
 vi.mock('@/api/mappers/post.mappers', () => ({
   mapDbPostToOwner: (row: any) => ({ ...row, _isOwn: true }),
@@ -81,6 +89,25 @@ describe('POST /', () => {
       post: expect.objectContaining({ _isOwn: true }),
     })
     expect(mockCluster.evictAll).toHaveBeenCalled()
+  })
+
+  it('returns 400 when ImageServiceError is thrown by service.create', async () => {
+    const handler = fastify.routes['POST /']
+    const { ImageServiceError } = await import('@/services/image.service')
+    mockPostService.create.mockRejectedValue(
+      new ImageServiceError('NOT_FOUND', 'One or more images not found')
+    )
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        body: { content: 'hello world hello', type: 'OFFER', imageIds: ['cmimg00000000000000000a'] },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload).toMatchObject({ success: false })
   })
 })
 
