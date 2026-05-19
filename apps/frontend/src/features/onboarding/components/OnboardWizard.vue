@@ -9,6 +9,7 @@ import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue
 import TagExplorer from '@/features/shared/components/TagExplorer.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
+import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
 import DatingSteps from '../components/DatingSteps.vue'
 import LocationSelectorComponent from '@/features/shared/profileform/LocationSelector.vue'
 import BackButton from '../components/BackButton.vue'
@@ -72,6 +73,7 @@ const handleSubmit = () => {
 
 const tagStore = useTagsStore()
 const appStore = useAppStore()
+const profileImageStore = useProfileImageStore()
 
 const handleLocationSelected = async (location: { country: string }) => {
   await tagStore.fetchPopularTags({
@@ -211,7 +213,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
             <!-- I look like... -->
             {{ t('onboarding.photos_title') }}
           </legend>
-          <ImageEditor />
+          <ImageEditor :store="profileImageStore" />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('dating_mode')">

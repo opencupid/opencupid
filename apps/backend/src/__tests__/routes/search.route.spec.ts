@@ -6,7 +6,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapProfileSummary: vi.fn((p: any) => ({
     id: p.id,
     publicName: p.publicName,
-    profileImages: p.profileImages ?? [],
+    profileImages: (p.profileImages ?? []).map((g: any) => g.image),
     location: p.location ?? { country: '' },
   })),
 }))
@@ -20,7 +20,7 @@ vi.mock('../../api/mappers/post.mappers', () => ({
     postedBy: {
       id: p.postedBy.id,
       publicName: p.postedBy.publicName,
-      profileImages: p.postedBy.profileImages ?? [],
+      profileImages: (p.postedBy.profileImages ?? []).map((g: any) => g.image),
     },
   })),
 }))
@@ -78,13 +78,23 @@ describe('GET /search', () => {
           translations: [{ name: 'Zene', locale: 'hu' }],
         },
       ],
-      profiles: [{ id: 'p1', publicName: 'Alice', profileImages: [{ storagePath: 'a/b' }] }],
+      profiles: [
+        {
+          id: 'p1',
+          publicName: 'Alice',
+          profileImages: [{ image: { storagePath: 'a/b' } }],
+        },
+      ],
       posts: [
         {
           id: 'post-1',
           type: 'OFFER',
           content: 'Guitar lessons',
-          postedBy: { id: 'p1', publicName: 'Alice', profileImages: [{ storagePath: 'a/b' }] },
+          postedBy: {
+            id: 'p1',
+            publicName: 'Alice',
+            profileImages: [{ image: { storagePath: 'a/b' } }],
+          },
         },
       ],
     })

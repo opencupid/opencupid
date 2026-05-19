@@ -6,9 +6,12 @@ import { detectMobile } from '@/lib/mobile-detect'
 
 import UploadButton from './UploadButton.vue'
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
-import { useImageStore } from '@/features/images/stores/imageStore'
+import type { GalleryStore } from '@/features/images/stores/galleryStore'
 
-const imageStore = useImageStore()
+const props = defineProps<{
+  store: GalleryStore
+}>()
+const imageStore = props.store
 const { t } = useI18n()
 
 // Upload state
@@ -44,7 +47,7 @@ const handleUpload = async () => {
   isLoading.value = true
   error.value = null
 
-  const res = await imageStore.uploadProfileImage(selectedFile.value, captionText.value)
+  const res = await imageStore.upload(selectedFile.value, captionText.value)
   if (!res.success) {
     const code = res.message ?? 'unknown'
     const key = `profiles.image_upload.errors.${code}`

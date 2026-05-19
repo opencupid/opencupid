@@ -9,7 +9,7 @@ import {
   HasKidsSchema,
 } from '@zod/generated'
 import { LocalizedStringSchema } from './profile.dto'
-import { PublicProfileImageSchema } from './profileimage.dto'
+import { PublicImageSchema } from '@zod/image/image.dto'
 import { DatingPreferencesFormSchema } from '@zod/match/filters.form'
 
 // Social profile fields
@@ -50,7 +50,7 @@ export type CreateProfileForm = z.infer<typeof CreateProfileFormSchema>
 // because we use EditField.vue to implement the in-place modal, we're not
 // actually touching the profile images
 export type EditFieldProfileFormWithImages = EditProfileForm & {
-  profileImages: z.infer<typeof PublicProfileImageSchema>[]
+  profileImages: z.infer<typeof PublicImageSchema>[]
 }
 
 export const ProfileFormToPayloadTransform = EditProfileFormSchema.transform((data) => {

@@ -5,8 +5,8 @@ import { prisma } from '../lib/prisma'
 import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/media'
 
 import { generateContentHash } from '@/utils/hash'
-import { ProfileImagePosition } from '@zod/profile/profileimage.dto'
-import type { ProfileImage } from '@zod/generated'
+import { ImagePosition } from '@zod/image/image.dto'
+import type { Image } from '@zod/generated'
 
 import sharp from 'sharp'
 
@@ -26,6 +26,23 @@ const variants: Variant[] = [
   { name: 'profile', width: 1200, height: 900, fit: sharp.fit.contain }, // 4:3 aspect ratio
   { name: 'full', width: 1280, fit: sharp.fit.inside },
 ]
+
+export type ImageServiceErrorCode =
+  | 'NOT_FOUND'
+  | 'OWNER_MISMATCH'
+  | 'ALREADY_ATTACHED'
+  | 'INVALID_REORDER'
+
+export class ImageServiceError extends Error {
+  constructor(
+    public readonly code: ImageServiceErrorCode,
+    message: string
+  ) {
+    super(message)
+    this.name = 'ImageServiceError'
+  }
+}
+
 export class ImageService {
   private static instance: ImageService
 
@@ -45,13 +62,27 @@ export class ImageService {
   }
 
   /**
-   * List all images for a profile, ordered by position
+   * List all images attached to a Profile gallery, ordered by Image.position.
    */
-  async listImages(profileId: string): Promise<ProfileImage[]> {
-    return prisma.profileImage.findMany({
+  async listProfileGallery(profileId: string): Promise<Image[]> {
+    const rows = await prisma.profileImage.findMany({
       where: { profileId },
-      orderBy: { position: 'asc' },
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
     })
+    return rows.map((r) => r.image)
+  }
+
+  /**
+   * List all images attached to a UserContent gallery, ordered by Image.position.
+   */
+  async listUserContentGallery(userContentId: string): Promise<Image[]> {
+    const rows = await prisma.userContentImage.findMany({
+      where: { userContentId },
+      include: { image: true },
+      orderBy: { image: { position: 'asc' } },
+    })
+    return rows.map((r) => r.image)
   }
 
   /**
@@ -68,55 +99,143 @@ export class ImageService {
   }
 
   /**
-   * Store an image uploaded for a profile.
-   * Creates the ProfileImage row and re-syncs Profile.hasFace in one transaction,
-   * so the invariant Profile.hasFace == position-0 image's hasFace always holds.
+   * Create an Image row for a freshly uploaded file. Does NOT attach it to any gallery —
+   * the caller (route handler) composes createImage + attachTo* sequentially. If the
+   * subsequent attach fails the route is responsible for compensating delete (atomicity is
+   * not provided here; createImage opens its own write).
    */
-  async storeImage(
-    profileId: string,
-    tmpImagePath: string,
-    captionText: string
-  ): Promise<ProfileImage> {
-    let imageLocation
+  async createImage(ownerProfileId: string, tmpImagePath: string, altText: string): Promise<Image> {
+    const imageLocation = await makeImageLocation(ownerProfileId)
+    const processed = await this.processImage(
+      tmpImagePath,
+      imageLocation.absPath,
+      imageLocation.base
+    )
+    const contentHash = await generateContentHash(processed.variants.original)
 
-    try {
-      imageLocation = await makeImageLocation(profileId)
-    } catch (err: any) {
-      console.error('Failed to create dest dir', err)
-      throw new Error('Failed to create dest dir')
-    }
-
-    try {
-      const processed = await this.processImage(
-        tmpImagePath,
-        imageLocation.absPath,
-        imageLocation.base
-      )
-      const contentHash = await generateContentHash(processed.variants.original)
-
-      return await prisma.$transaction(async (tx) => {
-        const position = await tx.profileImage.count({ where: { profileId } })
-        const created = await tx.profileImage.create({
-          data: {
-            profileId,
-            mimeType: processed.mime,
-            altText: captionText,
-            storagePath: path.join(imageLocation.relPath, imageLocation.base),
-            isModerated: false,
-            contentHash,
-            blurhash: processed.blurhash,
-            hasFace: processed.hasFace,
-            position,
-          },
-        })
-        await syncProfileHasFace(tx, profileId)
-        return created
-      })
-    } catch (err: any) {
-      console.error('Failed to process image', err)
-      throw new Error(`Failed to process image ${tmpImagePath}: ${err.message}`)
-    }
+    return prisma.image.create({
+      data: {
+        ownerProfileId,
+        mimeType: processed.mime,
+        altText,
+        storagePath: path.join(imageLocation.relPath, imageLocation.base),
+        contentHash,
+        blurhash: processed.blurhash,
+        hasFace: processed.hasFace,
+        width: processed.width ?? null,
+        height: processed.height ?? null,
+        position: 0,
+      },
+    })
   }
+
+  /**
+   * Attach an existing Image to a Profile gallery. Validates ownership, computes the new
+   * position, and re-syncs Profile.hasFace in one transaction.
+   */
+  async attachToProfile(imageId: string, profileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+    if (image.ownerProfileId !== profileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+    }
+    if (image.profileGallery || image.userContentGallery) {
+      throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
+    }
+
+    await prisma.$transaction(
+      async (tx) => {
+        const position = await tx.profileImage.count({ where: { profileId } })
+        await tx.profileImage.create({ data: { imageId, profileId } })
+        await tx.image.update({ where: { id: imageId }, data: { position } })
+        await syncProfileHasFace(tx, profileId)
+      },
+      { isolationLevel: 'Serializable' }
+    )
+  }
+
+  /**
+   * Attach an existing Image to a UserContent gallery. Validates that the content's
+   * author matches the image owner, computes the new position, and inserts the join
+   * row in one transaction. Profile.hasFace is intentionally NOT touched here.
+   */
+  async attachToUserContent(imageId: string, userContentId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+
+    const content = await prisma.userContent.findUnique({ where: { id: userContentId } })
+    if (!content) throw new ImageServiceError('NOT_FOUND', 'UserContent not found')
+    if (content.postedById !== image.ownerProfileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch with content author')
+    }
+
+    if (image.profileGallery || image.userContentGallery) {
+      throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
+    }
+
+    await prisma.$transaction(
+      async (tx) => {
+        const position = await tx.userContentImage.count({ where: { userContentId } })
+        await tx.userContentImage.create({ data: { imageId, userContentId } })
+        await tx.image.update({ where: { id: imageId }, data: { position } })
+      },
+      { isolationLevel: 'Serializable' }
+    )
+  }
+
+  /**
+   * Drop a profile-gallery join row without deleting the underlying Image.
+   * Re-syncs Profile.hasFace inside the same transaction.
+   */
+  async detachFromProfile(imageId: string, requesterProfileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+    }
+    if (!image.profileGallery) {
+      throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a profile gallery')
+    }
+
+    const profileId = image.profileGallery.profileId
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.profileImage.delete({ where: { imageId } })
+        await syncProfileHasFace(tx, profileId)
+      },
+      { isolationLevel: 'Serializable' }
+    )
+  }
+
+  /**
+   * Drop a content-gallery join row without deleting the underlying Image.
+   * Profile.hasFace is intentionally NOT touched here (symmetry with attach).
+   */
+  async detachFromUserContent(imageId: string, requesterProfileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { userContentGallery: true },
+    })
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+    }
+    if (!image.userContentGallery) {
+      throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a content gallery')
+    }
+
+    await prisma.userContentImage.delete({ where: { imageId } })
+  }
+
   async processImage(filePath: string, outputDir: string, baseName: string) {
     await fs.promises.mkdir(outputDir, { recursive: true })
 
@@ -124,7 +243,7 @@ export class ImageService {
 
     const originalPath = path.join(outputDir, `${baseName}-original.jpg`)
 
-    const orientFix = await sharp(buffer, { failOn: 'error' }).rotate() // auto-orient pixels
+    const orientFix = sharp(buffer, { failOn: 'error' }).rotate() // auto-orient pixels
 
     await orientFix.keepIccProfile().jpeg({ quality: 100 }).toFile(originalPath)
 
@@ -190,91 +309,125 @@ export class ImageService {
   }
 
   /**
-   * Update an existing ProfileImage's metadata
-   * @param image - The ProfileImage object with updated fields
-   * Returns number of records updated (0 or 1)
+   * Patch an Image's editable metadata. Owner-checked; works for images attached
+   * to either a Profile or a UserContent gallery (or unattached).
    */
-  async updateImage(image: ProfileImage): Promise<ProfileImage> {
-    return prisma.profileImage.update({
-      where: { id: image.id },
-      data: {
-        altText: image.altText,
-      },
+  async updateImage(
+    imageId: string,
+    requesterProfileId: string,
+    patch: { altText?: string }
+  ): Promise<Image> {
+    const image = await prisma.image.findUnique({ where: { id: imageId } })
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+    }
+    return prisma.image.update({
+      where: { id: imageId },
+      data: { altText: patch.altText ?? image.altText },
     })
   }
 
   /**
-   * Delete a ProfileImage record
-   * @param profileId - ID of the profile that owns the image
-   * @param imageId - ID of the image to delete
-   * Returns true if successful, false if not
+   * Delete an Image. Detects whether it lives in a Profile or UserContent gallery
+   * (or is unattached), drops the matching join, drops the Image, re-syncs
+   * Profile.hasFace when applicable, then unlinks the on-disk variants.
    */
-  async deleteImage(profileId: string, imageId: string): Promise<boolean> {
-    const image = await prisma.profileImage.findUnique({
-      where: { id: imageId, profileId },
+  async deleteImage(imageId: string, requesterProfileId: string): Promise<void> {
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      include: { profileGallery: true, userContentGallery: true },
     })
-    if (!image) {
-      console.warn('Image not found or does not belong to profile')
-      return false
-    }
-    try {
-      await prisma.$transaction(async (tx) => {
-        await tx.profileImage.delete({ where: { id: image.id } })
-        await syncProfileHasFace(tx, profileId)
-      })
-    } catch (err) {
-      console.error('Error deleting image from database:', err)
-      return false
+    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+    if (image.ownerProfileId !== requesterProfileId) {
+      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
     }
 
-    // Delete all generated image files from the filesystem
+    await prisma.$transaction(async (tx) => {
+      if (image.profileGallery) {
+        await tx.profileImage.delete({ where: { imageId } })
+      } else if (image.userContentGallery) {
+        await tx.userContentImage.delete({ where: { imageId } })
+      }
+      await tx.image.delete({ where: { id: imageId } })
+      if (image.profileGallery) {
+        await syncProfileHasFace(tx, image.profileGallery.profileId)
+      }
+    })
+
+    // File cleanup, post-commit, best-effort.
     const baseFile = path.join(getMediaRoot(), imageBasePath(image.storagePath))
     const filesToDelete = [
       `${baseFile}-original.jpg`,
-      `${baseFile}-face.jpg`,
       ...variants.map((size) => `${baseFile}-${size.name}.webp`),
     ]
-
     for (const f of filesToDelete) {
       try {
         await fs.promises.unlink(f)
       } catch (err) {
-        // Log but continue deleting other variants
         console.warn('Error deleting file:', err)
       }
     }
-    return true
   }
 
   /**
-   * Reorder images by updating their positions
-   * @param profileId - ID of the profile whose images are being reordered
-   * @param items - Array of image IDs and their new positions
-   * Returns the updated images sorted by position
+   * Reorder images in a Profile gallery by updating Image.position via the join.
+   * Re-syncs Profile.hasFace and returns the gallery sorted by position.
    */
-  async reorderImages(profileId: string, items: ProfileImagePosition[]) {
-    const valid = await prisma.profileImage.findMany({
-      where: { profileId, id: { in: items.map((i) => i.id) } },
-      select: { id: true },
-    })
-
-    const validIds = new Set(valid.map((v) => v.id))
-    if (items.some((i) => !validIds.has(i.id))) {
-      throw new Error('Invalid image ID')
+  async reorderProfileGallery(profileId: string, items: ImagePosition[]): Promise<Image[]> {
+    const galleryCount = await prisma.profileImage.count({ where: { profileId } })
+    if (items.length !== galleryCount) {
+      throw new ImageServiceError(
+        'INVALID_REORDER',
+        'Reorder must include every image in the gallery exactly once'
+      )
     }
 
-    return prisma.$transaction(async (tx) => {
-      const updated = []
+    const valid = await prisma.profileImage.findMany({
+      where: { profileId, imageId: { in: items.map((i) => i.id) } },
+      select: { imageId: true },
+    })
+    const validIds = new Set(valid.map((v) => v.imageId))
+    if (items.some((i) => !validIds.has(i.id))) {
+      throw new ImageServiceError('INVALID_REORDER', 'Invalid image ID')
+    }
+
+    await prisma.$transaction(async (tx) => {
       for (const item of items) {
-        updated.push(
-          await tx.profileImage.update({
-            where: { id: item.id },
-            data: { position: item.position },
-          })
-        )
+        await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
       await syncProfileHasFace(tx, profileId)
-      return updated.sort((a, b) => a.position - b.position)
     })
+    return this.listProfileGallery(profileId)
+  }
+
+  /**
+   * Reorder images in a UserContent gallery by updating Image.position via the join.
+   * Profile.hasFace is intentionally NOT touched here.
+   */
+  async reorderUserContentGallery(userContentId: string, items: ImagePosition[]): Promise<Image[]> {
+    const galleryCount = await prisma.userContentImage.count({ where: { userContentId } })
+    if (items.length !== galleryCount) {
+      throw new ImageServiceError(
+        'INVALID_REORDER',
+        'Reorder must include every image in the gallery exactly once'
+      )
+    }
+
+    const valid = await prisma.userContentImage.findMany({
+      where: { userContentId, imageId: { in: items.map((i) => i.id) } },
+      select: { imageId: true },
+    })
+    const validIds = new Set(valid.map((v) => v.imageId))
+    if (items.some((i) => !validIds.has(i.id))) {
+      throw new ImageServiceError('INVALID_REORDER', 'Invalid image ID')
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of items) {
+        await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
+      }
+    })
+    return this.listUserContentGallery(userContentId)
   }
 }

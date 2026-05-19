@@ -1,35 +1,28 @@
-import { ProfileImage } from '@prisma/client'
+import { Image } from '@prisma/client'
 import { ImageService } from '@/services/image.service'
-import {
-  PublicProfileImage,
-  PublicProfileImageSchema,
-  OwnerProfileImage,
-  OwnerProfileImageSchema,
-} from '@zod/profile/profileimage.dto'
+import { PublicImage, PublicImageSchema, OwnerImage, OwnerImageSchema } from '@zod/image/image.dto'
 
-export interface MinimalProfileImage {
+export interface MinimalImage {
   storagePath: string
 }
 
-function getImageVariants(image: MinimalProfileImage) {
+function getImageVariants(image: MinimalImage) {
   const svc = ImageService.getInstance()
   return svc.getImageUrls(image)
 }
 
 /**
- * Add the public URL to the image object and sanitize it
- * by removing any non-public fields
+ * Add public URLs and sanitize to fields safe to expose to non-owners.
  */
-export function toPublicProfileImage(image: MinimalProfileImage): PublicProfileImage {
+export function toPublicImage(image: MinimalImage): PublicImage {
   const variants = getImageVariants(image)
-  return PublicProfileImageSchema.parse({ ...image, variants })
+  return PublicImageSchema.parse({ ...image, variants })
 }
 
 /**
- * Add the public URL to the image object and sanitize it
- * by removing fields that are not accessible to the owner
+ * Add public URLs while keeping the owner-only fields (id, etc.).
  */
-export function toOwnerProfileImage(image: ProfileImage): OwnerProfileImage {
+export function toOwnerImage(image: Image): OwnerImage {
   const variants = getImageVariants(image)
-  return OwnerProfileImageSchema.parse({ ...image, variants })
+  return OwnerImageSchema.parse({ ...image, variants })
 }

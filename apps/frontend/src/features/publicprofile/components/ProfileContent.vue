@@ -19,6 +19,7 @@ import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
+import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
 
 const { t } = useI18n()
 
@@ -28,6 +29,8 @@ const props = defineProps<{
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)
+
+const profileImageStore = useProfileImageStore()
 </script>
 
 <template>
@@ -44,6 +47,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
       <EditField
         fieldName="profileImages"
         :editComponent="ImageEditor"
+        :editProps="{ store: profileImageStore }"
         buttonClass="btn-icon-lg btn-overlay photo-edit-button"
       >
         <IconPhoto class="svg-icon" />

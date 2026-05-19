@@ -2,9 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { VueDraggableNext } from 'vue-draggable-next'
-import { useImageStore } from '@/features/images/stores/imageStore'
+import type { GalleryStore } from '@/features/images/stores/galleryStore'
 
-import type { OwnerProfileImage } from '@zod/profile/profileimage.dto'
+import type { OwnerImage } from '@zod/image/image.dto'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 
 import ImageUpload from './ImageUpload.vue'
@@ -13,14 +13,17 @@ import IconPhoto from '@/assets/icons/interface/photo.svg'
 
 import { useI18n } from 'vue-i18n'
 
-const imageStore = useImageStore()
+const props = withDefaults(
+  defineProps<{
+    store: GalleryStore
+    maxImages?: number
+  }>(),
+  {
+    maxImages: 6,
+  }
+)
 
-const props = defineProps({
-  maxImages: {
-    type: Number,
-    default: 6,
-  },
-})
+const imageStore = props.store
 
 const isRemoving = ref<Record<string, boolean>>({})
 const error = ref<string>('')
@@ -39,10 +42,10 @@ const model = computed({
 /**
  * Remove an image by ID
  */
-async function handleDelete(image: OwnerProfileImage) {
+async function handleDelete(image: OwnerImage) {
   isRemoving.value[image.id] = true
 
-  const res = await imageStore.deleteImage(image)
+  const res = await imageStore.remove(image)
   if (!res.success) {
     error.value = res.message
     isRemoving.value[image.id] = false
@@ -57,7 +60,7 @@ const handleReorder = async (event: any) => {
     id: img.id,
     position,
   }))
-  await imageStore.reorderImages(newOrder)
+  await imageStore.reorder(newOrder)
 }
 
 /**
@@ -69,7 +72,7 @@ function checkMove(evt: any) {
 }
 
 onMounted(async () => {
-  await imageStore.fetchImages()
+  await imageStore.load()
 })
 
 const placeholderSlots = computed(() => {
@@ -132,7 +135,7 @@ const isDeletable = computed(() => {
             v-if="remainingSlots > 0"
             class="col nodrag"
           >
-            <ImageUpload />
+            <ImageUpload :store="imageStore" />
           </div>
 
           <div

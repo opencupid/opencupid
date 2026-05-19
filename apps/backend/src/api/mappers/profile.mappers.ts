@@ -9,19 +9,17 @@ import { type DbProfileSummary, type DbProfileWithImages } from '@zod/profile/pr
 import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
-import { type OwnerProfileImage, type PublicProfileImage } from '@zod/profile/profileimage.dto'
+import { type OwnerImage, type PublicImage } from '@zod/image/image.dto'
 import { mapProfileTagsTranslated } from './tag.mappers'
-import { ProfileImage } from '@zod/generated'
-import {
-  toOwnerProfileImage,
-  toPublicProfileImage,
-  type MinimalProfileImage,
-} from './image.mappers'
+import { Image } from '@zod/generated'
+import { toOwnerImage, toPublicImage } from './image.mappers'
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
   const tags = mapProfileTagsTranslated(db.tags, locale)
-  const images = db.profileImages ? mapProfileImagesToOwner(db.profileImages) : []
+  const images = db.profileImages
+    ? mapProfileImagesToOwner(db.profileImages.map((g) => g.image))
+    : []
   const location = LocationSchema.parse(db)
 
   const localizedMap = db.localized.reduce(
@@ -70,7 +68,7 @@ export function mapProfileToPublic(
   }
   const scalars = ProfileUnionSchema.parse(dProf)
   const publicImages = dbProfile.profileImages
-    ? mapProfileImagesToPublic(dbProfile.profileImages)
+    ? mapProfileImagesToPublic(dbProfile.profileImages.map((g) => g.image))
     : []
   const publicTags = dbProfile.tags ? mapProfileTagsTranslated(dbProfile.tags, locale) : []
 
@@ -84,19 +82,19 @@ export function mapProfileToPublic(
   } as PublicProfile
 }
 
-export function mapProfileImagesToOwner(images: ProfileImage[]): OwnerProfileImage[] {
-  return images.map((img) => toOwnerProfileImage(img))
+export function mapProfileImagesToOwner(images: Image[]): OwnerImage[] {
+  return images.map((img) => toOwnerImage(img))
 }
 
-export function mapProfileImagesToPublic(images: ProfileImage[]): PublicProfileImage[] {
-  return images.map((img: ProfileImage) => toPublicProfileImage(img))
+export function mapProfileImagesToPublic(images: Image[]): PublicImage[] {
+  return images.map((img) => toPublicImage(img))
 }
 
 export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
   return {
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile?.profileImages.map(toPublicProfileImage),
+    profileImages: profile?.profileImages.map((g) => toPublicImage(g.image)),
     location: DbLocationToLocationDTO({
       country: profile.country ?? null,
       cityName: profile.cityName ?? null,

@@ -2,7 +2,10 @@ import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
 import { Prisma } from '@prisma/client'
-import { TrustReasonSchema, type TrustReasonType } from '@zod/generated/inputTypeSchemas/TrustReasonSchema'
+import {
+  TrustReasonSchema,
+  type TrustReasonType,
+} from '@zod/generated/inputTypeSchemas/TrustReasonSchema'
 import { sendError } from '../helpers'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
@@ -1062,8 +1065,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             },
           },
           profileImages: {
-            select: { id: true, url: true, position: true },
-            orderBy: { position: 'asc' },
+            select: { image: { select: { id: true, storagePath: true, position: true } } },
+            orderBy: { image: { position: 'asc' } },
           },
           trustFlags: {
             where: { clearedAt: null },
@@ -1074,9 +1077,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (!profile) return sendError(reply, 404, 'Profile not found')
 
+      const { profileImages, ...profileRest } = profile
       return reply.code(200).send({
         success: true,
-        profile: { ...profile, hasActiveTrustFlag: profile.trustFlags.length > 0 },
+        profile: {
+          ...profileRest,
+          profileImages: profileImages.map((g) => g.image),
+          hasActiveTrustFlag: profile.trustFlags.length > 0,
+        },
       })
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin profile detail')

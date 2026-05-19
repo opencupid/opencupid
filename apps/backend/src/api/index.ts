@@ -13,6 +13,7 @@ import interactionRoutes from './routes/interaction.route'
 import postRoutes from './routes/content/post.route'
 import eventRoutes from './routes/content/event.route'
 import communityRoutes from './routes/content/community.route'
+import contentImageRoutes from './routes/content/image.route'
 import contentRoutes from './routes/content.route'
 import callRoutes from './routes/call.route'
 import adminRoutes from './routes/admin.route'
@@ -35,6 +36,7 @@ const api: FastifyPluginAsync = async (fastify) => {
   fastify.register(postRoutes, { prefix: '/content/posts' })
   fastify.register(eventRoutes, { prefix: '/content/events' })
   fastify.register(communityRoutes, { prefix: '/content/communities' })
+  fastify.register(contentImageRoutes, { prefix: '/content' })
   fastify.register(contentRoutes, { prefix: '/content' })
   fastify.register(callRoutes, { prefix: '/calls' })
   fastify.register(adminRoutes, { prefix: '/admin' })

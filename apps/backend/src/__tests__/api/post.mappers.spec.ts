@@ -5,7 +5,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapProfileSummary: (profile: any) => ({
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile.profileImages ?? [],
+    profileImages: (profile.profileImages ?? []).map((g: any) => g.image),
     location: profile.location ?? { country: '' },
   }),
 }))

@@ -742,6 +742,7 @@ describe('GET /profiles/:id', () => {
       id: 'prof1',
       publicName: 'Test',
       user: { id: 'user1' },
+      profileImages: [],
       trustFlags: [
         {
           id: 'f1',
@@ -764,7 +765,7 @@ describe('GET /profiles/:id', () => {
   })
 
   it('reports hasActiveTrustFlag=false when no flags', async () => {
-    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p2', trustFlags: [] })
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p2', profileImages: [], trustFlags: [] })
     const handler = fastify.routes['GET /profiles/:id']
     await handler({ params: { id: 'p2' } }, reply)
     expect(reply.payload.profile.hasActiveTrustFlag).toBe(false)
