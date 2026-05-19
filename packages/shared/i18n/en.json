@@ -493,6 +493,10 @@
       "copied": "Copied to clipboard",
       "copy": "Copy text",
       "share": "Share"
+    },
+    "image_button": {
+      "label": "Images",
+      "modal_title": "Manage images"
     }
   }
 }
