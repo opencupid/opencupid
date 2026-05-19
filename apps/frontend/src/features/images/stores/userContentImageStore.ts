@@ -136,6 +136,14 @@ export const useUserContentImageStore = (params: UserContentImageStoreParams) =>
           this.isLoading = false
         }
       },
+
+      async cleanup(): Promise<GalleryStoreResponse> {
+        if (!this.isDraft || this.images.length === 0) return storeSuccess()
+        const ids = this.images.map((i) => i.id)
+        await Promise.allSettled(ids.map((id) => api.delete(`/image/${id}`)))
+        this.images = []
+        return storeSuccess()
+      },
     },
   })()
 }

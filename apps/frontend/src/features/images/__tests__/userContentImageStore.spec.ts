@@ -189,4 +189,37 @@ describe('draft mode', () => {
     expect(store.images.map((i) => i.id)).toEqual([ID2, ID1])
     expect(api.patch).not.toHaveBeenCalled()
   })
+
+  it('cleanup() best-effort DELETEs each staged image; survives a failure', async () => {
+    ;(api.post as any)
+      .mockResolvedValueOnce({ data: { success: true, image: { ...CREATED, id: 'ckabcdefghijklmnopqrstu01' } } })
+      .mockResolvedValueOnce({ data: { success: true, image: { ...CREATED, id: 'ckabcdefghijklmnopqrstu02' } } })
+    ;(api.delete as any)
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce({ data: { success: true } })
+
+    const store = useUserContentImageStore({ draftKey: 'k6' })
+    await store.upload(new File(['x'], 'x.jpg'), 'cap')
+    await store.upload(new File(['y'], 'y.jpg'), 'cap')
+
+    await store.cleanup()
+    expect(api.delete).toHaveBeenCalledTimes(2)
+    expect(api.delete).toHaveBeenCalledWith('/image/ckabcdefghijklmnopqrstu01')
+    expect(api.delete).toHaveBeenCalledWith('/image/ckabcdefghijklmnopqrstu02')
+  })
+
+  it('cleanup() is a no-op in attached mode', async () => {
+    const store = useUserContentImageStore({ contentId: 'content-1' })
+    await store.cleanup()
+    expect(api.delete).not.toHaveBeenCalled()
+  })
+
+  it('cleanup() after $reset is a no-op (no DELETEs)', async () => {
+    ;(api.post as any).mockResolvedValueOnce({ data: { success: true, image: CREATED } })
+    const store = useUserContentImageStore({ draftKey: 'k7' })
+    await store.upload(new File(['x'], 'x.jpg'), 'cap')
+    store.$reset()
+    await store.cleanup()
+    expect(api.delete).not.toHaveBeenCalled()
+  })
 })
