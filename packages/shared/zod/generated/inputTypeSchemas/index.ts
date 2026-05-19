@@ -1,7 +1,6 @@
 export { TransactionIsolationLevelSchema } from './TransactionIsolationLevelSchema';
 export { TagScalarFieldEnumSchema } from './TagScalarFieldEnumSchema';
 export { TagTranslationScalarFieldEnumSchema } from './TagTranslationScalarFieldEnumSchema';
-export { ConnectionRequestScalarFieldEnumSchema } from './ConnectionRequestScalarFieldEnumSchema';
 export { UserScalarFieldEnumSchema } from './UserScalarFieldEnumSchema';
 export { ProfileScalarFieldEnumSchema } from './ProfileScalarFieldEnumSchema';
 export { LocalizedProfileFieldScalarFieldEnumSchema } from './LocalizedProfileFieldScalarFieldEnumSchema';
@@ -26,8 +25,6 @@ export { MessageTemplateScalarFieldEnumSchema } from './MessageTemplateScalarFie
 export { SortOrderSchema } from './SortOrderSchema';
 export { QueryModeSchema } from './QueryModeSchema';
 export { NullsOrderSchema } from './NullsOrderSchema';
-export { ConnectionTypeSchema } from './ConnectionTypeSchema';
-export { ConnectionStatusSchema } from './ConnectionStatusSchema';
 export { GenderSchema } from './GenderSchema';
 export { PronounsSchema } from './PronounsSchema';
 export { HasKidsSchema } from './HasKidsSchema';

@@ -13,18 +13,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum ConnectionType {
-  friend
-  dating
-}
-
-enum ConnectionStatus {
-  pending
-  accepted
-  rejected
-  blocked
-}
-
 enum Gender {
   male
   female
@@ -125,19 +113,6 @@ model TagTranslation {
   @@unique([tagId, locale])
 }
 
-model ConnectionRequest {
-  id         String           @id @default(cuid())
-  fromUser   User             @relation("RequestsSent", fields: [fromUserId], references: [id], onDelete: Cascade)
-  fromUserId String
-  toUser     User             @relation("RequestsReceived", fields: [toUserId], references: [id], onDelete: Cascade)
-  toUserId   String
-  scope      ConnectionType
-  status     ConnectionStatus
-  createdAt  DateTime         @default(now())
-
-  @@unique([fromUserId, toUserId, scope])
-}
-
 model User {
   id                      String     @id @default(cuid())
   email                   String     @unique
@@ -159,9 +134,6 @@ model User {
 
   // relations
   profile Profile? @relation
-
-  requestsSent     ConnectionRequest[] @relation("RequestsSent")
-  requestsReceived ConnectionRequest[] @relation("RequestsReceived")
 
   pushSubscription          PushSubscription[]
   // TODO: remove isPushNotificationEnabled — push state should be derived from PushSubscription existence
