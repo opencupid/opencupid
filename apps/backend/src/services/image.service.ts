@@ -1,6 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { getMediaRoot, imageBasePath, makeImageLocation, mediaUrl } from '@/lib/media'
 
@@ -187,6 +188,45 @@ export class ImageService {
       },
       { isolationLevel: 'Serializable' }
     )
+  }
+
+  /**
+   * Bulk-attach images to a freshly-created UserContent inside a caller-supplied
+   * transaction. Pre-validates that every imageId exists, is owned by
+   * `ownerProfileId`, and is not yet attached to any gallery. Inserts join rows
+   * and assigns sequential positions in the order of `imageIds`.
+   */
+  async attachManyToUserContentTx(
+    tx: Prisma.TransactionClient,
+    imageIds: string[],
+    userContentId: string,
+    ownerProfileId: string,
+  ): Promise<void> {
+    if (imageIds.length === 0) return
+
+    const images = await tx.image.findMany({
+      where: { id: { in: imageIds } },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+
+    if (images.length !== imageIds.length) {
+      throw new ImageServiceError('NOT_FOUND', 'One or more images not found')
+    }
+    for (const img of images) {
+      if (img.ownerProfileId !== ownerProfileId) {
+        throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      }
+      if (img.profileGallery || img.userContentGallery) {
+        throw new ImageServiceError('ALREADY_ATTACHED', `Image ${img.id} already attached`)
+      }
+    }
+
+    const startPos = await tx.userContentImage.count({ where: { userContentId } })
+    for (let i = 0; i < imageIds.length; i++) {
+      const id = imageIds[i]
+      await tx.userContentImage.create({ data: { imageId: id, userContentId } })
+      await tx.image.update({ where: { id }, data: { position: startPos + i } })
+    }
   }
 
   /**

@@ -471,6 +471,88 @@ describe('detachFromProfile', () => {
   })
 })
 
+describe('attachManyToUserContentTx', () => {
+  it('inserts join rows with sequential positions in supplied order', async () => {
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+      { id: 'img-b', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+    ] as any)
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+
+    await svc.attachManyToUserContentTx(
+      mockPrisma,
+      ['img-a', 'img-b'],
+      'content-1',
+      'profile-1'
+    )
+
+    expect(mockPrisma.userContentImage.create).toHaveBeenNthCalledWith(1, {
+      data: { imageId: 'img-a', userContentId: 'content-1' },
+    })
+    expect(mockPrisma.userContentImage.create).toHaveBeenNthCalledWith(2, {
+      data: { imageId: 'img-b', userContentId: 'content-1' },
+    })
+    expect(mockPrisma.image.update).toHaveBeenNthCalledWith(1, {
+      where: { id: 'img-a' },
+      data: { position: 0 },
+    })
+    expect(mockPrisma.image.update).toHaveBeenNthCalledWith(2, {
+      where: { id: 'img-b' },
+      data: { position: 1 },
+    })
+  })
+
+  it('throws NOT_FOUND when one imageId is missing', async () => {
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+    ] as any)
+
+    await expect(
+      svc.attachManyToUserContentTx(mockPrisma, ['img-a', 'img-missing'], 'content-1', 'profile-1')
+    ).rejects.toThrow(/not found/i)
+    expect(mockPrisma.userContentImage.create).not.toHaveBeenCalled()
+  })
+
+  it('throws OWNER_MISMATCH when one image is owned by another profile', async () => {
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+      { id: 'img-b', ownerProfileId: 'profile-OTHER', profileGallery: null, userContentGallery: null },
+    ] as any)
+
+    await expect(
+      svc.attachManyToUserContentTx(mockPrisma, ['img-a', 'img-b'], 'content-1', 'profile-1')
+    ).rejects.toThrow(/owner/i)
+    expect(mockPrisma.userContentImage.create).not.toHaveBeenCalled()
+  })
+
+  it('throws ALREADY_ATTACHED when one image is in another gallery', async () => {
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      {
+        id: 'img-a',
+        ownerProfileId: 'profile-1',
+        profileGallery: { profileId: 'profile-1' },
+        userContentGallery: null,
+      },
+    ] as any)
+
+    await expect(
+      svc.attachManyToUserContentTx(mockPrisma, ['img-a'], 'content-1', 'profile-1')
+    ).rejects.toThrow(/already attached/i)
+    expect(mockPrisma.userContentImage.create).not.toHaveBeenCalled()
+  })
+
+  it('is a no-op for empty input', async () => {
+    const svc = service
+    await svc.attachManyToUserContentTx(mockPrisma, [], 'content-1', 'profile-1')
+    expect(mockPrisma.image.findMany).not.toHaveBeenCalled()
+    expect(mockPrisma.userContentImage.create).not.toHaveBeenCalled()
+  })
+})
+
 describe('detachFromUserContent', () => {
   const IMG = 'img-1'
   const ME = 'p-1'
