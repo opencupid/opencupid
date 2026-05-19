@@ -41,26 +41,29 @@ export class CommunityService extends UserContentService {
 
   async create(profileId: string, data: CreateCommunityPayload): Promise<CommunityWithMetadata> {
     const { imageIds, ...contentData } = data
-    return prisma.$transaction(async (tx) => {
-      const created = await tx.userContent.create({
-        data: {
-          ...this.baseCreateData(contentData),
-          kind: 'community',
-          postedById: profileId,
-          community: { create: { yearFounded: data.yearFounded ?? null } },
-        },
-        include: communityWithMetadataInclude,
-      })
-      if (imageIds && imageIds.length > 0) {
-        await ImageService.getInstance().attachManyToUserContentTx(
-          tx,
-          imageIds,
-          created.id,
-          profileId
-        )
-      }
-      return created
-    })
+    return prisma.$transaction(
+      async (tx) => {
+        const created = await tx.userContent.create({
+          data: {
+            ...this.baseCreateData(contentData),
+            kind: 'community',
+            postedById: profileId,
+            community: { create: { yearFounded: data.yearFounded ?? null } },
+          },
+          include: communityWithMetadataInclude,
+        })
+        if (imageIds && imageIds.length > 0) {
+          await ImageService.getInstance().attachManyToUserContentTx(
+            tx,
+            imageIds,
+            created.id,
+            profileId
+          )
+        }
+        return created
+      },
+      { isolationLevel: 'Serializable' }
+    )
   }
 
   async update(

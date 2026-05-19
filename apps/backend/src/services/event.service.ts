@@ -41,26 +41,29 @@ export class EventService extends UserContentService {
 
   async create(profileId: string, data: CreateEventPayload): Promise<EventWithMetadata> {
     const { imageIds, ...contentData } = data
-    return prisma.$transaction(async (tx) => {
-      const created = await tx.userContent.create({
-        data: {
-          ...this.baseCreateData(contentData),
-          kind: 'event',
-          postedById: profileId,
-          event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
-        },
-        include: eventWithMetadataInclude,
-      })
-      if (imageIds && imageIds.length > 0) {
-        await ImageService.getInstance().attachManyToUserContentTx(
-          tx,
-          imageIds,
-          created.id,
-          profileId
-        )
-      }
-      return created
-    })
+    return prisma.$transaction(
+      async (tx) => {
+        const created = await tx.userContent.create({
+          data: {
+            ...this.baseCreateData(contentData),
+            kind: 'event',
+            postedById: profileId,
+            event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
+          },
+          include: eventWithMetadataInclude,
+        })
+        if (imageIds && imageIds.length > 0) {
+          await ImageService.getInstance().attachManyToUserContentTx(
+            tx,
+            imageIds,
+            created.id,
+            profileId
+          )
+        }
+        return created
+      },
+      { isolationLevel: 'Serializable' }
+    )
   }
 
   async update(

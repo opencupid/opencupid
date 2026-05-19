@@ -204,12 +204,15 @@ export class ImageService {
   ): Promise<void> {
     if (imageIds.length === 0) return
 
+    // De-dupe caller input; downstream length checks and writes assume uniqueness.
+    const uniqueIds = Array.from(new Set(imageIds))
+
     const images = await tx.image.findMany({
-      where: { id: { in: imageIds } },
+      where: { id: { in: uniqueIds } },
       include: { profileGallery: true, userContentGallery: true },
     })
 
-    if (images.length !== imageIds.length) {
+    if (images.length !== uniqueIds.length) {
       throw new ImageServiceError('NOT_FOUND', 'One or more images not found')
     }
     for (const img of images) {
@@ -221,12 +224,24 @@ export class ImageService {
       }
     }
 
-    // Writes iterate `imageIds` (input order) — not the validated `images` set, which
-    // Prisma may return in arbitrary order — so positions follow caller-supplied order.
+    // Writes iterate `uniqueIds` (deduped input order) — not the validated `images`
+    // set, which Prisma may return in arbitrary order — so positions follow
+    // caller-supplied order.
     const startPos = await tx.userContentImage.count({ where: { userContentId } })
-    for (let i = 0; i < imageIds.length; i++) {
-      const id = imageIds[i]
-      await tx.userContentImage.create({ data: { imageId: id, userContentId } })
+    for (let i = 0; i < uniqueIds.length; i++) {
+      const id = uniqueIds[i]
+      try {
+        await tx.userContentImage.create({ data: { imageId: id, userContentId } })
+      } catch (err) {
+        // P2002 means another transaction attached this image between our
+        // pre-validation and write. The owner check upstream guarantees the
+        // racing attach was the same user; their position assignment stands.
+        // Skip without updating position so we don't overwrite theirs.
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          continue
+        }
+        throw err
+      }
       await tx.image.update({ where: { id }, data: { position: startPos + i } })
     }
   }

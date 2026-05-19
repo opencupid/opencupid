@@ -571,6 +571,70 @@ describe('attachManyToUserContentTx', () => {
     expect(mockPrisma.image.findMany).not.toHaveBeenCalled()
     expect(mockPrisma.userContentImage.create).not.toHaveBeenCalled()
   })
+
+  it('de-dupes input ids before validation and writes', async () => {
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+    ] as any)
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+
+    await svc.attachManyToUserContentTx(
+      mockPrisma,
+      ['img-a', 'img-a', 'img-a'],
+      'content-1',
+      'profile-1'
+    )
+
+    expect(mockPrisma.image.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ['img-a'] } },
+      include: { profileGallery: true, userContentGallery: true },
+    })
+    expect(mockPrisma.userContentImage.create).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.userContentImage.create).toHaveBeenCalledWith({
+      data: { imageId: 'img-a', userContentId: 'content-1' },
+    })
+  })
+
+  it('swallows P2002 from userContentImage.create and continues with remaining ids', async () => {
+    const { Prisma } = await import('@prisma/client')
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+      { id: 'img-b', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+    ] as any)
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+
+    const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: '0',
+    })
+    mockPrisma.userContentImage.create.mockRejectedValueOnce(p2002).mockResolvedValueOnce(undefined)
+
+    await expect(
+      svc.attachManyToUserContentTx(mockPrisma, ['img-a', 'img-b'], 'content-1', 'profile-1')
+    ).resolves.toBeUndefined()
+
+    // First image's join failed; its position update is skipped.
+    expect(mockPrisma.image.update).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'img-b' },
+      data: { position: 1 },
+    })
+  })
+
+  it('re-throws non-P2002 errors from userContentImage.create', async () => {
+    const svc = service
+    mockPrisma.image.findMany.mockResolvedValue([
+      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
+    ] as any)
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+    mockPrisma.userContentImage.create.mockRejectedValue(new Error('disk full'))
+
+    await expect(
+      svc.attachManyToUserContentTx(mockPrisma, ['img-a'], 'content-1', 'profile-1')
+    ).rejects.toThrow(/disk full/)
+  })
 })
 
 describe('detachFromUserContent', () => {
