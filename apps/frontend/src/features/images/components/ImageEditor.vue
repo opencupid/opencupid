@@ -75,8 +75,11 @@ onMounted(async () => {
   await imageStore.load()
 })
 
-onUnmounted(async () => {
-  await imageStore.cleanup?.()
+onUnmounted(() => {
+  // Fire-and-forget: Vue does not await lifecycle hooks. cleanup() is
+  // best-effort internally (Promise.allSettled); the .catch() guards
+  // against any unexpected rejection surfacing as an unhandled promise.
+  imageStore.cleanup?.()?.catch(() => {})
 })
 
 const placeholderSlots = computed(() => {
