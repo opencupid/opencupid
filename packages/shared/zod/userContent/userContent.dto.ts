@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { ProfileSummarySchema } from '../profile/profile.dto'
 import { ConversationContextSchema } from '../interaction/interactionContext.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
+import { PublicImageSchema } from '../image/image.dto'
 
 export const ContentKindSchema = z.enum(['post', 'event', 'community'])
 export type ContentKind = z.infer<typeof ContentKindSchema>
@@ -19,6 +20,7 @@ export const UserContentMetadataSchema = z.object({
   location: LocationSchema.nullable().optional(),
   createdAt: z.coerce.date(),
   isOwn: z.boolean().default(false),
+  images: z.array(PublicImageSchema).default([]),
 })
 export type UserContentMetadata = z.infer<typeof UserContentMetadataSchema>
 

@@ -30,8 +30,16 @@ export interface BoundsBox {
   east: number
 }
 
+export const userContentImagesInclude = {
+  images: {
+    include: { image: true },
+    orderBy: { image: { position: 'asc' } },
+  },
+} as const satisfies Prisma.UserContentInclude
+
 const profileSummaryInclude = {
   postedBy: { include: { profileImages: { include: { image: true } } } },
+  ...userContentImagesInclude,
 } as const
 
 const ownerHydratedInclude = {
@@ -39,6 +47,7 @@ const ownerHydratedInclude = {
   event: true,
   community: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
+  ...userContentImagesInclude,
 } as const
 
 export type UserContentMetadataRow = Prisma.UserContentGetPayload<{

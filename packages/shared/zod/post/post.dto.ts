@@ -10,7 +10,7 @@ import {
 } from '../userContent/userContent.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { ProfileSummarySchema } from '@zod/profile/profile.dto'
-import { MAX_IMAGES_PER_GALLERY } from '../image/image.dto'
+import { MAX_IMAGES_PER_GALLERY, OwnerImageSchema } from '../image/image.dto'
 
 const POST_KIND = z.literal('post')
 
@@ -30,6 +30,8 @@ export const PublicPostDetailSchema = PublicUserContentDetailBaseSchema.extend({
 export type PublicPostDetail = z.infer<typeof PublicPostDetailSchema>
 
 export const OwnerPostSchema = PublicPostSchema.merge(OwnerUserContentOverlaySchema)
+  .omit({ images: true })
+  .extend({ images: z.array(OwnerImageSchema).default([]) })
 export type OwnerPost = z.infer<typeof OwnerPostSchema>
 
 export const PostSummarySchema = z.object({

@@ -9,7 +9,7 @@ import {
 } from '../userContent/userContent.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { ProfileSummarySchema } from '@zod/profile/profile.dto'
-import { MAX_IMAGES_PER_GALLERY } from '../image/image.dto'
+import { MAX_IMAGES_PER_GALLERY, OwnerImageSchema } from '../image/image.dto'
 
 const EVENT_KIND = z.literal('event')
 
@@ -30,6 +30,8 @@ export const PublicEventDetailSchema = PublicUserContentDetailBaseSchema.extend(
 export type PublicEventDetail = z.infer<typeof PublicEventDetailSchema>
 
 export const OwnerEventSchema = PublicEventSchema.merge(OwnerUserContentOverlaySchema)
+  .omit({ images: true })
+  .extend({ images: z.array(OwnerImageSchema).default([]) })
 export type OwnerEvent = z.infer<typeof OwnerEventSchema>
 
 export const CreateEventPayloadSchema = BaseUserContentPayloadSchema.extend({
