@@ -14,6 +14,8 @@ const startsAtFormatted = computed(() =>
     props.item.startsAt
   )
 )
+
+const firstImage = computed(() => props.item.images[0])
 </script>
 
 <template>
@@ -22,10 +24,10 @@ const startsAtFormatted = computed(() =>
     @click="$emit('click', item.id)"
   >
     <div
-      v-if="item.images.length > 0"
+      v-if="firstImage"
       class="popup-image ratio ratio-4x3 mb-2 rounded overflow-hidden"
     >
-      <ImageTag :image="item.images[0]!" variant="card" />
+      <ImageTag :image="firstImage" variant="card" />
     </div>
     <div class="event-map-popup__content mb-1">
       {{ (item.content ?? '').substring(0, 120) }}

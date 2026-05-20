@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PublicPostDetail } from '@zod/post/post.dto'
 import ImageTag from '@/features/images/components/ImageTag.vue'
 
-defineProps<{ item: PublicPostDetail }>()
+const props = defineProps<{ item: PublicPostDetail }>()
 defineEmits<{ (e: 'click', id: string): void }>()
+
+const firstImage = computed(() => props.item.images[0])
 </script>
 
 <template>
@@ -12,10 +15,10 @@ defineEmits<{ (e: 'click', id: string): void }>()
     @click="$emit('click', item.id)"
   >
     <div
-      v-if="item.images.length > 0"
+      v-if="firstImage"
       class="popup-image ratio ratio-4x3 mb-2 rounded overflow-hidden"
     >
-      <ImageTag :image="item.images[0]!" variant="card" />
+      <ImageTag :image="firstImage" variant="card" />
     </div>
     {{ (item.content ?? '').substring(0, 120) }}
   </div>

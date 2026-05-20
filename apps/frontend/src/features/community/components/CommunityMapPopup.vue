@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { PublicCommunityDetail } from '@zod/community/community.dto'
 import IconCommunity from '@/assets/icons/interface/community.svg'
@@ -8,6 +9,8 @@ const props = defineProps<{ item: PublicCommunityDetail }>()
 defineEmits<{ (e: 'click', id: string): void }>()
 
 const { t } = useI18n()
+
+const firstImage = computed(() => props.item.images[0])
 </script>
 
 <template>
@@ -16,10 +19,10 @@ const { t } = useI18n()
     @click="$emit('click', item.id)"
   >
     <div
-      v-if="item.images.length > 0"
+      v-if="firstImage"
       class="popup-image ratio ratio-4x3 mb-2 rounded overflow-hidden"
     >
-      <ImageTag :image="item.images[0]!" variant="card" />
+      <ImageTag :image="firstImage" variant="card" />
     </div>
     <div class="mb-2 text-primary d-flex flex-row">
       <IconCommunity class="svg-icon flex-shrink-0 flex-grow-0 me-2" />
