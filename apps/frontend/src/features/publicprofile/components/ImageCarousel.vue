@@ -4,7 +4,7 @@ import { shallowRef, reactive, computed, watch } from 'vue'
 import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel'
 import 'vue3-carousel/dist/carousel.css'
 
-import { type PublicProfile } from '@zod/profile/profile.dto'
+import type { OwnerImage, PublicImage } from '@zod/image/image.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import ChevronRightIcon from '@/assets/icons/arrows/arrow-single-right.svg'
@@ -13,7 +13,7 @@ import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
 import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
 
 const props = defineProps<{
-  profile: PublicProfile
+  images: ReadonlyArray<OwnerImage | PublicImage>
 }>()
 
 const showFullscreen = shallowRef(false)
@@ -38,7 +38,7 @@ const carouselProps = {
   mouseWheel: false,
 } as const
 
-const images = computed(() => props.profile.profileImages ?? [])
+const images = computed(() => props.images ?? [])
 const currentImage = computed(() => images.value[inlineSlide.value])
 const showBlurhash = computed(
   () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
