@@ -20,22 +20,22 @@ const firstImage = computed(() => props.item.images[0])
 
 <template>
   <div
-    class="event-map-popup bg-event-light cursor-pointer p-3 user-select-none"
+    class="event-map-popup bg-event-light cursor-pointer user-select-none"
     @click="$emit('click', item.id)"
   >
     <div
       v-if="firstImage"
-      class="popup-image ratio ratio-4x3 mb-2 rounded overflow-hidden"
+      class="popup-image ratio ratio-4x3 mb-2 overflow-hidden"
     >
       <ImageTag
         :image="firstImage"
         variant="card"
       />
     </div>
-    <div class="event-map-popup__content mb-1">
+    <div class="event-map-popup__content p-2">
       {{ (item.content ?? '').substring(0, 120) }}
     </div>
-    <div class="small text-secondary fw-semibold">
+    <div class="small text-secondary fw-semibold p-2">
       {{ startsAtFormatted }}
     </div>
   </div>

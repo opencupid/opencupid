@@ -49,16 +49,16 @@ const displayContent = computed(() => {
 <template>
   <div class="community-wrapper position-relative w-100 p-2">
     <div
-      class="community-card p-3 rounded border shadow-sm bg-subtle"
+      class="community-card overflow-hidden rounded border shadow-sm bg-subtle"
       :class="{ 'community-card--own': community.isOwn }"
       @click="$emit('click', community)"
     >
       <ImageCarousel
         v-if="community.images.length > 0"
         :images="community.images"
-        class="content-card-carousel mb-2"
+        class="mb-2"
       />
-      <BRow class="g-2 align-items-start mb-3">
+      <BRow class="g-2 align-items-start m-2">
         <BCol
           cols="12"
           md="8"
@@ -85,7 +85,7 @@ const displayContent = computed(() => {
       </BRow>
 
       <div
-        class="community-meta d-flex align-items-center justify-content-between gap-2 small text-muted"
+        class="community-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"
       >
         <div class="d-flex align-items-center gap-2">
           <OwnerToolbar
@@ -117,10 +117,5 @@ const displayContent = computed(() => {
 <style scoped>
 .community-card {
   background-color: var(--bs-community-light);
-}
-
-.content-card-carousel {
-  border-radius: var(--radius-md);
-  overflow: hidden;
 }
 </style>

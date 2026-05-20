@@ -15,19 +15,19 @@ const firstImage = computed(() => props.item.images[0])
 
 <template>
   <div
-    class="community-map-popup bg-community-light cursor-pointer p-3 user-select-none"
+    class="community-map-popup bg-community-light cursor-pointer user-select-none"
     @click="$emit('click', item.id)"
   >
     <div
       v-if="firstImage"
-      class="popup-image ratio ratio-4x3 mb-2 rounded overflow-hidden"
+      class="popup-image ratio ratio-4x3 mb-2 overflow-hidden"
     >
       <ImageTag
         :image="firstImage"
         variant="card"
       />
     </div>
-    <div class="mb-2 text-primary d-flex flex-row">
+    <div class="mb-2 text-primary d-flex flex-row p-2">
       <IconCommunity class="svg-icon flex-shrink-0 flex-grow-0 me-2" />
       <div class="flex-grow-1">
         <div class="mb-1">
