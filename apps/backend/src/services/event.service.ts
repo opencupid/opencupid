@@ -1,6 +1,10 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { UserContentService, type ListOptions } from './userContent.service'
+import {
+  UserContentService,
+  type ListOptions,
+  userContentImagesInclude,
+} from './userContent.service'
 import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
@@ -8,6 +12,7 @@ import { ImageService } from './image.service'
 const eventWithMetadataInclude = {
   event: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
+  ...userContentImagesInclude,
 } as const
 
 const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -19,6 +24,7 @@ const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
         ...conversationContextInclude(viewerProfileId),
       },
     },
+    ...userContentImagesInclude,
   }) as const
 
 export type EventWithMetadata = Prisma.UserContentGetPayload<{

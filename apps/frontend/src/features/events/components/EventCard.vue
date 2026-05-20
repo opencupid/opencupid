@@ -9,6 +9,7 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import IconCalendar from '@/assets/icons/interface/calendar.svg'
 import IconChecklist from '@/assets/icons/interface/checklist.svg'
 import EventCalendarExportDropdown from './EventCalendarExportDropdown.vue'
+import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
@@ -64,22 +65,26 @@ const displayContent = computed(() => {
 <template>
   <div class="event-wrapper position-relative w-100 p-2">
     <div
-      class="event-card p-3 rounded border shadow-sm bg-subtle"
+      class="event-card overflow-hidden rounded border shadow-sm bg-subtle"
       :class="{ 'event-card--own': event.isOwn }"
       @click="$emit('click', event)"
     >
-      <BRow class="g-2 align-items-start mb-3"
-      >
+      <ImageCarousel
+        v-if="event.images.length > 0"
+        :images="event.images"
+        class="mb-2"
+      />
+      <BRow class="g-2 align-items-start m-2">
         <BCol
           cols="12"
           md="8"
         >
-          <p class="lh-sm small mb-0">{{ displayContent }}</p>
+          <p class="lh-sm small mb-0 p-2">{{ displayContent }}</p>
         </BCol>
         <BCol
           cols="12"
           md="4"
-          class="small lh-sm text-center d-flex align-items-center flex-column"
+          class="small lh-sm text-center d-flex align-items-center flex-column p-2"
         >
           <IconCalendar class="text-primary d-block svg-icon-lg mb-1" />
           <div class="m-0">{{ startsAtYear }}</div>
@@ -102,7 +107,7 @@ const displayContent = computed(() => {
       </BRow>
 
       <div
-        class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted"
+        class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"
       >
         <div class="d-flex align-items-center gap-2">
           <OwnerToolbar

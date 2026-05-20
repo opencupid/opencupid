@@ -276,10 +276,17 @@ export const useUserContentStore = defineStore('userContent', {
     },
 
     // ─── Post-only public reads ───────────────────────────────────────
-    async fetchPublicPost(id: string): Promise<StoreResponse<{ post: PublicPostDetail }>> {
+    async fetchPublicPost(
+      id: string,
+      signal?: AbortSignal
+    ): Promise<StoreResponse<{ post: PublicPostDetail }>> {
       if (publicPostAbortController) publicPostAbortController.abort()
       const controller = new AbortController()
       publicPostAbortController = controller
+      if (signal) {
+        if (signal.aborted) controller.abort()
+        else signal.addEventListener('abort', () => controller.abort(), { once: true })
+      }
 
       try {
         const res = await safeApiCall(() =>

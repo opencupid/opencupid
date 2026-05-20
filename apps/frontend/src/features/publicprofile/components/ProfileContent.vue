@@ -36,7 +36,7 @@ const profileImageStore = useProfileImageStore()
 <template>
   <div class="position-relative">
     <div class="overflow-hidden carousel-wrapper">
-      <ImageCarousel :profile />
+      <ImageCarousel :images="profile.profileImages" />
     </div>
 
     <div class="icons">

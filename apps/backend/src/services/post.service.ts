@@ -4,6 +4,7 @@ import {
   UserContentService,
   type ListOptions,
   type UserContentMetadataRow,
+  userContentImagesInclude,
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
@@ -12,6 +13,7 @@ import { ImageService } from './image.service'
 const postWithMetadataInclude = {
   post: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
+  ...userContentImagesInclude,
 } as const
 
 const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -23,6 +25,7 @@ const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
         ...conversationContextInclude(viewerProfileId),
       },
     },
+    ...userContentImagesInclude,
   }) as const
 
 export type PostWithMetadata = Prisma.UserContentGetPayload<{

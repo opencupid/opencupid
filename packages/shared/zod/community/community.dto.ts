@@ -9,7 +9,7 @@ import {
 } from '../userContent/userContent.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { ProfileSummarySchema } from '@zod/profile/profile.dto'
-import { MAX_IMAGES_PER_GALLERY } from '../image/image.dto'
+import { MAX_IMAGES_PER_GALLERY, OwnerImageSchema } from '../image/image.dto'
 
 const COMMUNITY_KIND = z.literal('community')
 
@@ -39,6 +39,8 @@ export const PublicCommunityDetailSchema = PublicUserContentDetailBaseSchema.ext
 export type PublicCommunityDetail = z.infer<typeof PublicCommunityDetailSchema>
 
 export const OwnerCommunitySchema = PublicCommunitySchema.merge(OwnerUserContentOverlaySchema)
+  .omit({ images: true })
+  .extend({ images: z.array(OwnerImageSchema).default([]) })
 export type OwnerCommunity = z.infer<typeof OwnerCommunitySchema>
 
 export const CreateCommunityPayloadSchema = BaseUserContentPayloadSchema.extend({

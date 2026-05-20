@@ -27,7 +27,11 @@ vi.mock('../../api/mappers/image.mappers', () => ({
   }),
 }))
 
-import { mapDbEventToPublic, mapDbEventToOwner } from '../../api/mappers/event.mappers'
+import {
+  mapDbCommunityToPublic,
+  mapDbCommunityToDetail,
+  mapDbCommunityToOwner,
+} from '../../api/mappers/community.mappers'
 
 const baseImages = [
   {
@@ -52,10 +56,18 @@ const baseImages = [
   },
 ]
 
-const baseDbEvent: any = {
-  id: 'cuevent00000000000001',
-  kind: 'event',
-  content: 'Test event content',
+const basePostedBy = {
+  id: 'clprofile000000000001',
+  publicName: 'Test User',
+  profileImages: [],
+  conversationAsA: [],
+  conversationAsB: [],
+}
+
+const baseDbCommunity: any = {
+  id: 'cucomm00000000000001',
+  kind: 'community',
+  content: 'Test community content',
   isDeleted: false,
   isVisible: true,
   createdAt: new Date('2026-01-01'),
@@ -65,49 +77,52 @@ const baseDbEvent: any = {
   cityName: 'Vienna',
   lat: 48.2,
   lon: 16.3,
-  postedBy: {
-    id: 'clprofile000000000001',
-    publicName: 'Test User',
-    profileImages: [],
-  },
-  event: {
-    userContentId: 'cuevent00000000000001',
-    startsAt: new Date('2027-06-01T18:00:00Z'),
-    venue: null,
+  postedBy: basePostedBy,
+  community: {
+    userContentId: 'cucomm00000000000001',
+    yearFounded: 2010,
   },
   images: baseImages,
 }
 
-describe('mapDbEventToPublic', () => {
-  it('maps an event with location and startsAt', () => {
-    const result = mapDbEventToPublic(baseDbEvent, 'viewer-profile-id')
-    expect(result.id).toBe(baseDbEvent.id)
-    expect(result.kind).toBe('event')
-    expect(result.content).toBe(baseDbEvent.content)
-    expect(result.startsAt.toISOString()).toBe('2027-06-01T18:00:00.000Z')
+describe('mapDbCommunityToPublic', () => {
+  it('maps a community with yearFounded and location', () => {
+    const result = mapDbCommunityToPublic(baseDbCommunity, 'viewer-profile-id')
+    expect(result.id).toBe(baseDbCommunity.id)
+    expect(result.kind).toBe('community')
+    expect(result.content).toBe(baseDbCommunity.content)
+    expect(result.yearFounded).toBe(2010)
     expect(result.isOwn).toBe(false)
     expect(result.location).toEqual({ country: 'AT', cityName: 'Vienna', lat: 48.2, lon: 16.3 })
   })
 
   it('isOwn=true when viewer is poster', () => {
-    const result = mapDbEventToPublic(baseDbEvent, 'clprofile000000000001')
+    const result = mapDbCommunityToPublic(baseDbCommunity, 'clprofile000000000001')
     expect(result.isOwn).toBe(true)
   })
 })
 
-describe('mapDbEventToOwner', () => {
-  it('parses through OwnerEventSchema', () => {
-    const result = mapDbEventToOwner(baseDbEvent)
-    expect(result.kind).toBe('event')
+describe('mapDbCommunityToDetail', () => {
+  it('attaches conversation context on postedBy', () => {
+    const result = mapDbCommunityToDetail(baseDbCommunity, 'viewer-profile-id')
+    expect(result.postedBy).toHaveProperty('haveConversation')
+    expect(result.postedBy).toHaveProperty('canMessage')
+  })
+})
+
+describe('mapDbCommunityToOwner', () => {
+  it('parses through OwnerCommunitySchema', () => {
+    const result = mapDbCommunityToOwner(baseDbCommunity)
+    expect(result.kind).toBe('community')
     expect(result.isOwn).toBe(true)
-    expect(result.startsAt.toISOString()).toBe('2027-06-01T18:00:00.000Z')
+    expect(result.yearFounded).toBe(2010)
     expect(result.isVisible).toBe(true)
   })
 })
 
-describe('mapDbEventToPublic images', () => {
-  it('projects attached images in PublicEvent shape (no id)', () => {
-    const result = mapDbEventToPublic(baseDbEvent, 'viewer-profile-id')
+describe('mapDbCommunityToPublic images', () => {
+  it('projects attached images in PublicCommunity shape (no id)', () => {
+    const result = mapDbCommunityToPublic(baseDbCommunity, 'viewer-profile-id')
     expect(result.images).toHaveLength(2)
     expect(result.images[0]).toEqual({
       mimeType: 'image/jpeg',
@@ -120,14 +135,14 @@ describe('mapDbEventToPublic images', () => {
   })
 
   it('returns empty images array when content has none', () => {
-    const result = mapDbEventToPublic({ ...baseDbEvent, images: [] }, 'viewer-profile-id')
+    const result = mapDbCommunityToPublic({ ...baseDbCommunity, images: [] }, 'viewer-profile-id')
     expect(result.images).toEqual([])
   })
 })
 
-describe('mapDbEventToOwner images', () => {
-  it('projects attached images in OwnerEvent shape (with id)', () => {
-    const result = mapDbEventToOwner(baseDbEvent)
+describe('mapDbCommunityToOwner images', () => {
+  it('projects attached images in OwnerCommunity shape (with id)', () => {
+    const result = mapDbCommunityToOwner(baseDbCommunity)
     expect(result.images).toHaveLength(2)
     expect(result.images[0]?.id).toBe('climg00000000000000001')
   })

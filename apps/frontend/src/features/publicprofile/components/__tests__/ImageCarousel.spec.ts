@@ -23,18 +23,17 @@ vi.mock('vue3-carousel', () => ({
 
 import ImageCarousel from '../ImageCarousel.vue'
 
-const makeProfile = (count = 3, withBlurhash = false) => ({
-  profileImages: Array.from({ length: count }, (_, i) => ({
+const makeImages = (count = 3, withBlurhash = false) =>
+  Array.from({ length: count }, (_, i) => ({
     id: String(i + 1),
     position: i,
     variants: [{ size: 'original', url: `/img${i}` }],
     blurhash: withBlurhash ? 'LEHV6nWB2yk8pyo0adR*.7kCMdnj' : null,
-  })),
-})
+  }))
 
-const mountCarousel = (profile = makeProfile()) =>
+const mountCarousel = (images = makeImages()) =>
   mount(ImageCarousel, {
-    props: { profile: profile as any },
+    props: { images: images as any },
     global: {
       stubs: {
         BModal: { template: '<div class="modal-stub"><slot /></div>' },
@@ -67,16 +66,16 @@ describe('ImageCarousel', () => {
     expect(vm.showFullscreen).toBe(false)
   })
 
-  it('resets inlineSlide when profileImages change', async () => {
+  it('resets inlineSlide when images change', async () => {
     const wrapper = mountCarousel()
     const vm = wrapper.vm as any
     vm.inlineSlide = 2
-    await wrapper.setProps({ profile: makeProfile(4) as any })
+    await wrapper.setProps({ images: makeImages(4) as any })
     expect(vm.inlineSlide).toBe(0)
   })
 
   it('sets background-image on fullscreen slide when blurhash is present', () => {
-    const wrapper = mountCarousel(makeProfile(2, true))
+    const wrapper = mountCarousel(makeImages(2, true))
     const modalSlides = wrapper.findAll('.modal-stub .slide')
     expect(modalSlides.length).toBeGreaterThan(0)
     const slideDiv = modalSlides[0]!.find('div[style]')
@@ -86,7 +85,7 @@ describe('ImageCarousel', () => {
   })
 
   it('does not set background-image when blurhash is null', () => {
-    const wrapper = mountCarousel(makeProfile(2, false))
+    const wrapper = mountCarousel(makeImages(2, false))
     const modalSlides = wrapper.findAll('.modal-stub .slide')
     expect(modalSlides.length).toBeGreaterThan(0)
     const innerDivs = modalSlides[0]!.findAll('div')
@@ -97,12 +96,12 @@ describe('ImageCarousel', () => {
   })
 
   it('shows blurhash overlay before image loads', () => {
-    const wrapper = mountCarousel(makeProfile(2, true))
+    const wrapper = mountCarousel(makeImages(2, true))
     expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
   })
 
   it('hides blurhash overlay after current image loads', async () => {
-    const wrapper = mountCarousel(makeProfile(2, true))
+    const wrapper = mountCarousel(makeImages(2, true))
     const vm = wrapper.vm as any
     expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
     vm.handleImageLoad(0)
@@ -111,7 +110,7 @@ describe('ImageCarousel', () => {
   })
 
   it('does not show blurhash overlay when hash is null', () => {
-    const wrapper = mountCarousel(makeProfile(2, false))
+    const wrapper = mountCarousel(makeImages(2, false))
     expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
   })
 })

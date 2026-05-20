@@ -66,6 +66,7 @@ function makeItem(
     location: { country: 'US' },
     createdAt: new Date('2026-05-13T10:00:00Z'),
     isOwn: false,
+    images: [],
   }
 }
 

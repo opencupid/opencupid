@@ -108,6 +108,7 @@ describe('GET /bounds', () => {
         cityName: null,
         lat: null,
         lon: null,
+        images: [],
       },
       {
         id: 'e1',
@@ -120,6 +121,7 @@ describe('GET /bounds', () => {
         cityName: null,
         lat: null,
         lon: null,
+        images: [],
       },
       {
         id: 'c1',
@@ -132,6 +134,7 @@ describe('GET /bounds', () => {
         cityName: null,
         lat: null,
         lon: null,
+        images: [],
       },
     ]
     mockUserContentService.findInBounds.mockResolvedValueOnce(rows)
@@ -229,6 +232,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsA: [],
         conversationAsB: [],
       },
+      images: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000001' } } as any,
@@ -271,6 +275,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsA: [],
         conversationAsB: [],
       },
+      images: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000002' } } as any,
@@ -308,6 +313,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsA: [],
         conversationAsB: [],
       },
+      images: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000003' } } as any,
@@ -345,6 +351,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsA: [],
         conversationAsB: [],
       },
+      images: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000001' } } as any,

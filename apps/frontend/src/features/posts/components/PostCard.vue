@@ -14,6 +14,7 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 
 import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
+import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
@@ -67,18 +68,18 @@ const sharePostPayload = computed<SharePayload>(() => ({
 <template>
   <div class="post-wrapper position-relative w-100 p-2">
     <PostIt
-      class="position-relative p-2"
+      class="position-relative  "
       variant="post"
       :id="post.id"
     >
       <template #header>
-        <div class="d-flex justify-content-end align-items-center">
+        <div class="d-flex justify-content-end align-items-center p-2">
           <PostTypeBadge :type="post.type" />
         </div>
       </template>
 
       <div
-        class="post-card d-flex flex-column"
+        class="post-card d-flex flex-column overflow-hidden"
         :class="[
           `post-card--${post.type.toLowerCase()}`,
           {
@@ -87,9 +88,14 @@ const sharePostPayload = computed<SharePayload>(() => ({
         ]"
         @click="$emit('click', post)"
       >
-        <p class="post-content flex-grow-1 flex-shrink-1">{{ displayContent }}</p>
+        <ImageCarousel
+          v-if="post.images.length > 0"
+          :images="post.images"
+          class="content-card-carousel mb-2"
+        />
+        <p class="post-content flex-grow-1 flex-shrink-1 p-2">{{ displayContent }}</p>
 
-        <div class="post-meta d-flex align-items-center justify-content-start gap-2">
+        <div class="post-meta d-flex align-items-center justify-content-start gap-2 p-2">
           <div
             class="text-muted"
             v-if="showDetails"
@@ -228,5 +234,10 @@ const sharePostPayload = computed<SharePayload>(() => ({
 
 .post-location {
   font-size: 0.75rem;
+}
+
+.content-card-carousel {
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 </style>

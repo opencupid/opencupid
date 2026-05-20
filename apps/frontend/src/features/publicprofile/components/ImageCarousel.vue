@@ -4,7 +4,7 @@ import { shallowRef, reactive, computed, watch } from 'vue'
 import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel'
 import 'vue3-carousel/dist/carousel.css'
 
-import { type PublicProfile } from '@zod/profile/profile.dto'
+import type { OwnerImage, PublicImage } from '@zod/image/image.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import ChevronRightIcon from '@/assets/icons/arrows/arrow-single-right.svg'
@@ -13,7 +13,7 @@ import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
 import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
 
 const props = defineProps<{
-  profile: PublicProfile
+  images: ReadonlyArray<OwnerImage | PublicImage>
 }>()
 
 const showFullscreen = shallowRef(false)
@@ -38,17 +38,15 @@ const carouselProps = {
   mouseWheel: false,
 } as const
 
-const images = computed(() => props.profile.profileImages ?? [])
-const currentImage = computed(() => images.value[inlineSlide.value])
+const currentImage = computed(() => props.images[inlineSlide.value])
 const showBlurhash = computed(
   () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
 )
 
-const shouldShowNavButtons = computed(() => images.value.length > 1)
+const shouldShowNavButtons = computed(() => props.images.length > 1)
 
-// Reset carousel to first slide when images change (e.g. after reorder in editor)
 watch(
-  () => images.value,
+  () => props.images,
   () => {
     inlineSlide.value = 0
     Object.keys(loadedImages).forEach((key) => delete loadedImages[Number(key)])
@@ -70,7 +68,7 @@ watch(
       class="h-100"
     >
       <Slide
-        v-for="img in images"
+        v-for="img in props.images"
         :key="img.position"
         @click="handleImageClick"
       >
@@ -120,7 +118,7 @@ watch(
         class="w-100 h-100"
       >
         <Slide
-          v-for="img in images"
+          v-for="img in props.images"
           :key="img.position"
           class="bg-black"
           @click="showFullscreen = false"

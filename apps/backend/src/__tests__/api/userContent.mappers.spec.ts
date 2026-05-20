@@ -9,6 +9,24 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   }),
 }))
 
+vi.mock('../../api/mappers/image.mappers', () => ({
+  toPublicImage: (img: any) => ({
+    mimeType: img.mimeType,
+    altText: img.altText,
+    position: img.position,
+    blurhash: img.blurhash,
+    variants: [],
+  }),
+  toOwnerImage: (img: any) => ({
+    id: img.id,
+    mimeType: img.mimeType,
+    altText: img.altText,
+    position: img.position,
+    blurhash: img.blurhash,
+    variants: [],
+  }),
+}))
+
 import { mapUserContentMetadata } from '../../api/mappers/userContent.mappers'
 import type { UserContentMetadataRow } from '@/services/userContent.service'
 
@@ -30,6 +48,7 @@ const baseRow = {
     publicName: 'X',
     profileImages: [],
   },
+  images: [],
 } as unknown as UserContentMetadataRow
 
 describe('mapUserContentMetadata', () => {

@@ -11,6 +11,7 @@ import type {
 import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { extractLocation } from './location.mappers'
+import { toOwnerImage, toPublicImage } from './image.mappers'
 
 export function mapDbCommunityToPublic(
   row: CommunityWithMetadata,
@@ -25,6 +26,7 @@ export function mapDbCommunityToPublic(
     isOwn: row.postedById === viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toPublicImage(j.image)),
   }
 }
 
@@ -44,6 +46,7 @@ export function mapDbCommunityToDetail(
       ...mapConversationContext(row.postedBy, viewerProfileId),
     },
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toPublicImage(j.image)),
   }
 }
 
@@ -60,5 +63,6 @@ export function mapDbCommunityToOwner(row: CommunityWithMetadata): OwnerCommunit
     isOwn: true,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toOwnerImage(j.image)),
   })
 }

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { PublicEventDetail } from '@zod/event/event.dto'
+import ImageTag from '@/features/images/components/ImageTag.vue'
 
 const props = defineProps<{ item: PublicEventDetail }>()
 defineEmits<{ (e: 'click', id: string): void }>()
@@ -13,17 +14,28 @@ const startsAtFormatted = computed(() =>
     props.item.startsAt
   )
 )
+
+const firstImage = computed(() => props.item.images[0])
 </script>
 
 <template>
   <div
-    class="event-map-popup bg-event-light cursor-pointer p-3 user-select-none"
+    class="event-map-popup bg-event-light cursor-pointer user-select-none"
     @click="$emit('click', item.id)"
   >
-    <div class="event-map-popup__content mb-1">
+    <div
+      v-if="firstImage"
+      class="popup-image ratio ratio-4x3 mb-2 overflow-hidden"
+    >
+      <ImageTag
+        :image="firstImage"
+        variant="card"
+      />
+    </div>
+    <div class="event-map-popup__content p-2">
       {{ (item.content ?? '').substring(0, 120) }}
     </div>
-    <div class="small text-secondary fw-semibold ">
+    <div class="small text-secondary fw-semibold p-2">
       {{ startsAtFormatted }}
     </div>
   </div>
