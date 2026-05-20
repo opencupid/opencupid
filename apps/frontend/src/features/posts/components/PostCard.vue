@@ -14,6 +14,7 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 
 import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
+import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
@@ -87,6 +88,11 @@ const sharePostPayload = computed<SharePayload>(() => ({
         ]"
         @click="$emit('click', post)"
       >
+        <ImageCarousel
+          v-if="post.images.length > 0"
+          :images="post.images"
+          class="content-card-carousel mb-2"
+        />
         <p class="post-content flex-grow-1 flex-shrink-1">{{ displayContent }}</p>
 
         <div class="post-meta d-flex align-items-center justify-content-start gap-2">
@@ -228,5 +234,10 @@ const sharePostPayload = computed<SharePayload>(() => ({
 
 .post-location {
   font-size: 0.75rem;
+}
+
+.content-card-carousel {
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 </style>

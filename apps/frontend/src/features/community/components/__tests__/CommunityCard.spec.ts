@@ -39,6 +39,7 @@ const baseCommunity = {
   location: { country: 'HU', cityName: 'Budapest', lat: null, lon: null },
   postedBy: { id: 'p-1', publicName: 'Alice', profileImages: [] },
   isOwn: false,
+  images: [],
 } as any
 
 const stubs = {

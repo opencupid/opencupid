@@ -9,6 +9,7 @@ import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import IconCalendar from '@/assets/icons/interface/calendar.svg'
 import IconChecklist from '@/assets/icons/interface/checklist.svg'
 import EventCalendarExportDropdown from './EventCalendarExportDropdown.vue'
+import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
@@ -68,6 +69,11 @@ const displayContent = computed(() => {
       :class="{ 'event-card--own': event.isOwn }"
       @click="$emit('click', event)"
     >
+      <ImageCarousel
+        v-if="event.images.length > 0"
+        :images="event.images"
+        class="content-card-carousel mb-2"
+      />
       <BRow class="g-2 align-items-start mb-3"
       >
         <BCol
@@ -145,5 +151,10 @@ const displayContent = computed(() => {
 <style scoped>
 .event-card {
   background-color: var(--bs-event-light);
+}
+
+.content-card-carousel {
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 </style>

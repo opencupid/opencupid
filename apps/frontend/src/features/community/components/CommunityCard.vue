@@ -9,6 +9,7 @@ import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
 import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import IconCommunity from '@/assets/icons/interface/community.svg'
+import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 
 const props = defineProps<{
   community: PublicCommunity | OwnerCommunity
@@ -52,6 +53,11 @@ const displayContent = computed(() => {
       :class="{ 'community-card--own': community.isOwn }"
       @click="$emit('click', community)"
     >
+      <ImageCarousel
+        v-if="community.images.length > 0"
+        :images="community.images"
+        class="content-card-carousel mb-2"
+      />
       <BRow class="g-2 align-items-start mb-3">
         <BCol
           cols="12"
@@ -111,5 +117,10 @@ const displayContent = computed(() => {
 <style scoped>
 .community-card {
   background-color: var(--bs-community-light);
+}
+
+.content-card-carousel {
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 </style>
