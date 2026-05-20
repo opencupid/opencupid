@@ -22,7 +22,10 @@ const firstImage = computed(() => props.item.images[0])
       v-if="firstImage"
       class="popup-image ratio ratio-4x3 mb-2 rounded overflow-hidden"
     >
-      <ImageTag :image="firstImage" variant="card" />
+      <ImageTag
+        :image="firstImage"
+        variant="card"
+      />
     </div>
     <div class="mb-2 text-primary d-flex flex-row">
       <IconCommunity class="svg-icon flex-shrink-0 flex-grow-0 me-2" />

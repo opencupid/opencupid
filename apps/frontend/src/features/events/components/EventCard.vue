@@ -74,8 +74,7 @@ const displayContent = computed(() => {
         :images="event.images"
         class="content-card-carousel mb-2"
       />
-      <BRow class="g-2 align-items-start mb-3"
-      >
+      <BRow class="g-2 align-items-start mb-3">
         <BCol
           cols="12"
           md="8"

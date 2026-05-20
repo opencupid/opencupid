@@ -1,6 +1,10 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
-import { UserContentService, type ListOptions, userContentImagesInclude } from './userContent.service'
+import {
+  UserContentService,
+  type ListOptions,
+  userContentImagesInclude,
+} from './userContent.service'
 import type { CreateCommunityPayload, UpdateCommunityPayload } from '@zod/community/community.dto'
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'

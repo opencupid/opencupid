@@ -27,12 +27,15 @@ const firstImage = computed(() => props.item.images[0])
       v-if="firstImage"
       class="popup-image ratio ratio-4x3 mb-2 rounded overflow-hidden"
     >
-      <ImageTag :image="firstImage" variant="card" />
+      <ImageTag
+        :image="firstImage"
+        variant="card"
+      />
     </div>
     <div class="event-map-popup__content mb-1">
       {{ (item.content ?? '').substring(0, 120) }}
     </div>
-    <div class="small text-secondary fw-semibold ">
+    <div class="small text-secondary fw-semibold">
       {{ startsAtFormatted }}
     </div>
   </div>
