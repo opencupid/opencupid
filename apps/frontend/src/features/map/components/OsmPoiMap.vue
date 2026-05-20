@@ -29,20 +29,16 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
     />
 
     <!--
-      Posts render the popup directly from the marker's PointFeature.
-      Profiles and events need a fetched detail DTO (popupFullData), so we
-      wait until it lands — pre-fetch the popup container is empty rather
-      than rendering with a partial PointFeature shape.
+      All content kinds and profiles fetch their full detail DTO before
+      rendering the popup, so we wait on popupFullData for every kind.
     -->
     <Teleport
-      v-if="
-        popupResolver && popupTarget && popupItem && (popupItem.kind === 'post' || popupFullData)
-      "
+      v-if="popupResolver && popupTarget && popupItem && popupFullData"
       :to="popupTarget"
     >
       <component
         :is="popupResolver(popupItem)"
-        :item="popupItem.kind === 'post' ? popupItem : popupFullData"
+        :item="popupFullData"
         @click="$emit('item:select', popupItem.id)"
       />
     </Teleport>

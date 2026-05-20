@@ -146,7 +146,10 @@ export function useBrowseViewModel() {
 
   const fetchPopupData = async (id: string, signal?: AbortSignal) => {
     const poi = allPois.value.find((p) => p.id === id)
-    if (poi?.kind === 'post') return null
+    if (poi?.kind === 'post') {
+      const result = await contentStore.fetchPublicPost(id, signal)
+      return result.success && result.data ? result.data.post : null
+    }
     if (poi?.kind === 'event') {
       const result = await contentStore.fetchPublicEvent(id, signal)
       return result.success && result.data ? result.data.event : null
