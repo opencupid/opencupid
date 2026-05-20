@@ -11,6 +11,7 @@ import type { PostType } from '@prisma/client'
 import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { DbLocationToLocationDTO, extractLocation } from './location.mappers'
+import { toOwnerImage, toPublicImage } from './image.mappers'
 
 export function mapDbPostToPublic(row: PostWithMetadata, viewerProfileId: string): PublicPost {
   return {
@@ -22,6 +23,7 @@ export function mapDbPostToPublic(row: PostWithMetadata, viewerProfileId: string
     isOwn: row.postedById === viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toPublicImage(j.image)),
   }
 }
 
@@ -41,6 +43,7 @@ export function mapDbPostToDetail(
       ...mapConversationContext(row.postedBy, viewerProfileId),
     },
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toPublicImage(j.image)),
   }
 }
 
@@ -57,6 +60,7 @@ export function mapDbPostToOwner(row: PostWithMetadata): OwnerPost {
     isOwn: true,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toOwnerImage(j.image)),
   })
 }
 

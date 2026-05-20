@@ -8,6 +8,7 @@ import type { EventWithMetadata, EventWithMetadataAndContext } from '@/services/
 import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { extractLocation } from './location.mappers'
+import { toOwnerImage, toPublicImage } from './image.mappers'
 
 export function mapDbEventToPublic(row: EventWithMetadata, viewerProfileId: string): PublicEvent {
   return {
@@ -20,6 +21,7 @@ export function mapDbEventToPublic(row: EventWithMetadata, viewerProfileId: stri
     isOwn: row.postedById === viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toPublicImage(j.image)),
   }
 }
 
@@ -40,6 +42,7 @@ export function mapDbEventToDetail(
       ...mapConversationContext(row.postedBy, viewerProfileId),
     },
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toPublicImage(j.image)),
   }
 }
 
@@ -57,5 +60,6 @@ export function mapDbEventToOwner(row: EventWithMetadata): OwnerEvent {
     isOwn: true,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toOwnerImage(j.image)),
   })
 }

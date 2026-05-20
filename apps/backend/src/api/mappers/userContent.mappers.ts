@@ -1,6 +1,7 @@
 import type { OwnerHydratedRow, UserContentMetadataRow } from '@/services/userContent.service'
 import { mapProfileSummary } from './profile.mappers'
 import { extractLocation } from './location.mappers'
+import { toPublicImage } from './image.mappers'
 import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 import { mapDbPostToOwner } from './post.mappers'
@@ -19,6 +20,7 @@ export function mapUserContentMetadata(
     isOwn: row.postedById === viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
+    images: row.images.map((j) => toPublicImage(j.image)),
   }
 }
 
