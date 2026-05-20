@@ -36,7 +36,10 @@ const profileImageStore = useProfileImageStore()
 <template>
   <div class="position-relative">
     <div class="overflow-hidden carousel-wrapper">
-      <ImageCarousel :images="profile.profileImages" />
+      <ImageCarousel
+        v-if="profile.profileImages?.length"
+        :images="profile.profileImages"
+      />
     </div>
 
     <div class="icons">
