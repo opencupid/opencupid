@@ -1,5 +1,5 @@
 import { useI18nStore } from '@/store/i18nStore'
-import { computed, reactive, toRef, watch } from 'vue'
+import { computed, reactive, shallowRef, toRef, watch } from 'vue'
 
 import { type PublicProfile } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
@@ -19,11 +19,11 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     currentScope: 'social',
   })
 
-  // computed properties
-  const publicProfile = reactive({} as PublicProfile)
-  const profilePreview = computed((): PublicProfile => {
+  const publicProfile = shallowRef<PublicProfile | null>(null)
+  const profilePreview = computed<PublicProfile | null>(() => {
+    if (!publicProfile.value) return null
     return {
-      ...publicProfile,
+      ...publicProfile.value,
       isDatingActive: viewState.currentScope === 'dating',
     } as PublicProfile
   })
@@ -53,7 +53,8 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     if (!res.success) {
       return res
     }
-    Object.assign(publicProfile, res.data)
+    if (!res.data) return
+    publicProfile.value = res.data
   }
 
   const updateScopes = async (payload: { isDatingActive: boolean }) => {
