@@ -53,6 +53,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     if (!res.success) {
       return res
     }
+    if (!res.data) return
     publicProfile.value = res.data
   }
 
