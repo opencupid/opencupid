@@ -10,6 +10,25 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   }),
 }))
 
+// Mock image.mappers to avoid ImageService URL-signing dependency
+vi.mock('../../api/mappers/image.mappers', () => ({
+  toPublicImage: (img: any) => ({
+    mimeType: img.mimeType,
+    altText: img.altText,
+    position: img.position,
+    blurhash: img.blurhash,
+    variants: [],
+  }),
+  toOwnerImage: (img: any) => ({
+    id: img.id,
+    mimeType: img.mimeType,
+    altText: img.altText,
+    position: img.position,
+    blurhash: img.blurhash,
+    variants: [],
+  }),
+}))
+
 import { mapDbPostToPublic, mapDbPostToOwner } from '../../api/mappers/post.mappers'
 
 const basePostedBy = {
@@ -17,6 +36,29 @@ const basePostedBy = {
   publicName: 'Test User',
   profileImages: [],
 }
+
+const baseImages = [
+  {
+    image: {
+      id: 'climg00000000000000001',
+      mimeType: 'image/jpeg',
+      altText: 'first',
+      position: 0,
+      blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
+      storagePath: '/x',
+    },
+  },
+  {
+    image: {
+      id: 'climg00000000000000002',
+      mimeType: 'image/jpeg',
+      altText: 'second',
+      position: 1,
+      blurhash: null,
+      storagePath: '/y',
+    },
+  },
+]
 
 const baseDbPost: any = {
   id: 'clpost00000000000001',
@@ -36,6 +78,7 @@ const baseDbPost: any = {
     userContentId: 'clpost00000000000001',
     type: 'OFFER',
   },
+  images: baseImages,
 }
 
 describe('mapDbPostToPublic', () => {
@@ -134,5 +177,33 @@ describe('mapDbPostToOwner', () => {
       lat: 48.2,
       lon: 16.3,
     })
+  })
+})
+
+describe('mapDbPostToPublic images', () => {
+  it('projects attached images in PublicPost shape (no id)', () => {
+    const result = mapDbPostToPublic(baseDbPost, 'viewer-profile-id')
+    expect(result.images).toHaveLength(2)
+    expect(result.images[0]).toEqual({
+      mimeType: 'image/jpeg',
+      altText: 'first',
+      position: 0,
+      blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
+      variants: [],
+    })
+    expect((result.images[0] as any).id).toBeUndefined()
+  })
+
+  it('returns empty images array when content has none', () => {
+    const result = mapDbPostToPublic({ ...baseDbPost, images: [] }, 'viewer-profile-id')
+    expect(result.images).toEqual([])
+  })
+})
+
+describe('mapDbPostToOwner images', () => {
+  it('projects attached images in OwnerPost shape (with id)', () => {
+    const result = mapDbPostToOwner(baseDbPost)
+    expect(result.images).toHaveLength(2)
+    expect(result.images[0]?.id).toBe('climg00000000000000001')
   })
 })
