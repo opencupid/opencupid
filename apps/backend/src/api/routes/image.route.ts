@@ -182,6 +182,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err)
       if (err instanceof ImageServiceError) {
+        if (err.code === 'NOT_FOUND') return sendError(reply, 404, 'Image not found')
         if (err.code === 'OWNER_MISMATCH') return sendError(reply, 403, 'Forbidden')
         if (err.code === 'PROFILE_GALLERY_MIN') return sendError(reply, 409, 'PROFILE_GALLERY_MIN')
       }

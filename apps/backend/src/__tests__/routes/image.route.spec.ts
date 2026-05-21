@@ -179,6 +179,18 @@ describe('image.route', () => {
       expect(reply.payload).toMatchObject({ success: false })
     })
 
+    it('image not found → 404', async () => {
+      mockImageService.deleteImage.mockRejectedValue(
+        new ImageServiceError('NOT_FOUND', 'Image not found')
+      )
+
+      const handler = fastify.routes['DELETE /:id']
+      await handler(makeReq({ params: { id: cuid } }), reply as any)
+
+      expect(reply.statusCode).toBe(404)
+      expect(reply.payload).toMatchObject({ success: false })
+    })
+
     it('profile gallery minimum violated → 409', async () => {
       mockImageService.deleteImage.mockRejectedValue(
         new ImageServiceError('PROFILE_GALLERY_MIN', 'Profile must keep at least one image')
