@@ -33,6 +33,9 @@ export type ImageServiceErrorCode =
   | 'OWNER_MISMATCH'
   | 'ALREADY_ATTACHED'
   | 'INVALID_REORDER'
+  | 'PROFILE_GALLERY_MIN'
+
+const PROFILE_GALLERY_MIN_IMAGES = 1
 
 export class ImageServiceError extends Error {
   constructor(
@@ -266,6 +269,10 @@ export class ImageService {
     const profileId = image.profileGallery.profileId
     await prisma.$transaction(
       async (tx) => {
+        const remaining = await tx.profileImage.count({ where: { profileId } })
+        if (remaining <= PROFILE_GALLERY_MIN_IMAGES) {
+          throw new ImageServiceError('PROFILE_GALLERY_MIN', 'Profile must keep at least one image')
+        }
         await tx.profileImage.delete({ where: { imageId } })
         await syncProfileHasFace(tx, profileId)
       },
@@ -400,17 +407,28 @@ export class ImageService {
       throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
     }
 
-    await prisma.$transaction(async (tx) => {
-      if (image.profileGallery) {
-        await tx.profileImage.delete({ where: { imageId } })
-      } else if (image.userContentGallery) {
-        await tx.userContentImage.delete({ where: { imageId } })
-      }
-      await tx.image.delete({ where: { id: imageId } })
-      if (image.profileGallery) {
-        await syncProfileHasFace(tx, image.profileGallery.profileId)
-      }
-    })
+    await prisma.$transaction(
+      async (tx) => {
+        if (image.profileGallery) {
+          const profileId = image.profileGallery.profileId
+          const remaining = await tx.profileImage.count({ where: { profileId } })
+          if (remaining <= PROFILE_GALLERY_MIN_IMAGES) {
+            throw new ImageServiceError(
+              'PROFILE_GALLERY_MIN',
+              'Profile must keep at least one image'
+            )
+          }
+          await tx.profileImage.delete({ where: { imageId } })
+        } else if (image.userContentGallery) {
+          await tx.userContentImage.delete({ where: { imageId } })
+        }
+        await tx.image.delete({ where: { id: imageId } })
+        if (image.profileGallery) {
+          await syncProfileHasFace(tx, image.profileGallery.profileId)
+        }
+      },
+      { isolationLevel: 'Serializable' }
+    )
 
     // File cleanup, post-commit, best-effort.
     const baseFile = path.join(getMediaRoot(), imageBasePath(image.storagePath))

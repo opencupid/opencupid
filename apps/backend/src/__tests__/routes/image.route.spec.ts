@@ -178,6 +178,18 @@ describe('image.route', () => {
       expect(reply.statusCode).toBe(403)
       expect(reply.payload).toMatchObject({ success: false })
     })
+
+    it('profile gallery minimum violated → 409', async () => {
+      mockImageService.deleteImage.mockRejectedValue(
+        new ImageServiceError('PROFILE_GALLERY_MIN', 'Profile must keep at least one image')
+      )
+
+      const handler = fastify.routes['DELETE /:id']
+      await handler(makeReq({ params: { id: cuid } }), reply as any)
+
+      expect(reply.statusCode).toBe(409)
+      expect(reply.payload).toMatchObject({ success: false, message: 'PROFILE_GALLERY_MIN' })
+    })
   })
 
   describe('PATCH /:id', () => {
@@ -328,6 +340,16 @@ describe('image.route', () => {
       const handler = fastify.routes['DELETE /me/:imageId']
       await handler(makeReq({ params: { imageId } }), reply as any)
       expect(reply.statusCode).toBe(404)
+    })
+
+    it('profile gallery minimum violated → 409', async () => {
+      mockImageService.detachFromProfile.mockRejectedValue(
+        new ImageServiceError('PROFILE_GALLERY_MIN', 'Profile must keep at least one image')
+      )
+      const handler = fastify.routes['DELETE /me/:imageId']
+      await handler(makeReq({ params: { imageId } }), reply as any)
+      expect(reply.statusCode).toBe(409)
+      expect(reply.payload).toMatchObject({ success: false, message: 'PROFILE_GALLERY_MIN' })
     })
   })
 })
