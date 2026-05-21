@@ -97,7 +97,7 @@ const items = computed(() => myContent.value)
           @click="emit('intent:fullview', item)"
         />
         <OwnerToolbar
-          class="owner-toolbar position-absolute"
+          class="owner-toolbar position-absolute shadow "
           :is-visible="item.isVisible"
           @edit="emit('intent:edit', item)"
           @hide="emit('intent:hide', item)"

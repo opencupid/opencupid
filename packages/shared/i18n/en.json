@@ -40,7 +40,7 @@
     "actions": {
       "cancel": "Nevermind",
       "create": "Submit",
-      "save": "Save community"
+      "save": "Save"
     },
     "labels": {
       "content": "About this community",

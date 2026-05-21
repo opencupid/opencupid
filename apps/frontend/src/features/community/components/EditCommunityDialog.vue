@@ -109,13 +109,8 @@ const handleSubmit = async () => {
     @submit.prevent="handleSubmit"
     class="w-100 p-2 p-md-4 p-lg-5 mt-2 scrollable hide-scrollbar"
   >
-    <BFormGroup
-      :label="$t('community.labels.content')"
-      label-for="community-content"
-      class="mb-2 mb-lg-3 position-relative"
-    >
+    <BFormGroup class="mb-2 mb-lg-3 position-relative">
       <BFormTextarea
-        id="community-content"
         v-model="form.content"
         :placeholder="$t('community.placeholders.content')"
         :maxlength="COMMUNITY_CONTENT_MAX_LENGTH"
@@ -129,6 +124,22 @@ const handleSubmit = async () => {
       </div>
     </BFormGroup>
 
+    <BFormGroup
+      :label="$t('community.labels.year_founded')"
+      label-for="community-year-founded"
+      class="mb-3"
+      label-cols-sm="4"
+      label-cols-lg="4"
+      content-cols-sm="8"
+      content-cols-lg="8"
+    >
+      <BFormSelect
+        id="community-year-founded"
+        v-model="form.yearFounded"
+        :options="yearOptions"
+      />
+    </BFormGroup>
+
     <BFormGroup class="mb-3">
       <LocationSelector
         v-model="form.location"
@@ -138,33 +149,13 @@ const handleSubmit = async () => {
       />
     </BFormGroup>
 
-    <BFormGroup
-      :label="$t('community.labels.year_founded')"
-      label-for="community-year-founded"
-      class="mb-3"
-    >
-      <BFormSelect
-        id="community-year-founded"
-        v-model="form.yearFounded"
-        :options="yearOptions"
-      />
-    </BFormGroup>
-
-    <BFormGroup
-      v-if="isEdit"
-      class="d-flex align-items-center mb-3"
-    >
-      <BFormCheckbox v-model="form.isVisible">
-        {{ $t('community.labels.visibility') }}
-      </BFormCheckbox>
-    </BFormGroup>
-
     <BFormGroup class="mb-3">
       <ContentImageButton
         ref="imageBtn"
         :contentId="community?.id"
       />
     </BFormGroup>
+
     <div class="d-flex justify-content-end mt-3">
       <BButton
         type="button"

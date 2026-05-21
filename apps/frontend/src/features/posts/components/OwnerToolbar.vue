@@ -16,7 +16,7 @@ defineEmits<{
 </script>
 
 <template>
-  <div>
+  <BButtonGroup aria-label="">
     <BButton
       @click.stop="$emit('edit')"
       variant="link-primary"
@@ -51,5 +51,5 @@ defineEmits<{
         class="svg-icon"
       />
     </BButton>
-  </div>
+  </BButtonGroup>
 </template>
