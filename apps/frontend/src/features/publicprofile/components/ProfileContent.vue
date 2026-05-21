@@ -47,7 +47,7 @@ const profileImageStore = useProfileImageStore()
       <EditField
         fieldName="profileImages"
         :editComponent="ImageEditor"
-        :editProps="{ store: profileImageStore }"
+        :editProps="{ store: profileImageStore, minImages: 1 }"
         buttonClass="btn-icon-lg btn-overlay photo-edit-button"
       >
         <IconPhoto class="svg-icon" />

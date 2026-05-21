@@ -17,9 +17,11 @@ const props = withDefaults(
   defineProps<{
     store: GalleryStore
     maxImages?: number
+    minImages?: number
   }>(),
   {
     maxImages: 6,
+    minImages: 0,
   }
 )
 
@@ -92,7 +94,7 @@ const remainingSlots = computed(() => {
 })
 
 const isDeletable = computed(() => {
-  return model.value.length > 1
+  return model.value.length > props.minImages
 })
 </script>
 
