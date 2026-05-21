@@ -81,7 +81,7 @@ const items = computed(() => myContent.value)
 
     <div
       ref="scrollContainer"
-      class="container-fluid overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1"
+      class="scroll-container overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1"
       v-if="items.length > 0"
     >
       <div
@@ -117,5 +117,8 @@ const items = computed(() => myContent.value)
   margin-top: -2rem;
   background-color: rgba(255, 255, 255, 0.5);
   right: 1rem;
+}
+.scroll-container {
+  padding: 0.75rem 0.75rem 5rem 0.75rem;
 }
 </style>
