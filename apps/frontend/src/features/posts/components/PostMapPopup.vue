@@ -3,7 +3,6 @@ import type { PublicPostDetail } from '@zod/post/post.dto'
 import UserContentMapPopup from '@/features/userContent/components/UserContentMapPopup.vue'
 
 defineProps<{ item: PublicPostDetail }>()
-defineEmits<{ (e: 'click', id: string): void }>()
 </script>
 
 <template>

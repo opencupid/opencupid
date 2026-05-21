@@ -39,7 +39,6 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
       <component
         :is="popupResolver(popupItem)"
         :item="popupFullData"
-        @click="$emit('item:select', popupItem.id)"
       />
     </Teleport>
   </div>

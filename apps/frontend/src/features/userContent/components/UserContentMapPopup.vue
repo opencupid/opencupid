@@ -4,16 +4,12 @@ import ImageTag from '@/features/images/components/ImageTag.vue'
 import type { PublicImage } from '@zod/image/image.dto'
 
 const props = defineProps<{ item: { id: string; images: PublicImage[] } }>()
-defineEmits<{ (e: 'click', id: string): void }>()
 
 const firstImage = computed(() => props.item.images[0])
 </script>
 
 <template>
-  <div
-    class="cursor-pointer user-select-none position-relative"
-    @click="$emit('click', props.item.id)"
-  >
+  <div class="user-select-none position-relative">
     <div
       v-if="firstImage"
       class="popup-image ratio ratio-1x1 overflow-hidden"

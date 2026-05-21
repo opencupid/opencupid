@@ -5,7 +5,6 @@ import type { PublicEventDetail } from '@zod/event/event.dto'
 import UserContentMapPopup from '@/features/userContent/components/UserContentMapPopup.vue'
 
 const props = defineProps<{ item: PublicEventDetail }>()
-defineEmits<{ (e: 'click', id: string): void }>()
 
 const { locale } = useI18n()
 

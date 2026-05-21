@@ -5,7 +5,6 @@ import IconCommunity from '@/assets/icons/interface/community.svg'
 import UserContentMapPopup from '@/features/userContent/components/UserContentMapPopup.vue'
 
 defineProps<{ item: PublicCommunityDetail }>()
-defineEmits<{ (e: 'click', id: string): void }>()
 
 const { t } = useI18n()
 </script>
