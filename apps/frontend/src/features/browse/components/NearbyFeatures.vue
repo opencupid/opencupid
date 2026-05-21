@@ -87,7 +87,7 @@ const isVisible = computed(() => props.items.length > 0)
         </PostIt>
         <PostIt
           v-else-if="item.kind === 'event'"
-          class="cursor-pointer post-content"
+          class="cursor-pointer p-2 post-content"
           :id="item.id"
           variant="event"
         >
@@ -98,7 +98,7 @@ const isVisible = computed(() => props.items.length > 0)
         </PostIt>
         <PostIt
           v-else-if="item.kind === 'community'"
-          class="cursor-pointer post-content"
+          class="cursor-pointer p-2 post-content"
           :id="item.id"
           variant="community"
         >

@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicEvent, OwnerEvent } from '@zod/event/event.dto'
-import OwnerToolbar from '@/features/posts/components/OwnerToolbar.vue'
 import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
 import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
@@ -19,9 +18,6 @@ const props = defineProps<{
 
 defineEmits<{
   (e: 'click', event: PublicEvent | OwnerEvent): void
-  (e: 'edit', event: PublicEvent | OwnerEvent): void
-  (e: 'hide', event: PublicEvent | OwnerEvent): void
-  (e: 'delete', event: PublicEvent | OwnerEvent): void
   (e: 'attend', event: PublicEvent | OwnerEvent): void
 }>()
 
@@ -33,7 +29,6 @@ const shareEventPayload = computed<SharePayload>(() => ({
   url: `${window.location.origin}/events/${props.event.id}`,
 }))
 
-const isVisible = computed(() => !('isVisible' in props.event) || props.event.isVisible !== false)
 const eventLocation = computed(() => props.event.location ?? null)
 
 const startsAtYear = computed(() => {
@@ -109,21 +104,15 @@ const displayContent = computed(() => {
       <div
         class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"
       >
-        <div class="d-flex align-items-center gap-2">
-          <OwnerToolbar
-            v-if="event.isOwn"
-            :is-visible="isVisible"
-            @edit="$emit('edit', event)"
-            @delete="$emit('delete', event)"
-            @hide="$emit('hide', event)"
+        <div
+          v-if="!event.isOwn"
+          class="d-flex align-items-center gap-2"
+        >
+          <ProfileThumbnail
+            :profile="event.postedBy"
+            size="sm"
           />
-          <template v-else>
-            <ProfileThumbnail
-              :profile="event.postedBy"
-              size="sm"
-            />
-            <span>{{ event.postedBy.publicName }}</span>
-          </template>
+          <span>{{ event.postedBy.publicName }}</span>
         </div>
         <ViewerToolbar
           v-if="showDetails && !event.isOwn"

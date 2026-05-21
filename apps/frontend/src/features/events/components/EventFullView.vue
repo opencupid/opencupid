@@ -14,11 +14,8 @@ defineProps<{
   event: PublicEventDetail | OwnerEvent
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'close'): void
-  (e: 'edit', event: PublicEventDetail | OwnerEvent): void
-  (e: 'hide', event: PublicEventDetail | OwnerEvent): void
-  (e: 'delete', event: PublicEventDetail | OwnerEvent): void
 }>()
 
 const closeDetailPanel = inject<(() => void) | null>('detailPanelClose', null)
@@ -30,7 +27,10 @@ const handleBack = () => {
 
 <template>
   <div class="w-100">
-    <div class="d-flex justify-content-end align-items-center w-100" v-if="isMdUp">
+    <div
+      class="d-flex justify-content-end align-items-center w-100"
+      v-if="isMdUp"
+    >
       <BButton
         variant="link-secondary"
         :title="$t('profiles.back_button_title')"
@@ -44,9 +44,6 @@ const handleBack = () => {
       :event="event"
       :show-details="true"
       class="pt-2 pt-md-3 pt-lg-5"
-      @edit="emit('edit', event)"
-      @hide="emit('hide', event)"
-      @delete="emit('delete', event)"
     />
   </div>
 </template>

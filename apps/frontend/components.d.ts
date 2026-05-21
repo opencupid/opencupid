@@ -14,6 +14,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
     BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
+    BButtonGroup: typeof import('bootstrap-vue-next/components/BButton')['BButtonGroup']
     BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
     BCollapse: typeof import('bootstrap-vue-next/components/BCollapse')['BCollapse']
     BContainer: typeof import('bootstrap-vue-next/components/BContainer')['BContainer']
@@ -62,6 +63,7 @@ declare module 'vue' {
 declare global {
   const BBadge: typeof import('bootstrap-vue-next/components/BBadge')['BBadge']
   const BButton: typeof import('bootstrap-vue-next/components/BButton')['BButton']
+  const BButtonGroup: typeof import('bootstrap-vue-next/components/BButton')['BButtonGroup']
   const BCol: typeof import('bootstrap-vue-next/components/BContainer')['BCol']
   const BCollapse: typeof import('bootstrap-vue-next/components/BCollapse')['BCollapse']
   const BContainer: typeof import('bootstrap-vue-next/components/BContainer')['BContainer']

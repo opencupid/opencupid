@@ -7,7 +7,6 @@ import type { PublicPostWithProfile, OwnerPost } from '@zod/post/post.dto'
 import type { OwnerProfile, MessageRecipient } from '@zod/profile/profile.dto'
 
 import PostTypeBadge from './PostTypeBadge.vue'
-import OwnerToolbar from './OwnerToolbar.vue'
 import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
 import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
@@ -24,15 +23,10 @@ const props = defineProps<{
 const ownerProfile = inject<Ref<OwnerProfile | null>>('ownerProfile', ref(null))
 const viewerLocation = computed(() => ownerProfile?.value?.location ?? undefined)
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'click', post: PublicPostWithProfile | OwnerPost): void
   (e: 'contact', post: PublicPostWithProfile): void
-  (e: 'edit', post: PublicPostWithProfile | OwnerPost): void
-  (e: 'hide', post: PublicPostWithProfile | OwnerPost): void
-  (e: 'delete', post: PublicPostWithProfile | OwnerPost): void
 }>()
-
-const isVisible = computed(() => !('isVisible' in props.post) || props.post.isVisible !== false)
 
 const postLocation = computed(() => props.post.location ?? null)
 
@@ -68,7 +62,7 @@ const sharePostPayload = computed<SharePayload>(() => ({
 <template>
   <div class="post-wrapper position-relative w-100 p-2">
     <PostIt
-      class="position-relative  "
+      class="position-relative"
       variant="post"
       :id="post.id"
     >
@@ -97,59 +91,33 @@ const sharePostPayload = computed<SharePayload>(() => ({
 
         <div class="post-meta d-flex align-items-center justify-content-start gap-2 p-2">
           <div
-            class="text-muted"
-            v-if="showDetails"
+            v-if="showDetails && !post.isOwn"
+            class="text-muted d-flex align-items-center"
           >
-            <!-- left col 50% can grow/shrink-->
-            <div class="d-flex justify-content-start flex-row align-items-center">
-              <div class="d-flex align-items-center">
-                <OwnerToolbar
-                  v-if="post.isOwn"
-                  :is-visible="isVisible"
-                  @edit="$emit('edit', post)"
-                  @delete="$emit('delete', post)"
-                  @hide="$emit('hide', post)"
-                />
-                <div
-                  v-else
-                  class="d-flex align-items-center"
-                >
-                  <ProfileThumbnail
-                    :profile="post.postedBy"
-                    class="me-2"
-                  />
-                  <div>
-                    <div>{{ post.postedBy.publicName }}</div>
-                    <LocalizedTimeAgo
-                      v-slot="{ timeAgo }"
-                      :time="post.createdAt"
-                    >
-                      {{ timeAgo }}
-                    </LocalizedTimeAgo>
-                  </div>
-                </div>
-              </div>
+            <ProfileThumbnail
+              :profile="post.postedBy"
+              class="me-2"
+            />
+            <div>
+              <div>{{ post.postedBy.publicName }}</div>
+              <LocalizedTimeAgo
+                v-slot="{ timeAgo }"
+                :time="post.createdAt"
+              >
+                {{ timeAgo }}
+              </LocalizedTimeAgo>
             </div>
           </div>
 
           <div
-            class=""
             v-if="!showDetails"
+            class="post-date text-muted small"
           >
-            <div class="post-date text-muted small">
-              <LocalizedTimeAgo
-                v-slot="{ timeAgo }"
-                :time="post.createdAt"
-                >{{ timeAgo }}</LocalizedTimeAgo
-              >
-            </div>
-            <OwnerToolbar
-              v-if="post.isOwn"
-              :is-visible="isVisible"
-              @edit="$emit('edit', post)"
-              @delete="$emit('delete', post)"
-              @hide="$emit('hide', post)"
-            />
+            <LocalizedTimeAgo
+              v-slot="{ timeAgo }"
+              :time="post.createdAt"
+              >{{ timeAgo }}</LocalizedTimeAgo
+            >
           </div>
 
           <!-- location  in right column 50% can shrink -->

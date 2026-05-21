@@ -15,9 +15,6 @@ vi.mock('@/assets/icons/interface/community.svg', () => ({
 vi.mock('@/features/images/components/ProfileThumbnail.vue', () => ({
   default: { template: '<div class="thumb" />' },
 }))
-vi.mock('@/features/posts/components/OwnerToolbar.vue', () => ({
-  default: { template: '<div class="owner-toolbar" />' },
-}))
 vi.mock('@/features/userContent/components/ViewerToolbar.vue', () => ({
   default: {
     props: ['actions', 'copyText', 'sharePayload'],
@@ -92,14 +89,6 @@ describe('CommunityCard', () => {
     expect(toolbar.exists()).toBe(true)
     expect(toolbar.attributes('data-actions')).toBe('["copy","share"]')
     expect(toolbar.attributes('data-copy-text')).toBe(baseCommunity.content)
-  })
-
-  it('renders OwnerToolbar when isOwn is true', () => {
-    const wrapper = mount(CommunityCard, {
-      props: { community: { ...baseCommunity, isOwn: true, isVisible: true }, showDetails: true },
-      global: { stubs },
-    })
-    expect(wrapper.find('.owner-toolbar').exists()).toBe(true)
   })
 
   it('renders viewer profile thumbnail when not isOwn', () => {

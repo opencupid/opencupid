@@ -11,9 +11,6 @@ defineProps<{
 
 defineEmits<{
   (e: 'click', item: OwnerUserContent): void
-  (e: 'edit', item: OwnerUserContent): void
-  (e: 'hide', item: OwnerUserContent): void
-  (e: 'delete', item: OwnerUserContent): void
 }>()
 </script>
 
@@ -23,26 +20,17 @@ defineEmits<{
     :post="item"
     :show-details="showDetails"
     @click="$emit('click', item)"
-    @edit="$emit('edit', item)"
-    @hide="$emit('hide', item)"
-    @delete="$emit('delete', item)"
   />
   <EventCard
     v-else-if="item.kind === 'event'"
     :event="item"
     :show-details="showDetails"
     @click="$emit('click', item)"
-    @edit="$emit('edit', item)"
-    @hide="$emit('hide', item)"
-    @delete="$emit('delete', item)"
   />
   <CommunityCard
     v-else-if="item.kind === 'community'"
     :community="item"
     :show-details="showDetails"
     @click="$emit('click', item)"
-    @edit="$emit('edit', item)"
-    @hide="$emit('hide', item)"
-    @delete="$emit('delete', item)"
   />
 </template>

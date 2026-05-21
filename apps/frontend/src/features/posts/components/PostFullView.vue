@@ -13,11 +13,8 @@ const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'close'): void
-  (e: 'edit', post: PublicPostWithProfile | OwnerPost): void
-  (e: 'hide', post: PublicPostWithProfile | OwnerPost): void
-  (e: 'delete', post: PublicPostWithProfile | OwnerPost): void
 }>()
 
 const closeDetailPanel = inject<(() => void) | null>('detailPanelClose', null)
@@ -44,9 +41,6 @@ const handleBack = () => {
       :show-details="true"
       class="pt-2 pt-md-3 pt-lg-5"
       :class="{ details: true }"
-      @edit="emit('edit', post)"
-      @hide="emit('hide', post)"
-      @delete="emit('delete', post)"
     />
   </div>
 </template>

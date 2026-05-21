@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import ContentCard from './ContentCard.vue'
+import OwnerToolbar from '@/features/posts/components/OwnerToolbar.vue'
 import PostPlaceholdersGrid from '@/features/posts/components/PostPlaceholdersGrid.vue'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 import { useUserContentStore } from '../stores/userContentStore'
@@ -80,48 +81,44 @@ const items = computed(() => myContent.value)
 
     <div
       ref="scrollContainer"
-      class="container-fluid overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1"
+      class="scroll-container overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1"
+      v-if="items.length > 0"
     >
-      <BRow
-        v-if="items.length > 0"
-        cols="1"
-        class="g-2 g-md-3"
-        v-bind="$attrs"
+      <div
+        v-for="item in items"
+        :key="item.id"
+        class="position-relative"
       >
-        <BCol
-          v-for="item in items"
-          :key="item.id"
-        >
-          <div class="card-wrapper" :class="{ 'opacity-50': !item.isVisible }">
-            <ContentCard
-              :item="item"
-              :show-details="false"
-              class="clickable"
-              @click="emit('intent:fullview', item)"
-              @edit="emit('intent:edit', item)"
-              @hide="emit('intent:hide', item)"
-              @delete="emit('intent:delete', item)"
-            />
-          </div>
-        </BCol>
-      </BRow>
-    </div>
-
-    <div
-      v-if="isLoading && items.length > 0"
-      class="text-center py-3"
-    >
-      <BSpinner
-        small
-        variant="primary"
-      />
-      <span class="ms-2 text-muted">{{ $t('uicomponents.loading.loading') }}</span>
+        <ContentCard
+          :item="item"
+          :show-details="false"
+          class="clickable content-card mb-2"
+          :class="{ 'opacity-50': !item.isVisible }"
+          @click="emit('intent:fullview', item)"
+        />
+        <OwnerToolbar
+          class="owner-toolbar position-absolute shadow "
+          :is-visible="item.isVisible"
+          @edit="emit('intent:edit', item)"
+          @hide="emit('intent:hide', item)"
+          @delete="emit('intent:delete', item)"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.card-wrapper {
-  transition: opacity 300ms  ease-in-out;
+.content-card {
+  transition: opacity 300ms ease-in-out;
+}
+.owner-toolbar {
+  z-index: 2;
+  margin-top: -2rem;
+  background-color: rgba(255, 255, 255, 0.5);
+  right: 1rem;
+}
+.scroll-container {
+  padding: 0.75rem 0.75rem 5rem 0.75rem;
 }
 </style>

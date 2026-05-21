@@ -123,13 +123,8 @@ function nextHourFromNow(): Date {
     @submit.prevent="handleSubmit"
     class="w-100 p-2 p-md-4 p-lg-5 mt-2 scrollable hide-scrollbar"
   >
-    <BFormGroup
-      :label="$t('events.labels.content')"
-      label-for="event-content"
-      class="mb-2 mb-lg-3 position-relative"
-    >
+    <BFormGroup class="mb-2 mb-lg-3 position-relative">
       <BFormTextarea
-        id="event-content"
         v-model="form.content"
         :placeholder="$t('events.placeholders.content')"
         :maxlength="EVENT_CONTENT_MAX_LENGTH"
@@ -147,6 +142,10 @@ function nextHourFromNow(): Date {
       :label="$t('events.labels.starts_at')"
       label-for="event-starts-at"
       class="mb-3"
+      label-cols-sm="4"
+      label-cols-lg="4"
+      content-cols-sm="8"
+      content-cols-lg="8"
     >
       <VueDatePicker
         id="event-starts-at"

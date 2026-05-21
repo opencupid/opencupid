@@ -14,11 +14,8 @@ defineProps<{
   community: PublicCommunityDetail | OwnerCommunity
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'close'): void
-  (e: 'edit', community: PublicCommunityDetail | OwnerCommunity): void
-  (e: 'hide', community: PublicCommunityDetail | OwnerCommunity): void
-  (e: 'delete', community: PublicCommunityDetail | OwnerCommunity): void
 }>()
 
 const closeDetailPanel = inject<(() => void) | null>('detailPanelClose', null)
@@ -47,9 +44,6 @@ const handleBack = () => {
       :community="community"
       :show-details="true"
       class="pt-2 pt-md-3 pt-lg-5"
-      @edit="emit('edit', community)"
-      @hide="emit('hide', community)"
-      @delete="emit('delete', community)"
     />
   </div>
 </template>
