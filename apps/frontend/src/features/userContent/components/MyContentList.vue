@@ -82,57 +82,40 @@ const items = computed(() => myContent.value)
     <div
       ref="scrollContainer"
       class="container-fluid overflow-auto hide-scrollbar flex-grow-1 flex-shrink-1"
+      v-if="items.length > 0"
     >
-      <BRow
-        v-if="items.length > 0"
-        cols="1"
-        class="g-2 g-md-3"
-        v-bind="$attrs"
+      <div
+        v-for="item in items"
+        :key="item.id"
+        class="position-relative"
       >
-        <BCol
-          v-for="item in items"
-          :key="item.id"
-        >
-          <div
-            class="card-wrapper position-relative"
-            :class="{ 'opacity-50': !item.isVisible }"
-          >
-            <OwnerToolbar
-              class="owner-toolbar position-absolute top-0 end-0 m-2"
-              :is-visible="item.isVisible"
-              @edit="emit('intent:edit', item)"
-              @hide="emit('intent:hide', item)"
-              @delete="emit('intent:delete', item)"
-            />
-            <ContentCard
-              :item="item"
-              :show-details="false"
-              class="clickable"
-              @click="emit('intent:fullview', item)"
-            />
-          </div>
-        </BCol>
-      </BRow>
-    </div>
-
-    <div
-      v-if="isLoading && items.length > 0"
-      class="text-center py-3"
-    >
-      <BSpinner
-        small
-        variant="primary"
-      />
-      <span class="ms-2 text-muted">{{ $t('uicomponents.loading.loading') }}</span>
+        <ContentCard
+          :item="item"
+          :show-details="false"
+          class="clickable content-card mb-2"
+          :class="{ 'opacity-50': !item.isVisible }"
+          @click="emit('intent:fullview', item)"
+        />
+        <OwnerToolbar
+          class="owner-toolbar position-absolute"
+          :is-visible="item.isVisible"
+          @edit="emit('intent:edit', item)"
+          @hide="emit('intent:hide', item)"
+          @delete="emit('intent:delete', item)"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.card-wrapper {
+.content-card {
   transition: opacity 300ms ease-in-out;
 }
 .owner-toolbar {
   z-index: 2;
+  margin-top: -2rem;
+  background-color: rgba(255, 255, 255, 0.5);
+  right: 1rem;
 }
 </style>

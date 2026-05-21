@@ -19,7 +19,7 @@ defineEmits<{
   <div>
     <BButton
       @click.stop="$emit('edit')"
-      variant="link-secondary"
+      variant="link-primary"
       size="sm"
       :title="$t('posts.actions.edit')"
       :aria-label="$t('posts.actions.edit')"
@@ -28,7 +28,7 @@ defineEmits<{
     </BButton>
     <BButton
       @click.stop="$emit('delete')"
-      variant="link-secondary"
+      variant="link-primary"
       size="sm"
       :title="$t('posts.actions.delete')"
       :aria-label="$t('posts.actions.delete')"
@@ -37,7 +37,7 @@ defineEmits<{
     </BButton>
     <BButton
       @click.stop="$emit('hide')"
-      variant="link-secondary"
+      variant="link-primary"
       size="sm"
       :title="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
       :aria-label="isVisible ? $t('posts.actions.hide') : $t('posts.actions.show')"
