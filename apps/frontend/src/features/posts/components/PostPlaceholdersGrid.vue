@@ -16,8 +16,8 @@ withDefaults(
 <template>
   <BRow
     cols="1"
-    cols-lg="3"
-    class="g-2 gx-4 gy-4"
+    cols-lg="1"
+    class="g-4"
   >
     <BCol
       v-for="n in howMany"
