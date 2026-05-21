@@ -3,6 +3,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import ContentCard from './ContentCard.vue'
+import OwnerToolbar from '@/features/posts/components/OwnerToolbar.vue'
 import PostPlaceholdersGrid from '@/features/posts/components/PostPlaceholdersGrid.vue'
 import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
 import { useUserContentStore } from '../stores/userContentStore'
@@ -92,15 +93,22 @@ const items = computed(() => myContent.value)
           v-for="item in items"
           :key="item.id"
         >
-          <div class="card-wrapper" :class="{ 'opacity-50': !item.isVisible }">
+          <div
+            class="card-wrapper position-relative"
+            :class="{ 'opacity-50': !item.isVisible }"
+          >
+            <OwnerToolbar
+              class="owner-toolbar position-absolute top-0 end-0 m-2"
+              :is-visible="item.isVisible"
+              @edit="emit('intent:edit', item)"
+              @hide="emit('intent:hide', item)"
+              @delete="emit('intent:delete', item)"
+            />
             <ContentCard
               :item="item"
               :show-details="false"
               class="clickable"
               @click="emit('intent:fullview', item)"
-              @edit="emit('intent:edit', item)"
-              @hide="emit('intent:hide', item)"
-              @delete="emit('intent:delete', item)"
             />
           </div>
         </BCol>
@@ -122,6 +130,9 @@ const items = computed(() => myContent.value)
 
 <style scoped>
 .card-wrapper {
-  transition: opacity 300ms  ease-in-out;
+  transition: opacity 300ms ease-in-out;
+}
+.owner-toolbar {
+  z-index: 2;
 }
 </style>
