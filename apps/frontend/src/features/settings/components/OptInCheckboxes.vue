@@ -76,7 +76,7 @@ async function handleOptInChange(event: Event, patch: UpdateProfileOptInPayload)
     </div>
   </fieldset>
 
-  <fieldset class="mb-2 mb-md-4">
+  <fieldset class="mb-2">
     <div class="form-check">
       <input
         id="newsletter-opt-in"
