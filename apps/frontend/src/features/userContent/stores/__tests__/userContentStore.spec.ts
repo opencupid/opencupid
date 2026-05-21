@@ -14,6 +14,7 @@ vi.mock('@/lib/api', () => ({
 }))
 
 import type { MapBounds } from '@/features/map/types/map.types'
+import { bus } from '@/lib/bus'
 import { useUserContentStore } from '../userContentStore'
 
 const CUID_1 = 'cmc7t45x400086w39gj30pzn3'
@@ -336,6 +337,23 @@ describe('useUserContentStore', () => {
         [CUID_1, 'post'],
         ['event-2', 'event'],
       ])
+    })
+  })
+
+  describe('auth:logout', () => {
+    it('resets store state when auth:logout is emitted', () => {
+      const store = useUserContentStore()
+      store.myContent = [makeOwnerPost(CUID_1)] as any
+      store.feedItems = [{ id: CUID_2 }] as any
+      store.isInitialized = true
+      store.isLoading = true
+
+      bus.emit('auth:logout')
+
+      expect(store.myContent).toEqual([])
+      expect(store.feedItems).toEqual([])
+      expect(store.isInitialized).toBe(false)
+      expect(store.isLoading).toBe(false)
     })
   })
 })

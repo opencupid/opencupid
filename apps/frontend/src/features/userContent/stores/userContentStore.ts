@@ -370,3 +370,7 @@ export const useUserContentStore = defineStore('userContent', {
     },
   },
 })
+
+bus.on('auth:logout', () => {
+  useUserContentStore().$reset()
+})
