@@ -16,12 +16,11 @@ import { useI18n } from 'vue-i18n'
 const props = withDefaults(
   defineProps<{
     store: GalleryStore
+    minImages: number
     maxImages?: number
-    minImages?: number
   }>(),
   {
     maxImages: 6,
-    minImages: 0,
   }
 )
 
