@@ -213,7 +213,10 @@ const siteName = __APP_CONFIG__.SITE_NAME
             <!-- I look like... -->
             {{ t('onboarding.photos_title') }}
           </legend>
-          <ImageEditor :store="profileImageStore" />
+          <ImageEditor
+            :store="profileImageStore"
+            :minImages="1"
+          />
         </fieldset>
 
         <fieldset v-else-if="isCurrent('dating_mode')">

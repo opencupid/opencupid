@@ -56,7 +56,10 @@ defineExpose({
       size="lg"
       :title="t('userContent.image_button.modal_title')"
     >
-      <ImageEditor :store="store" />
+      <ImageEditor
+        :store="store"
+        :minImages="0"
+      />
     </BModal>
   </BFormGroup>
 </template>

@@ -16,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 const props = withDefaults(
   defineProps<{
     store: GalleryStore
+    minImages: number
     maxImages?: number
   }>(),
   {
@@ -92,7 +93,7 @@ const remainingSlots = computed(() => {
 })
 
 const isDeletable = computed(() => {
-  return model.value.length > 1
+  return model.value.length > props.minImages
 })
 </script>
 
