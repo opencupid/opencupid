@@ -91,7 +91,7 @@ const displayContent = computed(() => {
           <span>{{ community.postedBy.publicName }}</span>
         </div>
         <ViewerToolbar
-          v-if="showDetails && !community.isOwn"
+          v-if="showDetails"
           :actions="['copy', 'share']"
           :copy-text="community.content"
           :share-payload="shareCommunityPayload"

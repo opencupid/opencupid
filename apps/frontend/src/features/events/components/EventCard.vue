@@ -115,7 +115,7 @@ const displayContent = computed(() => {
           <span>{{ event.postedBy.publicName }}</span>
         </div>
         <ViewerToolbar
-          v-if="showDetails && !event.isOwn"
+          v-if="showDetails"
           :actions="['copy', 'share']"
           :copy-text="event.content"
           :share-payload="shareEventPayload"

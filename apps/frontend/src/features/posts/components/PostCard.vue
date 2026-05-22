@@ -138,7 +138,7 @@ const sharePostPayload = computed<SharePayload>(() => ({
               />
             </span>
             <ViewerToolbar
-              v-if="showDetails && !post.isOwn"
+              v-if="showDetails"
               :actions="['contact', 'copy', 'share']"
               :copy-text="post.content"
               :share-payload="sharePostPayload"
