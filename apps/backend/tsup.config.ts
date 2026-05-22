@@ -6,7 +6,7 @@ const appVersion = getPackageVersion(path.join(__dirname, 'package.json'))
 const frontendVersion = getPackageVersion(path.join(__dirname, '../frontend/package.json'))
 
 export default defineConfig({
-  entry: ['src/api.ts', 'src/worker.ts'],
+  entry: ['src/api.ts', 'src/worker.ts', 'src/lib/prisma.ts'],
   outDir: 'dist',
   format: ['cjs'],
   splitting: false,

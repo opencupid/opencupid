@@ -1,6 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-
-const prisma = new PrismaClient()
+const { prisma } = require('../../dist/lib/prisma')
 
 // Default content for the welcome message, copied from the previous i18n strings
 // (packages/shared/i18n/{en,hu}.json -> messages.welcome_message). Kept here as the

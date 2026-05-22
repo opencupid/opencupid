@@ -1,8 +1,6 @@
-const { PrismaClient } = require('@prisma/client')
+const { prisma } = require('../../dist/lib/prisma')
 const fs = require('fs')
 const path = require('path')
-
-const prisma = new PrismaClient()
 
 async function main() {
   const tags = JSON.parse(fs.readFileSync(path.join(__dirname, 'tags-data.json'), 'utf-8'))
