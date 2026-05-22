@@ -1,5 +1,19 @@
 # @opencupid/shared
 
+## 0.12.0
+
+### Minor Changes
+
+- d366047: Add ContentImageButton to post/event/community edit dialogs. Images can now be uploaded during create (staged locally, attached on save) and during edit (immediate attach). Abandoned uploads are GC'd best-effort on dialog close. Adds `userContent.image_button.{label,modal_title}` i18n keys to `@opencupid/shared` (en + hu).
+- b4a6d12: Accept optional `imageIds` on `POST /api/post`, `POST /api/event`, `POST /api/community` and attach those images to the new content atomically. Exports a new `MAX_IMAGES_PER_GALLERY = 6` constant from `@zod/image/image.dto`; the per-kind Create schemas gain optional `imageIds`, and the per-kind Update schemas explicitly omit it.
+- 98eab1b: Display user-content images on post/event/community cards and map popups
+- f852990: Generalize image attachments: extract `Image` model from `ProfileImage`, add `UserContentImage` join, and expose `/api/content/:contentId/image/*` endpoints for post/event/community galleries.
+
+### Patch Changes
+
+- cf5af26: Translation updates
+- 69034af: Drop `ProfileImage.userId` column; images are owned solely by `profileId`. Upload route collapses to a single atomic write that creates the row and syncs `Profile.hasFace` in one transaction.
+
 ## 0.11.0
 
 ### Minor Changes

@@ -1,5 +1,25 @@
 # frontend
 
+## 0.64.0
+
+### Minor Changes
+
+- d366047: Add ContentImageButton to post/event/community edit dialogs. Images can now be uploaded during create (staged locally, attached on save) and during edit (immediate attach). Abandoned uploads are GC'd best-effort on dialog close. Adds `userContent.image_button.{label,modal_title}` i18n keys to `@opencupid/shared` (en + hu).
+- 98eab1b: Display user-content images on post/event/community cards and map popups
+- f852990: Separate image upload from gallery attach. `POST /image` now returns the
+  created image only; gallery membership is managed via the new
+  `POST /image/me/attach`, `POST /content/:contentId/image/attach`, and the
+  corresponding detach endpoints. `POST /content/:contentId/image` is removed.
+- f852990: Generalize image attachments: extract `Image` model from `ProfileImage`, add `UserContentImage` join, and expose `/api/content/:contentId/image/*` endpoints for post/event/community galleries.
+
+### Patch Changes
+
+- 49c369c: Fix MyProfile owner drawer crashing on first paint with `TypeError: can't access property 0, props.images is undefined` when opening before profile data has loaded.
+- 870a247: refactor(userContent): polish map popups, lift OwnerToolbar, strip dead emits
+- 9f25081: chore(settings): tighten vertical spacing in Settings panel
+- 725bb3b: Clear userContent store on logout
+- 3b1f7d5: Restore image delete buttons in user-content image editor (posts/events/communities).
+
 ## 0.63.1
 
 ## 0.63.0

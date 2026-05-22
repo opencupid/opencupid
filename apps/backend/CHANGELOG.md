@@ -1,5 +1,18 @@
 # backend
 
+## 0.64.0
+
+### Minor Changes
+
+- b4a6d12: Accept optional `imageIds` on `POST /api/post`, `POST /api/event`, `POST /api/community` and attach those images to the new content atomically. Exports a new `MAX_IMAGES_PER_GALLERY = 6` constant from `@zod/image/image.dto`; the per-kind Create schemas gain optional `imageIds`, and the per-kind Update schemas explicitly omit it.
+- 98eab1b: Display user-content images on post/event/community cards and map popups
+- 69034af: Drop `ProfileImage.userId` column; images are owned solely by `profileId`. Upload route collapses to a single atomic write that creates the row and syncs `Profile.hasFace` in one transaction.
+- f852990: Separate image upload from gallery attach. `POST /image` now returns the
+  created image only; gallery membership is managed via the new
+  `POST /image/me/attach`, `POST /content/:contentId/image/attach`, and the
+  corresponding detach endpoints. `POST /content/:contentId/image` is removed.
+- f852990: Generalize image attachments: extract `Image` model from `ProfileImage`, add `UserContentImage` join, and expose `/api/content/:contentId/image/*` endpoints for post/event/community galleries.
+
 ## 0.63.1
 
 ### Patch Changes
