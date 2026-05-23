@@ -65,3 +65,23 @@ export const EventSummarySchema = z.object({
   location: LocationSchema,
   postedBy: ProfileSummarySchema,
 })
+
+export const AttendanceStatusEnum = z.enum(['GOING', 'MAYBE'])
+export type AttendanceStatus = z.infer<typeof AttendanceStatusEnum>
+
+export const RsvpPayloadSchema = z.object({
+  status: AttendanceStatusEnum,
+})
+export type RsvpPayload = z.infer<typeof RsvpPayloadSchema>
+
+export const AttendeeSchema = z.object({
+  profile: ProfileSummarySchema,
+  status: AttendanceStatusEnum,
+  rsvpedAt: z.coerce.date(),
+})
+export type Attendee = z.infer<typeof AttendeeSchema>
+
+export const AttendeeListQuerySchema = z.object({
+  status: AttendanceStatusEnum.optional(),
+})
+export type AttendeeListQuery = z.infer<typeof AttendeeListQuerySchema>
