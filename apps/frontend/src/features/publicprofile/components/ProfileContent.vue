@@ -1,27 +1,14 @@
 <script lang="ts" setup>
 import { computed, inject, type Ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 import { type OwnerProfile, type PublicProfile } from '@zod/profile/profile.dto'
 
 import ImageCarousel from './ImageCarousel.vue'
-import IconPhoto from '@/assets/icons/interface/photo.svg'
-// Edit components
-import EditField from '@/features/myprofile/components/EditField.vue'
-import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
-import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
-import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
-import TagSelector from '@/features/shared/profileform/TagSelector.vue'
-import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import GenderPronounLabel from '@/features/shared/profiledisplay/GenderPronounLabel.vue'
 import RelationshipTags from '@/features/shared/profiledisplay/RelationshipTags.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
-import ImageEditor from '@/features/images/components/ImageEditor.vue'
-import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
-
-const { t } = useI18n()
 
 const props = defineProps<{
   profile: PublicProfile
@@ -29,8 +16,6 @@ const props = defineProps<{
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)
-
-const profileImageStore = useProfileImageStore()
 </script>
 
 <template>
@@ -43,25 +28,18 @@ const profileImageStore = useProfileImageStore()
       <!-- <DatingIcon :profile /> -->
     </div>
 
-    <div class="action-buttons">
-      <EditField
-        fieldName="profileImages"
-        :editComponent="ImageEditor"
-        :editProps="{ store: profileImageStore, minImages: 1 }"
-        buttonClass="btn-icon-lg btn-overlay photo-edit-button"
-      >
-        <IconPhoto class="svg-icon" />
-      </EditField>
+    <div
+      class="action-buttons"
+      v-if="$slots['photo-edit']"
+    >
+      <slot name="photo-edit" />
     </div>
 
     <div class="mx-3">
       <div class="d-flex flex-row align-items-center mt-2">
         <div class="flex-grow-1 d-inline-flex align-items-center">
-          <span class="fw-bolder fs-2 me-1"> {{ props.profile.publicName }}</span>
-          <EditField
-            fieldName="publicName"
-            :editComponent="PublicNameInput"
-          />
+          <span class="fw-bolder fs-2 me-1">{{ props.profile.publicName }}</span>
+          <slot name="name-edit" />
         </div>
         <GenderPronounLabel :profile="props.profile" />
       </div>
@@ -75,62 +53,22 @@ const profileImageStore = useProfileImageStore()
             :showCountryIcon="false"
           />
         </span>
-        <EditField
-          fieldName="location"
-          :editComponent="LocationSelector"
-        />
+        <slot name="location-edit" />
       </div>
 
       <div class="mb-3">
         <div class="d-inline-flex align-items-center flex-wrap">
           <TagList :tags="profile.tags" />
-          <EditField
-            fieldName="tags"
-            :editComponent="TagSelector"
-          >
-            <template #placeholder>
-              <div
-                class="editable-placeholder"
-                v-if="!props.profile.tags?.length"
-              >
-                {{ t('profiles.forms.tags_placeholder') }}
-              </div>
-            </template>
-          </EditField>
+          <slot name="tags-edit" />
         </div>
 
         <div class="d-inline-flex align-items-center">
           <LanguageList :languages="profile.languages" />
-          <EditField
-            fieldName="languages"
-            :editComponent="LanguageSelector"
-          />
+          <slot name="languages-edit" />
         </div>
       </div>
       <div class="mb-3">
-        <EditField
-          fieldName="introSocialLocalized"
-          :editComponent="IntrotextEditor"
-          wrapper-class="editable-textarea"
-          :editProps="{
-            languages: profile.languages,
-            placeholder: t('profiles.forms.intro_placeholder'),
-          }"
-        >
-          <template #display>
-            {{ props.profile.introSocial }}
-          </template>
-          <template #placeholder>
-            <div class="editable-placeholder">
-              <span v-if="!props.profile.introSocial">
-                {{ t('profiles.forms.intro_placeholder') }}
-              </span>
-              <span v-else>
-                {{ props.profile.introSocial }}
-              </span>
-            </div>
-          </template>
-        </EditField>
+        <slot name="intro-social">{{ props.profile.introSocial }}</slot>
       </div>
 
       <div class="mb-3 dating-field">
@@ -141,29 +79,7 @@ const profileImageStore = useProfileImageStore()
           <span class="opacity-25">
             <hr />
           </span>
-          <EditField
-            fieldName="introDatingLocalized"
-            :editComponent="IntrotextEditor"
-            wrapper-class="editable-textarea"
-            :editProps="{
-              languages: profile.languages,
-              placeholder: t('profiles.forms.intro_who_placeholder'),
-            }"
-          >
-            <template #display>
-              {{ props.profile.introDating }}
-            </template>
-            <template #placeholder>
-              <div class="editable-placeholder">
-                <span v-if="!props.profile.introDating">
-                  {{ t('profiles.forms.intro_who_placeholder') }}
-                </span>
-                <span v-else>
-                  {{ props.profile.introDating }}
-                </span>
-              </div>
-            </template>
-          </EditField>
+          <slot name="intro-dating">{{ props.profile.introDating }}</slot>
         </div>
         <div class="mb-3">
           <RelationshipTags :profile="props.profile" />
