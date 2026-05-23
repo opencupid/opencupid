@@ -119,7 +119,7 @@ const isDeletable = computed(() => {
           >
             <div class="actions nodrag">
               <button
-                class="btn btn-sm btn-secondary rounded-circle"
+                class="btn btn-sm btn-secondary "
                 @mousedown.stop.prevent
                 @click="handleDelete(img)"
                 :disabled="isRemoving[img.id]"

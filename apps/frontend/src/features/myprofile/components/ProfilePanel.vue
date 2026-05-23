@@ -59,7 +59,7 @@ function handleClose() {
       <span class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
         <span
           v-if="ownerProfileStore.profile?.profileImages?.length"
-          class="owner-profile-avatar flex-shrink-0 overflow-hidden rounded-circle"
+          class="owner-profile-avatar flex-shrink-0 overflow-hidden "
         >
           <ProfileImage
             :profile="ownerProfileStore.profile"

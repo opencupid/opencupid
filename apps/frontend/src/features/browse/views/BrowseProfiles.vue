@@ -283,7 +283,7 @@ onMounted(async () => {
 <template>
   <div class="map-region h-100 position-relative overflow-hidden">
     <div
-      class="search-bar-wrapper position-absolute w-100 top-0 end-0 d-flex align-items-start justify-content-end gap-2 p-2 pb-5"
+      class="search-bar-wrapper position-absolute w-100 top-0 end-0 d-flex align-items-start justify-content-end gap-2 p-2"
       style="z-index: 1010"
     >
       <div class="flex-grow-1 d-flex">
