@@ -1,8 +1,6 @@
-const { PrismaClient } = require('@prisma/client')
+const { prisma } = require('../../dist/lib/prisma')
 const seedTags = require('./tags')
 const seedMessageTemplates = require('./message-templates')
-
-const prisma = new PrismaClient()
 
 async function main() {
   await seedTags()
