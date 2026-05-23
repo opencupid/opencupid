@@ -1,5 +1,15 @@
 # backend
 
+## 0.65.0
+
+### Minor Changes
+
+- 9cc1478: Remove unused `ConnectionRequest` model along with `ConnectionType` and `ConnectionStatus` enums — they had no runtime usage anywhere in the codebase.
+
+### Patch Changes
+
+- e9c69cc: Fix database seed crash on Prisma 7 by importing the adapter-wired PrismaClient singleton instead of constructing a bare client.
+
 ## 0.64.0
 
 ### Minor Changes

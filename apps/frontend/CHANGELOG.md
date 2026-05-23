@@ -1,5 +1,11 @@
 # frontend
 
+## 0.65.0
+
+### Patch Changes
+
+- f037987: Show ViewerToolbar (copy/share/contact) on user-owned community, event, and post cards.
+
 ## 0.64.0
 
 ### Minor Changes
