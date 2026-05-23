@@ -9,6 +9,13 @@ import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dt
 import { conversationContextInclude } from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
+export class EventNotVisibleError extends Error {
+  constructor() {
+    super('Event not found or not visible')
+    this.name = 'EventNotVisibleError'
+  }
+}
+
 const eventWithMetadataInclude = {
   event: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
@@ -57,6 +64,13 @@ export class EventService extends UserContentService {
             event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
           },
           include: eventWithMetadataInclude,
+        })
+        await tx.eventAttendance.create({
+          data: {
+            eventContentId: created.id,
+            profileId,
+            status: 'GOING',
+          },
         })
         if (imageIds && imageIds.length > 0) {
           await ImageService.getInstance().attachManyToUserContentTx(
@@ -126,6 +140,55 @@ export class EventService extends UserContentService {
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,
+    })
+  }
+
+  private async assertEventVisibleTo(
+    eventContentId: string,
+    viewerProfileId: string
+  ): Promise<void> {
+    const event = await prisma.userContent.findFirst({
+      where: {
+        id: eventContentId,
+        kind: 'event',
+        isDeleted: false,
+        OR: [{ postedById: viewerProfileId }, { isVisible: true }],
+      },
+      select: { id: true },
+    })
+    if (!event) {
+      throw new EventNotVisibleError()
+    }
+  }
+
+  async rsvp(profileId: string, eventContentId: string, status: 'GOING' | 'MAYBE') {
+    await this.assertEventVisibleTo(eventContentId, profileId)
+    return prisma.eventAttendance.upsert({
+      where: { eventContentId_profileId: { eventContentId, profileId } },
+      create: { eventContentId, profileId, status },
+      update: { status },
+    })
+  }
+
+  async cancelRsvp(profileId: string, eventContentId: string): Promise<void> {
+    await prisma.eventAttendance.deleteMany({
+      where: { eventContentId, profileId },
+    })
+  }
+
+  async listAttendees(viewerProfileId: string, eventContentId: string, status?: 'GOING' | 'MAYBE') {
+    await this.assertEventVisibleTo(eventContentId, viewerProfileId)
+    return prisma.eventAttendance.findMany({
+      where: { eventContentId, ...(status ? { status } : {}) },
+      include: { profile: { include: { profileImages: { include: { image: true } } } } },
+      orderBy: { rsvpedAt: 'asc' },
+    })
+  }
+
+  async getMyRsvp(profileId: string, eventContentId: string) {
+    await this.assertEventVisibleTo(eventContentId, profileId)
+    return prisma.eventAttendance.findUnique({
+      where: { eventContentId_profileId: { eventContentId, profileId } },
     })
   }
 }

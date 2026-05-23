@@ -207,9 +207,10 @@ model Profile {
   userContent UserContent[]
 
   // Activity tracking
-  sessionLogs     ProfileSessionLog[]
-  activitySummary ProfileActivitySummary?
-  trustFlags      ProfileTrustFlag[]
+  sessionLogs      ProfileSessionLog[]
+  activitySummary  ProfileActivitySummary?
+  trustFlags       ProfileTrustFlag[]
+  eventAttendances EventAttendance[]
 
   @@index([lat, lon])
 }
@@ -422,7 +423,30 @@ model EventContent {
   startsAt      DateTime
   venue         String?
 
+  attendees     EventAttendance[]
+
   @@index([startsAt])
+}
+
+enum AttendanceStatus {
+  GOING
+  MAYBE
+}
+
+model EventAttendance {
+  eventContentId String
+  event          EventContent     @relation(fields: [eventContentId], references: [userContentId], onDelete: Cascade)
+
+  profileId      String
+  profile        Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  status         AttendanceStatus @default(GOING)
+  rsvpedAt       DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@id([eventContentId, profileId])
+  @@index([profileId, status])
+  @@index([eventContentId, status])
 }
 
 model CommunityContent {

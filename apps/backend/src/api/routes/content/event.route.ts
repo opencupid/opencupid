@@ -1,18 +1,22 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { createEvent as createIcsEvent, type EventAttributes } from 'ics'
-import { EventService } from '@/services/event.service'
+import { EventService, EventNotVisibleError } from '@/services/event.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageServiceError } from '@/services/image.service'
 import {
   CreateEventPayloadSchema,
   UpdateEventPayloadSchema,
   EventParamsSchema,
+  RsvpPayloadSchema,
+  AttendeeListQuerySchema,
   type CreateEventPayload,
   type UpdateEventPayload,
+  type RsvpPayload,
 } from '@zod/event/event.dto'
 import { PaginationSchema } from '@zod/userContent/userContent.dto'
-import { z } from 'zod'
+import { z, ZodError } from 'zod'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../../mappers/event.mappers'
+import { mapProfileSummary } from '../../mappers/profile.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
@@ -188,6 +192,95 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch profile events')
+    }
+  })
+
+  fastify.post(
+    '/:id/rsvp',
+    {
+      onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 30),
+    },
+    async (req, reply) => {
+      const { id } = EventParamsSchema.parse(req.params)
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile required')
+      const data = validateBody<RsvpPayload>(RsvpPayloadSchema, req, reply)
+      if (!data) return
+      try {
+        await svc.rsvp(profileId, id, data.status)
+        return reply.code(200).send({ success: true })
+      } catch (err) {
+        if (err instanceof EventNotVisibleError) {
+          return sendError(reply, 404, 'Event not found')
+        }
+        fastify.log.error(err)
+        return sendError(reply, 500, 'Failed to RSVP')
+      }
+    }
+  )
+
+  fastify.get('/:id/rsvp', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { id } = EventParamsSchema.parse(req.params)
+    const profileId = req.session.profileId
+    if (!profileId) return sendError(reply, 401, 'Profile required')
+    try {
+      const row = await svc.getMyRsvp(profileId, id)
+      return reply.code(200).send({
+        success: true,
+        status: row?.status ?? null,
+      })
+    } catch (err) {
+      if (err instanceof EventNotVisibleError) {
+        return sendError(reply, 404, 'Event not found')
+      }
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch RSVP')
+    }
+  })
+
+  fastify.delete(
+    '/:id/rsvp',
+    {
+      onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 30),
+    },
+    async (req, reply) => {
+      const { id } = EventParamsSchema.parse(req.params)
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile required')
+      try {
+        await svc.cancelRsvp(profileId, id)
+        return reply.code(200).send({ success: true })
+      } catch (err) {
+        fastify.log.error(err)
+        return sendError(reply, 500, 'Failed to cancel RSVP')
+      }
+    }
+  )
+
+  fastify.get('/:id/attendees', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { id } = EventParamsSchema.parse(req.params)
+    const viewerProfileId = req.session.profileId
+    if (!viewerProfileId) return sendError(reply, 401, 'Profile required')
+    try {
+      const { status } = AttendeeListQuerySchema.parse(req.query)
+      const rows = await svc.listAttendees(viewerProfileId, id, status)
+      const attendees = rows.map((r) => ({
+        profile: mapProfileSummary(r.profile),
+        status: r.status,
+        rsvpedAt: r.rsvpedAt,
+      }))
+      return reply.code(200).send({ success: true, attendees })
+    } catch (err) {
+      if (err instanceof ZodError) {
+        return sendError(reply, 400, 'Invalid query parameters')
+      }
+      if (err instanceof EventNotVisibleError) {
+        return sendError(reply, 404, 'Event not found')
+      }
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to list attendees')
     }
   })
 }

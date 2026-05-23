@@ -101,6 +101,16 @@ export function createMockPrisma() {
       deleteMany: vi.fn(),
       count: vi.fn(),
     },
+    eventAttendance: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      upsert: vi.fn(),
+      delete: vi.fn(),
+      deleteMany: vi.fn(),
+      count: vi.fn(),
+    },
     $transaction: vi.fn((fn: (client: any) => any) => fn(mock)),
   }
   return mock
