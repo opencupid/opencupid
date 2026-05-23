@@ -62,9 +62,11 @@ export const EventSummarySchema = z.object({
   id: z.string(),
   kind: EVENT_KIND,
   content: z.string(),
+  startsAt: z.coerce.date(),
   location: LocationSchema,
   postedBy: ProfileSummarySchema,
 })
+export type EventSummary = z.infer<typeof EventSummarySchema>
 
 export const AttendanceStatusEnum = z.enum(['GOING', 'MAYBE'])
 export type AttendanceStatus = z.infer<typeof AttendanceStatusEnum>

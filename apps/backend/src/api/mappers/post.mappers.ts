@@ -5,6 +5,8 @@ import {
   type OwnerPost,
   type PostSummary,
 } from '@zod/post/post.dto'
+import type { EventSummary } from '@zod/event/event.dto'
+import type { CommunitySummary } from '@zod/community/community.dto'
 import type { PostWithMetadata, PostWithMetadataAndContext } from '@/services/post.service'
 import type { DbProfileSummary } from '@zod/profile/profile.db'
 import type { PostType } from '@prisma/client'
@@ -84,6 +86,56 @@ export function mapPostSummary(row: DbPostForSummary): PostSummary {
     kind: 'post',
     type: row.post.type,
     content: row.content,
+    location: DbLocationToLocationDTO(row),
+    postedBy: mapProfileSummary(row.postedBy),
+  }
+}
+
+/** Input shape for `mapEventSummary` — what the search query hydrates. */
+export type DbEventForSummary = {
+  id: string
+  kind: 'event'
+  content: string
+  country: string | null
+  cityName: string | null
+  lat: number | null
+  lon: number | null
+  postedBy: DbProfileSummary
+  event: { startsAt: Date }
+}
+
+/** Lightweight event mapper used by /search omnibox results. */
+export function mapEventSummary(row: DbEventForSummary): EventSummary {
+  return {
+    id: row.id,
+    kind: 'event',
+    content: row.content,
+    startsAt: row.event.startsAt,
+    location: DbLocationToLocationDTO(row),
+    postedBy: mapProfileSummary(row.postedBy),
+  }
+}
+
+/** Input shape for `mapCommunitySummary` — what the search query hydrates. */
+export type DbCommunityForSummary = {
+  id: string
+  kind: 'community'
+  content: string
+  country: string | null
+  cityName: string | null
+  lat: number | null
+  lon: number | null
+  postedBy: DbProfileSummary
+  community: { yearFounded: number | null }
+}
+
+/** Lightweight community mapper used by /search omnibox results. */
+export function mapCommunitySummary(row: DbCommunityForSummary): CommunitySummary {
+  return {
+    id: row.id,
+    kind: 'community',
+    content: row.content,
+    yearFounded: row.community.yearFounded,
     location: DbLocationToLocationDTO(row),
     postedBy: mapProfileSummary(row.postedBy),
   }

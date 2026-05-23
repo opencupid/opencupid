@@ -13,6 +13,8 @@ import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { PostSummary } from '@zod/post/post.dto'
+import type { EventSummary } from '@zod/event/event.dto'
+import type { CommunitySummary } from '@zod/community/community.dto'
 import { SEARCH_MIN_QUERY_LENGTH } from '@zod/search/search.dto'
 
 import { useSearchStore } from '@/features/browse/stores/searchStore'
@@ -31,6 +33,8 @@ const emit = defineEmits<{
   'location:set': [point: GeoPoint]
   'profile:select': [profile: ProfileSummary]
   'post:select': [post: PostSummary]
+  'event:select': [event: EventSummary]
+  'community:select': [community: CommunitySummary]
 }>()
 
 const searchStore = useSearchStore()
@@ -96,8 +100,24 @@ function onSelectPost(post: PostSummary) {
   emit('post:select', post)
 }
 
+function onSelectEvent(event: EventSummary) {
+  const point = toGeoPoint(event.location)
+  if (point) emit('location:set', point)
+  emit('event:select', event)
+}
+
+function onSelectCommunity(community: CommunitySummary) {
+  const point = toGeoPoint(community.location)
+  if (point) emit('location:set', point)
+  emit('community:select', community)
+}
+
 const isSearchMatchesEmpty = computed(
-  () => !searchResults.value?.profiles.length && !searchResults.value?.posts.length
+  () =>
+    !searchResults.value?.profiles.length &&
+    !searchResults.value?.posts.length &&
+    !searchResults.value?.events.length &&
+    !searchResults.value?.communities.length
 )
 
 const trackSearch = useDebounceFn(() => tracker.track('search'), 500)
@@ -175,8 +195,12 @@ watch(haveResults, () => {
         <SearchMatches
           :profiles="searchResults?.profiles ?? []"
           :posts="searchResults?.posts ?? []"
+          :events="searchResults?.events ?? []"
+          :communities="searchResults?.communities ?? []"
           @profile:select="onSelectProfile"
           @post:select="onSelectPost"
+          @event:select="onSelectEvent"
+          @community:select="onSelectCommunity"
         />
       </div>
     </div>

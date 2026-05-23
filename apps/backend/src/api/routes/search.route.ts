@@ -3,7 +3,7 @@ import { FastifyPluginAsync } from 'fastify'
 import { sendError, sendForbiddenError } from '../helpers'
 import { SearchService } from '@/services/search.service'
 import { mapProfileSummary } from '../mappers/profile.mappers'
-import { mapPostSummary } from '../mappers/post.mappers'
+import { mapCommunitySummary, mapEventSummary, mapPostSummary } from '../mappers/post.mappers'
 import { DbTagToPublicTagTransform } from '../mappers/tag.mappers'
 import { SearchQuerySchema, type SearchResponse } from '@zod/search/search.dto'
 
@@ -12,9 +12,9 @@ const searchRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /search?q=<query>
-   * Returns results grouped by content kind: tags, profiles, posts.
-   * All three queries run in parallel. Below the minimum query length the
-   * endpoint short-circuits with empty arrays.
+   * Returns results grouped by content kind: tags, profiles, posts, events,
+   * communities. All queries run in parallel. Below the minimum query length
+   * the endpoint short-circuits with empty arrays.
    */
   fastify.get('/', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     if (!req.session.profile.isSocialActive) {
@@ -29,13 +29,19 @@ const searchRoutes: FastifyPluginAsync = async (fastify) => {
     const { lang, profileId } = req.session
 
     try {
-      const { tags, profiles, posts } = await searchService.search(q, lang, profileId)
+      const { tags, profiles, posts, events, communities } = await searchService.search(
+        q,
+        lang,
+        profileId
+      )
 
       const response: SearchResponse = {
         success: true,
         tags: tags.map((t) => DbTagToPublicTagTransform(t, lang)),
         profiles: profiles.map(mapProfileSummary),
         posts: posts.map(mapPostSummary),
+        events: events.map(mapEventSummary),
+        communities: communities.map(mapCommunitySummary),
       }
       return reply.code(200).send(response)
     } catch (err) {
