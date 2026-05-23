@@ -17,6 +17,7 @@ export { PushSubscriptionScalarFieldEnumSchema } from './PushSubscriptionScalarF
 export { UserContentScalarFieldEnumSchema } from './UserContentScalarFieldEnumSchema';
 export { PostContentScalarFieldEnumSchema } from './PostContentScalarFieldEnumSchema';
 export { EventContentScalarFieldEnumSchema } from './EventContentScalarFieldEnumSchema';
+export { EventAttendanceScalarFieldEnumSchema } from './EventAttendanceScalarFieldEnumSchema';
 export { CommunityContentScalarFieldEnumSchema } from './CommunityContentScalarFieldEnumSchema';
 export { ProfileSessionLogScalarFieldEnumSchema } from './ProfileSessionLogScalarFieldEnumSchema';
 export { ProfileActivitySummaryScalarFieldEnumSchema } from './ProfileActivitySummaryScalarFieldEnumSchema';
@@ -34,5 +35,6 @@ export { PostTypeSchema } from './PostTypeSchema';
 export { ContentKindSchema } from './ContentKindSchema';
 export { ActivitySegmentSchema } from './ActivitySegmentSchema';
 export { ConversationStatusSchema } from './ConversationStatusSchema';
+export { AttendanceStatusSchema } from './AttendanceStatusSchema';
 export { TrustReasonSchema } from './TrustReasonSchema';
 export { MessageTemplateTypeSchema } from './MessageTemplateTypeSchema';

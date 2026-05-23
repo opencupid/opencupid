@@ -16,6 +16,7 @@ export * from './PushSubscriptionSchema';
 export * from './UserContentSchema';
 export * from './PostContentSchema';
 export * from './EventContentSchema';
+export * from './EventAttendanceSchema';
 export * from './CommunityContentSchema';
 export * from './ProfileSessionLogSchema';
 export * from './ProfileActivitySummarySchema';
