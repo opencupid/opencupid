@@ -27,8 +27,11 @@ const store = useUserContentStore()
 onMounted(() => {
   if (props.showDetails) {
     store.fetchMyRsvp(props.event.id)
+    store.fetchAttendees(props.event.id)
   }
 })
+
+const attendees = computed(() => store.attendeesByEventId[props.event.id] ?? [])
 
 const isGoing = computed(() => store.rsvpStatusByEventId[props.event.id] === 'GOING')
 
@@ -121,10 +124,7 @@ const displayContent = computed(() => {
       <div
         class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"
       >
-        <div
-          v-if="!event.isOwn"
-          class="d-flex align-items-center gap-2"
-        >
+        <div class="d-flex align-items-center gap-2">
           <ProfileThumbnail
             :profile="event.postedBy"
             size="sm"
@@ -148,6 +148,17 @@ const displayContent = computed(() => {
             <IconChecklist class="svg-icon" />
           </BButton>
         </ViewerToolbar>
+        <div
+          v-if="showDetails && attendees.length > 0"
+          class="event-attendees d-flex flex-wrap align-items-center gap-1 p-2"
+        >
+          <ProfileThumbnail
+            v-for="attendee in attendees"
+            :key="attendee.profile.id"
+            :profile="attendee.profile"
+            class="avatar-chip"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -156,5 +167,12 @@ const displayContent = computed(() => {
 <style scoped>
 .event-card {
   background-color: var(--bs-event-light);
+}
+.avatar-chip {
+  display: inline-block;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  border-radius: 50%;
 }
 </style>
