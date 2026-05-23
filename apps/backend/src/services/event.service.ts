@@ -157,4 +157,10 @@ export class EventService extends UserContentService {
       orderBy: { rsvpedAt: 'asc' },
     })
   }
+
+  async getMyRsvp(profileId: string, eventContentId: string) {
+    return prisma.eventAttendance.findUnique({
+      where: { eventContentId_profileId: { eventContentId, profileId } },
+    })
+  }
 }

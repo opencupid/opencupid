@@ -85,3 +85,9 @@ export const AttendeeListQuerySchema = z.object({
   status: AttendanceStatusEnum.optional(),
 })
 export type AttendeeListQuery = z.infer<typeof AttendeeListQuerySchema>
+
+export const MyRsvpResponseSchema = z.object({
+  success: z.literal(true),
+  status: AttendanceStatusEnum.nullable(),
+})
+export type MyRsvpResponse = z.infer<typeof MyRsvpResponseSchema>

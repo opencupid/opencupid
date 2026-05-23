@@ -48,9 +48,35 @@ beforeEach(async () => {
     rsvp: vi.fn(),
     cancelRsvp: vi.fn(),
     listAttendees: vi.fn(),
+    getMyRsvp: vi.fn(),
   }
   mockCluster = { evictAll: vi.fn().mockResolvedValue(undefined) }
   await eventRoutes(fastify as any, {})
+})
+
+describe('GET /:id/rsvp', () => {
+  it('returns 401 when no profile', async () => {
+    const handler = fastify.routes['GET /:id/rsvp']
+    await handler({ session: {}, params: { id: eventId } } as any, reply as any)
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns 200 with status GOING when service returns a row', async () => {
+    const handler = fastify.routes['GET /:id/rsvp']
+    mockEventService.getMyRsvp.mockResolvedValue({ status: 'GOING' })
+    await handler({ session: { profileId }, params: { id: eventId } } as any, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true, status: 'GOING' })
+    expect(mockEventService.getMyRsvp).toHaveBeenCalledWith(profileId, eventId)
+  })
+
+  it('returns 200 with status null when service returns null', async () => {
+    const handler = fastify.routes['GET /:id/rsvp']
+    mockEventService.getMyRsvp.mockResolvedValue(null)
+    await handler({ session: { profileId }, params: { id: eventId } } as any, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true, status: null })
+  })
 })
 
 describe('POST /:id/rsvp', () => {
@@ -103,10 +129,7 @@ describe('DELETE /:id/rsvp', () => {
   it('returns 200 and calls svc.cancelRsvp', async () => {
     const handler = fastify.routes['DELETE /:id/rsvp']
     mockEventService.cancelRsvp.mockResolvedValue(undefined)
-    await handler(
-      { session: { profileId }, params: { id: eventId } } as any,
-      reply as any
-    )
+    await handler({ session: { profileId }, params: { id: eventId } } as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload).toEqual({ success: true })
     expect(mockEventService.cancelRsvp).toHaveBeenCalledWith(profileId, eventId)

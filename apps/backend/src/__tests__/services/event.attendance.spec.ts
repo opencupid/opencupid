@@ -11,7 +11,10 @@ vi.mock('../../lib/prisma', () => ({
 vi.mock('../../services/image.service', () => ({
   ImageService: { getInstance: () => ({ attachManyToUserContentTx: vi.fn() }) },
   ImageServiceError: class extends Error {
-    constructor(public code: string, message: string) {
+    constructor(
+      public code: string,
+      message: string
+    ) {
       super(message)
     }
   },
@@ -58,6 +61,26 @@ describe('EventService.cancelRsvp', () => {
   it('is idempotent when no row exists (no throw)', async () => {
     mockPrisma.eventAttendance.deleteMany = vi.fn().mockResolvedValue({ count: 0 })
     await expect(service.cancelRsvp('prof-1', 'evt-1')).resolves.not.toThrow()
+  })
+})
+
+describe('EventService.getMyRsvp', () => {
+  it("returns the viewer's attendance row by composite PK", async () => {
+    const row = { eventContentId: 'evt-1', profileId: 'prof-1', status: 'GOING' }
+    mockPrisma.eventAttendance.findUnique = vi.fn().mockResolvedValue(row)
+
+    const result = await service.getMyRsvp('prof-1', 'evt-1')
+
+    expect(mockPrisma.eventAttendance.findUnique).toHaveBeenCalledWith({
+      where: { eventContentId_profileId: { eventContentId: 'evt-1', profileId: 'prof-1' } },
+    })
+    expect(result).toEqual(row)
+  })
+
+  it('returns null when no row exists', async () => {
+    mockPrisma.eventAttendance.findUnique = vi.fn().mockResolvedValue(null)
+    const result = await service.getMyRsvp('prof-1', 'evt-1')
+    expect(result).toBeNull()
   })
 })
 

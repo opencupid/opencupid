@@ -216,6 +216,22 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
+  fastify.get('/:id/rsvp', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { id } = EventParamsSchema.parse(req.params)
+    const profileId = req.session.profileId
+    if (!profileId) return sendError(reply, 401, 'Profile required')
+    try {
+      const row = await svc.getMyRsvp(profileId, id)
+      return reply.code(200).send({
+        success: true,
+        status: row?.status ?? null,
+      })
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch RSVP')
+    }
+  })
+
   fastify.delete(
     '/:id/rsvp',
     {
@@ -236,26 +252,22 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
     }
   )
 
-  fastify.get(
-    '/:id/attendees',
-    { onRequest: [fastify.authenticate] },
-    async (req, reply) => {
-      const { id } = EventParamsSchema.parse(req.params)
-      const { status } = AttendeeListQuerySchema.parse(req.query)
-      try {
-        const rows = await svc.listAttendees(id, status)
-        const attendees = rows.map((r: any) => ({
-          profile: r.profile,
-          status: r.status,
-          rsvpedAt: r.rsvpedAt,
-        }))
-        return reply.code(200).send({ success: true, attendees })
-      } catch (err) {
-        fastify.log.error(err)
-        return sendError(reply, 500, 'Failed to list attendees')
-      }
+  fastify.get('/:id/attendees', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const { id } = EventParamsSchema.parse(req.params)
+    const { status } = AttendeeListQuerySchema.parse(req.query)
+    try {
+      const rows = await svc.listAttendees(id, status)
+      const attendees = rows.map((r: any) => ({
+        profile: r.profile,
+        status: r.status,
+        rsvpedAt: r.rsvpedAt,
+      }))
+      return reply.code(200).send({ success: true, attendees })
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to list attendees')
     }
-  )
+  })
 }
 
 export default eventRoutes
