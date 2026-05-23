@@ -149,4 +149,12 @@ export class EventService extends UserContentService {
       where: { eventContentId, profileId },
     })
   }
+
+  async listAttendees(eventContentId: string, status?: 'GOING' | 'MAYBE') {
+    return prisma.eventAttendance.findMany({
+      where: { eventContentId, ...(status ? { status } : {}) },
+      include: { profile: true },
+      orderBy: { rsvpedAt: 'asc' },
+    })
+  }
 }

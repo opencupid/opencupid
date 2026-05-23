@@ -60,3 +60,34 @@ describe('EventService.cancelRsvp', () => {
     await expect(service.cancelRsvp('prof-1', 'evt-1')).resolves.not.toThrow()
   })
 })
+
+describe('EventService.listAttendees', () => {
+  it('returns all attendees ordered by rsvpedAt ascending', async () => {
+    const rows = [
+      { profileId: 'a', status: 'GOING', rsvpedAt: new Date('2030-01-01'), profile: {} },
+      { profileId: 'b', status: 'MAYBE', rsvpedAt: new Date('2030-01-02'), profile: {} },
+    ]
+    mockPrisma.eventAttendance.findMany = vi.fn().mockResolvedValue(rows)
+
+    const result = await service.listAttendees('evt-1')
+
+    expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
+      where: { eventContentId: 'evt-1' },
+      include: { profile: true },
+      orderBy: { rsvpedAt: 'asc' },
+    })
+    expect(result).toEqual(rows)
+  })
+
+  it('filters by status when provided', async () => {
+    mockPrisma.eventAttendance.findMany = vi.fn().mockResolvedValue([])
+
+    await service.listAttendees('evt-1', 'GOING')
+
+    expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
+      where: { eventContentId: 'evt-1', status: 'GOING' },
+      include: { profile: true },
+      orderBy: { rsvpedAt: 'asc' },
+    })
+  })
+})
