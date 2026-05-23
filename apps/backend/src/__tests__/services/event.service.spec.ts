@@ -36,6 +36,7 @@ beforeEach(async () => {
     postedBy: { id: 'profile-1', profileImages: [] },
   })
   mockPrisma.$transaction = vi.fn((fn: any) => fn(mockPrisma))
+  mockPrisma.eventAttendance.create = vi.fn().mockResolvedValue({})
   mockAttachMany = vi.fn().mockResolvedValue(undefined)
   const mod = await import('../../services/event.service')
   ;(mod.EventService as any).eventInstance = undefined
@@ -61,5 +62,30 @@ describe('EventService.create with imageIds', () => {
   it('does not call attach for empty imageIds', async () => {
     await service.create('profile-1', { ...baseData, imageIds: [] })
     expect(mockAttachMany).not.toHaveBeenCalled()
+  })
+})
+
+describe('EventService.create — creator auto-RSVP', () => {
+  it('inserts an EventAttendance(GOING) for the poster inside the same transaction', async () => {
+    mockPrisma.eventAttendance.create = vi.fn().mockResolvedValue({
+      eventContentId: 'content-1',
+      profileId: 'profile-1',
+      status: 'GOING',
+    })
+
+    await service.create('profile-1', {
+      content: 'hello world hello world',
+      startsAt: new Date('2030-01-01T10:00:00Z'),
+      venue: null,
+    })
+
+    expect(mockPrisma.eventAttendance.create).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.eventAttendance.create).toHaveBeenCalledWith({
+      data: {
+        eventContentId: 'content-1',
+        profileId: 'profile-1',
+        status: 'GOING',
+      },
+    })
   })
 })

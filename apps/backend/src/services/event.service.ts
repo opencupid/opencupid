@@ -58,6 +58,13 @@ export class EventService extends UserContentService {
           },
           include: eventWithMetadataInclude,
         })
+        await tx.eventAttendance.create({
+          data: {
+            eventContentId: created.id,
+            profileId,
+            status: 'GOING',
+          },
+        })
         if (imageIds && imageIds.length > 0) {
           await ImageService.getInstance().attachManyToUserContentTx(
             tx,
