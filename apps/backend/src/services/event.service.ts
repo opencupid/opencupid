@@ -143,4 +143,10 @@ export class EventService extends UserContentService {
       update: { status },
     })
   }
+
+  async cancelRsvp(profileId: string, eventContentId: string): Promise<void> {
+    await prisma.eventAttendance.deleteMany({
+      where: { eventContentId, profileId },
+    })
+  }
 }

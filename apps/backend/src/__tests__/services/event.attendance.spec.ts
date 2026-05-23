@@ -43,3 +43,20 @@ describe('EventService.rsvp', () => {
     expect(result.status).toBe('MAYBE')
   })
 })
+
+describe('EventService.cancelRsvp', () => {
+  it('hard-deletes the attendance row', async () => {
+    mockPrisma.eventAttendance.deleteMany = vi.fn().mockResolvedValue({ count: 1 })
+
+    await service.cancelRsvp('prof-1', 'evt-1')
+
+    expect(mockPrisma.eventAttendance.deleteMany).toHaveBeenCalledWith({
+      where: { eventContentId: 'evt-1', profileId: 'prof-1' },
+    })
+  })
+
+  it('is idempotent when no row exists (no throw)', async () => {
+    mockPrisma.eventAttendance.deleteMany = vi.fn().mockResolvedValue({ count: 0 })
+    await expect(service.cancelRsvp('prof-1', 'evt-1')).resolves.not.toThrow()
+  })
+})
