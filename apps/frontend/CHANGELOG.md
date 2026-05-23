@@ -1,5 +1,11 @@
 # frontend
 
+## 0.66.0
+
+### Minor Changes
+
+- 8a0b552: Add RSVP / attendance for events (GOING and MAYBE backend, GOING-only UI toggle on EventCard). Creators auto-attend; cancel is hard-delete.
+
 ## 0.65.0
 
 ### Patch Changes
