@@ -7,8 +7,11 @@ import {
   CreateEventPayloadSchema,
   UpdateEventPayloadSchema,
   EventParamsSchema,
+  RsvpPayloadSchema,
+  AttendeeListQuerySchema,
   type CreateEventPayload,
   type UpdateEventPayload,
+  type RsvpPayload,
 } from '@zod/event/event.dto'
 import { PaginationSchema } from '@zod/userContent/userContent.dto'
 import { z } from 'zod'
@@ -190,6 +193,69 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 500, 'Failed to fetch profile events')
     }
   })
+
+  fastify.post(
+    '/:id/rsvp',
+    {
+      onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 30),
+    },
+    async (req, reply) => {
+      const { id } = EventParamsSchema.parse(req.params)
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile required')
+      const data = validateBody<RsvpPayload>(RsvpPayloadSchema, req, reply)
+      if (!data) return
+      try {
+        await svc.rsvp(profileId, id, data.status)
+        return reply.code(200).send({ success: true })
+      } catch (err) {
+        fastify.log.error(err)
+        return sendError(reply, 500, 'Failed to RSVP')
+      }
+    }
+  )
+
+  fastify.delete(
+    '/:id/rsvp',
+    {
+      onRequest: [fastify.authenticate],
+      config: rateLimitConfig(fastify, '1 minute', 30),
+    },
+    async (req, reply) => {
+      const { id } = EventParamsSchema.parse(req.params)
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile required')
+      try {
+        await svc.cancelRsvp(profileId, id)
+        return reply.code(200).send({ success: true })
+      } catch (err) {
+        fastify.log.error(err)
+        return sendError(reply, 500, 'Failed to cancel RSVP')
+      }
+    }
+  )
+
+  fastify.get(
+    '/:id/attendees',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const { id } = EventParamsSchema.parse(req.params)
+      const { status } = AttendeeListQuerySchema.parse(req.query)
+      try {
+        const rows = await svc.listAttendees(id, status)
+        const attendees = rows.map((r: any) => ({
+          profile: r.profile,
+          status: r.status,
+          rsvpedAt: r.rsvpedAt,
+        }))
+        return reply.code(200).send({ success: true, attendees })
+      } catch (err) {
+        fastify.log.error(err)
+        return sendError(reply, 500, 'Failed to list attendees')
+      }
+    }
+  )
 }
 
 export default eventRoutes
