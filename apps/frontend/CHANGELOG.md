@@ -1,5 +1,11 @@
 # frontend
 
+## 0.67.0
+
+### Minor Changes
+
+- 30b5e23: Show attendee avatars on EventCard detail view; refresh list after RSVP/cancel.
+
 ## 0.66.0
 
 ### Minor Changes
