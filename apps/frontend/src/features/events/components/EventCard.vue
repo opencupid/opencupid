@@ -148,17 +148,17 @@ const displayContent = computed(() => {
             <IconChecklist class="svg-icon" />
           </BButton>
         </ViewerToolbar>
-        <div
-          v-if="showDetails && attendees.length > 0"
-          class="event-attendees d-flex flex-wrap align-items-center gap-1 p-2"
-        >
-          <ProfileThumbnail
-            v-for="attendee in attendees"
-            :key="attendee.profile.id"
-            :profile="attendee.profile"
-            class="avatar-chip"
-          />
-        </div>
+      </div>
+      <div
+        v-if="showDetails && attendees.length > 0"
+        class="event-attendees d-flex flex-wrap align-items-center gap-1 p-2 ps-3"
+      >
+        <ProfileThumbnail
+          v-for="attendee in attendees"
+          :key="attendee.profile.id"
+          :profile="attendee.profile"
+          class="avatar-chip"
+        />
       </div>
     </div>
   </div>
@@ -170,9 +170,10 @@ const displayContent = computed(() => {
 }
 .avatar-chip {
   display: inline-block;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2rem;
+  height: 2rem;
   overflow: hidden;
   border-radius: 50%;
+  margin-left: -0.5rem;
 }
 </style>
