@@ -1,6 +1,5 @@
 export * from './TagSchema';
 export * from './TagTranslationSchema';
-export * from './ConnectionRequestSchema';
 export * from './UserSchema';
 export * from './ProfileSchema';
 export * from './LocalizedProfileFieldSchema';
