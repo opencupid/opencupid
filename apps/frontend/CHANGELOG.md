@@ -1,5 +1,13 @@
 # frontend
 
+## 0.67.1
+
+### Patch Changes
+
+- 495d3df: Replace ApiErrorOverlay illustration with transparent mid-grey PNG (#1491)
+- 5bd5558: Split `ProfileContent` into a lean read-only component and an `EditableProfileContent` wrapper that injects edit fields via slots. Public/conversation views no longer load the edit-field machinery or form editor bundles.
+- ff99530: Tidy button and avatar utility classes (#1490)
+
 ## 0.67.0
 
 ### Minor Changes
