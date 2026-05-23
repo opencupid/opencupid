@@ -420,4 +420,87 @@ describe('useUserContentStore', () => {
       expect(store.isLoading).toBe(false)
     })
   })
+
+  describe('fetchAttendees', () => {
+    const attendees = [
+      {
+        profile: { id: CUID_1, publicName: 'Alice', profileImages: [], location: { country: '' } },
+        status: 'GOING',
+        rsvpedAt: '2030-01-01T00:00:00Z',
+      },
+      {
+        profile: { id: CUID_2, publicName: 'Bob', profileImages: [], location: { country: '' } },
+        status: 'MAYBE',
+        rsvpedAt: '2030-01-02T00:00:00Z',
+      },
+    ]
+
+    it('populates attendeesByEventId from API response', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockResolvedValue({ data: { success: true, attendees } })
+
+      await store.fetchAttendees(CUID_1)
+
+      expect(mockApi.get).toHaveBeenCalledWith(`/content/events/${CUID_1}/attendees`)
+      expect(store.attendeesByEventId[CUID_1]).toHaveLength(2)
+      expect(store.attendeesByEventId[CUID_1]![0]!.profile.publicName).toBe('Alice')
+      expect(store.attendeesByEventId[CUID_1]![1]!.profile.publicName).toBe('Bob')
+    })
+
+    it('leaves state untouched on API error', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockRejectedValue(new Error('network error'))
+
+      await store.fetchAttendees(CUID_1)
+
+      expect(store.attendeesByEventId[CUID_1]).toBeUndefined()
+    })
+  })
+
+  describe('rsvpEvent refetches attendees on success', () => {
+    it('triggers fetchAttendees after successful rsvp', async () => {
+      const store = useUserContentStore()
+      mockApi.post.mockResolvedValue({ data: { success: true } })
+      mockApi.get.mockResolvedValue({ data: { success: true, attendees: [] } })
+
+      await store.rsvpEvent(CUID_1, 'GOING')
+      // Allow the fire-and-forget fetchAttendees to resolve
+      await Promise.resolve()
+
+      expect(mockApi.get).toHaveBeenCalledWith(`/content/events/${CUID_1}/attendees`)
+    })
+
+    it('does NOT refetch on rsvp error', async () => {
+      const store = useUserContentStore()
+      mockApi.post.mockRejectedValue(new Error('network error'))
+
+      await store.rsvpEvent(CUID_1, 'GOING')
+
+      expect(mockApi.get).not.toHaveBeenCalledWith(`/content/events/${CUID_1}/attendees`)
+    })
+  })
+
+  describe('cancelRsvp refetches attendees on success', () => {
+    it('triggers fetchAttendees after successful cancel', async () => {
+      const store = useUserContentStore()
+      store.rsvpStatusByEventId[CUID_1] = 'GOING'
+      mockApi.delete.mockResolvedValue({ data: { success: true } })
+      mockApi.get.mockResolvedValue({ data: { success: true, attendees: [] } })
+
+      await store.cancelRsvp(CUID_1)
+      await Promise.resolve()
+
+      expect(mockApi.get).toHaveBeenCalledWith(`/content/events/${CUID_1}/attendees`)
+    })
+
+    it('does NOT refetch on cancel error', async () => {
+      const store = useUserContentStore()
+      store.rsvpStatusByEventId[CUID_1] = 'GOING'
+      mockApi.delete.mockRejectedValue(new Error('network error'))
+
+      await store.cancelRsvp(CUID_1)
+
+      expect(mockApi.get).not.toHaveBeenCalledWith(`/content/events/${CUID_1}/attendees`)
+    })
+  })
 })

@@ -14,6 +14,8 @@ import {
 import {
   OwnerEventSchema,
   PublicEventDetailSchema,
+  AttendeeListResponseSchema,
+  type Attendee,
   type CreateEventPayload,
   type UpdateEventPayload,
   type OwnerEvent,
@@ -85,6 +87,8 @@ export const useUserContentStore = defineStore('userContent', {
     isInitialized: false,
     /** Viewer's own RSVP status per event id. null = explicitly not attending; undefined = not yet fetched. */
     rsvpStatusByEventId: {} as Record<string, 'GOING' | 'MAYBE' | null>,
+    /** Attendee list per event id (both GOING and MAYBE). Empty array = fetched and no attendees; undefined = not yet fetched. */
+    attendeesByEventId: {} as Record<string, Attendee[] | undefined>,
   }),
 
   getters: {
@@ -248,6 +252,16 @@ export const useUserContentStore = defineStore('userContent', {
       }
     },
 
+    async fetchAttendees(eventId: string): Promise<void> {
+      try {
+        const res = await safeApiCall(() => api.get(`/content/events/${eventId}/attendees`))
+        const parsed = AttendeeListResponseSchema.parse(res.data)
+        this.attendeesByEventId[eventId] = parsed.attendees
+      } catch {
+        // Silently ignore — card shows empty list, consistent with fetchMyRsvp
+      }
+    },
+
     async rsvpEvent(eventId: string, status: 'GOING' | 'MAYBE' = 'GOING'): Promise<void> {
       const had = eventId in this.rsvpStatusByEventId
       const previous = this.rsvpStatusByEventId[eventId] as 'GOING' | 'MAYBE' | null
@@ -256,6 +270,9 @@ export const useUserContentStore = defineStore('userContent', {
         await safeApiCall(() =>
           api.post<{ success: true }>(`/content/events/${eventId}/rsvp`, { status })
         )
+        // Refresh attendee list so the card UI reflects the new attendee.
+        // Fire-and-forget — if it fails, the card just keeps its previous list.
+        void this.fetchAttendees(eventId)
       } catch {
         if (had) {
           this.rsvpStatusByEventId[eventId] = previous
@@ -271,6 +288,8 @@ export const useUserContentStore = defineStore('userContent', {
       this.rsvpStatusByEventId[eventId] = null
       try {
         await safeApiCall(() => api.delete<{ success: true }>(`/content/events/${eventId}/rsvp`))
+        // Refresh attendee list so the card UI reflects the removed attendee.
+        void this.fetchAttendees(eventId)
       } catch {
         if (had) {
           this.rsvpStatusByEventId[eventId] = previous
