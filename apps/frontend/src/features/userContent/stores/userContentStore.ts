@@ -249,24 +249,34 @@ export const useUserContentStore = defineStore('userContent', {
     },
 
     async rsvpEvent(eventId: string, status: 'GOING' | 'MAYBE' = 'GOING'): Promise<void> {
-      const previous = this.rsvpStatusByEventId[eventId] ?? null
+      const had = eventId in this.rsvpStatusByEventId
+      const previous = this.rsvpStatusByEventId[eventId] as 'GOING' | 'MAYBE' | null
       this.rsvpStatusByEventId[eventId] = status
       try {
         await safeApiCall(() =>
           api.post<{ success: true }>(`/content/events/${eventId}/rsvp`, { status })
         )
       } catch {
-        this.rsvpStatusByEventId[eventId] = previous
+        if (had) {
+          this.rsvpStatusByEventId[eventId] = previous
+        } else {
+          delete this.rsvpStatusByEventId[eventId]
+        }
       }
     },
 
     async cancelRsvp(eventId: string): Promise<void> {
-      const previous = this.rsvpStatusByEventId[eventId] ?? null
+      const had = eventId in this.rsvpStatusByEventId
+      const previous = this.rsvpStatusByEventId[eventId] as 'GOING' | 'MAYBE' | null
       this.rsvpStatusByEventId[eventId] = null
       try {
         await safeApiCall(() => api.delete<{ success: true }>(`/content/events/${eventId}/rsvp`))
       } catch {
-        this.rsvpStatusByEventId[eventId] = previous
+        if (had) {
+          this.rsvpStatusByEventId[eventId] = previous
+        } else {
+          delete this.rsvpStatusByEventId[eventId]
+        }
       }
     },
 

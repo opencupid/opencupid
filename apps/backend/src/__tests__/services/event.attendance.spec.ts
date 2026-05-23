@@ -24,6 +24,8 @@ let service: any
 
 beforeEach(async () => {
   Object.assign(mockPrisma, createMockPrisma())
+  // Default: event is visible to viewer
+  mockPrisma.userContent.findFirst = vi.fn().mockResolvedValue({ id: 'evt-1' })
   const mod = await import('../../services/event.service')
   service = mod.EventService.getInstance()
 })
@@ -92,7 +94,7 @@ describe('EventService.listAttendees', () => {
     ]
     mockPrisma.eventAttendance.findMany = vi.fn().mockResolvedValue(rows)
 
-    const result = await service.listAttendees('evt-1')
+    const result = await service.listAttendees('viewer-1', 'evt-1')
 
     expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
       where: { eventContentId: 'evt-1' },
@@ -105,12 +107,53 @@ describe('EventService.listAttendees', () => {
   it('filters by status when provided', async () => {
     mockPrisma.eventAttendance.findMany = vi.fn().mockResolvedValue([])
 
-    await service.listAttendees('evt-1', 'GOING')
+    await service.listAttendees('viewer-1', 'evt-1', 'GOING')
 
     expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
       where: { eventContentId: 'evt-1', status: 'GOING' },
       include: { profile: true },
       orderBy: { rsvpedAt: 'asc' },
     })
+  })
+})
+
+describe('EventService visibility gate', () => {
+  it('rsvp throws EventNotVisibleError when event is invisible to viewer', async () => {
+    mockPrisma.userContent.findFirst = vi.fn().mockResolvedValue(null)
+    const mod = await import('../../services/event.service')
+    const { EventNotVisibleError } = mod
+    await expect(service.rsvp('prof-1', 'evt-1', 'GOING')).rejects.toBeInstanceOf(
+      EventNotVisibleError
+    )
+    expect(mockPrisma.eventAttendance.upsert).not.toHaveBeenCalled()
+  })
+
+  it('rsvp proceeds when event is visible', async () => {
+    mockPrisma.userContent.findFirst = vi.fn().mockResolvedValue({ id: 'evt-1' })
+    mockPrisma.eventAttendance.upsert = vi.fn().mockResolvedValue({})
+    await service.rsvp('prof-1', 'evt-1', 'GOING')
+    expect(mockPrisma.eventAttendance.upsert).toHaveBeenCalled()
+  })
+
+  it('getMyRsvp throws when event is invisible', async () => {
+    mockPrisma.userContent.findFirst = vi.fn().mockResolvedValue(null)
+    const mod = await import('../../services/event.service')
+    const { EventNotVisibleError } = mod
+    await expect(service.getMyRsvp('prof-1', 'evt-1')).rejects.toBeInstanceOf(EventNotVisibleError)
+  })
+
+  it('listAttendees throws when event is invisible', async () => {
+    mockPrisma.userContent.findFirst = vi.fn().mockResolvedValue(null)
+    const mod = await import('../../services/event.service')
+    const { EventNotVisibleError } = mod
+    await expect(service.listAttendees('prof-1', 'evt-1')).rejects.toBeInstanceOf(
+      EventNotVisibleError
+    )
+  })
+
+  it('cancelRsvp does NOT check visibility (idempotent)', async () => {
+    mockPrisma.eventAttendance.deleteMany = vi.fn().mockResolvedValue({ count: 0 })
+    await expect(service.cancelRsvp('prof-1', 'evt-1')).resolves.not.toThrow()
+    expect(mockPrisma.userContent.findFirst).not.toHaveBeenCalled()
   })
 })

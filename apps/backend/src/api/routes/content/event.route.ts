@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { createEvent as createIcsEvent, type EventAttributes } from 'ics'
-import { EventService } from '@/services/event.service'
+import { EventService, EventNotVisibleError } from '@/services/event.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageServiceError } from '@/services/image.service'
 import {
@@ -210,6 +210,9 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         await svc.rsvp(profileId, id, data.status)
         return reply.code(200).send({ success: true })
       } catch (err) {
+        if (err instanceof EventNotVisibleError) {
+          return sendError(reply, 404, 'Event not found')
+        }
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to RSVP')
       }
@@ -227,6 +230,9 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         status: row?.status ?? null,
       })
     } catch (err) {
+      if (err instanceof EventNotVisibleError) {
+        return sendError(reply, 404, 'Event not found')
+      }
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch RSVP')
     }
@@ -255,15 +261,20 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/:id/attendees', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = EventParamsSchema.parse(req.params)
     const { status } = AttendeeListQuerySchema.parse(req.query)
+    const viewerProfileId = req.session.profileId
+    if (!viewerProfileId) return sendError(reply, 401, 'Profile required')
     try {
-      const rows = await svc.listAttendees(id, status)
-      const attendees = rows.map((r: any) => ({
+      const rows = await svc.listAttendees(viewerProfileId, id, status)
+      const attendees = rows.map((r) => ({
         profile: r.profile,
         status: r.status,
         rsvpedAt: r.rsvpedAt,
       }))
       return reply.code(200).send({ success: true, attendees })
     } catch (err) {
+      if (err instanceof EventNotVisibleError) {
+        return sendError(reply, 404, 'Event not found')
+      }
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to list attendees')
     }

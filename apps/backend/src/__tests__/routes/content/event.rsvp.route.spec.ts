@@ -8,8 +8,19 @@ let reply: MockReply
 let mockEventService: any
 let mockCluster: any
 
+const { EventNotVisibleError } = vi.hoisted(() => {
+  class EventNotVisibleError extends Error {
+    constructor() {
+      super('Event not found or not visible')
+      this.name = 'EventNotVisibleError'
+    }
+  }
+  return { EventNotVisibleError }
+})
+
 vi.mock('@/services/event.service', () => ({
   EventService: { getInstance: () => mockEventService },
+  EventNotVisibleError,
 }))
 vi.mock('@/services/cluster.service', () => ({
   ClusterService: { getInstance: () => mockCluster },
@@ -77,6 +88,13 @@ describe('GET /:id/rsvp', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload).toEqual({ success: true, status: null })
   })
+
+  it('returns 404 when service throws EventNotVisibleError', async () => {
+    const handler = fastify.routes['GET /:id/rsvp']
+    mockEventService.getMyRsvp.mockRejectedValue(new EventNotVisibleError())
+    await handler({ session: { profileId }, params: { id: eventId } } as any, reply as any)
+    expect(reply.statusCode).toBe(404)
+  })
 })
 
 describe('POST /:id/rsvp', () => {
@@ -116,6 +134,16 @@ describe('POST /:id/rsvp', () => {
       reply as any
     )
     expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 404 when service throws EventNotVisibleError', async () => {
+    const handler = fastify.routes['POST /:id/rsvp']
+    mockEventService.rsvp.mockRejectedValue(new EventNotVisibleError())
+    await handler(
+      { session: { profileId }, params: { id: eventId }, body: { status: 'GOING' } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
   })
 })
 
@@ -170,6 +198,16 @@ describe('GET /:id/attendees', () => {
       { session: { profileId }, params: { id: eventId }, query: { status: 'GOING' } } as any,
       reply as any
     )
-    expect(mockEventService.listAttendees).toHaveBeenCalledWith(eventId, 'GOING')
+    expect(mockEventService.listAttendees).toHaveBeenCalledWith(profileId, eventId, 'GOING')
+  })
+
+  it('returns 404 when service throws EventNotVisibleError', async () => {
+    const handler = fastify.routes['GET /:id/attendees']
+    mockEventService.listAttendees.mockRejectedValue(new EventNotVisibleError())
+    await handler(
+      { session: { profileId }, params: { id: eventId }, query: {} } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
   })
 })
