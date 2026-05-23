@@ -12,7 +12,7 @@ import IconPostIt from '@/assets/icons/interface/post-it.svg'
 import IconCalendar from '@/assets/icons/interface/calendar.svg'
 import IconCommunity from '@/assets/icons/interface/community.svg'
 
-const props = defineProps<{
+defineProps<{
   profiles: ProfileSummary[]
   posts: PostSummary[]
   events: EventSummary[]

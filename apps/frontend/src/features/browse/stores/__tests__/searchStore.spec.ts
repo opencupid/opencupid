@@ -84,6 +84,41 @@ describe('useSearchStore', () => {
     })
   })
 
+  describe('hasResults', () => {
+    /**
+     * `hasResults` drives the SearchBar panel-open watch. Regression guard:
+     * any non-empty collection — including events or communities — must
+     * flip it to true, otherwise event/community-only matches won't open
+     * the panel. We poke `searchResults` directly because exercising the
+     * full `search()` path would require schema-valid fixtures for every
+     * kind, which the parse layer enforces (covered elsewhere).
+     */
+    const withOnly = (key: 'profiles' | 'posts' | 'events' | 'communities' | 'tags') => ({
+      ...emptyResults,
+      [key]: [{ id: 'x' }],
+    })
+
+    it('is false before any search has run', () => {
+      const store = useSearchStore()
+      expect(store.hasResults).toBe(false)
+    })
+
+    it('is false when every collection in the response is empty', () => {
+      const store = useSearchStore()
+      store.searchResults = emptyResults as any
+      expect(store.hasResults).toBe(false)
+    })
+
+    it.each(['profiles', 'posts', 'events', 'communities', 'tags'] as const)(
+      'is true when only %s has matches',
+      (key) => {
+        const store = useSearchStore()
+        store.searchResults = withOnly(key) as any
+        expect(store.hasResults).toBe(true)
+      }
+    )
+  })
+
   describe('clearTags / reset', () => {
     it('clearTags empties the selection', () => {
       const store = useSearchStore()

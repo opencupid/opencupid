@@ -18,7 +18,14 @@ export const useSearchStore = defineStore('search', () => {
   const selectedTagIds = computed(() => selectedTags.value.map((t) => t.id))
   const hasResults = computed(() => {
     const r = searchResults.value
-    return !!r && (r.profiles.length > 0 || r.posts.length > 0 || r.tags.length > 0)
+    return (
+      !!r &&
+      (r.profiles.length > 0 ||
+        r.posts.length > 0 ||
+        r.events.length > 0 ||
+        r.communities.length > 0 ||
+        r.tags.length > 0)
+    )
   })
 
   function toggleTag(tag: PublicTag) {
