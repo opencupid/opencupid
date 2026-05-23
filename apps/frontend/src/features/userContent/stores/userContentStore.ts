@@ -14,6 +14,7 @@ import {
 import {
   OwnerEventSchema,
   PublicEventDetailSchema,
+  AttendeeListResponseSchema,
   type Attendee,
   type CreateEventPayload,
   type UpdateEventPayload,
@@ -87,7 +88,7 @@ export const useUserContentStore = defineStore('userContent', {
     /** Viewer's own RSVP status per event id. null = explicitly not attending; undefined = not yet fetched. */
     rsvpStatusByEventId: {} as Record<string, 'GOING' | 'MAYBE' | null>,
     /** Attendee list per event id (both GOING and MAYBE). Empty array = fetched and no attendees; undefined = not yet fetched. */
-    attendeesByEventId: {} as Record<string, Attendee[]>,
+    attendeesByEventId: {} as Record<string, Attendee[] | undefined>,
   }),
 
   getters: {
@@ -253,10 +254,9 @@ export const useUserContentStore = defineStore('userContent', {
 
     async fetchAttendees(eventId: string): Promise<void> {
       try {
-        const res = await safeApiCall(() =>
-          api.get<{ success: true; attendees: Attendee[] }>(`/content/events/${eventId}/attendees`)
-        )
-        this.attendeesByEventId[eventId] = res.data.attendees
+        const res = await safeApiCall(() => api.get(`/content/events/${eventId}/attendees`))
+        const parsed = AttendeeListResponseSchema.parse(res.data)
+        this.attendeesByEventId[eventId] = parsed.attendees
       } catch {
         // Silently ignore — card shows empty list, consistent with fetchMyRsvp
       }
