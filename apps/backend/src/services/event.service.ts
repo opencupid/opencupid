@@ -135,4 +135,12 @@ export class EventService extends UserContentService {
       skip: opts.offset,
     })
   }
+
+  async rsvp(profileId: string, eventContentId: string, status: 'GOING' | 'MAYBE') {
+    return prisma.eventAttendance.upsert({
+      where: { eventContentId_profileId: { eventContentId, profileId } },
+      create: { eventContentId, profileId, status },
+      update: { status },
+    })
+  }
 }
