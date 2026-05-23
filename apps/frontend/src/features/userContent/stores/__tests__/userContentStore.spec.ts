@@ -340,6 +340,70 @@ describe('useUserContentStore', () => {
     })
   })
 
+  describe('RSVP actions', () => {
+    it('fetchMyRsvp sets rsvpStatusByEventId to returned status', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockResolvedValue({ data: { success: true, status: 'GOING' } })
+
+      await store.fetchMyRsvp(CUID_1)
+
+      expect(mockApi.get).toHaveBeenCalledWith(`/content/events/${CUID_1}/rsvp`)
+      expect(store.rsvpStatusByEventId[CUID_1]).toBe('GOING')
+    })
+
+    it('fetchMyRsvp sets status to null when API returns null', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockResolvedValue({ data: { success: true, status: null } })
+
+      await store.fetchMyRsvp(CUID_1)
+
+      expect(store.rsvpStatusByEventId[CUID_1]).toBeNull()
+    })
+
+    it('rsvpEvent sets state optimistically and persists on success', async () => {
+      const store = useUserContentStore()
+      mockApi.post.mockResolvedValue({ data: { success: true } })
+
+      await store.rsvpEvent(CUID_1, 'GOING')
+
+      expect(store.rsvpStatusByEventId[CUID_1]).toBe('GOING')
+      expect(mockApi.post).toHaveBeenCalledWith(`/content/events/${CUID_1}/rsvp`, {
+        status: 'GOING',
+      })
+    })
+
+    it('rsvpEvent rolls back state on API error', async () => {
+      const store = useUserContentStore()
+      store.rsvpStatusByEventId[CUID_1] = null
+      mockApi.post.mockRejectedValue(new Error('network error'))
+
+      await store.rsvpEvent(CUID_1, 'GOING')
+
+      expect(store.rsvpStatusByEventId[CUID_1]).toBeNull()
+    })
+
+    it('cancelRsvp sets state to null optimistically and persists on success', async () => {
+      const store = useUserContentStore()
+      store.rsvpStatusByEventId[CUID_1] = 'GOING'
+      mockApi.delete.mockResolvedValue({ data: { success: true } })
+
+      await store.cancelRsvp(CUID_1)
+
+      expect(store.rsvpStatusByEventId[CUID_1]).toBeNull()
+      expect(mockApi.delete).toHaveBeenCalledWith(`/content/events/${CUID_1}/rsvp`)
+    })
+
+    it('cancelRsvp rolls back on API error', async () => {
+      const store = useUserContentStore()
+      store.rsvpStatusByEventId[CUID_1] = 'GOING'
+      mockApi.delete.mockRejectedValue(new Error('network error'))
+
+      await store.cancelRsvp(CUID_1)
+
+      expect(store.rsvpStatusByEventId[CUID_1]).toBe('GOING')
+    })
+  })
+
   describe('auth:logout', () => {
     it('resets store state when auth:logout is emitted', () => {
       const store = useUserContentStore()

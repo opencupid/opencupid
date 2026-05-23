@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicEvent, OwnerEvent } from '@zod/event/event.dto'
 import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
@@ -10,6 +10,7 @@ import IconChecklist from '@/assets/icons/interface/checklist.svg'
 import EventCalendarExportDropdown from './EventCalendarExportDropdown.vue'
 import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 import { useI18n } from 'vue-i18n'
+import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
@@ -18,10 +19,24 @@ const props = defineProps<{
 
 defineEmits<{
   (e: 'click', event: PublicEvent | OwnerEvent): void
-  (e: 'attend', event: PublicEvent | OwnerEvent): void
 }>()
 
 const { t, locale } = useI18n()
+const store = useUserContentStore()
+
+onMounted(() => {
+  store.fetchMyRsvp(props.event.id)
+})
+
+const isGoing = computed(() => store.rsvpStatusByEventId[props.event.id] === 'GOING')
+
+function toggleRsvp() {
+  if (isGoing.value) {
+    store.cancelRsvp(props.event.id)
+  } else {
+    store.rsvpEvent(props.event.id, 'GOING')
+  }
+}
 
 const shareEventPayload = computed<SharePayload>(() => ({
   title: props.event.content.substring(0, 80),
@@ -122,11 +137,11 @@ const displayContent = computed(() => {
         >
           <EventCalendarExportDropdown :event="event" />
           <BButton
-            @click.stop="$emit('attend', event)"
-            variant="link-secondary"
+            @click.stop="toggleRsvp()"
+            :variant="isGoing ? 'primary' : 'link-secondary'"
             size="sm"
-            :title="t('events.actions.attend')"
-            :aria-label="t('events.actions.attend')"
+            :title="isGoing ? t('events.actions.attending') : t('events.actions.attend')"
+            :aria-label="isGoing ? t('events.actions.attending') : t('events.actions.attend')"
           >
             <IconChecklist class="svg-icon" />
           </BButton>

@@ -83,6 +83,8 @@ export const useUserContentStore = defineStore('userContent', {
     feedItems: [] as UserContentMetadata[],
     isLoading: false,
     isInitialized: false,
+    /** Viewer's own RSVP status per event id. null = explicitly not attending; undefined = not yet fetched. */
+    rsvpStatusByEventId: {} as Record<string, 'GOING' | 'MAYBE' | null>,
   }),
 
   getters: {
@@ -229,6 +231,42 @@ export const useUserContentStore = defineStore('userContent', {
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to delete event')
+      }
+    },
+
+    // ─── Event RSVP ───────────────────────────────────────────────────
+    async fetchMyRsvp(eventId: string): Promise<void> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<{ success: true; status: 'GOING' | 'MAYBE' | null }>(
+            `/content/events/${eventId}/rsvp`
+          )
+        )
+        this.rsvpStatusByEventId[eventId] = res.data.status
+      } catch {
+        // Silently ignore fetch errors — the button just stays in unknown state
+      }
+    },
+
+    async rsvpEvent(eventId: string, status: 'GOING' | 'MAYBE' = 'GOING'): Promise<void> {
+      const previous = this.rsvpStatusByEventId[eventId] ?? null
+      this.rsvpStatusByEventId[eventId] = status
+      try {
+        await safeApiCall(() =>
+          api.post<{ success: true }>(`/content/events/${eventId}/rsvp`, { status })
+        )
+      } catch {
+        this.rsvpStatusByEventId[eventId] = previous
+      }
+    },
+
+    async cancelRsvp(eventId: string): Promise<void> {
+      const previous = this.rsvpStatusByEventId[eventId] ?? null
+      this.rsvpStatusByEventId[eventId] = null
+      try {
+        await safeApiCall(() => api.delete<{ success: true }>(`/content/events/${eventId}/rsvp`))
+      } catch {
+        this.rsvpStatusByEventId[eventId] = previous
       }
     },
 
