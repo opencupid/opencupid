@@ -36,8 +36,8 @@ function openCreateCommunity() {
 <template>
   <div class="owner-drawer-controls d-flex flex-column flex-md-row gap-2">
     <BButton
-      variant="light"
-      class="btn-rounded shadow overflow-hidden order-1 order-md-1 border"
+      variant="outline-secondary"
+      class="btn-rounded shadow overflow-hidden order-1 order-md-1 "
       :aria-label="$t('nav.inbox')"
       @click="$emit('open:inbox')"
     >

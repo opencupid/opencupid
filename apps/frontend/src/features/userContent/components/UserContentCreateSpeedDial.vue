@@ -18,7 +18,7 @@ withDefaults(
   }>(),
   {
     triggerClass: 'btn-icon-lg btn-shadow',
-    actionClass: 'btn-icon-lg btn-shadow btn-light rounded-circle',
+    actionClass: 'btn-icon-lg btn-shadow btn-light ',
   }
 )
 
