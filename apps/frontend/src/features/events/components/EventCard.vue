@@ -25,7 +25,9 @@ const { t, locale } = useI18n()
 const store = useUserContentStore()
 
 onMounted(() => {
-  store.fetchMyRsvp(props.event.id)
+  if (props.showDetails) {
+    store.fetchMyRsvp(props.event.id)
+  }
 })
 
 const isGoing = computed(() => store.rsvpStatusByEventId[props.event.id] === 'GOING')

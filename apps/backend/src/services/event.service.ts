@@ -180,7 +180,7 @@ export class EventService extends UserContentService {
     await this.assertEventVisibleTo(eventContentId, viewerProfileId)
     return prisma.eventAttendance.findMany({
       where: { eventContentId, ...(status ? { status } : {}) },
-      include: { profile: true },
+      include: { profile: { include: { profileImages: { include: { image: true } } } } },
       orderBy: { rsvpedAt: 'asc' },
     })
   }

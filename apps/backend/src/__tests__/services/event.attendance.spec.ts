@@ -98,7 +98,7 @@ describe('EventService.listAttendees', () => {
 
     expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
       where: { eventContentId: 'evt-1' },
-      include: { profile: true },
+      include: { profile: { include: { profileImages: { include: { image: true } } } } },
       orderBy: { rsvpedAt: 'asc' },
     })
     expect(result).toEqual(rows)
@@ -111,7 +111,7 @@ describe('EventService.listAttendees', () => {
 
     expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
       where: { eventContentId: 'evt-1', status: 'GOING' },
-      include: { profile: true },
+      include: { profile: { include: { profileImages: { include: { image: true } } } } },
       orderBy: { rsvpedAt: 'asc' },
     })
   })

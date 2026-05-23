@@ -14,8 +14,9 @@ import {
   type RsvpPayload,
 } from '@zod/event/event.dto'
 import { PaginationSchema } from '@zod/userContent/userContent.dto'
-import { z } from 'zod'
+import { z, ZodError } from 'zod'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../../mappers/event.mappers'
+import { mapProfileSummary } from '../../mappers/profile.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
@@ -260,18 +261,21 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/:id/attendees', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { id } = EventParamsSchema.parse(req.params)
-    const { status } = AttendeeListQuerySchema.parse(req.query)
     const viewerProfileId = req.session.profileId
     if (!viewerProfileId) return sendError(reply, 401, 'Profile required')
     try {
+      const { status } = AttendeeListQuerySchema.parse(req.query)
       const rows = await svc.listAttendees(viewerProfileId, id, status)
       const attendees = rows.map((r) => ({
-        profile: r.profile,
+        profile: mapProfileSummary(r.profile),
         status: r.status,
         rsvpedAt: r.rsvpedAt,
       }))
       return reply.code(200).send({ success: true, attendees })
     } catch (err) {
+      if (err instanceof ZodError) {
+        return sendError(reply, 400, 'Invalid query parameters')
+      }
       if (err instanceof EventNotVisibleError) {
         return sendError(reply, 404, 'Event not found')
       }

@@ -42,6 +42,10 @@ vi.mock('@/api/mappers/event.mappers', () => ({
   mapDbEventToDetail: (row: any) => ({ ...row, _isOwn: false }),
 }))
 
+vi.mock('@/api/mappers/profile.mappers', () => ({
+  mapProfileSummary: (profile: any) => ({ id: profile.id, publicName: profile.publicName }),
+}))
+
 import eventRoutes from '../../../api/routes/content/event.route'
 
 const profileId = 'cmprofile00000000000p1'
@@ -171,7 +175,7 @@ describe('GET /:id/attendees', () => {
     rsvpedAt: new Date('2027-01-01T12:00:00Z'),
   })
 
-  it('returns 200 with attendees list', async () => {
+  it('returns 200 with attendees list mapped via mapProfileSummary', async () => {
     const handler = fastify.routes['GET /:id/attendees']
     const row = makeAttendeeRow()
     mockEventService.listAttendees.mockResolvedValue([row])
@@ -184,11 +188,20 @@ describe('GET /:id/attendees', () => {
       success: true,
       attendees: [
         expect.objectContaining({
-          profile: row.profile,
+          profile: { id: row.profile.id, publicName: row.profile.publicName },
           status: 'GOING',
         }),
       ],
     })
+  })
+
+  it('returns 400 when query contains invalid status', async () => {
+    const handler = fastify.routes['GET /:id/attendees']
+    await handler(
+      { session: { profileId }, params: { id: eventId }, query: { status: 'INVALID' } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(400)
   })
 
   it('propagates status filter to service', async () => {
