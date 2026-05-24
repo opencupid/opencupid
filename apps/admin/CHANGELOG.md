@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.68.0
+
+### Minor Changes
+
+- 8129e01: Render admin dashboard Messages and Interactions detail charts as stacked columns.
+
 ## 0.67.1
 
 ## 0.67.0

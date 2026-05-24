@@ -1,5 +1,11 @@
 # frontend
 
+## 0.68.0
+
+### Minor Changes
+
+- e9b9851: Search now includes events and communities alongside posts, surfaced as separate sections in the omnibox.
+
 ## 0.67.1
 
 ### Patch Changes
