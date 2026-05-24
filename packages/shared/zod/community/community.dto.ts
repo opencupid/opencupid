@@ -70,6 +70,8 @@ export const CommunitySummarySchema = z.object({
   id: z.string(),
   kind: COMMUNITY_KIND,
   content: z.string(),
+  yearFounded: YearFoundedSchema,
   location: LocationSchema,
   postedBy: ProfileSummarySchema,
 })
+export type CommunitySummary = z.infer<typeof CommunitySummarySchema>

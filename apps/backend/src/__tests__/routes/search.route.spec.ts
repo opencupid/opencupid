@@ -14,6 +14,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
 vi.mock('../../api/mappers/post.mappers', () => ({
   mapPostSummary: vi.fn((p: any) => ({
     id: p.id,
+    kind: 'post',
     type: p.type,
     content: p.content,
     location: p.location ?? { country: '' },
@@ -21,6 +22,30 @@ vi.mock('../../api/mappers/post.mappers', () => ({
       id: p.postedBy.id,
       publicName: p.postedBy.publicName,
       profileImages: (p.postedBy.profileImages ?? []).map((g: any) => g.image),
+    },
+  })),
+  mapEventSummary: vi.fn((e: any) => ({
+    id: e.id,
+    kind: 'event',
+    content: e.content,
+    startsAt: e.event.startsAt,
+    location: e.location ?? { country: '' },
+    postedBy: {
+      id: e.postedBy.id,
+      publicName: e.postedBy.publicName,
+      profileImages: (e.postedBy.profileImages ?? []).map((g: any) => g.image),
+    },
+  })),
+  mapCommunitySummary: vi.fn((c: any) => ({
+    id: c.id,
+    kind: 'community',
+    content: c.content,
+    yearFounded: c.community.yearFounded,
+    location: c.location ?? { country: '' },
+    postedBy: {
+      id: c.postedBy.id,
+      publicName: c.postedBy.publicName,
+      profileImages: (c.postedBy.profileImages ?? []).map((g: any) => g.image),
     },
   })),
 }))
@@ -57,7 +82,7 @@ describe('GET /search', () => {
   const handler = () => fastify.routes['GET /']
 
   it('forwards session language and profileId to the service', async () => {
-    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [] })
+    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [], events: [], communities: [] })
 
     await handler()(
       { session: { ...baseSession, lang: 'hu' }, query: { q: 'guitar' }, log: { error: vi.fn() } },
@@ -68,6 +93,7 @@ describe('GET /search', () => {
   })
 
   it('returns grouped results mapped to public/summary shapes', async () => {
+    const startsAt = new Date('2026-06-01T18:00:00Z')
     mockSearch.mockResolvedValue({
       tags: [
         {
@@ -97,6 +123,30 @@ describe('GET /search', () => {
           },
         },
       ],
+      events: [
+        {
+          id: 'evt-1',
+          content: 'Guitar concert',
+          event: { startsAt },
+          postedBy: {
+            id: 'p1',
+            publicName: 'Alice',
+            profileImages: [{ image: { storagePath: 'a/b' } }],
+          },
+        },
+      ],
+      communities: [
+        {
+          id: 'com-1',
+          content: 'Guitar players',
+          community: { yearFounded: 2010 },
+          postedBy: {
+            id: 'p1',
+            publicName: 'Alice',
+            profileImages: [{ image: { storagePath: 'a/b' } }],
+          },
+        },
+      ],
     })
 
     await handler()(
@@ -110,14 +160,29 @@ describe('GET /search', () => {
     expect(reply.payload.profiles[0]).toMatchObject({ id: 'p1', publicName: 'Alice' })
     expect(reply.payload.posts[0]).toMatchObject({
       id: 'post-1',
+      kind: 'post',
       type: 'OFFER',
       content: 'Guitar lessons',
+      postedBy: { id: 'p1', publicName: 'Alice' },
+    })
+    expect(reply.payload.events[0]).toMatchObject({
+      id: 'evt-1',
+      kind: 'event',
+      content: 'Guitar concert',
+      startsAt,
+      postedBy: { id: 'p1', publicName: 'Alice' },
+    })
+    expect(reply.payload.communities[0]).toMatchObject({
+      id: 'com-1',
+      kind: 'community',
+      content: 'Guitar players',
+      yearFounded: 2010,
       postedBy: { id: 'p1', publicName: 'Alice' },
     })
   })
 
   it('defaults missing q to empty string (and the service short-circuits)', async () => {
-    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [] })
+    mockSearch.mockResolvedValue({ tags: [], profiles: [], posts: [], events: [], communities: [] })
 
     await handler()({ session: baseSession, query: {}, log: { error: vi.fn() } }, reply)
 
@@ -127,6 +192,8 @@ describe('GET /search', () => {
       tags: [],
       profiles: [],
       posts: [],
+      events: [],
+      communities: [],
     })
   })
 

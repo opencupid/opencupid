@@ -293,6 +293,8 @@ onMounted(async () => {
           @location:set="onLocationSet"
           @profile:select="handleProfileSelect"
           @post:select="handlePostSelect"
+          @event:select="handleEventSelect"
+          @community:select="handleCommunitySelect"
         />
         <MapLayerControl
           v-model="selectedLayers"
