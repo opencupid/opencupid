@@ -86,6 +86,20 @@ describe('DashboardDrillDownModal', () => {
     expect(wrapper.text()).toContain('Matches')
   })
 
+  it('renders the bar chart with stacked axes', async () => {
+    const wrapper = mount(DashboardDrillDownModal, {
+      props: { metric: 'interactions', title: 'Interactions' },
+    })
+    await flushPromises()
+
+    const chart = wrapper.findComponent({ name: 'Bar' })
+    const options = chart.props('options') as {
+      scales: { x: { stacked: boolean }; y: { stacked: boolean } }
+    }
+    expect(options.scales.x.stacked).toBe(true)
+    expect(options.scales.y.stacked).toBe(true)
+  })
+
   it('refetches when the range dropdown changes', async () => {
     const wrapper = mount(DashboardDrillDownModal, {
       props: { metric: 'interactions', title: 'Interactions' },

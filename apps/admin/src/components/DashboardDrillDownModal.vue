@@ -107,7 +107,7 @@ const chartOptions = computed(() => {
     interaction: { mode: 'index' as const, intersect: false },
     scales: {
       x: {
-        stacked: false,
+        stacked: true,
         ticks: {
           autoSkip: false,
           maxRotation: 0,
@@ -118,6 +118,7 @@ const chartOptions = computed(() => {
         grid: { display: false },
       },
       y: {
+        stacked: true,
         beginAtZero: true,
         ticks: { precision: 0 },
       },
