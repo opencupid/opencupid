@@ -8,6 +8,7 @@ import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
+import VisibilityToggle from '@/features/shared/ui/VisibilityToggle.vue'
 
 const COMMUNITY_CONTENT_MAX_LENGTH = 300
 
@@ -148,6 +149,13 @@ const handleSubmit = async () => {
         :close-on-select="true"
       />
     </BFormGroup>
+
+    <VisibilityToggle
+      v-if="isEdit"
+      v-model="form.isVisible"
+      :label="$t('community.labels.visibility')"
+      class="mb-3"
+    />
 
     <BFormGroup class="mb-3">
       <ContentImageButton

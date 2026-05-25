@@ -10,6 +10,13 @@ vi.mock('@/features/shared/profileform/LocationSelector.vue', () => ({
   default: { template: '<div class="loc-selector" />' },
 }))
 
+vi.mock('@/assets/icons/interface/hide.svg', () => ({
+  default: { template: '<span class="icon-hide" />' },
+}))
+vi.mock('@/assets/icons/interface/unhide.svg', () => ({
+  default: { template: '<span class="icon-show" />' },
+}))
+
 const createCommunityMock = vi.fn().mockResolvedValue({
   success: true,
   data: { community: { id: 'c-new', kind: 'community', content: 'X', yearFounded: 2020 } },
