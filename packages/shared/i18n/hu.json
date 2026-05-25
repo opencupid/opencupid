@@ -478,6 +478,10 @@
     "update_banner": {
       "message": "Új verzió jelent meg, frissítsünk?",
       "reload": "Frissítsd"
+    },
+    "visibility_toggle": {
+      "hide": "Elrejtés (de nem törlés)",
+      "show": "Megjelenítés"
     }
   },
   "unsubscribe": {

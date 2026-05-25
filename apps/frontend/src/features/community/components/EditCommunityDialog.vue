@@ -8,6 +8,7 @@ import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
+import VisibilityToggle from '@/features/shared/ui/VisibilityToggle.vue'
 
 const COMMUNITY_CONTENT_MAX_LENGTH = 300
 

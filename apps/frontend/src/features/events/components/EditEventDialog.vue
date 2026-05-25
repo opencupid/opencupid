@@ -11,6 +11,7 @@ import { enGB } from 'date-fns/locale/en-GB'
 import { hu as huLocale } from 'date-fns/locale/hu'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
+import VisibilityToggle from '@/features/shared/ui/VisibilityToggle.vue'
 
 // XXX hardcoded locales - needs attention when adding new locale support to i18n
 const datepickerLocales = { en: enGB, hu: huLocale } as const
@@ -183,15 +184,6 @@ function nextHourFromNow(): Date {
         :placeholder="$t('events.placeholders.venue')"
         :maxlength="EVENT_VENUE_MAX_LENGTH"
       />
-    </BFormGroup>
-
-    <BFormGroup
-      v-if="isEdit"
-      class="d-flex align-items-center mb-3"
-    >
-      <BFormCheckbox v-model="form.isVisible">
-        {{ $t('events.labels.visibility') }}
-      </BFormCheckbox>
     </BFormGroup>
 
     <BFormGroup class="mb-3">
