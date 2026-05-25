@@ -145,13 +145,6 @@ const handleSubmit = async () => {
             :close-on-select="true"
           />
         </BFormGroup>
-
-        <!-- isVisible flag checkbox -->
-        <VisibilityToggle
-          v-if="isEdit"
-          v-model="form.isVisible"
-          :label="$t('posts.labels.visibility')"
-        />
       </div>
 
       <!-- submit button -->

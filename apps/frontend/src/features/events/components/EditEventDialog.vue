@@ -186,13 +186,6 @@ function nextHourFromNow(): Date {
       />
     </BFormGroup>
 
-    <VisibilityToggle
-      v-if="isEdit"
-      v-model="form.isVisible"
-      :label="$t('events.labels.visibility')"
-      class="mb-3"
-    />
-
     <BFormGroup class="mb-3">
       <ContentImageButton
         ref="imageBtn"

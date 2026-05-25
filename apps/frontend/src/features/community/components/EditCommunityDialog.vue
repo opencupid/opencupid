@@ -150,13 +150,6 @@ const handleSubmit = async () => {
       />
     </BFormGroup>
 
-    <VisibilityToggle
-      v-if="isEdit"
-      v-model="form.isVisible"
-      :label="$t('community.labels.visibility')"
-      class="mb-3"
-    />
-
     <BFormGroup class="mb-3">
       <ContentImageButton
         ref="imageBtn"
