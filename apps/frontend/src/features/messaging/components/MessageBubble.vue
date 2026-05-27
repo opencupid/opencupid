@@ -41,7 +41,7 @@ const isVoice = computed(
       >
         <ImageTag
           v-for="img in message.images"
-          :key="img.id"
+          :key="img.position"
           :image="img"
           variant="card"
           loading="lazy"

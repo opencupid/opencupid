@@ -26,7 +26,7 @@ vi.mock('@/features/images/components/ImageTag.vue', () => ({
     name: 'ImageTag',
     props: ['image', 'variant', 'loading', 'className'],
     template:
-      '<img class="image-stub" :data-id="image.id" :data-variant="variant" :src="image.variants?.[0]?.url" />',
+      '<img class="image-stub" :data-position="image.position" :data-variant="variant" :src="image.variants?.[0]?.url" />',
   },
 }))
 
@@ -93,8 +93,7 @@ describe('MessageBubble', () => {
     expect(wrapper.find('.message-bubble').classes()).toContain('bg-secondary')
   })
 
-  const imageFixture = (id: string, url: string, position = 0) => ({
-    id,
+  const imageFixture = (url: string, position = 0) => ({
     mimeType: 'image/jpeg',
     altText: '',
     blurhash: 'L0',
@@ -109,13 +108,13 @@ describe('MessageBubble', () => {
           ...baseMessage,
           content: '',
           messageType: 'image',
-          images: [imageFixture('img-1', '/a.jpg'), imageFixture('img-2', '/b.jpg')],
+          images: [imageFixture('/a.jpg', 0), imageFixture('/b.jpg', 1)],
         } as MessageDTO,
       },
     })
     const imgs = wrapper.findAll('.image-stub')
     expect(imgs).toHaveLength(2)
-    expect(imgs[0]!.attributes('data-id')).toBe('img-1')
+    expect(imgs[0]!.attributes('data-position')).toBe('0')
     expect(imgs[0]!.attributes('data-variant')).toBe('card')
     // No text body when content is empty
     expect(wrapper.find('.message-text').exists()).toBe(false)
@@ -128,7 +127,7 @@ describe('MessageBubble', () => {
           ...baseMessage,
           content: 'check this out',
           messageType: 'text/plain',
-          images: [imageFixture('img-1', '/a.jpg')],
+          images: [imageFixture('/a.jpg', 0)],
         } as MessageDTO,
       },
     })
