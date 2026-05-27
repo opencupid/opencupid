@@ -588,7 +588,7 @@ describe('attachManyToUserContentTx', () => {
 
     expect(mockPrisma.image.findMany).toHaveBeenCalledWith({
       where: { id: { in: ['img-a'] } },
-      include: { profileGallery: true, userContentGallery: true },
+      include: { profileGallery: true, userContentGallery: true, messageGallery: true },
     })
     expect(mockPrisma.userContentImage.create).toHaveBeenCalledTimes(1)
     expect(mockPrisma.userContentImage.create).toHaveBeenCalledWith({

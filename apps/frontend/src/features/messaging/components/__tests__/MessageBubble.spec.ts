@@ -31,6 +31,7 @@ const baseMessage = {
   createdAt: new Date('2026-01-15T12:00:00.000Z'),
   messageType: 'text',
   attachment: null,
+  images: [],
   conversationId: 'c1',
   senderId: 'p1',
   sender: { id: 'p1', publicName: 'Alice', profileImages: [], location: { country: 'HU' } },

@@ -5,6 +5,7 @@ import { Conversation } from '@zod/generated'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { appConfig } from '../lib/appconfig'
 import { computeSendOutcome } from './messaging.stateMachine'
+import { ImageService } from './image.service'
 
 // Business-error codes raised from the messaging service / route handlers.
 // HTTP status mapping is the route's responsibility — do not bake it in here.
@@ -69,6 +70,7 @@ export const messageWithSenderInclude = {
     },
   },
   attachment: true,
+  images: { include: { image: true } },
 } satisfies Prisma.MessageInclude
 
 export type MessageWithSender = Prisma.MessageGetPayload<{
@@ -314,17 +316,21 @@ export class MessageService {
       mimeType: string
       fileSize?: number
       duration?: number
-    }
+    },
+    imageIds?: string[]
   ): Promise<{ message: MessageWithSender; isDuplicate: boolean }> {
     const cleanContent = messageType === 'text/plain' ? content.trim() : content
+    const hasImages = !!imageIds && imageIds.length > 0
 
-    if (messageType === 'text/plain' && !cleanContent) {
+    if (messageType === 'text/plain' && !cleanContent && !hasImages) {
       throw new MessagingError(MessagingErrorCodes.EMPTY_MESSAGE, 'Message content cannot be empty')
     }
 
-    // Dedup: identical text content within 5s, text-only (attachments bypass dedup
-    // because voice messages have empty content and would falsely match).
-    if (messageType === 'text/plain' && !attachmentData) {
+    // Dedup: identical text content within 5s, text-only (attachments and image
+    // attachments bypass dedup — voice messages have empty content and would
+    // falsely match, and image messages are intentionally never deduped because
+    // the imageIds are already proof of distinct user intent).
+    if (messageType === 'text/plain' && !attachmentData && !hasImages) {
       const fiveSecondsAgo = new Date(Date.now() - 5000)
       const duplicate = await tx.message.findFirst({
         where: {
@@ -339,7 +345,7 @@ export class MessageService {
       if (duplicate) return { message: duplicate, isDuplicate: true }
     }
 
-    const message = await tx.message.create({
+    const created = await tx.message.create({
       data: {
         conversationId: convoId,
         senderId: senderProfileId,
@@ -349,6 +355,24 @@ export class MessageService {
       },
       include: messageWithSenderInclude,
     })
+
+    // Attach images after create (rather than nested under it) so the attach
+    // step can throw and roll back the entire transaction if any imageId is
+    // foreign/missing/already-attached. Re-fetch only in that branch — the
+    // text/voice fast path returns the original create result unchanged.
+    let message: MessageWithSender = created
+    if (hasImages) {
+      await ImageService.getInstance().attachManyToMessageTx(
+        tx,
+        imageIds!,
+        created.id,
+        senderProfileId
+      )
+      message = await tx.message.findUniqueOrThrow({
+        where: { id: created.id },
+        include: messageWithSenderInclude,
+      })
+    }
 
     // Bump parent conversation so inbox ordering (listConversationsForProfile
     // orders by updatedAt DESC) reflects the new activity. Prisma @updatedAt

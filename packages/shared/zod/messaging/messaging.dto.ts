@@ -3,9 +3,11 @@ import { ProfileSummarySchema } from '../profile/profile.dto'
 import {
   ConversationParticipantSchema,
   ConversationSchema,
+  ImageSchema,
   MessageSchema,
   MessageAttachmentSchema,
 } from '../generated'
+import { PublicImageSchema } from '../image/image.dto'
 import { Prisma } from '@prisma/client'
 
 const conversationParticipantFields = {
@@ -42,6 +44,12 @@ const MessageAttachmentDTOSchema = MessageAttachmentSchema.pick({
 
 export type MessageAttachmentDTO = z.infer<typeof MessageAttachmentDTOSchema>
 
+// DB-layer shape of a MessageImage join: caller must include `{ image: true }`.
+const DbMessageImageSchema = z.object({
+  image: ImageSchema,
+})
+export type DbMessageImage = z.infer<typeof DbMessageImageSchema>
+
 // this is used in the db layer
 const DbMessageInConversationSchema = MessageSchema.pick({
   id: true,
@@ -53,6 +61,7 @@ const DbMessageInConversationSchema = MessageSchema.pick({
 }).extend({
   sender: ProfileSummarySchema,
   attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
+  images: z.array(DbMessageImageSchema).default([]),
 })
 export type DbMessageInConversation = z.infer<typeof DbMessageInConversationSchema>
 
@@ -67,6 +76,7 @@ const MessageInConversationSchema = MessageSchema.pick({
 }).extend({
   sender: ProfileSummarySchema,
   attachment: MessageAttachmentDTOSchema.nullable().optional(),
+  images: z.array(PublicImageSchema).default([]),
 })
 export type MessageInConversation = z.infer<typeof MessageInConversationSchema>
 
@@ -75,6 +85,7 @@ const MessageDTOSchema = MessageInConversationSchema.extend({
   sender: ProfileSummarySchema,
   isMine: z.boolean().optional(),
   attachment: MessageAttachmentDTOSchema.nullable().optional(),
+  images: z.array(PublicImageSchema).default([]),
 })
 export type MessageDTO = z.infer<typeof MessageDTOSchema>
 
@@ -158,10 +169,20 @@ export type ConversationParticipantWithConversationSummary =
     }
   }>
 
-export const SendMessagePayloadSchema = z.object({
-  profileId: z.string().cuid(),
-  content: z.string().min(1),
-})
+// Maximum images attachable to a single message. Tighter than
+// MAX_IMAGES_PER_GALLERY (6) so message bubbles stay renderable as a small grid
+// and the WS payload stays bounded.
+export const MAX_IMAGES_PER_MESSAGE = 4
+
+export const SendMessagePayloadSchema = z
+  .object({
+    profileId: z.string().cuid(),
+    content: z.string().default(''),
+    imageIds: z.array(z.string().cuid()).max(MAX_IMAGES_PER_MESSAGE).optional(),
+  })
+  .refine((b) => b.content.trim().length > 0 || (b.imageIds && b.imageIds.length > 0), {
+    message: 'Message must have content or at least one image',
+  })
 
 export type SendMessagePayload = z.infer<typeof SendMessagePayloadSchema>
 
