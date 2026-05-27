@@ -28,6 +28,7 @@ const msg: any = {
   messageType: 'text/plain',
   sender: { id: 'p1', publicName: 'Me', profileImages: [] },
   attachment: null,
+  images: [],
 }
 
 const profileMe = { id: 'p1', publicName: 'Me', profileImages: [], isCallable: true }
@@ -65,6 +66,7 @@ describe('messaging mappers', () => {
       expect(dto.id).toBe('m1')
       expect(dto.sender.publicName).toBe('Me')
       expect(dto.attachment).toBeNull()
+      expect(dto.images).toEqual([])
       expect(dto.isMine).toBeUndefined()
     })
 

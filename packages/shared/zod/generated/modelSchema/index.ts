@@ -6,6 +6,7 @@ export * from './LocalizedProfileFieldSchema';
 export * from './ImageSchema';
 export * from './ProfileImageSchema';
 export * from './UserContentImageSchema';
+export * from './MessageImageSchema';
 export * from './ConversationSchema';
 export * from './ConversationParticipantSchema';
 export * from './LikedProfileSchema';

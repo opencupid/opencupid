@@ -104,6 +104,7 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
         isMine: false,
+        images: [],
         sender: {
           id: 'partner-profile-1',
           publicName: 'Partner',
@@ -186,6 +187,7 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-03'),
         isMine: false,
+        images: [],
         sender: {
           id: 'partner-2',
           publicName: 'Partner 2',
@@ -241,6 +243,7 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
         isMine: false,
+        images: [],
         sender: {
           id: 'partner-1',
           publicName: 'Partner',
@@ -294,6 +297,7 @@ describe('messageStore', () => {
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
         isMine: false,
+        images: [],
         sender: {
           id: 'partner-1',
           publicName: 'Partner',

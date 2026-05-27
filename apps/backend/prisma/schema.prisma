@@ -250,6 +250,7 @@ model Image {
 
   profileGallery     ProfileImage?
   userContentGallery UserContentImage?
+  messageGallery     MessageImage?
 
   @@index([ownerProfileId])
 }
@@ -270,6 +271,15 @@ model UserContentImage {
   userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
 
   @@index([userContentId])
+}
+
+model MessageImage {
+  imageId   String  @id
+  image     Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
 }
 
 model Conversation {
@@ -355,6 +365,7 @@ model Message {
   messageType    String             @default("text/plain") // 'text/plain', 'audio/voice'
   createdAt      DateTime           @default(now())
   attachment     MessageAttachment?
+  images         MessageImage[]
 }
 
 model MessageAttachment {

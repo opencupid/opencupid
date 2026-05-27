@@ -11,6 +11,7 @@ import {
 } from '../../services/messaging.service'
 import { mediaUrl } from '../../lib/media'
 import { appConfig } from '../../lib/appconfig'
+import { toPublicImage } from './image.mappers'
 
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
@@ -77,6 +78,7 @@ export function mapMessageToDTO(m: MessageWithSender, currentProfileId?: string)
     createdAt: m.createdAt,
     sender: mapProfileSummary(m.sender),
     attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
+    images: m.images.map((j) => toPublicImage(j.image)),
     ...(currentProfileId !== undefined && { isMine: m.senderId === currentProfileId }),
   }
 }

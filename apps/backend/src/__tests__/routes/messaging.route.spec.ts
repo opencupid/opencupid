@@ -322,6 +322,7 @@ describe('POST /message', () => {
       'p1',
       'hello',
       'text/plain',
+      undefined,
       undefined
     )
     expect(mockMessageService.acceptConversationOnReply).not.toHaveBeenCalled()

@@ -7,6 +7,7 @@ export { LocalizedProfileFieldScalarFieldEnumSchema } from './LocalizedProfileFi
 export { ImageScalarFieldEnumSchema } from './ImageScalarFieldEnumSchema';
 export { ProfileImageScalarFieldEnumSchema } from './ProfileImageScalarFieldEnumSchema';
 export { UserContentImageScalarFieldEnumSchema } from './UserContentImageScalarFieldEnumSchema';
+export { MessageImageScalarFieldEnumSchema } from './MessageImageScalarFieldEnumSchema';
 export { ConversationScalarFieldEnumSchema } from './ConversationScalarFieldEnumSchema';
 export { ConversationParticipantScalarFieldEnumSchema } from './ConversationParticipantScalarFieldEnumSchema';
 export { LikedProfileScalarFieldEnumSchema } from './LikedProfileScalarFieldEnumSchema';

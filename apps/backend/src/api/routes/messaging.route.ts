@@ -99,13 +99,15 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       fileSize?: number
       duration?: number
     }
+    imageIds?: string[]
   }): Promise<{
     response: SendMessageResponse
     messageDTO: MessageDTO
     outcome: SendOutcome
     isDuplicate: boolean
   }> {
-    const { senderProfileId, recipientProfileId, content, messageType, attachment } = input
+    const { senderProfileId, recipientProfileId, content, messageType, attachment, imageIds } =
+      input
 
     // Pre-tx: is the sender currently quarantined? Drives PENDING vs INITIATED status.
     const senderIsQuarantined = await trustService.hasTrustFlag(senderProfileId)
@@ -148,7 +150,8 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           senderProfileId,
           content,
           messageType,
-          attachment
+          attachment,
+          imageIds
         )
 
         return {
@@ -410,7 +413,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       const body = SendMessagePayloadSchema.safeParse(req.body)
       if (!body.success) return sendError(reply, 401, 'Invalid parameters')
 
-      const { profileId, content } = body.data
+      const { profileId, content, imageIds } = body.data
 
       try {
         const { response, messageDTO, outcome, isDuplicate } = await sendAndBuildResponse({
@@ -418,6 +421,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           recipientProfileId: profileId,
           content,
           messageType: 'text/plain',
+          imageIds,
         })
 
         reply.code(200).send(response)

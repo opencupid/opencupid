@@ -179,6 +179,7 @@ beforeEach(async () => {
           isCallable: true,
         },
         attachment: null,
+        images: [],
       },
       isDuplicate: false,
     }),

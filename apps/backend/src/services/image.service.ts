@@ -137,13 +137,13 @@ export class ImageService {
   async attachToProfile(imageId: string, profileId: string): Promise<void> {
     const image = await prisma.image.findUnique({
       where: { id: imageId },
-      include: { profileGallery: true, userContentGallery: true },
+      include: { profileGallery: true, userContentGallery: true, messageGallery: true },
     })
     if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
     if (image.ownerProfileId !== profileId) {
       throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
     }
-    if (image.profileGallery || image.userContentGallery) {
+    if (image.profileGallery || image.userContentGallery || image.messageGallery) {
       throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
     }
 
@@ -166,7 +166,7 @@ export class ImageService {
   async attachToUserContent(imageId: string, userContentId: string): Promise<void> {
     const image = await prisma.image.findUnique({
       where: { id: imageId },
-      include: { profileGallery: true, userContentGallery: true },
+      include: { profileGallery: true, userContentGallery: true, messageGallery: true },
     })
     if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
 
@@ -176,7 +176,7 @@ export class ImageService {
       throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch with content author')
     }
 
-    if (image.profileGallery || image.userContentGallery) {
+    if (image.profileGallery || image.userContentGallery || image.messageGallery) {
       throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
     }
 
@@ -209,7 +209,7 @@ export class ImageService {
 
     const images = await tx.image.findMany({
       where: { id: { in: uniqueIds } },
-      include: { profileGallery: true, userContentGallery: true },
+      include: { profileGallery: true, userContentGallery: true, messageGallery: true },
     })
 
     if (images.length !== uniqueIds.length) {
@@ -219,7 +219,7 @@ export class ImageService {
       if (img.ownerProfileId !== ownerProfileId) {
         throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
       }
-      if (img.profileGallery || img.userContentGallery) {
+      if (img.profileGallery || img.userContentGallery || img.messageGallery) {
         throw new ImageServiceError('ALREADY_ATTACHED', `Image ${img.id} already attached`)
       }
     }
@@ -243,6 +243,62 @@ export class ImageService {
         throw err
       }
       await tx.image.update({ where: { id }, data: { position: startPos + i } })
+    }
+  }
+
+  /**
+   * Bulk-attach images to a freshly-created Message inside a caller-supplied
+   * transaction. Pre-validates that every imageId exists, is owned by
+   * `ownerProfileId`, and is not yet attached to any gallery. Inserts join
+   * rows and assigns sequential `Image.position` values in caller-supplied
+   * order so the bubble renders in the order the user picked.
+   */
+  async attachManyToMessageTx(
+    tx: Prisma.TransactionClient,
+    imageIds: string[],
+    messageId: string,
+    ownerProfileId: string
+  ): Promise<void> {
+    if (imageIds.length === 0) return
+
+    // De-dupe caller input; downstream length checks and writes assume uniqueness.
+    const uniqueIds = Array.from(new Set(imageIds))
+
+    const images = await tx.image.findMany({
+      where: { id: { in: uniqueIds } },
+      include: { profileGallery: true, userContentGallery: true, messageGallery: true },
+    })
+
+    if (images.length !== uniqueIds.length) {
+      throw new ImageServiceError('NOT_FOUND', 'One or more images not found')
+    }
+    for (const img of images) {
+      if (img.ownerProfileId !== ownerProfileId) {
+        throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      }
+      if (img.profileGallery || img.userContentGallery || img.messageGallery) {
+        throw new ImageServiceError('ALREADY_ATTACHED', `Image ${img.id} already attached`)
+      }
+    }
+
+    // Writes iterate `uniqueIds` (deduped input order) — not the validated `images`
+    // set, which Prisma may return in arbitrary order — so positions follow
+    // caller-supplied order.
+    for (let i = 0; i < uniqueIds.length; i++) {
+      const id = uniqueIds[i]
+      try {
+        await tx.messageImage.create({ data: { imageId: id, messageId } })
+      } catch (err) {
+        // P2002 means another transaction attached this image between our
+        // pre-validation and write. The owner check upstream guarantees the
+        // racing attach was the same user; their attach stands. Skip without
+        // updating position so we don't overwrite theirs.
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          continue
+        }
+        throw err
+      }
+      await tx.image.update({ where: { id }, data: { position: i } })
     }
   }
 
