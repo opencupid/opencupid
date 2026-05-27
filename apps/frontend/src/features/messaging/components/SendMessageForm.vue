@@ -15,6 +15,7 @@ import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
 import VoiceMessage from './VoiceMessage.vue'
+import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
 import { useMessageStore } from '../stores/messageStore'
 
 const toast = useToast()
@@ -50,6 +51,7 @@ const shouldShowLanguageList = computed(() => senderLanguages.value.length > 1)
 const content = ref('')
 const isVoiceActive = ref(false)
 const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
+const imageButtonRef = ref<InstanceType<typeof ContentImageButton> | null>(null)
 const voiceMaxDuration = parseInt(__APP_CONFIG__.VOICE_MESSAGE_MAX_DURATION, 10)
 
 // Voice confirmation modal state (shown when recording auto-stops at max duration)
@@ -110,17 +112,26 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 const isSending = ref(false)
 
+const pendingImageIds = computed<string[]>(() => imageButtonRef.value?.getImageIds() ?? [])
+const canSend = computed(() => content.value.trim() !== '' || pendingImageIds.value.length > 0)
+
 async function handleSendMessage() {
+  if (!canSend.value) return
   const trimmedContent = content.value.trim()
-  if (trimmedContent === '') return
+  const imageIds = pendingImageIds.value
   isSending.value = true
-  const result = await messageStore.sendMessage(props.recipientProfile.id, trimmedContent)
+  const result = await messageStore.sendMessage(
+    props.recipientProfile.id,
+    trimmedContent,
+    imageIds.length > 0 ? imageIds : undefined
+  )
   isSending.value = false
   focusTextarea()
   if (result.success) {
     emit('message:sent', result.data!)
     content.value = '' // Clear the input after sending
     localStore.setMessageDraft(props.recipientProfile.id, '') // Clear the draft in local store
+    imageButtonRef.value?.markSaved()
     return
   }
 }
@@ -218,6 +229,7 @@ function handleVoiceRecordingError(error: string) {
         />
         <div class="text-muted d-flex justify-content-between align-items-start">
           <div class="d-flex align-items-center gap-1">
+            <ContentImageButton ref="imageButtonRef" />
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
               ref="voiceRecorderRef"
@@ -250,7 +262,7 @@ function handleVoiceRecordingError(error: string) {
               variant="primary"
               size="md"
               @click="handleSendMessage"
-              :disabled="content.trim() === '' || isVoiceActive || isSending"
+              :disabled="!canSend || isVoiceActive || isSending"
               :title="$t('messaging.send_message_button')"
             >
               <IconSend class="svg-icon" />
