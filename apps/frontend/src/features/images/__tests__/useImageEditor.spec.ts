@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { defineComponent, h, ref, nextTick } from 'vue'
+import { defineComponent, h, reactive, ref, nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import { useImageEditor } from '../composables/useImageEditor'
 import type { GalleryStore } from '../stores/galleryStore'
@@ -22,7 +22,9 @@ function makeStore(initial: OwnerImage[] = []): GalleryStore & {
   reorder: ReturnType<typeof vi.fn>
   cleanup: ReturnType<typeof vi.fn>
 } {
-  return {
+  // Wrap in reactive() so the composable's computed model tracks mutations,
+  // matching real Pinia store behavior in production.
+  return reactive({
     images: [...initial],
     isLoading: false,
     load: vi.fn().mockResolvedValue({ success: true }),
@@ -30,7 +32,7 @@ function makeStore(initial: OwnerImage[] = []): GalleryStore & {
     remove: vi.fn().mockResolvedValue({ success: true }),
     reorder: vi.fn().mockResolvedValue({ success: true }),
     cleanup: vi.fn().mockResolvedValue({ success: true }),
-  } as any
+  }) as any
 }
 
 // Mount the composable inside a tiny host component so onMounted/onUnmounted fire.
@@ -51,18 +53,14 @@ describe('useImageEditor', () => {
 
   it('calls store.load() on mount when autoLoad is true', async () => {
     const store = makeStore()
-    mountComposable(() =>
-      useImageEditor({ store, minImages: 0, maxImages: 6, autoLoad: true })
-    )
+    mountComposable(() => useImageEditor({ store, minImages: 0, maxImages: 6, autoLoad: true }))
     await nextTick()
     expect(store.load).toHaveBeenCalledTimes(1)
   })
 
   it('does not call store.load() on mount when autoLoad is false', async () => {
     const store = makeStore()
-    mountComposable(() =>
-      useImageEditor({ store, minImages: 0, maxImages: 6, autoLoad: false })
-    )
+    mountComposable(() => useImageEditor({ store, minImages: 0, maxImages: 6, autoLoad: false }))
     await nextTick()
     expect(store.load).not.toHaveBeenCalled()
   })
@@ -77,9 +75,7 @@ describe('useImageEditor', () => {
   it('reacts to autoLoad as a getter', async () => {
     const store = makeStore()
     const enabled = ref(false)
-    mountComposable(() =>
-      useImageEditor({ store, minImages: 0, autoLoad: () => enabled.value })
-    )
+    mountComposable(() => useImageEditor({ store, minImages: 0, autoLoad: () => enabled.value }))
     await nextTick()
     expect(store.load).not.toHaveBeenCalled()
     // Getter is evaluated at mount only; toggling later must not re-fire load.
@@ -91,9 +87,7 @@ describe('useImageEditor', () => {
   it('calls store.cleanup() on unmount and swallows rejections', async () => {
     const store = makeStore()
     store.cleanup.mockRejectedValueOnce(new Error('boom'))
-    const { wrapper } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0 })
-    )
+    const { wrapper } = mountComposable(() => useImageEditor({ store, minImages: 0 }))
     wrapper.unmount()
     await nextTick()
     expect(store.cleanup).toHaveBeenCalledTimes(1)
@@ -104,9 +98,7 @@ describe('useImageEditor', () => {
     const store = makeStore([img])
     let resolveRemove: (v: any) => void = () => {}
     store.remove.mockReturnValue(new Promise((r) => (resolveRemove = r)))
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0 }))
     const p = api().handleDelete(img)
     expect(api().isRemoving.value['a']).toBe(true)
     resolveRemove({ success: true })
@@ -120,9 +112,7 @@ describe('useImageEditor', () => {
     const img = makeImage('a')
     const store = makeStore([img])
     store.remove.mockResolvedValueOnce({ success: false, message: 'nope' })
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0 }))
     await api().handleDelete(img)
     expect(api().error.value).toBe('nope')
     expect(api().isRemoving.value['a']).toBe(false)
@@ -132,9 +122,7 @@ describe('useImageEditor', () => {
     const a = makeImage('a', 0)
     const b = makeImage('b', 1)
     const store = makeStore([a, b])
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0 }))
     api().model.value = [b, a]
     await api().handleReorder({ moved: { oldIndex: 0, newIndex: 1 } })
     expect(store.reorder).toHaveBeenCalledWith([
@@ -145,18 +133,14 @@ describe('useImageEditor', () => {
 
   it('handleReorder is a no-op when event.moved is absent', async () => {
     const store = makeStore([makeImage('a')])
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0 }))
     await api().handleReorder({})
     expect(store.reorder).not.toHaveBeenCalled()
   })
 
   it('checkMove returns true when futureIndex is within model bounds', () => {
     const store = makeStore([makeImage('a'), makeImage('b')])
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0 }))
     expect(api().checkMove({ draggedContext: { futureIndex: 0 } })).toBe(true)
     expect(api().checkMove({ draggedContext: { futureIndex: 1 } })).toBe(true)
     // futureIndex === model.length is the uploader slot — disallowed.
@@ -165,17 +149,13 @@ describe('useImageEditor', () => {
 
   it('remainingSlots = maxImages - images.length', () => {
     const store = makeStore([makeImage('a'), makeImage('b')])
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0, maxImages: 6 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0, maxImages: 6 }))
     expect(api().remainingSlots.value).toBe(4)
   })
 
   it('placeholderSlots = max(0, maxImages - images.length - 1)', () => {
     const store = makeStore([makeImage('a')])
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0, maxImages: 6 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0, maxImages: 6 }))
     // 6 - 1 - 1 = 4 placeholder slots (leaving 1 for the uploader)
     expect(api().placeholderSlots.value.length).toBe(4)
   })
@@ -188,17 +168,13 @@ describe('useImageEditor', () => {
       makeImage('d'),
       makeImage('e'),
     ])
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 0, maxImages: 6 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 0, maxImages: 6 }))
     expect(api().placeholderSlots.value.length).toBe(0)
   })
 
   it('isDeletable is true only when images.length > minImages', () => {
     const store = makeStore([makeImage('a'), makeImage('b')])
-    const { api } = mountComposable(() =>
-      useImageEditor({ store, minImages: 2 })
-    )
+    const { api } = mountComposable(() => useImageEditor({ store, minImages: 2 }))
     expect(api().isDeletable.value).toBe(false)
     store.images.push(makeImage('c'))
     expect(api().isDeletable.value).toBe(true)
