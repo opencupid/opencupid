@@ -501,7 +501,8 @@
     },
     "image_button": {
       "label": "Images",
-      "modal_title": "Manage images"
+      "modal_title": "Manage images",
+      "thumb_edit_aria": "Edit image"
     }
   }
 }

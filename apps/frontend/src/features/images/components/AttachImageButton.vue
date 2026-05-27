@@ -56,7 +56,7 @@ defineExpose({
           type="button"
           data-test="thumb-wrap"
           class="attach-image-button__thumb-button"
-          :aria-label="t('userContent.image_button.modal_title')"
+          :aria-label="t('userContent.image_button.thumb_edit_aria')"
           @click="showModal = true"
         >
           <ImageTag
@@ -86,6 +86,7 @@ defineExpose({
         :store="store"
         :minImages="0"
         :maxImages="props.maxImages"
+        :autoLoad="false"
       />
     </BModal>
   </BFormGroup>

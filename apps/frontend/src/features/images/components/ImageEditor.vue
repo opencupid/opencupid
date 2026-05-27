@@ -16,9 +16,11 @@ const props = withDefaults(
     store: GalleryStore
     minImages: number
     maxImages?: number
+    autoLoad?: boolean
   }>(),
   {
     maxImages: 6,
+    autoLoad: true,
   }
 )
 
@@ -37,7 +39,7 @@ const {
   store: props.store,
   minImages: () => props.minImages,
   maxImages: () => props.maxImages,
-  autoLoad: true,
+  autoLoad: () => props.autoLoad,
 })
 </script>
 
