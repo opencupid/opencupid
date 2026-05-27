@@ -249,9 +249,9 @@ export class ImageService {
   /**
    * Bulk-attach images to a freshly-created Message inside a caller-supplied
    * transaction. Pre-validates that every imageId exists, is owned by
-   * `ownerProfileId`, and is not yet attached to any gallery. Messages have no
-   * positional ordering (rendered in attach order via the join's index lookup),
-   * so unlike attachManyToUserContentTx this does not update Image.position.
+   * `ownerProfileId`, and is not yet attached to any gallery. Inserts join
+   * rows and assigns sequential `Image.position` values in caller-supplied
+   * order so the bubble renders in the order the user picked.
    */
   async attachManyToMessageTx(
     tx: Prisma.TransactionClient,
@@ -261,6 +261,7 @@ export class ImageService {
   ): Promise<void> {
     if (imageIds.length === 0) return
 
+    // De-dupe caller input; downstream length checks and writes assume uniqueness.
     const uniqueIds = Array.from(new Set(imageIds))
 
     const images = await tx.image.findMany({
@@ -280,15 +281,24 @@ export class ImageService {
       }
     }
 
-    for (const id of uniqueIds) {
+    // Writes iterate `uniqueIds` (deduped input order) — not the validated `images`
+    // set, which Prisma may return in arbitrary order — so positions follow
+    // caller-supplied order.
+    for (let i = 0; i < uniqueIds.length; i++) {
+      const id = uniqueIds[i]
       try {
         await tx.messageImage.create({ data: { imageId: id, messageId } })
       } catch (err) {
+        // P2002 means another transaction attached this image between our
+        // pre-validation and write. The owner check upstream guarantees the
+        // racing attach was the same user; their attach stands. Skip without
+        // updating position so we don't overwrite theirs.
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
           continue
         }
         throw err
       }
+      await tx.image.update({ where: { id }, data: { position: i } })
     }
   }
 

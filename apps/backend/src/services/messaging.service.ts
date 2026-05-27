@@ -70,7 +70,10 @@ export const messageWithSenderInclude = {
     },
   },
   attachment: true,
-  images: { include: { image: true } },
+  images: {
+    include: { image: true },
+    orderBy: { image: { position: 'asc' } },
+  },
 } satisfies Prisma.MessageInclude
 
 export type MessageWithSender = Prisma.MessageGetPayload<{

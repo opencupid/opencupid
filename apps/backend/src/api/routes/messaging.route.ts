@@ -414,19 +414,13 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       if (!body.success) return sendError(reply, 401, 'Invalid parameters')
 
       const { profileId, content, imageIds } = body.data
-      // messageType is image-dominant when images are present and no text
-      // accompanies them — this matches the bubble-rendering branch on the
-      // frontend. Mixed text+image messages stay as text/plain so existing
-      // text-rendering keeps the caption inline.
-      const hasImages = !!imageIds && imageIds.length > 0
-      const messageType = hasImages && !content.trim() ? 'image' : 'text/plain'
 
       try {
         const { response, messageDTO, outcome, isDuplicate } = await sendAndBuildResponse({
           senderProfileId,
           recipientProfileId: profileId,
           content,
-          messageType,
+          messageType: 'text/plain',
           imageIds,
         })
 

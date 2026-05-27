@@ -362,7 +362,7 @@ model Message {
   sender         Profile            @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderId       String
   content        String
-  messageType    String             @default("text/plain") // 'text/plain', 'audio/voice', 'image'
+  messageType    String             @default("text/plain") // 'text/plain', 'audio/voice'
   createdAt      DateTime           @default(now())
   attachment     MessageAttachment?
   images         MessageImage[]
