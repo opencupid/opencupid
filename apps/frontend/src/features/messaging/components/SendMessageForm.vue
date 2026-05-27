@@ -4,7 +4,11 @@ import { funnel } from 'remeda'
 
 import { useLocalStore } from '@/store/localStore'
 
-import { type MessageDTO, type MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
+import {
+  MAX_IMAGES_PER_MESSAGE,
+  type MessageDTO,
+  type MessageAttachmentDTO,
+} from '@zod/messaging/messaging.dto'
 import { type MessageRecipient, type OwnerProfile } from '@zod/profile/profile.dto'
 
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
@@ -229,7 +233,10 @@ function handleVoiceRecordingError(error: string) {
         />
         <div class="text-muted d-flex justify-content-between align-items-start">
           <div class="d-flex align-items-center gap-1">
-            <ContentImageButton ref="imageButtonRef" />
+            <ContentImageButton
+              ref="imageButtonRef"
+              :max-images="MAX_IMAGES_PER_MESSAGE"
+            />
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
               ref="voiceRecorderRef"

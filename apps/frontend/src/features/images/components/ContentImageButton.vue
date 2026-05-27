@@ -5,8 +5,12 @@ import { useUserContentImageStore } from '@/features/images/stores/userContentIm
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import ImageTag from '@/features/images/components/ImageTag.vue'
 import IconPhoto from '@/assets/icons/interface/photo.svg'
+import { MAX_IMAGES_PER_GALLERY } from '@zod/image/image.dto'
 
-const props = defineProps<{ contentId?: string }>()
+const props = withDefaults(
+  defineProps<{ contentId?: string; maxImages?: number }>(),
+  { maxImages: MAX_IMAGES_PER_GALLERY }
+)
 const { t } = useI18n()
 
 const draftKey = useId()
@@ -59,6 +63,7 @@ defineExpose({
       <ImageEditor
         :store="store"
         :minImages="0"
+        :maxImages="props.maxImages"
       />
     </BModal>
   </BFormGroup>
