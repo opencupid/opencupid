@@ -23,7 +23,10 @@ const stubs = {
     props: ['modelValue'],
     template: '<div v-if="modelValue"><slot /></div>',
   },
-  ImageEditor: { template: '<div data-test="image-editor"/>' },
+  ImageEditor: {
+    props: ['store', 'minImages', 'maxImages'],
+    template: '<div data-test="image-editor" :data-max-images="maxImages"/>',
+  },
   ImageTag: {
     template: '<img data-test="thumb" :src="image?.variants?.[0]?.url" />',
     props: ['image', 'variant', 'className'],
@@ -78,6 +81,23 @@ describe('ContentImageButton', () => {
       global: { stubs },
     })
     expect(api.get).toHaveBeenCalledWith('/content/content-1/image')
+  })
+
+  it('forwards maxImages to ImageEditor', async () => {
+    const wrapper = mount(ContentImageButton, {
+      props: { maxImages: 4 },
+      global: { stubs },
+    })
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.find('[data-test="image-editor"]').attributes('data-max-images')).toBe('4')
+  })
+
+  it('defaults maxImages to MAX_IMAGES_PER_GALLERY (6)', async () => {
+    const wrapper = mount(ContentImageButton, {
+      global: { stubs },
+    })
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.find('[data-test="image-editor"]').attributes('data-max-images')).toBe('6')
   })
 
   it('does not load on mount in draft mode (no contentId)', async () => {

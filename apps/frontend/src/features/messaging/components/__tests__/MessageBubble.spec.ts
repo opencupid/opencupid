@@ -21,6 +21,15 @@ vi.mock('../VoiceMessage.vue', () => ({
   },
 }))
 
+vi.mock('@/features/images/components/ImageTag.vue', () => ({
+  default: {
+    name: 'ImageTag',
+    props: ['image', 'variant', 'loading', 'className'],
+    template:
+      '<img class="image-stub" :data-position="image.position" :data-variant="variant" :src="image.variants?.[0]?.url" />',
+  },
+}))
+
 import MessageBubble from '../MessageBubble.vue'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
@@ -82,6 +91,58 @@ describe('MessageBubble', () => {
       props: { message: { ...baseMessage, isMine: true } },
     })
     expect(wrapper.find('.message-bubble').classes()).toContain('bg-secondary')
+  })
+
+  const imageFixture = (url: string, position = 0) => ({
+    mimeType: 'image/jpeg',
+    altText: '',
+    blurhash: 'L0',
+    position,
+    variants: [{ size: 'card' as const, url }],
+  })
+
+  it('renders one ImageTag per attached image with variant=card', () => {
+    const wrapper = mount(MessageBubble, {
+      props: {
+        message: {
+          ...baseMessage,
+          content: '',
+          messageType: 'image',
+          images: [imageFixture('/a.jpg', 0), imageFixture('/b.jpg', 1)],
+        } as MessageDTO,
+      },
+    })
+    const imgs = wrapper.findAll('.image-stub')
+    expect(imgs).toHaveLength(2)
+    expect(imgs[0]!.attributes('data-position')).toBe('0')
+    expect(imgs[0]!.attributes('data-variant')).toBe('card')
+    // No text body when content is empty
+    expect(wrapper.find('.message-text').exists()).toBe(false)
+  })
+
+  it('renders both image and caption when content is present alongside images', () => {
+    const wrapper = mount(MessageBubble, {
+      props: {
+        message: {
+          ...baseMessage,
+          content: 'check this out',
+          messageType: 'text/plain',
+          images: [imageFixture('/a.jpg', 0)],
+        } as MessageDTO,
+      },
+    })
+    expect(wrapper.findAll('.image-stub')).toHaveLength(1)
+    expect(wrapper.find('.message-text').exists()).toBe(true)
+    expect(wrapper.text()).toContain('check this out')
+  })
+
+  it('still renders text-only message when images array is empty', () => {
+    const wrapper = mount(MessageBubble, {
+      props: { message: { ...baseMessage, images: [] } as MessageDTO },
+    })
+    expect(wrapper.findAll('.image-stub')).toHaveLength(0)
+    expect(wrapper.find('.message-text').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Hello!')
   })
 
   it('renders VoiceMessage for audio/voice type', () => {

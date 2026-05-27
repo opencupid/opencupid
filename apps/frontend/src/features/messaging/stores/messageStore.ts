@@ -275,7 +275,8 @@ export const useMessageStore = defineStore('message', {
 
     async sendMessage(
       recipientProfileId: string,
-      content: string
+      content: string,
+      imageIds?: string[]
     ): Promise<StoreResponse<MessageDTO> | StoreError> {
       try {
         this.isSending = true
@@ -284,6 +285,7 @@ export const useMessageStore = defineStore('message', {
           api.post<SendMessageResponse>('/messages/message', {
             profileId: recipientProfileId,
             content,
+            ...(imageIds && imageIds.length > 0 ? { imageIds } : {}),
           } satisfies SendMessagePayload)
         )
         return this.handleSendResponse(res)
