@@ -19,7 +19,7 @@ import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
 import VoiceMessage from './VoiceMessage.vue'
-import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
+import AttachImageButton from '@/features/images/components/AttachImageButton.vue'
 import { useMessageStore } from '../stores/messageStore'
 
 const toast = useToast()
@@ -55,7 +55,7 @@ const shouldShowLanguageList = computed(() => senderLanguages.value.length > 1)
 const content = ref('')
 const isVoiceActive = ref(false)
 const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
-const imageButtonRef = ref<InstanceType<typeof ContentImageButton> | null>(null)
+const imageButtonRef = ref<InstanceType<typeof AttachImageButton> | null>(null)
 const voiceMaxDuration = parseInt(__APP_CONFIG__.VOICE_MESSAGE_MAX_DURATION, 10)
 
 // Voice confirmation modal state (shown when recording auto-stops at max duration)
@@ -233,7 +233,7 @@ function handleVoiceRecordingError(error: string) {
         />
         <div class="text-muted d-flex justify-content-between align-items-start">
           <div class="d-flex align-items-center gap-1">
-            <ContentImageButton
+            <AttachImageButton
               ref="imageButtonRef"
               :max-images="MAX_IMAGES_PER_MESSAGE"
             />

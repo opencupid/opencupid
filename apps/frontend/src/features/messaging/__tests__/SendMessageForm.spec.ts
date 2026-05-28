@@ -33,10 +33,10 @@ const VoiceRecorderStub = {
   props: ['disabled', 'maxDuration'],
 }
 
-// ContentImageButton stub exposing the same defineExpose API as the real component
-const ContentImageButtonStub = {
-  name: 'ContentImageButton',
-  template: '<div data-testid="content-image-button" />',
+// AttachImageButton stub exposing the same defineExpose API as the real component
+const AttachImageButtonStub = {
+  name: 'AttachImageButton',
+  template: '<div data-testid="attach-image-button" />',
   methods: {
     getImageIds: () => [] as string[],
     markSaved: () => {},
@@ -91,7 +91,7 @@ describe('SendMessageForm', () => {
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
-          ContentImageButton: ContentImageButtonStub,
+          AttachImageButton: AttachImageButtonStub,
         },
         mocks: {
           $t: (key: string) => key,
@@ -151,7 +151,7 @@ describe('SendMessageForm', () => {
           IconMenuDotsVert: true,
           IconCall: true,
           Mic2Icon: true,
-          ContentImageButton: ContentImageButtonStub,
+          AttachImageButton: AttachImageButtonStub,
         },
         mocks: {
           $t: (key: string) => key,
@@ -267,7 +267,7 @@ describe('SendMessageForm', () => {
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
-          ContentImageButton: ContentImageButtonStub,
+          AttachImageButton: AttachImageButtonStub,
         },
         mocks: {
           $t: (key: string) => key,
@@ -321,7 +321,7 @@ describe('SendMessageForm', () => {
           IconMenuDotsVert: true,
           IconCall: true,
           Mic2Icon: true,
-          ContentImageButton: ContentImageButtonStub,
+          AttachImageButton: AttachImageButtonStub,
         },
         mocks: {
           $t: (key: string) => key,
