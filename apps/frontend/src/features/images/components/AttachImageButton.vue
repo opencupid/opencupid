@@ -34,7 +34,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="d-flex align-items-center flex-wrap gap-2">
+  <div class="d-flex flex-column align-items-center flex-wrap gap-2">
     <div
       class="attach-image-button__upload"
       :class="{ 'attach-image-button__upload--disabled': remainingSlots <= 0 }"
