@@ -233,10 +233,6 @@ function handleVoiceRecordingError(error: string) {
         />
         <div class="text-muted d-flex justify-content-between align-items-start">
           <div class="d-flex align-items-center gap-1">
-            <AttachImageButton
-              ref="imageButtonRef"
-              :max-images="MAX_IMAGES_PER_MESSAGE"
-            />
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
               ref="voiceRecorderRef"
@@ -257,6 +253,10 @@ function handleVoiceRecordingError(error: string) {
             >
               <IconCall class="svg-icon" />
             </a>
+            <AttachImageButton
+              ref="imageButtonRef"
+              :max-images="MAX_IMAGES_PER_MESSAGE"
+            />
           </div>
 
           <div
