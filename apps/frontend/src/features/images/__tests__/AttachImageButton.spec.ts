@@ -12,26 +12,18 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (k: string) => k.split('.').pop() ?? k }),
 }))
 
-vi.mock('@/assets/icons/interface/photo.svg', () => ({ default: { name: 'IconPhoto' } }))
-
 import AttachImageButton from '../components/AttachImageButton.vue'
 
 const stubs = {
   BFormGroup: { template: '<div><slot /></div>' },
-  BButton: { template: '<button @click="$emit(\'click\')"><slot /></button>' },
-  BModal: {
-    props: ['modelValue'],
-    template: '<div v-if="modelValue"><slot /></div>',
-  },
-  ImageEditor: {
-    props: ['store', 'minImages', 'maxImages'],
-    template: '<div data-test="image-editor" :data-max-images="maxImages"/>',
+  ImageUpload: {
+    props: ['store'],
+    template: '<div data-test="image-upload" />',
   },
   ImageTag: {
     template: '<img data-test="thumb" :src="image?.variants?.[0]?.url" />',
     props: ['image', 'variant', 'className'],
   },
-  IconPhoto: { template: '<span class="icon-photo"/>' },
   FontAwesomeIcon: { template: '<span class="fa-icon"/>' },
 }
 
@@ -63,16 +55,9 @@ describe('AttachImageButton', () => {
     vi.clearAllMocks()
   })
 
-  it('renders an Images button with label', () => {
+  it('renders the ImageUpload control', () => {
     const wrapper = mountWith()
-    expect(wrapper.text()).toContain('label')
-  })
-
-  it('opens the modal with the editor when the Images button is clicked', async () => {
-    const wrapper = mountWith()
-    // First button is the IconPhoto BButton (modal opener)
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.find('[data-test="image-editor"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="image-upload"]').exists()).toBe(true)
   })
 
   it('exposes getImageIds reflecting the underlying store images', () => {
@@ -100,18 +85,6 @@ describe('AttachImageButton', () => {
     expect(api.get).not.toHaveBeenCalled()
   })
 
-  it('forwards maxImages to ImageEditor', async () => {
-    const wrapper = mountWith({ maxImages: 4 })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.find('[data-test="image-editor"]').attributes('data-max-images')).toBe('4')
-  })
-
-  it('defaults maxImages to MAX_IMAGES_PER_GALLERY (6)', async () => {
-    const wrapper = mountWith()
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.find('[data-test="image-editor"]').attributes('data-max-images')).toBe('6')
-  })
-
   it('renders a thumbnail for each store image', async () => {
     ;(api.get as any).mockResolvedValue({ data: { success: true, images: mockImages } })
     const wrapper = mountWith({ contentId: 'content-1' })
@@ -120,21 +93,7 @@ describe('AttachImageButton', () => {
     expect(wrapper.findAll('[data-test="thumb"]')).toHaveLength(2)
   })
 
-  it('clicking a thumbnail opens the modal', async () => {
-    ;(api.get as any).mockResolvedValue({ data: { success: true, images: mockImages } })
-    const wrapper = mountWith({ contentId: 'content-1' })
-    await new Promise((r) => setTimeout(r, 0))
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-test="image-editor"]').exists()).toBe(false)
-    const thumbWrappers = wrapper.findAll('[data-test="thumb-wrap"]')
-    expect(thumbWrappers.length).toBeGreaterThan(0)
-    await thumbWrappers[0]!.trigger('click')
-    expect(wrapper.find('[data-test="image-editor"]').exists()).toBe(true)
-  })
-
-  it('clicking the X overlay deletes the image without opening the modal', async () => {
-    ;(api.get as any).mockResolvedValue({ data: { success: true, images: mockImages } })
-    // remove → DELETE /image/:id, then reload returns empty
+  it('clicking the X overlay deletes the image via DELETE /image/:id', async () => {
     ;(api.delete as any).mockResolvedValue({ data: { success: true } })
     let loadCall = 0
     ;(api.get as any).mockImplementation(() => {
@@ -154,6 +113,28 @@ describe('AttachImageButton', () => {
     expect(xButtons.length).toBe(2)
     await xButtons[0]!.trigger('click')
     expect(api.delete).toHaveBeenCalledWith('/image/ckabcdefghijklmnopqrstu01')
-    expect(wrapper.find('[data-test="image-editor"]').exists()).toBe(false)
+  })
+
+  it('disables the upload control when remainingSlots is 0', async () => {
+    // Use maxImages: 2 with 2 loaded images to hit the cap.
+    ;(api.get as any).mockResolvedValue({ data: { success: true, images: mockImages } })
+    const wrapper = mountWith({ contentId: 'content-1', maxImages: 2 })
+    await new Promise((r) => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    const uploadWrap = wrapper.find('.attach-image-button__upload')
+    expect(uploadWrap.classes()).toContain('attach-image-button__upload--disabled')
+    expect(uploadWrap.attributes('aria-disabled')).toBe('true')
+  })
+
+  it('upload control is enabled when below maxImages', async () => {
+    ;(api.get as any).mockResolvedValue({ data: { success: true, images: mockImages } })
+    const wrapper = mountWith({ contentId: 'content-1', maxImages: 6 })
+    await new Promise((r) => setTimeout(r, 0))
+    await wrapper.vm.$nextTick()
+
+    const uploadWrap = wrapper.find('.attach-image-button__upload')
+    expect(uploadWrap.classes()).not.toContain('attach-image-button__upload--disabled')
+    expect(uploadWrap.attributes('aria-disabled')).toBe('false')
   })
 })
