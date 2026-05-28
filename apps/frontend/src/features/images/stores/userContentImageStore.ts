@@ -23,7 +23,7 @@ const storeKey = (params: UserContentImageStoreParams) =>
  * server-side gallery endpoints. In "draft" mode (`{ draftKey }`) it stages
  * uploads locally so the host EditDialog can submit the imageIds with its
  * create payload. The draft store self-cleans abandoned uploads via
- * `cleanup()` (called by ImageEditor.onUnmounted).
+ * `cleanup()` (called by useImageEditor's onUnmounted hook).
  */
 export const useUserContentImageStore = (params: UserContentImageStoreParams) => {
   const isDraft = !('contentId' in params)
