@@ -232,7 +232,7 @@ function handleVoiceRecordingError(error: string) {
           :disabled="messageStore.isSending || isVoiceActive"
         />
         <div class="text-muted d-flex justify-content-between align-items-start">
-          <div class="d-flex align-items-center gap-1">
+          <div class="d-flex align-items-center gap-2">
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
               ref="voiceRecorderRef"
@@ -246,7 +246,7 @@ function handleVoiceRecordingError(error: string) {
             />
             <a
               v-if="canCall && !isVoiceActive"
-              class="btn btn-secondary btn-sm icon-btn-round ms-2"
+              class="btn btn-secondary btn-sm icon-btn-round"
               role="button"
               :title="$t('calls.call_button_title')"
               @click="emit('call:start')"
@@ -256,6 +256,7 @@ function handleVoiceRecordingError(error: string) {
             <AttachImageButton
               ref="imageButtonRef"
               :max-images="MAX_IMAGES_PER_MESSAGE"
+              class="btn btn-sm icon-btn-round btn-secondary"
             />
           </div>
 

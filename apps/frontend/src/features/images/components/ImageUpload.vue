@@ -98,7 +98,7 @@ function onModalHidden() {
 </script>
 
 <template>
-  <div class="image-upload h-100">
+  <div class="image-upload h-100 d-flex align-items-center p-1">
     <BButton
       v-if="isMobile"
       variant="secondary"
@@ -106,7 +106,7 @@ function onModalHidden() {
       @click="openModal"
       @touchend="openModal"
     >
-      <AvatarUploadIcon class="svg-icon w-100 h-100" />
+      <AvatarUploadIcon class="svg-icon" />
     </BButton>
     <UploadButton
       v-else

@@ -153,6 +153,7 @@ const handleSubmit = async () => {
       <AttachImageButton
         ref="imageBtn"
         :contentId="post?.id"
+        class="btn btn-sm icon-btn-round btn-secondary"
       />
     </BFormGroup>
     <div class="d-flex justify-content-end mt-3">
@@ -178,4 +179,14 @@ const handleSubmit = async () => {
   </BForm>
 </template>
 
-<style scoped></style>
+<style scoped>
+.icon-btn-round {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

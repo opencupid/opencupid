@@ -65,7 +65,7 @@ const {
           >
             <div class="actions nodrag">
               <button
-                class="btn btn-sm btn-secondary"
+                class="btn btn-sm btn-secondary btn-rounded"
                 @mousedown.stop.prevent
                 @click="handleDelete(img)"
                 :disabled="isRemoving[img.id]"
@@ -89,7 +89,11 @@ const {
             v-if="remainingSlots > 0"
             class="col nodrag"
           >
-            <ImageUpload :store="props.store" />
+            <div class="ratio ratio-1x1">
+              <div class="btn btn-outline-primary w-100 file-upload-label">
+                <ImageUpload :store="props.store" />
+              </div>
+            </div>
           </div>
 
           <div
