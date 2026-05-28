@@ -505,7 +505,8 @@
     },
     "image_button": {
       "label": "Képek",
-      "modal_title": "Képek kezelése"
+      "modal_title": "Képek kezelése",
+      "thumb_edit_aria": "Kép szerkesztése"
     }
   }
 }
