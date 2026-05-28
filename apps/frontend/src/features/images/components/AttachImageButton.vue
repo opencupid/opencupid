@@ -34,40 +34,38 @@ defineExpose({
 </script>
 
 <template>
-  <BFormGroup>
-    <div class="d-flex align-items-center flex-wrap gap-2">
-      <div
-        class="attach-image-button__upload"
-        :class="{ 'attach-image-button__upload--disabled': remainingSlots <= 0 }"
-        :aria-disabled="remainingSlots <= 0"
-      >
-        <ImageUpload :store="store" />
-      </div>
-      <div
-        v-for="img in store.images"
-        :key="img.id"
-        class="attach-image-button__thumb"
-        :class="{ removing: isRemoving[img.id] }"
-      >
-        <ImageTag
-          :image="img"
-          variant="thumb"
-          className="rounded"
-        />
-        <button
-          type="button"
-          data-test="thumb-remove"
-          class="attach-image-button__thumb-remove btn btn-sm btn-secondary"
-          :disabled="isRemoving[img.id]"
-          :title="t('profiles.image_editor.delete_button_title')"
-          :aria-label="t('profiles.image_editor.delete_button_title')"
-          @click="handleDelete(img)"
-        >
-          <FontAwesomeIcon :icon="faXmark" />
-        </button>
-      </div>
+  <div class="d-flex align-items-center flex-wrap gap-2">
+    <div
+      class="attach-image-button__upload"
+      :class="{ 'attach-image-button__upload--disabled': remainingSlots <= 0 }"
+      :aria-disabled="remainingSlots <= 0"
+    >
+      <ImageUpload :store="store" />
     </div>
-  </BFormGroup>
+    <div
+      v-for="img in store.images"
+      :key="img.id"
+      class="attach-image-button__thumb"
+      :class="{ removing: isRemoving[img.id] }"
+    >
+      <ImageTag
+        :image="img"
+        variant="thumb"
+        className="rounded"
+      />
+      <button
+        type="button"
+        data-test="thumb-remove"
+        class="attach-image-button__thumb-remove btn btn-sm btn-secondary"
+        :disabled="isRemoving[img.id]"
+        :title="t('profiles.image_editor.delete_button_title')"
+        :aria-label="t('profiles.image_editor.delete_button_title')"
+        @click="handleDelete(img)"
+      >
+        <FontAwesomeIcon :icon="faXmark" />
+      </button>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">

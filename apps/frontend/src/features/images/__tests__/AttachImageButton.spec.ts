@@ -15,7 +15,6 @@ vi.mock('vue-i18n', () => ({
 import AttachImageButton from '../components/AttachImageButton.vue'
 
 const stubs = {
-  BFormGroup: { template: '<div><slot /></div>' },
   ImageUpload: {
     props: ['store'],
     template: '<div data-test="image-upload" />',
