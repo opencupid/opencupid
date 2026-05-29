@@ -8,6 +8,7 @@ import IconPhoto from '@/assets/icons/interface/photo.svg'
 const props = defineProps<{
   capture?: 'user' | 'environment' | undefined
   genericIcon?: boolean
+  buttonTitle?: string
 }>()
 
 defineEmits<{
@@ -21,36 +22,38 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
 </script>
 
 <template>
-    <label
-      class="file-upload-label"
-      :for="idAttr"
+  <label
+    class="file-upload-label"
+    :for="idAttr"
+    :title="buttonTitle"
+  >
+    <BFormFile
+      :id="idAttr"
+      accept="image/jpeg,image/png"
+      ref="fileInput"
+      autofocus
+      @change="$emit('file:change', $event)"
+      :plain="true"
+      class="file-upload-input"
+      :capture="captureAttr"
+      :title="buttonTitle"
     >
-      <BFormFile
-        :id="idAttr"
-        accept="image/jpeg,image/png"
-        ref="fileInput"
-        autofocus
-        @change="$emit('file:change', $event)"
-        :plain="true"
-        class="file-upload-input"
-        :capture="captureAttr"
-      >
-        <template #label> </template>
-      </BFormFile>
+      <template #label> </template>
+    </BFormFile>
 
-      <IconCamera2
-        class="svg-icon"
-        v-if="captureAttr"
-      />
-      <AvatarUploadIcon
-        class="svg-icon"
-        v-else-if="genericIcon"
-      />
-      <IconPhoto
-        class="svg-icon"
-        v-else
-      />
-    </label>
+    <IconCamera2
+      class="svg-icon"
+      v-if="captureAttr"
+    />
+    <AvatarUploadIcon
+      class="svg-icon"
+      v-else-if="genericIcon"
+    />
+    <IconPhoto
+      class="svg-icon"
+      v-else
+    />
+  </label>
 </template>
 
 <style lang="scss">

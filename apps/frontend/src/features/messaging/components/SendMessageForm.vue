@@ -260,7 +260,7 @@ function handleVoiceRecordingError(error: string) {
             />
             <a
               v-if="canCall && !isVoiceActive"
-              class="btn btn-secondary btn-sm icon-btn-round"
+              class="btn btn-secondary btn-sm btn-rounded"
               role="button"
               :title="$t('calls.call_button_title')"
               @click="emit('call:start')"
@@ -270,6 +270,8 @@ function handleVoiceRecordingError(error: string) {
             <ImageUpload
               :store="imageStore"
               :preview="false"
+              :button-title="$t('messaging.attach_image')"
+              class="btn btn-sm btn-secondary btn-rounded"
             />
           </div>
 
@@ -330,15 +332,3 @@ function handleVoiceRecordingError(error: string) {
     </BModal>
   </div>
 </template>
-
-<style scoped>
-.icon-btn-round {
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>

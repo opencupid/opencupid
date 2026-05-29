@@ -215,6 +215,7 @@
   },
   "messaging": {
     "already_sent_waiting": "Már küldtél nekik üzenetet. Amint válaszolnak, folytathatod a beszélgetést.",
+    "attach_image": "Kép csatolása",
     "block_member": "Tag letiltása",
     "loading_older_messages": "Régebbi üzenetek betöltése…",
     "message_input_placeholder": "...",

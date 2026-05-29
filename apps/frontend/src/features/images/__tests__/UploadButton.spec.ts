@@ -25,6 +25,23 @@ describe('UploadButton', () => {
     expect(wrapper.emitted('file:change')).toBeTruthy()
   })
 
+  it('renders a static title on the label when buttonTitle is provided', () => {
+    const wrapper = mount(UploadButton, {
+      props: { buttonTitle: 'Attach image' },
+      global: {
+        stubs: {
+          BFormFile: { template: '<input />' },
+          AvatarUploadIcon: true,
+          IconCamera2: true,
+          IconPhoto: true,
+        },
+      },
+    })
+    // The static title replaces the browser's native filename tooltip on the
+    // visually-hidden file input.
+    expect(wrapper.find('label').attributes('title')).toBe('Attach image')
+  })
+
   it('applies capture attribute when capture prop is provided', () => {
     const wrapper = mount(UploadButton, {
       props: {

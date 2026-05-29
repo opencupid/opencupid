@@ -12,6 +12,7 @@ const props = withDefaults(
   defineProps<{
     store: GalleryStore
     preview?: boolean
+    buttonTitle?: string
   }>(),
   { preview: true }
 )
@@ -59,6 +60,13 @@ const handleUpload = async () => {
     isLoading.value = false
     return
   }
+  isLoading.value = false
+  selectedFile.value = null
+  previewUrl.value = null
+  // Remount UploadButton so its file input is cleared — required for the
+  // no-preview flow (modal never opens, so onModalHidden won't fire) and so
+  // re-picking the same file fires @change again.
+  uploadButtonKey.value++
   closeModal()
 }
 
@@ -112,6 +120,7 @@ function onModalHidden() {
       v-if="isMobile"
       variant="secondary"
       class="w-100 h-100"
+      :title="buttonTitle"
       @click="openModal"
       @touchend="openModal"
     >
@@ -120,6 +129,7 @@ function onModalHidden() {
     <UploadButton
       v-else
       :key="uploadButtonKey"
+      :button-title="buttonTitle"
       @file:change="handleFileChange"
       :genericIcon="true"
     />
