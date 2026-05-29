@@ -1,99 +1,45 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { VueDraggableNext } from 'vue-draggable-next'
-import type { GalleryStore } from '@/features/images/stores/galleryStore'
-
-import type { OwnerImage } from '@zod/image/image.dto'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
+import { useI18n } from 'vue-i18n'
+
+import type { GalleryStore } from '@/features/images/stores/galleryStore'
+import { useImageEditor } from '@/features/images/composables/useImageEditor'
 
 import ImageUpload from './ImageUpload.vue'
 import ImageTag from './ImageTag.vue'
 import IconPhoto from '@/assets/icons/interface/photo.svg'
-
-import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(
   defineProps<{
     store: GalleryStore
     minImages: number
     maxImages?: number
+    autoLoad?: boolean
   }>(),
   {
     maxImages: 6,
+    autoLoad: true,
   }
 )
 
-const imageStore = props.store
-
-const isRemoving = ref<Record<string, boolean>>({})
-const error = ref<string>('')
-
 const { t } = useI18n()
 
-const model = computed({
-  get() {
-    return imageStore.images
-  },
-  set(val) {
-    imageStore.images = val
-  },
-})
-
-/**
- * Remove an image by ID
- */
-async function handleDelete(image: OwnerImage) {
-  isRemoving.value[image.id] = true
-
-  const res = await imageStore.remove(image)
-  if (!res.success) {
-    error.value = res.message
-    isRemoving.value[image.id] = false
-    return
-  }
-}
-
-const handleReorder = async (event: any) => {
-  const payload = event.moved
-  if (!payload) return
-  const newOrder = model.value.map((img, position) => ({
-    id: img.id,
-    position,
-  }))
-  await imageStore.reorder(newOrder)
-}
-
-/**
- * Prevent moving the upload button
- */
-function checkMove(evt: any) {
-  const el = evt.draggedContext
-  return el.futureIndex < model.value.length
-}
-
-onMounted(async () => {
-  await imageStore.load()
-})
-
-onUnmounted(() => {
-  // Fire-and-forget: Vue does not await lifecycle hooks. cleanup() is
-  // best-effort internally (Promise.allSettled); the .catch() guards
-  // against any unexpected rejection surfacing as an unhandled promise.
-  imageStore.cleanup?.()?.catch(() => {})
-})
-
-const placeholderSlots = computed(() => {
-  const remaining = Math.max(0, props.maxImages - model.value.length - 1) // leave 1 for uploader
-  return Array.from({ length: remaining })
-})
-
-const remainingSlots = computed(() => {
-  return props.maxImages - model.value.length
-})
-
-const isDeletable = computed(() => {
-  return model.value.length > props.minImages
+const {
+  model,
+  isRemoving,
+  placeholderSlots,
+  remainingSlots,
+  isDeletable,
+  handleDelete,
+  handleReorder,
+  checkMove,
+} = useImageEditor({
+  store: props.store,
+  minImages: () => props.minImages,
+  maxImages: () => props.maxImages,
+  autoLoad: () => props.autoLoad,
 })
 </script>
 
@@ -119,7 +65,7 @@ const isDeletable = computed(() => {
           >
             <div class="actions nodrag">
               <button
-                class="btn btn-sm btn-secondary "
+                class="btn btn-sm btn-secondary btn-rounded"
                 @mousedown.stop.prevent
                 @click="handleDelete(img)"
                 :disabled="isRemoving[img.id]"
@@ -143,7 +89,11 @@ const isDeletable = computed(() => {
             v-if="remainingSlots > 0"
             class="col nodrag"
           >
-            <ImageUpload :store="imageStore" />
+            <div class="ratio ratio-1x1">
+              <div class="btn btn-outline-primary w-100 file-upload-label">
+                <ImageUpload :store="props.store" />
+              </div>
+            </div>
           </div>
 
           <div

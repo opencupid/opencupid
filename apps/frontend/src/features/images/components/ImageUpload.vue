@@ -6,17 +6,24 @@ import { detectMobile } from '@/lib/mobile-detect'
 
 import UploadButton from './UploadButton.vue'
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
+import IconPhoto from '@/assets/icons/interface/photo.svg'
 import type { GalleryStore } from '@/features/images/stores/galleryStore'
 
-const props = defineProps<{
-  store: GalleryStore
-}>()
+const props = withDefaults(
+  defineProps<{
+    store: GalleryStore
+    preview?: boolean
+    buttonTitle?: string
+    buttonClass?: string
+  }>(),
+  { preview: true }
+)
 const imageStore = props.store
 const { t } = useI18n()
 
 // Upload state
 const selectedFile = ref<File | null>(null)
-const preview = ref<string | null>(null)
+const previewUrl = ref<string | null>(null)
 const captionText = ref<string>('')
 
 const isLoading = ref(false)
@@ -55,6 +62,13 @@ const handleUpload = async () => {
     isLoading.value = false
     return
   }
+  isLoading.value = false
+  selectedFile.value = null
+  previewUrl.value = null
+  // Remount UploadButton so its file input is cleared — required for the
+  // no-preview flow (modal never opens, so onModalHidden won't fire) and so
+  // re-picking the same file fires @change again.
+  uploadButtonKey.value++
   closeModal()
 }
 
@@ -65,13 +79,18 @@ const handleFileChange = (event: Event) => {
   error.value = null
 
   if (!file) {
-    preview.value = null
+    previewUrl.value = null
+    return
+  }
+
+  if (!props.preview) {
+    handleUpload()
     return
   }
 
   const reader = new FileReader()
   reader.onload = () => {
-    preview.value = typeof reader.result === 'string' ? reader.result : null
+    previewUrl.value = typeof reader.result === 'string' ? reader.result : null
     modalState.value = 'preview'
     showModal.value = true
   }
@@ -89,7 +108,7 @@ const backFromPreview = () => {
 function onModalHidden() {
   modalState.value = 'closed'
   selectedFile.value = null
-  preview.value = null
+  previewUrl.value = null
   captionText.value = ''
   error.value = null
   isLoading.value = false
@@ -98,22 +117,33 @@ function onModalHidden() {
 </script>
 
 <template>
-  <div class="image-upload h-100">
+  <div class="image-upload h-100 d-flex align-items-center p-1">
     <BButton
       v-if="isMobile"
       variant="secondary"
       class="w-100 h-100"
+      :class="buttonClass"
+      :title="buttonTitle"
       @click="openModal"
       @touchend="openModal"
     >
-      <AvatarUploadIcon class="svg-icon w-100 h-100" />
+      <slot name="button">
+        <AvatarUploadIcon class="svg-icon" />
+      </slot>
     </BButton>
     <UploadButton
       v-else
       :key="uploadButtonKey"
+      :class="buttonClass"
+      :button-title="buttonTitle"
       @file:change="handleFileChange"
-      :genericIcon="true"
-    />
+    >
+      <template #button>
+        <slot name="button">
+          <AvatarUploadIcon class="svg-icon" />
+        </slot>
+      </template>
+    </UploadButton>
 
     <div
       v-if="error"
@@ -150,7 +180,7 @@ function onModalHidden() {
         {{ error }}
       </div>
       <div
-        v-if="preview && !error"
+        v-if="previewUrl && !error"
         class="mb-3 preview-image-wrapper"
       >
         <BOverlay
@@ -162,7 +192,7 @@ function onModalHidden() {
             v-show="modalState === 'preview'"
           >
             <img
-              :src="preview"
+              :src="previewUrl"
               alt="Preview"
               class="preview-image"
             />
@@ -217,7 +247,11 @@ function onModalHidden() {
               @file:change="handleFileChange"
               :key="'capture-none'"
               class="w-100"
-            />
+            >
+              <template #button>
+                <IconPhoto class="svg-icon" />
+              </template>
+            </UploadButton>
             <div class="mt-0 form-text text-mute text-center">
               {{ t('profiles.image_upload.add_from_phone') }}
             </div>

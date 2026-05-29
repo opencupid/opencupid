@@ -7,7 +7,7 @@ import type { OwnerCommunity } from '@zod/community/community.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
-import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
+import AttachImageButton from '@/features/images/components/AttachImageButton.vue'
 import VisibilityToggle from '@/features/shared/ui/VisibilityToggle.vue'
 
 const COMMUNITY_CONTENT_MAX_LENGTH = 300
@@ -52,7 +52,7 @@ const form = ref<CommunityForm>(
 )
 
 const isLoading = ref(false)
-const imageBtn = ref<InstanceType<typeof ContentImageButton> | null>(null)
+const imageBtn = ref<InstanceType<typeof AttachImageButton> | null>(null)
 
 const YEAR_PICKER_WINDOW = 15
 const currentYear = new Date().getUTCFullYear()
@@ -151,7 +151,7 @@ const handleSubmit = async () => {
     </BFormGroup>
 
     <BFormGroup class="mb-3">
-      <ContentImageButton
+      <AttachImageButton
         ref="imageBtn"
         :contentId="community?.id"
       />

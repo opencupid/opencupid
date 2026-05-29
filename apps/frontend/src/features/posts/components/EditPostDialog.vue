@@ -19,7 +19,7 @@ type PostForm = z.infer<typeof PostFormSchema>
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import PostTypeBadge from './PostTypeBadge.vue'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
-import ContentImageButton from '@/features/images/components/ContentImageButton.vue'
+import AttachImageButton from '@/features/images/components/AttachImageButton.vue'
 import VisibilityToggle from '@/features/shared/ui/VisibilityToggle.vue'
 
 interface Emits {
@@ -51,7 +51,7 @@ const form = ref<PostForm>(
 )
 
 const isLoading = ref(false)
-const imageBtn = ref<InstanceType<typeof ContentImageButton> | null>(null)
+const imageBtn = ref<InstanceType<typeof AttachImageButton> | null>(null)
 
 const isFormValid = computed(() => {
   return (
@@ -150,9 +150,10 @@ const handleSubmit = async () => {
       <!-- submit button -->
     </PostIt>
     <BFormGroup class="mb-2">
-      <ContentImageButton
+      <AttachImageButton
         ref="imageBtn"
         :contentId="post?.id"
+        class="btn btn-sm icon-btn-round btn-secondary"
       />
     </BFormGroup>
     <div class="d-flex justify-content-end mt-3">
@@ -178,4 +179,14 @@ const handleSubmit = async () => {
   </BForm>
 </template>
 
-<style scoped></style>
+<style scoped>
+.icon-btn-round {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
