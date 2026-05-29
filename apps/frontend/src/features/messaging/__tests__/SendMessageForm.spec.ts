@@ -33,14 +33,12 @@ const VoiceRecorderStub = {
   props: ['disabled', 'maxDuration'],
 }
 
-// AttachImageButton stub exposing the same defineExpose API as the real component
-const AttachImageButtonStub = {
-  name: 'AttachImageButton',
-  template: '<div data-testid="attach-image-button" />',
-  methods: {
-    getImageIds: () => [] as string[],
-    markSaved: () => {},
-  },
+// ImageUpload stub — SendMessageForm renders it directly; uploads trigger
+// send-on-attach via a watcher on the draft gallery store.
+const ImageUploadStub = {
+  name: 'ImageUpload',
+  template: '<div data-testid="image-upload" />',
+  props: ['store', 'preview'],
 }
 
 describe('SendMessageForm', () => {
@@ -91,7 +89,7 @@ describe('SendMessageForm', () => {
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
-          AttachImageButton: AttachImageButtonStub,
+          ImageUpload: ImageUploadStub,
         },
         mocks: {
           $t: (key: string) => key,
@@ -151,7 +149,7 @@ describe('SendMessageForm', () => {
           IconMenuDotsVert: true,
           IconCall: true,
           Mic2Icon: true,
-          AttachImageButton: AttachImageButtonStub,
+          ImageUpload: ImageUploadStub,
         },
         mocks: {
           $t: (key: string) => key,
@@ -267,7 +265,7 @@ describe('SendMessageForm', () => {
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
-          AttachImageButton: AttachImageButtonStub,
+          ImageUpload: ImageUploadStub,
         },
         mocks: {
           $t: (key: string) => key,
@@ -321,7 +319,7 @@ describe('SendMessageForm', () => {
           IconMenuDotsVert: true,
           IconCall: true,
           Mic2Icon: true,
-          AttachImageButton: AttachImageButtonStub,
+          ImageUpload: ImageUploadStub,
         },
         mocks: {
           $t: (key: string) => key,

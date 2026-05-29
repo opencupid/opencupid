@@ -8,15 +8,19 @@ import UploadButton from './UploadButton.vue'
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
 import type { GalleryStore } from '@/features/images/stores/galleryStore'
 
-const props = defineProps<{
-  store: GalleryStore
-}>()
+const props = withDefaults(
+  defineProps<{
+    store: GalleryStore
+    preview?: boolean
+  }>(),
+  { preview: true }
+)
 const imageStore = props.store
 const { t } = useI18n()
 
 // Upload state
 const selectedFile = ref<File | null>(null)
-const preview = ref<string | null>(null)
+const previewUrl = ref<string | null>(null)
 const captionText = ref<string>('')
 
 const isLoading = ref(false)
@@ -65,13 +69,18 @@ const handleFileChange = (event: Event) => {
   error.value = null
 
   if (!file) {
-    preview.value = null
+    previewUrl.value = null
+    return
+  }
+
+  if (!props.preview) {
+    handleUpload()
     return
   }
 
   const reader = new FileReader()
   reader.onload = () => {
-    preview.value = typeof reader.result === 'string' ? reader.result : null
+    previewUrl.value = typeof reader.result === 'string' ? reader.result : null
     modalState.value = 'preview'
     showModal.value = true
   }
@@ -89,7 +98,7 @@ const backFromPreview = () => {
 function onModalHidden() {
   modalState.value = 'closed'
   selectedFile.value = null
-  preview.value = null
+  previewUrl.value = null
   captionText.value = ''
   error.value = null
   isLoading.value = false
@@ -150,7 +159,7 @@ function onModalHidden() {
         {{ error }}
       </div>
       <div
-        v-if="preview && !error"
+        v-if="previewUrl && !error"
         class="mb-3 preview-image-wrapper"
       >
         <BOverlay
@@ -162,7 +171,7 @@ function onModalHidden() {
             v-show="modalState === 'preview'"
           >
             <img
-              :src="preview"
+              :src="previewUrl"
               alt="Preview"
               class="preview-image"
             />

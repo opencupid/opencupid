@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect, computed, inject, type Ref } from 'vue'
+import { ref, watch, watchEffect, computed, inject, useId, type Ref } from 'vue'
 import { funnel } from 'remeda'
 
 import { useLocalStore } from '@/store/localStore'
 
-import {
-  MAX_IMAGES_PER_MESSAGE,
-  type MessageDTO,
-  type MessageAttachmentDTO,
-} from '@zod/messaging/messaging.dto'
+import { type MessageDTO, type MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
 import { type MessageRecipient, type OwnerProfile } from '@zod/profile/profile.dto'
 
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
@@ -19,7 +15,8 @@ import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
 import VoiceMessage from './VoiceMessage.vue'
-import AttachImageButton from '@/features/images/components/AttachImageButton.vue'
+import ImageUpload from '@/features/images/components/ImageUpload.vue'
+import { useUserContentImageStore } from '@/features/images/stores/userContentImageStore'
 import { useMessageStore } from '../stores/messageStore'
 
 const toast = useToast()
@@ -54,9 +51,35 @@ const shouldShowLanguageList = computed(() => senderLanguages.value.length > 1)
 
 const content = ref('')
 const isVoiceActive = ref(false)
+const isSending = ref(false)
 const voiceRecorderRef = ref<InstanceType<typeof VoiceRecorder> | null>(null)
-const imageButtonRef = ref<InstanceType<typeof AttachImageButton> | null>(null)
 const voiceMaxDuration = parseInt(__APP_CONFIG__.VOICE_MESSAGE_MAX_DURATION, 10)
+
+// Draft-keyed gallery store: ImageUpload pushes the freshly uploaded image
+// into store.images; the watcher below sends the message and resets the store.
+const imageDraftKey = useId()
+const imageStore = useUserContentImageStore({ draftKey: imageDraftKey })
+
+watch(
+  () => imageStore.images.map((i) => i.id).join(','),
+  (ids) => {
+    if (!ids) return
+    void sendImageMessage(imageStore.images.map((i) => i.id))
+  }
+)
+
+async function sendImageMessage(imageIds: string[]) {
+  if (imageIds.length === 0) return
+  isSending.value = true
+  const result = await messageStore.sendMessage(props.recipientProfile.id, '', imageIds)
+  isSending.value = false
+  // Reset so the store is empty before the next upload — prevents the watcher
+  // from re-firing on the same set of ids.
+  imageStore.$reset()
+  if (result.success) {
+    emit('message:sent', result.data!)
+  }
+}
 
 // Voice confirmation modal state (shown when recording auto-stops at max duration)
 const showVoiceConfirmModal = ref(false)
@@ -114,28 +137,19 @@ const handleKeyPress = (event: KeyboardEvent) => {
   }
 }
 
-const isSending = ref(false)
-
-const pendingImageIds = computed<string[]>(() => imageButtonRef.value?.getImageIds() ?? [])
-const canSend = computed(() => content.value.trim() !== '' || pendingImageIds.value.length > 0)
+const canSend = computed(() => content.value.trim() !== '')
 
 async function handleSendMessage() {
   if (!canSend.value) return
   const trimmedContent = content.value.trim()
-  const imageIds = pendingImageIds.value
   isSending.value = true
-  const result = await messageStore.sendMessage(
-    props.recipientProfile.id,
-    trimmedContent,
-    imageIds.length > 0 ? imageIds : undefined
-  )
+  const result = await messageStore.sendMessage(props.recipientProfile.id, trimmedContent)
   isSending.value = false
   focusTextarea()
   if (result.success) {
     emit('message:sent', result.data!)
     content.value = '' // Clear the input after sending
     localStore.setMessageDraft(props.recipientProfile.id, '') // Clear the draft in local store
-    imageButtonRef.value?.markSaved()
     return
   }
 }
@@ -253,10 +267,9 @@ function handleVoiceRecordingError(error: string) {
             >
               <IconCall class="svg-icon" />
             </a>
-            <AttachImageButton
-              ref="imageButtonRef"
-              :max-images="MAX_IMAGES_PER_MESSAGE"
-              class="btn btn-sm icon-btn-round btn-secondary"
+            <ImageUpload
+              :store="imageStore"
+              :preview="false"
             />
           </div>
 
