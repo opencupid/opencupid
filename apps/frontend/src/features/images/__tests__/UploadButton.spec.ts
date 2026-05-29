@@ -5,7 +5,6 @@ import UploadButton from '../components/UploadButton.vue'
 
 vi.mock('@/assets/icons/files/avatar-upload.svg', () => ({ default: { name: 'AvatarUploadIcon' } }))
 vi.mock('@/assets/icons/interface/camera.svg', () => ({ default: { name: 'IconCamera2' } }))
-vi.mock('@/assets/icons/interface/photo.svg', () => ({ default: { name: 'IconPhoto' } }))
 
 describe('UploadButton', () => {
   it('emits file:change on input', async () => {
@@ -17,7 +16,6 @@ describe('UploadButton', () => {
           },
           AvatarUploadIcon: true,
           IconCamera2: true,
-          IconPhoto: true,
         },
       },
     })
@@ -33,13 +31,56 @@ describe('UploadButton', () => {
           BFormFile: { template: '<input />' },
           AvatarUploadIcon: true,
           IconCamera2: true,
-          IconPhoto: true,
         },
       },
     })
     // The static title replaces the browser's native filename tooltip on the
     // visually-hidden file input.
     expect(wrapper.find('label').attributes('title')).toBe('Attach image')
+  })
+
+  it('renders #button slot content when no capture is set', () => {
+    const wrapper = mount(UploadButton, {
+      slots: { button: '<span class="slotted-icon" />' },
+      global: {
+        stubs: {
+          BFormFile: { template: '<input />' },
+          AvatarUploadIcon: true,
+          IconCamera2: true,
+        },
+      },
+    })
+    expect(wrapper.find('.slotted-icon').exists()).toBe(true)
+  })
+
+  it('falls back to AvatarUploadIcon when #button slot is not provided', () => {
+    const wrapper = mount(UploadButton, {
+      global: {
+        stubs: {
+          BFormFile: { template: '<input />' },
+          AvatarUploadIcon: { template: '<span class="avatar-upload-icon" />' },
+          IconCamera2: true,
+        },
+      },
+    })
+    expect(wrapper.find('.avatar-upload-icon').exists()).toBe(true)
+  })
+
+  it('renders the camera icon (ignoring #button slot) when capture is set', () => {
+    const wrapper = mount(UploadButton, {
+      props: { capture: 'user' },
+      slots: { button: '<span class="slotted-icon" />' },
+      global: {
+        stubs: {
+          BFormFile: { props: ['capture'], template: '<input :capture="capture" />' },
+          AvatarUploadIcon: true,
+          IconCamera2: { template: '<span class="camera-icon" />' },
+        },
+      },
+    })
+    // capture intent always wins — the slot is bypassed for the camera path.
+    expect(wrapper.find('.camera-icon').exists()).toBe(true)
+    expect(wrapper.find('.slotted-icon').exists()).toBe(false)
   })
 
   it('applies capture attribute when capture prop is provided', () => {
@@ -55,7 +96,6 @@ describe('UploadButton', () => {
           },
           AvatarUploadIcon: true,
           IconCamera2: true,
-          IconPhoto: true,
         },
       },
     })
@@ -76,7 +116,6 @@ describe('UploadButton', () => {
           },
           AvatarUploadIcon: true,
           IconCamera2: true,
-          IconPhoto: true,
         },
       },
     })
@@ -94,7 +133,6 @@ describe('UploadButton', () => {
           },
           AvatarUploadIcon: true,
           IconCamera2: true,
-          IconPhoto: true,
         },
       },
     })
@@ -116,7 +154,6 @@ describe('UploadButton', () => {
           },
           AvatarUploadIcon: true,
           IconCamera2: true,
-          IconPhoto: true,
         },
       },
     })

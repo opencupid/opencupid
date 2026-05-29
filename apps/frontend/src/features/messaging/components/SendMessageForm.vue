@@ -11,6 +11,7 @@ import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import IconCall from '@/assets/icons/interface/call.svg'
 import IconSend from '@/assets/icons/interface/send.svg'
+import IconPhoto from '@/assets/icons/interface/photo.svg'
 import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
@@ -272,7 +273,11 @@ function handleVoiceRecordingError(error: string) {
               :preview="false"
               :button-title="$t('messaging.attach_image')"
               button-class="btn btn-sm btn-secondary btn-rounded"
-            />
+            >
+              <template #button>
+                <IconPhoto class="svg-icon" />
+              </template>
+            </ImageUpload>
           </div>
 
           <div

@@ -6,6 +6,7 @@ import { detectMobile } from '@/lib/mobile-detect'
 
 import UploadButton from './UploadButton.vue'
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
+import IconPhoto from '@/assets/icons/interface/photo.svg'
 import type { GalleryStore } from '@/features/images/stores/galleryStore'
 
 const props = withDefaults(
@@ -126,7 +127,9 @@ function onModalHidden() {
       @click="openModal"
       @touchend="openModal"
     >
-      <AvatarUploadIcon class="svg-icon" />
+      <slot name="button">
+        <AvatarUploadIcon class="svg-icon" />
+      </slot>
     </BButton>
     <UploadButton
       v-else
@@ -134,8 +137,13 @@ function onModalHidden() {
       :class="buttonClass"
       :button-title="buttonTitle"
       @file:change="handleFileChange"
-      :genericIcon="true"
-    />
+    >
+      <template #button>
+        <slot name="button">
+          <AvatarUploadIcon class="svg-icon" />
+        </slot>
+      </template>
+    </UploadButton>
 
     <div
       v-if="error"
@@ -239,7 +247,11 @@ function onModalHidden() {
               @file:change="handleFileChange"
               :key="'capture-none'"
               class="w-100"
-            />
+            >
+              <template #button>
+                <IconPhoto class="svg-icon" />
+              </template>
+            </UploadButton>
             <div class="mt-0 form-text text-mute text-center">
               {{ t('profiles.image_upload.add_from_phone') }}
             </div>

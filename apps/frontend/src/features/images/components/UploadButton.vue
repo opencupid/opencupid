@@ -3,11 +3,9 @@ import { computed, ref } from 'vue'
 
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
 import IconCamera2 from '@/assets/icons/interface/camera.svg'
-import IconPhoto from '@/assets/icons/interface/photo.svg'
 
 const props = defineProps<{
   capture?: 'user' | 'environment' | undefined
-  genericIcon?: boolean
   buttonTitle?: string
 }>()
 
@@ -45,14 +43,12 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
       class="svg-icon"
       v-if="captureAttr"
     />
-    <AvatarUploadIcon
-      class="svg-icon"
-      v-else-if="genericIcon"
-    />
-    <IconPhoto
-      class="svg-icon"
+    <slot
       v-else
-    />
+      name="button"
+    >
+      <AvatarUploadIcon class="svg-icon" />
+    </slot>
   </label>
 </template>
 
