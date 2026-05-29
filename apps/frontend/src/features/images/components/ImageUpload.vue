@@ -13,6 +13,7 @@ const props = withDefaults(
     store: GalleryStore
     preview?: boolean
     buttonTitle?: string
+    buttonClass?: string
   }>(),
   { preview: true }
 )
@@ -120,6 +121,7 @@ function onModalHidden() {
       v-if="isMobile"
       variant="secondary"
       class="w-100 h-100"
+      :class="buttonClass"
       :title="buttonTitle"
       @click="openModal"
       @touchend="openModal"
@@ -129,6 +131,7 @@ function onModalHidden() {
     <UploadButton
       v-else
       :key="uploadButtonKey"
+      :class="buttonClass"
       :button-title="buttonTitle"
       @file:change="handleFileChange"
       :genericIcon="true"

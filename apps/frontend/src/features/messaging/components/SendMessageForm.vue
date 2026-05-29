@@ -245,7 +245,7 @@ function handleVoiceRecordingError(error: string) {
           :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive"
         />
-        <div class="text-muted d-flex justify-content-between align-items-start">
+        <div class="d-flex justify-content-between align-items-start">
           <div class="d-flex align-items-center gap-2">
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
@@ -271,7 +271,7 @@ function handleVoiceRecordingError(error: string) {
               :store="imageStore"
               :preview="false"
               :button-title="$t('messaging.attach_image')"
-              class="btn btn-sm btn-secondary btn-rounded"
+              button-class="btn btn-sm btn-secondary btn-rounded"
             />
           </div>
 
