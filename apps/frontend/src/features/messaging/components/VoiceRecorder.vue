@@ -98,7 +98,7 @@ defineExpose({ triggerStart: handleRecordClick, reset })
         v-if="canRecord"
         :variant="buttonVariant"
         size="sm"
-        :class="{ 'icon-btn-round': isIdle }"
+        class="btn-rounded d-inline-flex"
         :disabled="props.disabled || micNotFound"
         @click="handleRecordClick"
         :title="

@@ -60,9 +60,9 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
 .file-upload-input {
   position: absolute !important;
   width: 1px !important;
-  height: 1px Imp !important;
+  height: 1px !important;
   opacity: 0 !important;
-  z-index: -1 Imp !important;
+  z-index: -1 !important;
 }
 .file-upload-label {
   width: 100%;
