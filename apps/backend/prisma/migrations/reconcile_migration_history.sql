@@ -13,6 +13,8 @@
 -- Usage:
 --   psql $DATABASE_URL -f reconcile_migration_history.sql
 
+BEGIN;
+
 -- Remove all previously recorded migration entries
 DELETE FROM "_prisma_migrations";
 
@@ -57,3 +59,5 @@ INSERT INTO "_prisma_migrations" (
   now(),
   1
 );
+
+COMMIT;
