@@ -3,15 +3,31 @@ import type {
   ConversationSummary,
   MessageAttachmentDTO,
   MessageDTO,
+  MessageProfileRef,
 } from '@zod/messaging/messaging.dto'
-import { mapProfileSummary } from './profile.mappers'
 import {
   canSendMessageInConversation,
   type MessageWithSender,
 } from '../../services/messaging.service'
 import { mediaUrl } from '../../lib/media'
 import { appConfig } from '../../lib/appconfig'
-import { toPublicImage } from './image.mappers'
+import { toPublicImage, type MinimalImage } from './image.mappers'
+
+// Trimmed profile projection for messaging payloads. Drops `location` and
+// caps `profileImages` to the first image (thumbnail) — the only data the
+// inbox list, message bubbles, and new-message toast actually render.
+// Issue #1369.
+export function mapMessageProfileRef(profile: {
+  id: string
+  publicName: string
+  profileImages: { image: MinimalImage }[]
+}): MessageProfileRef {
+  return {
+    id: profile.id,
+    publicName: profile.publicName,
+    profileImages: profile.profileImages.slice(0, 1).map((g) => toPublicImage(g.image)),
+  }
+}
 
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
@@ -64,7 +80,7 @@ export function mapConversationParticipantToSummary(
         }
       : null,
     conversation: mapConversationMeta(conversation),
-    partnerProfile: mapProfileSummary(partner),
+    partnerProfile: mapMessageProfileRef(partner),
   }
 }
 
@@ -76,7 +92,7 @@ export function mapMessageToDTO(m: MessageWithSender, currentProfileId?: string)
     content: m.content,
     messageType: m.messageType,
     createdAt: m.createdAt,
-    sender: mapProfileSummary(m.sender),
+    sender: mapMessageProfileRef(m.sender),
     attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
     images: m.images.map((j) => toPublicImage(j.image)),
     ...(currentProfileId !== undefined && { isMine: m.senderId === currentProfileId }),

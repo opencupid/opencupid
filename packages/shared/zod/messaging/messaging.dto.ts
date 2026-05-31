@@ -50,6 +50,18 @@ const DbMessageImageSchema = z.object({
 })
 export type DbMessageImage = z.infer<typeof DbMessageImageSchema>
 
+// Messaging-only profile reference. Trimmed projection of ProfileSummary used
+// wherever a conversation/message payload carries a "who is this profile"
+// pointer. Drops `location` (never read in messaging UI) and is intended to
+// carry at most one PublicImage (the thumbnail used by message bubbles, the
+// inbox list, and the new-message toast). Issue #1369.
+export const MessageProfileRefSchema = z.object({
+  id: z.string(),
+  publicName: z.string(),
+  profileImages: z.array(PublicImageSchema),
+})
+export type MessageProfileRef = z.infer<typeof MessageProfileRefSchema>
+
 // this is used in the db layer
 const DbMessageInConversationSchema = MessageSchema.pick({
   id: true,
@@ -74,7 +86,7 @@ const MessageInConversationSchema = MessageSchema.pick({
   messageType: true,
   createdAt: true,
 }).extend({
-  sender: ProfileSummarySchema,
+  sender: MessageProfileRefSchema,
   attachment: MessageAttachmentDTOSchema.nullable().optional(),
   images: z.array(PublicImageSchema).default([]),
 })
@@ -82,7 +94,7 @@ export type MessageInConversation = z.infer<typeof MessageInConversationSchema>
 
 // this is used in the dto layer
 const MessageDTOSchema = MessageInConversationSchema.extend({
-  sender: ProfileSummarySchema,
+  sender: MessageProfileRefSchema,
   isMine: z.boolean().optional(),
   attachment: MessageAttachmentDTOSchema.nullable().optional(),
   images: z.array(PublicImageSchema).default([]),
@@ -115,7 +127,7 @@ export const ConversationSummarySchema = ConversationParticipantSchema.pick({
   isAdminInitiator: z.boolean().default(false),
   isCallable: z.boolean().default(true),
   myIsCallable: z.boolean().default(true),
-  partnerProfile: ProfileSummarySchema,
+  partnerProfile: MessageProfileRefSchema,
   lastMessage: MessageInConversationSummarySchema.nullable(),
 })
 
@@ -127,7 +139,7 @@ export type ConversationSummary = z.infer<typeof ConversationSummarySchema>
 // ConversationSummary.
 export const ConversationDraftSummarySchema = z.object({
   isDraft: z.literal(true),
-  partnerProfile: ProfileSummarySchema,
+  partnerProfile: MessageProfileRefSchema,
   canReply: z.boolean(),
   isCallable: z.boolean(),
   myIsCallable: z.boolean(),
