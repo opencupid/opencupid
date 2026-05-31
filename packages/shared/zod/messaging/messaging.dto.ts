@@ -58,7 +58,7 @@ export type DbMessageImage = z.infer<typeof DbMessageImageSchema>
 export const MessageProfileRefSchema = z.object({
   id: z.string(),
   publicName: z.string(),
-  profileImages: z.array(PublicImageSchema),
+  profileImages: z.array(PublicImageSchema).max(1),
 })
 export type MessageProfileRef = z.infer<typeof MessageProfileRefSchema>
 
