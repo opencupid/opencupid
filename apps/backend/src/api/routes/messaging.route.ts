@@ -12,8 +12,11 @@ import { computeSendOutcome, type SendOutcome } from '@/services/messaging.state
 import { WebPushService } from '@/services/webpush.service'
 
 import { z } from 'zod'
-import { mapConversationParticipantToSummary, mapMessageToDTO } from '../mappers/messaging.mappers'
-import { mapProfileSummary } from '../mappers/profile.mappers'
+import {
+  mapConversationParticipantToSummary,
+  mapMessageProfileRef,
+  mapMessageToDTO,
+} from '../mappers/messaging.mappers'
 import type {
   MessagesResponse,
   ConversationsResponse,
@@ -344,7 +347,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         const viewer = await profileService.getProfileById(viewerProfileId)
         const draft: ConversationDraftSummary = {
           isDraft: true,
-          partnerProfile: mapProfileSummary(partner),
+          partnerProfile: mapMessageProfileRef(partner),
           canReply: true,
           isCallable: partner.isCallable !== false,
           myIsCallable: viewer?.isCallable !== false,

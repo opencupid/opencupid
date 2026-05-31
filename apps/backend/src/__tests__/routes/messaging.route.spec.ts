@@ -72,10 +72,11 @@ vi.mock('../../api/mappers/messaging.mappers', () => ({
     ...(currentProfileId !== undefined && { isMine: m?.senderId === currentProfileId }),
   })),
   mapConversationParticipantToSummary: vi.fn(() => ({ id: 'summary', partnerProfile: {} })),
-}))
-
-vi.mock('../../api/mappers/profile.mappers', () => ({
-  mapProfileSummary: vi.fn((p: any) => ({ id: p.id, publicName: p.publicName ?? 'Partner' })),
+  mapMessageProfileRef: vi.fn((p: any) => ({
+    id: p.id,
+    publicName: p.publicName ?? 'Partner',
+    profileImages: [],
+  })),
 }))
 
 vi.mock('@/services/profile.service', () => ({

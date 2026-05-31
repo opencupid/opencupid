@@ -103,7 +103,6 @@ function makePersistedSummary(
       id: partnerId,
       publicName: 'Partner',
       profileImages: [],
-      location: { country: '' },
     },
     lastMessage: null,
   }
@@ -116,7 +115,6 @@ function makeDraftSummary(partnerId = 'partner-1'): ConversationDraftSummary {
       id: partnerId,
       publicName: 'Partner',
       profileImages: [],
-      location: { country: '' },
     },
     canReply: true,
     isCallable: true,
