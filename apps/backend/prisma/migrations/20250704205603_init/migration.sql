@@ -589,19 +589,3 @@ ALTER TABLE "_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_A_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_B_fkey" FOREIGN KEY ("B") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-
-
--- Partial unique index for active conversations (not representable in Prisma schema).
--- Excluding DISCARDED lets multiple terminal rows coexist per pair (so a soft-deleted
--- conversation doesn't block a fresh one), while still preventing duplicate active
--- conversations. Application-side lookups must filter by status != 'DISCARDED' to see
--- only live rows — enforced in MessageService.resolveConversation.
-CREATE UNIQUE INDEX "Conversation_active_pair_key"
-    ON "Conversation" ("profileAId", "profileBId")
-    WHERE "status" != 'DISCARDED';
-
--- Partial index on active (uncleared) trust flags (not representable in Prisma schema).
-CREATE INDEX "ProfileTrustFlag_active_idx"
-    ON "ProfileTrustFlag" ("profileId")
-    WHERE "clearedAt" IS NULL;

@@ -3,8 +3,9 @@
 -- Run this script on existing installations before running `prisma migrate deploy`.
 -- It replaces all accumulated migration history entries with the two consolidated
 -- migrations whose effects existing installations have already applied:
---   1. 20250704205603_init                     — full schema from current schema.prisma
---   2. 20260415000000_add_search_trgm_indexes  — pg_trgm extension + GIN index on LocalizedProfileField
+--   1. 20250704205603_init                — full schema from current schema.prisma
+--   2. 20260415000000_add_custom_indexes  — pg_trgm + partial indexes that aren't
+--                                           expressible in Prisma schema syntax
 --
 -- The on-disk database structure of existing installations already matches what
 -- these two migrations produce, so after reconciliation the next
@@ -32,7 +33,7 @@ INSERT INTO "_prisma_migrations" (
   applied_steps_count
 ) VALUES (
   gen_random_uuid()::text,
-  '26ff652904dee161b516caedeae816d8d399bf5b4fdbb1e3b2fe02b3f2c93a4b',
+  '96610de43666283e91d30759b5b03d62ea1b93148dcc358e5cde6aa9688358c3',
   now(),
   '20250704205603_init',
   NULL,
@@ -41,7 +42,7 @@ INSERT INTO "_prisma_migrations" (
   1
 );
 
--- Record the trigram-index migration as already applied
+-- Record the custom-indexes migration as already applied
 INSERT INTO "_prisma_migrations" (
   id,
   checksum,
@@ -53,9 +54,9 @@ INSERT INTO "_prisma_migrations" (
   applied_steps_count
 ) VALUES (
   gen_random_uuid()::text,
-  '80dcbbdefa4323dcdf49095912b059d598439e34a3b9e87ca08505af41f09f49',
+  'fb6567710ccbc30bed2ab87026eb6a0a6beb0c33fc1f12893cb09bff2d6666c2',
   now(),
-  '20260415000000_add_search_trgm_indexes',
+  '20260415000000_add_custom_indexes',
   NULL,
   NULL,
   now(),
