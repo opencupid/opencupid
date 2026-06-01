@@ -2,13 +2,15 @@
 --
 -- Run this script on existing installations before running `prisma migrate deploy`.
 -- It replaces all accumulated migration history entries with the two consolidated
--- migrations introduced as part of the pre-release cleanup:
+-- migrations whose effects existing installations have already applied:
 --   1. 20250704205603_init                     — full schema from current schema.prisma
---   2. 20260415000000_add_search_trgm_indexes  — pg_trgm extension + GIN index
+--   2. 20260415000000_add_search_trgm_indexes  — pg_trgm extension + GIN index on LocalizedProfileField
 --
 -- The on-disk database structure of existing installations already matches what
--- these two migrations produce, so after reconciliation `prisma migrate deploy`
--- becomes a no-op.
+-- these two migrations produce, so after reconciliation the next
+-- `prisma migrate deploy` only needs to apply genuinely new migrations
+-- (e.g. 20260601000000_add_usercontent_trgm_index, which restores the trgm
+-- index on UserContent.content that no existing installation has yet).
 --
 -- Usage:
 --   psql $DATABASE_URL -f reconcile_migration_history.sql
