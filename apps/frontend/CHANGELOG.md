@@ -1,5 +1,20 @@
 # frontend
 
+## 0.69.0
+
+### Minor Changes
+
+- 2a9a95e: Add image attachments to the message composer via ContentImageButton (#1495)
+- 1f05d86: Slim messaging payloads: narrow `MessageDTO.sender`, `ConversationSummary.partnerProfile`, and `ConversationDraftSummary.partnerProfile` to a new `MessageProfileRef` shape (`id`, `publicName`, single-image `profileImages`). Drops `location` and every-image-variant duplication from message/conversation responses and `ws:new_message` payloads — the inbox list, message bubbles, and new-message toast only ever rendered the first image's thumbnail. Backend Prisma includes are scoped to a single `profileImages` row per profile on the messaging paths. (#1369)
+- 980553a: Extract the post visibility toggle into a shared VisibilityToggle component and use it consistently across the post, event, and community edit dialogs.
+
+### Patch Changes
+
+- eaaf874: Extract ImageEditor logic into a useImageEditor composable and introduce
+  AttachImageButton, replacing ContentImageButton across messaging, posts,
+  events, and communities. Inline thumbnails now expose a hover X-overlay
+  for quick removal without opening the modal.
+
 ## 0.68.0
 
 ### Minor Changes
