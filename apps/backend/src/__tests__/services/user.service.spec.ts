@@ -114,6 +114,24 @@ describe('UserService.setLoginToken', () => {
     })
   })
 
+  it('canonicalizes Gmail dots and plus when looking up user', async () => {
+    const user = { id: 'u1', email: 'jsmith@gmail.com', isRegistrationConfirmed: true }
+    mockPrisma.user.findUnique.mockResolvedValue(user)
+    await service.setLoginToken({ email: 'J.Smith+promo@Gmail.com' }, '123', 'en', 'test.local')
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { email: 'jsmith@gmail.com' },
+    })
+  })
+
+  it('preserves dots for non-Gmail domains when looking up user', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null)
+    mockPrisma.user.create.mockResolvedValue({ id: 'new' })
+    await service.setLoginToken({ email: 'Foo.Bar@Example.com' }, '123', 'en', 'test.local')
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { email: 'foo.bar@example.com' },
+    })
+  })
+
   it('normalizes email to lowercase when creating new user', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
     mockPrisma.user.create.mockResolvedValue({ id: 'new', email: 'new@example.com' })
