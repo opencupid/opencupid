@@ -70,6 +70,16 @@ describe('UserService.validateLoginToken', () => {
   })
 })
 
+describe('UserService.findByAuthId', () => {
+  it('canonicalizes the auth id before lookup', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null)
+    await service.findByAuthId('J.Smith+promo@Gmail.com')
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { email: 'jsmith@gmail.com' },
+    })
+  })
+})
+
 describe('UserService.setLoginToken', () => {
   it('updates existing user and gates the update on isBlocked=false', async () => {
     const user = { id: 'u1', isRegistrationConfirmed: true }
