@@ -18,6 +18,14 @@ describe('canonicalizeEmail', () => {
     expect(canonicalizeEmail('jsmith+netflix@gmail.com')).toBe('jsmith@gmail.com')
   })
 
+  it('preserves +suffix for non-Gmail domains', () => {
+    expect(canonicalizeEmail('foo+tag@example.com')).toBe('foo+tag@example.com')
+  })
+
+  it('pins the degenerate Gmail empty-local-part case', () => {
+    expect(canonicalizeEmail('+tag@gmail.com')).toBe('@gmail.com')
+  })
+
   it('strips both dots and +suffix for gmail.com', () => {
     expect(canonicalizeEmail('J.Smith+tag@Gmail.com')).toBe('jsmith@gmail.com')
   })
