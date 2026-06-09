@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import { createSigner, createVerifier } from 'fast-jwt'
 import { appConfig } from '@/lib/appconfig'
+import { canonicalizeEmail } from '@/lib/email'
 
 export type UnsubscribePayload = {
   userId: string
@@ -28,7 +29,7 @@ const verifier = createVerifier({
  * tokens issued against the old address.
  */
 export function hashEmail(email: string): string {
-  return createHash('sha256').update(email.trim().toLowerCase()).digest('base64url').slice(0, 22)
+  return createHash('sha256').update(canonicalizeEmail(email)).digest('base64url').slice(0, 22)
 }
 
 /**
