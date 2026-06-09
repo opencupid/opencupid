@@ -1,3 +1,4 @@
+import { canonicalizeEmail } from '@/lib/email'
 import { prisma } from '@/lib/prisma'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
@@ -63,7 +64,7 @@ export class UserService {
     user: User
     isNewUser: boolean
   }> {
-    const email = authId.email.trim().toLowerCase()
+    const email = canonicalizeEmail(authId.email)
     const userExists = await prisma.user.findUnique({ where: { email } })
     const tokenExpiration = getTokenExpiration()
 
@@ -134,7 +135,7 @@ export class UserService {
   }
 
   async findByAuthId(authId: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { email: authId.toLowerCase() } })
+    return prisma.user.findUnique({ where: { email: canonicalizeEmail(authId) } })
   }
 
   generateLoginToken() {

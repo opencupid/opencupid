@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import { createSigner, createVerifier } from 'fast-jwt'
 import { appConfig } from '@/lib/appconfig'
+import { canonicalizeEmail } from '@/lib/email'
 
 export type UnsubscribePayload = {
   userId: string
@@ -23,12 +24,15 @@ const verifier = createVerifier({
 })
 
 /**
- * Derive a stable per-email fingerprint. If the user changes their email
- * address this changes too, which implicitly revokes outstanding unsubscribe
- * tokens issued against the old address.
+ * Derive a stable per-email fingerprint from the canonical form of the
+ * address (see canonicalizeEmail). Changing to an address with a different
+ * canonical form changes the fingerprint, which implicitly revokes
+ * outstanding unsubscribe tokens issued against the old address. Gmail
+ * variants that share a canonical form (dots, +suffix, case) keep the same
+ * fingerprint and do not revoke.
  */
 export function hashEmail(email: string): string {
-  return createHash('sha256').update(email.trim().toLowerCase()).digest('base64url').slice(0, 22)
+  return createHash('sha256').update(canonicalizeEmail(email)).digest('base64url').slice(0, 22)
 }
 
 /**

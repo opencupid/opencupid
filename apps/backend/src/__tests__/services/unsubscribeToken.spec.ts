@@ -88,6 +88,16 @@ describe('unsubscribeToken', () => {
     expect(hashEmail('alice@example.com')).not.toBe(hashEmail('bob@example.com'))
   })
 
+  it('hashEmail unifies Gmail dot and plus variants', () => {
+    expect(hashEmail('j.smith@gmail.com')).toBe(hashEmail('jsmith@gmail.com'))
+    expect(hashEmail('jsmith+promo@gmail.com')).toBe(hashEmail('jsmith@gmail.com'))
+    expect(hashEmail('J.Smith+x@Googlemail.com')).toBe(hashEmail('jsmith@googlemail.com'))
+  })
+
+  it('hashEmail still distinguishes non-Gmail dotted addresses', () => {
+    expect(hashEmail('foo.bar@example.com')).not.toBe(hashEmail('foobar@example.com'))
+  })
+
   it('email fingerprint invalidates tokens on address change', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
