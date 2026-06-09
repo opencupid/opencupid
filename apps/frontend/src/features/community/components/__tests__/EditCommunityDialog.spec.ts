@@ -33,9 +33,9 @@ vi.mock('@/features/userContent/stores/userContentStore', () => ({
   }),
 }))
 
-vi.mock('@/features/images/components/ContentImageButton.vue', () => ({
+vi.mock('@/features/images/components/AttachImageButton.vue', () => ({
   default: {
-    template: '<div class="content-image-button" />',
+    template: '<div class="attach-image-button" />',
     setup: () => ({ getImageIds: () => [], markSaved: () => {} }),
     expose: ['getImageIds', 'markSaved'],
   },

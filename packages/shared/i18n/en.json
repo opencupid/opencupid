@@ -211,6 +211,7 @@
   },
   "messaging": {
     "already_sent_waiting": "You have already sent them a message. Once they answer, you can continue the conversation.",
+    "attach_image": "Attach image",
     "block_member": "Block member",
     "loading_older_messages": "Loading older messages…",
     "message_input_placeholder": "Type your message here...",
@@ -501,7 +502,8 @@
     },
     "image_button": {
       "label": "Images",
-      "modal_title": "Manage images"
+      "modal_title": "Manage images",
+      "thumb_edit_aria": "Edit image"
     }
   }
 }

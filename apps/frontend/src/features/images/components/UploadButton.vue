@@ -3,11 +3,10 @@ import { computed, ref } from 'vue'
 
 import AvatarUploadIcon from '@/assets/icons/files/avatar-upload.svg'
 import IconCamera2 from '@/assets/icons/interface/camera.svg'
-import IconPhoto from '@/assets/icons/interface/photo.svg'
 
 const props = defineProps<{
   capture?: 'user' | 'environment' | undefined
-  genericIcon?: boolean
+  buttonTitle?: string
 }>()
 
 defineEmits<{
@@ -21,50 +20,45 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
 </script>
 
 <template>
-  <div class="image-upload-button position-relative">
-    <label
-      class="file-upload-label"
-      :for="idAttr"
+  <label
+    class="file-upload-label"
+    :for="idAttr"
+    :title="buttonTitle"
+  >
+    <BFormFile
+      :id="idAttr"
+      accept="image/jpeg,image/png"
+      ref="fileInput"
+      autofocus
+      @change="$emit('file:change', $event)"
+      :plain="true"
+      class="file-upload-input"
+      :capture="captureAttr"
+      :title="buttonTitle"
     >
-      <BFormFile
-        :id="idAttr"
-        accept="image/jpeg,image/png"
-        ref="fileInput"
-        autofocus
-        @change="$emit('file:change', $event)"
-        :plain="true"
-        class="file-upload-input"
-        :capture="captureAttr"
-      >
-        <template #label> </template>
-      </BFormFile>
-      <div class="ratio ratio-1x1">
-        <div class="btn btn-outline-primary w-100 file-upload-label">
-          <IconCamera2
-            class="svg-icon"
-            v-if="captureAttr"
-          />
-          <AvatarUploadIcon
-            class="svg-icon"
-            v-else-if="genericIcon"
-          />
-          <IconPhoto
-            class="svg-icon"
-            v-else
-          />
-        </div>
-      </div>
-    </label>
-  </div>
+      <template #label> </template>
+    </BFormFile>
+
+    <IconCamera2
+      class="svg-icon"
+      v-if="captureAttr"
+    />
+    <slot
+      v-else
+      name="button"
+    >
+      <AvatarUploadIcon class="svg-icon" />
+    </slot>
+  </label>
 </template>
 
 <style lang="scss">
 .file-upload-input {
   position: absolute !important;
   width: 1px !important;
-  height: 1px Imp !important;
+  height: 1px !important;
   opacity: 0 !important;
-  z-index: -1 Imp !important;
+  z-index: -1 !important;
 }
 .file-upload-label {
   width: 100%;
