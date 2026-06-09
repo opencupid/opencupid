@@ -22,8 +22,11 @@ describe('canonicalizeEmail', () => {
     expect(canonicalizeEmail('foo+tag@example.com')).toBe('foo+tag@example.com')
   })
 
-  it('pins the degenerate Gmail empty-local-part case', () => {
-    expect(canonicalizeEmail('+tag@gmail.com')).toBe('@gmail.com')
+  it('preserves the local part when stripping would empty it', () => {
+    // A leading '+' or all-dots local part must not collapse to an invalid
+    // '@gmail.com' identifier; fall back to the trim/lowercased form.
+    expect(canonicalizeEmail('+tag@gmail.com')).toBe('+tag@gmail.com')
+    expect(canonicalizeEmail('.@Gmail.com')).toBe('.@gmail.com')
   })
 
   it('strips both dots and +suffix for gmail.com', () => {

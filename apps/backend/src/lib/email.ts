@@ -21,7 +21,10 @@ export function canonicalizeEmail(email: string): string {
   const domain = normalized.slice(atIndex + 1)
   if (!GMAIL_DOMAINS.has(domain)) return normalized
 
-  const withoutPlus = local.split('+', 1)[0]
-  const withoutDots = withoutPlus.replace(/\./g, '')
-  return `${withoutDots}@${domain}`
+  const canonicalLocal = local.split('+', 1)[0].replace(/\./g, '')
+  // A leading '+' or an all-dots local part (e.g. '+tag@gmail.com', '.@gmail.com')
+  // would canonicalize to an empty local part — an invalid address and a
+  // degenerate shared identifier. Keep the trim/lowercased form in that case.
+  if (canonicalLocal === '') return normalized
+  return `${canonicalLocal}@${domain}`
 }
