@@ -124,9 +124,6 @@ const displayContent = computed(() => {
       <div
         class="event-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"
       >
-        <div class="d-flex align-items-center gap-2">
-          <span>{{ event.postedBy.publicName }}</span>
-        </div>
         <ViewerToolbar
           v-if="showDetails"
           :actions="['copy', 'share']"
