@@ -1,5 +1,11 @@
 # frontend
 
+## 0.69.1
+
+### Patch Changes
+
+- 8304ca9: Remove the poster profile thumbnail from the event card meta row
+
 ## 0.69.0
 
 ### Minor Changes

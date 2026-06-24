@@ -1,5 +1,11 @@
 # backend
 
+## 0.69.1
+
+### Patch Changes
+
+- e1004a0: Fix admin users and profiles lists to sort by createdAt desc only, so newest signups always appear first
+
 ## 0.69.0
 
 ### Minor Changes
