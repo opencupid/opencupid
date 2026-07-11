@@ -12,6 +12,7 @@
     "captcha_verifying": "Hang on a sec...",
     "login": "Continue",
     "token_check_email": "We sent you a login link. Check your email and click the link to log in.",
+    "token_check_junk": "If you don't see the email, please check your junk folder.",
     "token_check_messages": "Check your messages",
     "token_different_device": "It seems the login was started on a different device. Please go back and enter your email again.",
     "token_expired": "This code has expired. Please request a new one.",

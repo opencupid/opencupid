@@ -127,7 +127,10 @@ function handleBackButton() {
               {{ $t('auth.token_check_messages') }}
             </div>
           </div>
-          <p class="text-muted fs-6">{{ $t('auth.token_check_email') }}</p>
+          <p class="text-muted fs-6">
+            {{ $t('auth.token_check_email') }}<br />
+            {{ $t('auth.token_check_junk') }}
+          </p>
         </template>
         <div
           v-if="error"

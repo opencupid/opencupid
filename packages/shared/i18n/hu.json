@@ -12,6 +12,7 @@
     "captcha_verifying": "Egy pillanat...",
     "login": "Tovább",
     "token_check_email": "Küldtünk egy bejelentkezési linket. Nézd meg az emailjeidet, és kattints a linkre a belépéshez.",
+    "token_check_junk": "Ha nem érkezik meg, nézd meg a spam mappát is.",
     "token_check_messages": "Nézz rá az üzeneteidre",
     "token_different_device": "Úgy tűnik, a bejelentkezést egy másik eszközön kezdted el. Menj vissza, és add meg újra az email címedet.",
     "token_expired": "Ez a kód lejárt, kérj újat.",
