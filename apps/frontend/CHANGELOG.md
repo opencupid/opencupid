@@ -1,5 +1,11 @@
 # frontend
 
+## 0.69.2
+
+### Patch Changes
+
+- a429de6: Add a junk-folder hint below the check-email message on the magic-link screen (en, hu).
+
 ## 0.69.1
 
 ### Patch Changes
