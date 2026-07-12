@@ -1,5 +1,11 @@
 # frontend
 
+## 0.69.3
+
+### Patch Changes
+
+- 33b6d03: Track Umami events for login flow failures: magic-link send failures, expired/invalid/malformed token verification failures and post-login bootstrap failures
+
 ## 0.69.2
 
 ### Patch Changes
