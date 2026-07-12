@@ -6,6 +6,7 @@ import { type UserIdentifyPayload } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
+import { tracker } from '@/lib/umami'
 import LoginForm from '../components/LoginForm.vue'
 import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
@@ -35,6 +36,7 @@ async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
     if (res.success) {
       router.push({ name: 'MagicLink' })
     } else {
+      tracker.track('auth-magic-link-failed', { code: res.code })
       error.value = res.message || t('auth.unknown_error')
     }
   } finally {

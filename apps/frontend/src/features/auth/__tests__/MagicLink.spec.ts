@@ -21,6 +21,16 @@ const route = {
   query: {} as Record<string, unknown>,
 }
 
+const track = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/umami', () => ({
+  tracker: { track },
+}))
+
+const bootstrapReady = vi.hoisted(() => vi.fn<() => Promise<void>>())
+vi.mock('@/lib/auth', () => ({
+  bootstrapReady,
+}))
+
 vi.mock('vue-router', () => ({
   useRoute: () => route,
   useRouter: () => ({ push }),
@@ -60,6 +70,9 @@ describe('MagicLink', () => {
     setActivePinia(createPinia())
     route.query = {}
     push.mockReset()
+    track.mockReset()
+    bootstrapReady.mockReset()
+    bootstrapReady.mockResolvedValue(undefined)
   })
 
   it('redirects to /browse on valid magic-link token', async () => {
@@ -104,5 +117,71 @@ describe('MagicLink', () => {
     expect(wrapper.text()).not.toContain('auth.token_check_messages')
     expect(wrapper.text()).toContain('auth.token_expired')
     expect(wrapper.text()).toContain('uicomponents.back_button_title')
+  })
+
+  it.each([
+    ['AUTH_EXPIRED_TOKEN', 'auth.token_expired'],
+    ['AUTH_INVALID_TOKEN', 'auth.token_invalid'],
+    ['AUTH_INVALID_INPUT', 'auth.token_different_device'],
+    ['AUTH_INTERNAL_ERROR', 'auth.token_unknown_error'],
+  ] as const)('tracks auth-token-failed with code %s', async (code, errorKey) => {
+    route.query = { token: '123456' }
+    const authStore = useAuthStore()
+    authStore.loginUser = emailLoginUser
+    vi.spyOn(authStore, 'verifyToken').mockResolvedValue({
+      success: false,
+      code,
+      message: 'failed',
+      restart: 'otp',
+    })
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    expect(track).toHaveBeenCalledWith('auth-token-failed', { code })
+    expect(wrapper.text()).toContain(errorKey)
+  })
+
+  it('tracks auth-token-failed with AUTH_MALFORMED_LINK on malformed token param', async () => {
+    route.query = { token: '12' }
+    const authStore = useAuthStore()
+    authStore.loginUser = emailLoginUser
+    const verifyToken = vi.spyOn(authStore, 'verifyToken')
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    expect(verifyToken).not.toHaveBeenCalled()
+    expect(track).toHaveBeenCalledWith('auth-token-failed', { code: 'AUTH_MALFORMED_LINK' })
+    expect(wrapper.text()).toContain('auth.token_invalid_link')
+  })
+
+  it('tracks auth-bootstrap-failed when bootstrap rejects after a valid token', async () => {
+    route.query = { token: '123456' }
+    const authStore = useAuthStore()
+    authStore.loginUser = emailLoginUser
+    vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
+    bootstrapReady.mockRejectedValue(new Error('chunk load failed'))
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    expect(track).toHaveBeenCalledWith('auth-bootstrap-failed')
+    expect(push).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('auth.token_unknown_error')
+    consoleError.mockRestore()
+  })
+
+  it('does not track failure events on successful login', async () => {
+    route.query = { token: '123456' }
+    const authStore = useAuthStore()
+    authStore.loginUser = emailLoginUser
+    vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
+
+    mountMagicLink()
+    await flushPromises()
+
+    expect(track).not.toHaveBeenCalled()
   })
 })
