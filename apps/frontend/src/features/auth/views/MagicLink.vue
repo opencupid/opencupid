@@ -7,6 +7,7 @@ import { useI18n } from 'vue-i18n'
 
 import { useAuthStore } from '../stores/authStore'
 import { bootstrapReady } from '@/lib/auth'
+import { tracker } from '@/lib/umami'
 import AuthLayout from '../components/AuthLayout.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
@@ -40,6 +41,7 @@ onMounted(async () => {
   }
   const params = TokenParamSchema.safeParse(route.query)
   if (!params.success) {
+    tracker.track('auth-token-failed', { code: 'AUTH_MALFORMED_LINK' })
     error.value = t('auth.token_invalid_link')
     isCheckingMagicLinkToken.value = false
     return
@@ -60,6 +62,7 @@ onMounted(async () => {
         await bootstrapReady()
       } catch (err) {
         console.error('Bootstrap failed after login:', err)
+        tracker.track('auth-bootstrap-failed')
         error.value = t('auth.token_unknown_error')
         isCheckingMagicLinkToken.value = false
         return
@@ -67,6 +70,7 @@ onMounted(async () => {
       await router.push('/browse')
       return
     }
+    tracker.track('auth-token-failed', { code: res.code })
     switch (res.code) {
       case 'AUTH_EXPIRED_TOKEN':
         error.value = t('auth.token_expired')
