@@ -35,6 +35,19 @@ interface AdminProfileDetail extends AdminProfile {
   trustFlags: AdminProfileTrustFlag[]
 }
 
+interface AdminUserDetail {
+  id: string
+  email: string
+  phonenumber: string | null
+  isActive: boolean
+  isBlocked: boolean
+  roles: string[]
+  createdAt: string
+  lastSeenAt: string | null
+  language: string
+  originDomain: string
+}
+
 interface ProfilesResponse {
   success: boolean
   profiles: AdminProfile[]
@@ -174,12 +187,63 @@ function segmentBadgeClass(segment: string) {
 const selectedProfileDetail = ref<AdminProfileDetail | null>(null)
 const detailLoading = ref(false)
 const detailError = ref<string | null>(null)
+const detailTab = ref<'profile' | 'user'>('profile')
+
+const userDetail = ref<AdminUserDetail | null>(null)
+const userLoading = ref(false)
+const userError = ref<string | null>(null)
+const editUserActive = ref(false)
+const editUserBlocked = ref(false)
+const userSaving = ref(false)
+const userSaveError = ref<string | null>(null)
+
+async function fetchUserDetail(userId: string) {
+  userDetail.value = null
+  userError.value = null
+  userSaveError.value = null
+  userLoading.value = true
+  try {
+    const res = await apiRequest<{ success: boolean; user: AdminUserDetail }>(
+      `/admin/users/${userId}`
+    )
+    userDetail.value = res.user
+    editUserActive.value = res.user.isActive
+    editUserBlocked.value = res.user.isBlocked
+  } catch (err) {
+    userError.value = err instanceof Error ? err.message : 'failed to load user'
+  } finally {
+    userLoading.value = false
+  }
+}
+
+async function saveUser() {
+  if (!userDetail.value) return
+  userSaving.value = true
+  userSaveError.value = null
+  try {
+    await apiRequest(`/admin/users/${userDetail.value.id}`, {
+      method: 'PATCH',
+      body: { isActive: editUserActive.value, isBlocked: editUserBlocked.value },
+    })
+    userDetail.value = {
+      ...userDetail.value,
+      isActive: editUserActive.value,
+      isBlocked: editUserBlocked.value,
+    }
+  } catch (err) {
+    userSaveError.value = err instanceof Error ? err.message : 'Failed to save'
+  } finally {
+    userSaving.value = false
+  }
+}
 
 async function viewProfile(profile: AdminProfile) {
   selectedProfile.value = profile
   selectedProfileDetail.value = null
   detailError.value = null
+  detailTab.value = 'profile'
   detailLoading.value = true
+  fetchUserDetail(profile.userId)
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
       `/admin/profiles/${profile.id}`
@@ -198,12 +262,14 @@ async function viewProfileById(id: string) {
 
   detailLoading.value = true
   detailError.value = null
+  detailTab.value = 'profile'
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
       `/admin/profiles/${id}`
     )
     selectedProfile.value = res.profile
     selectedProfileDetail.value = res.profile
+    fetchUserDetail(res.profile.userId)
   } catch (err) {
     detailError.value = err instanceof Error ? err.message : 'failed to load profile'
   } finally {
@@ -470,7 +536,7 @@ onUnmounted(() => {
         v-model="search"
         type="text"
         class="form-control"
-        placeholder="Search by name, city, or profile ID..."
+        placeholder="Search by name, city, email, phone, or ID..."
         @input="onSearchInput"
       />
       <div
@@ -689,7 +755,7 @@ onUnmounted(() => {
         tabindex="-1"
         @click.self="selectedProfile = null"
         @keydown.escape="selectedProfile = null"
-        @keydown.enter.prevent="selectedProfile = null"
+        @keydown.enter.prevent="detailTab === 'user' ? saveUser() : (selectedProfile = null)"
       >
         <div class="modal-dialog">
           <div class="modal-content">
@@ -702,96 +768,219 @@ onUnmounted(() => {
               ></button>
             </div>
             <div class="modal-body">
-              <dl class="row mb-0">
-                <dt class="col-sm-4">ID</dt>
-                <dd class="col-sm-8">
-                  <code>{{ selectedProfile.id }}</code>
-                </dd>
-                <dt class="col-sm-4">Name</dt>
-                <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
-                <dt class="col-sm-4">User Email</dt>
-                <dd class="col-sm-8">{{ selectedProfile.user?.email ?? '-' }}</dd>
-                <dt class="col-sm-4">User Phone</dt>
-                <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
-                <dt class="col-sm-4">Country</dt>
-                <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
-                <dt class="col-sm-4">City</dt>
-                <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
-                <dt class="col-sm-4">Gender</dt>
-                <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
-                <dt class="col-sm-4">Social Active</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Dating Active</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isDatingActive ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Onboarded</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isOnboarded ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Active</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Reported</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Blocked</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Activity Segment</dt>
-                <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
-                <dt class="col-sm-4">Created</dt>
-                <dd class="col-sm-8">{{ new Date(selectedProfile.createdAt).toLocaleString() }}</dd>
-              </dl>
+              <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                  <button
+                    type="button"
+                    class="nav-link"
+                    :class="{ active: detailTab === 'profile' }"
+                    @click="detailTab = 'profile'"
+                  >
+                    Profile
+                  </button>
+                </li>
+                <li class="nav-item">
+                  <button
+                    type="button"
+                    class="nav-link"
+                    :class="{ active: detailTab === 'user' }"
+                    @click="detailTab = 'user'"
+                  >
+                    User
+                  </button>
+                </li>
+              </ul>
 
-              <div class="mt-3">
-                <h6 class="mb-2">Trust</h6>
-                <div
-                  v-if="detailLoading"
-                  class="text-muted small"
-                >
-                  Loading trust info...
-                </div>
-                <div
-                  v-else-if="detailError"
-                  class="alert alert-danger small mb-0"
-                >
-                  {{ detailError }}
-                </div>
-                <template v-else>
+              <template v-if="detailTab === 'profile'">
+                <dl class="row mb-0">
+                  <dt class="col-sm-4">ID</dt>
+                  <dd class="col-sm-8">
+                    <code>{{ selectedProfile.id }}</code>
+                  </dd>
+                  <dt class="col-sm-4">Name</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
+                  <dt class="col-sm-4">User Email</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.user?.email ?? '-' }}</dd>
+                  <dt class="col-sm-4">User Phone</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
+                  <dt class="col-sm-4">Country</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
+                  <dt class="col-sm-4">City</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
+                  <dt class="col-sm-4">Gender</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
+                  <dt class="col-sm-4">Social Active</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Dating Active</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isDatingActive ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Onboarded</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isOnboarded ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Active</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Reported</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Blocked</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Activity Segment</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
+                  <dt class="col-sm-4">Created</dt>
+                  <dd class="col-sm-8">
+                    {{ new Date(selectedProfile.createdAt).toLocaleString() }}
+                  </dd>
+                </dl>
+
+                <div class="mt-3">
+                  <h6 class="mb-2">Trust</h6>
                   <div
-                    v-if="activeFlags.length === 0"
+                    v-if="detailLoading"
                     class="text-muted small"
                   >
-                    No active trust flags.
+                    Loading trust info...
                   </div>
                   <div
-                    v-for="f in activeFlags"
-                    v-else
-                    :key="f.id"
-                    class="border rounded p-2 mb-2 d-flex align-items-start gap-2"
+                    v-else-if="detailError"
+                    class="alert alert-danger small mb-0"
                   >
-                    <div class="flex-grow-1">
-                      <div>
-                        <strong>{{ f.reason }}</strong>
-                        <code class="ms-2 small">{{ f.flaggedBy }}</code>
-                      </div>
-                      <div class="small text-muted">
-                        {{ new Date(f.flaggedAt).toLocaleString() }}
-                      </div>
-                      <div
-                        v-if="f.evidence"
-                        class="small"
-                      >
-                        {{ f.evidence }}
-                      </div>
-                    </div>
-                    <button
-                      class="btn btn-sm btn-outline-primary"
-                      @click="askClearFlag(f.id)"
-                    >
-                      Clear
-                    </button>
+                    {{ detailError }}
                   </div>
+                  <template v-else>
+                    <div
+                      v-if="activeFlags.length === 0"
+                      class="text-muted small"
+                    >
+                      No active trust flags.
+                    </div>
+                    <div
+                      v-for="f in activeFlags"
+                      v-else
+                      :key="f.id"
+                      class="border rounded p-2 mb-2 d-flex align-items-start gap-2"
+                    >
+                      <div class="flex-grow-1">
+                        <div>
+                          <strong>{{ f.reason }}</strong>
+                          <code class="ms-2 small">{{ f.flaggedBy }}</code>
+                        </div>
+                        <div class="small text-muted">
+                          {{ new Date(f.flaggedAt).toLocaleString() }}
+                        </div>
+                        <div
+                          v-if="f.evidence"
+                          class="small"
+                        >
+                          {{ f.evidence }}
+                        </div>
+                      </div>
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        @click="askClearFlag(f.id)"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <template v-else>
+                <div
+                  v-if="userLoading"
+                  class="text-muted"
+                >
+                  Loading user...
+                </div>
+                <div
+                  v-else-if="userError"
+                  class="alert alert-danger mb-0"
+                >
+                  {{ userError }}
+                </div>
+                <template v-else-if="userDetail">
+                  <div
+                    v-if="userSaveError"
+                    class="alert alert-danger mb-3"
+                  >
+                    {{ userSaveError }}
+                  </div>
+                  <dl class="row mb-0">
+                    <dt class="col-sm-4">ID</dt>
+                    <dd class="col-sm-8">
+                      <code>{{ userDetail.id }}</code>
+                    </dd>
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ userDetail.email }}</dd>
+                    <dt class="col-sm-4">Phone</dt>
+                    <dd class="col-sm-8">{{ userDetail.phonenumber || '-' }}</dd>
+                    <dt class="col-sm-4">Roles</dt>
+                    <dd class="col-sm-8">{{ userDetail.roles.join(', ') }}</dd>
+                    <dt class="col-sm-4">Active</dt>
+                    <dd class="col-sm-8">
+                      <div class="form-check">
+                        <input
+                          id="editUserActive"
+                          v-model="editUserActive"
+                          class="form-check-input"
+                          type="checkbox"
+                        />
+                        <label
+                          class="form-check-label"
+                          for="editUserActive"
+                          >Active</label
+                        >
+                      </div>
+                    </dd>
+                    <dt class="col-sm-4">Blocked</dt>
+                    <dd class="col-sm-8">
+                      <div class="form-check">
+                        <input
+                          id="editUserBlocked"
+                          v-model="editUserBlocked"
+                          class="form-check-input"
+                          type="checkbox"
+                        />
+                        <label
+                          class="form-check-label"
+                          for="editUserBlocked"
+                          >Blocked</label
+                        >
+                      </div>
+                    </dd>
+                    <dt class="col-sm-4">Created</dt>
+                    <dd class="col-sm-8">{{ new Date(userDetail.createdAt).toLocaleString() }}</dd>
+                    <dt class="col-sm-4">Last Seen</dt>
+                    <dd class="col-sm-8">
+                      {{
+                        userDetail.lastSeenAt
+                          ? new Date(userDetail.lastSeenAt).toLocaleString()
+                          : 'Never'
+                      }}
+                    </dd>
+                    <dt class="col-sm-4">Language</dt>
+                    <dd class="col-sm-8">{{ userDetail.language || '-' }}</dd>
+                    <dt class="col-sm-4">Origin</dt>
+                    <dd class="col-sm-8">{{ userDetail.originDomain || '-' }}</dd>
+                  </dl>
                 </template>
-              </div>
+              </template>
             </div>
             <div class="modal-footer flex-wrap">
+              <template v-if="detailTab === 'user'">
+                <button
+                  class="btn btn-secondary"
+                  @click="selectedProfile = null"
+                >
+                  Close
+                </button>
+                <button
+                  class="btn btn-primary"
+                  :disabled="userSaving || !userDetail"
+                  @click="saveUser"
+                >
+                  {{ userSaving ? 'Saving...' : 'Save' }}
+                </button>
+              </template>
               <div
-                v-if="quarantineOpen"
+                v-else-if="quarantineOpen"
                 class="w-100"
               >
                 <div

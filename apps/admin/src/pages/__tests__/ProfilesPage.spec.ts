@@ -46,6 +46,19 @@ const baseProfile = {
   hasActiveTrustFlag: false,
 }
 
+const baseUser = {
+  id: 'u1',
+  email: 'a@b.com',
+  phonenumber: null,
+  isActive: true,
+  isBlocked: false,
+  roles: ['user'],
+  createdAt: '2026-01-02T00:00:00Z',
+  lastSeenAt: null,
+  language: 'en',
+  originDomain: 'example.org',
+}
+
 function listResponse(profiles: any[]) {
   return { success: true, profiles, total: profiles.length, page: 1, pageSize: 25 }
 }
@@ -61,9 +74,11 @@ describe('ProfilesPage', () => {
       }
       return Promise.resolve(listResponse([baseProfile]))
     })
-    apiRequestMock.mockResolvedValue({
-      success: true,
-      profile: { ...baseProfile, trustFlags: [] },
+    apiRequestMock.mockImplementation((path: string) => {
+      if (typeof path === 'string' && path.startsWith('/admin/users/')) {
+        return Promise.resolve({ success: true, user: baseUser })
+      }
+      return Promise.resolve({ success: true, profile: { ...baseProfile, trustFlags: [] } })
     })
   })
 
@@ -254,5 +269,64 @@ describe('ProfilesPage', () => {
 
     expect(wrapper.text()).toContain('Profile Detail')
     expect(wrapper.text()).toContain('Deep')
+  })
+
+  it('detail modal has Profile and User tabs; User tab shows user detail', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1')
+
+    const tabs = wrapper.findAll('.nav-tabs .nav-link')
+    expect(tabs.map((t) => t.text())).toEqual(['Profile', 'User'])
+
+    await tabs.filter((t) => t.text() === 'User')[0].trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('a@b.com')
+    expect(wrapper.text()).toContain('example.org')
+    expect(wrapper.find('#editUserActive').exists()).toBe(true)
+  })
+
+  it('saving from the User tab patches /admin/users/:id', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'User')[0]
+      .trigger('click')
+    await wrapper.find('#editUserBlocked').setValue(true)
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Save')[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1', {
+      method: 'PATCH',
+      body: { isActive: true, isBlocked: true },
+    })
+  })
+
+  it('quarantine controls are hidden on the User tab', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Quarantine')).toHaveLength(1)
+
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'User')[0]
+      .trigger('click')
+
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Quarantine')).toHaveLength(0)
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Save')).toHaveLength(1)
   })
 })

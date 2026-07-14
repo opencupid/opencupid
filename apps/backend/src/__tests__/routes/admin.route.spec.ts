@@ -400,109 +400,6 @@ describe('GET /stats/breakdown', () => {
   })
 })
 
-describe('GET /users', () => {
-  it('returns paginated user list with lastSeenAt flattened from activitySummary', async () => {
-    const seen = new Date('2026-04-20T10:00:00Z')
-    mockPrisma.user.findMany.mockResolvedValue([
-      {
-        id: 'user1',
-        email: 'test@test.com',
-        phonenumber: null,
-        isActive: true,
-        isBlocked: false,
-        roles: ['user'],
-        createdAt: new Date(),
-        profile: {
-          id: 'prof1',
-          publicName: 'Test',
-          activitySummary: { lastSeenAt: seen },
-        },
-      },
-    ])
-    mockPrisma.user.count.mockResolvedValue(1)
-
-    const handler = fastify.routes['GET /users']
-    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
-
-    expect(reply.statusCode).toBe(200)
-    expect(reply.payload.success).toBe(true)
-    expect(reply.payload.total).toBe(1)
-    expect(reply.payload.users).toHaveLength(1)
-    expect(reply.payload.users[0]).toMatchObject({
-      id: 'user1',
-      lastSeenAt: seen,
-      profile: { id: 'prof1', publicName: 'Test' },
-    })
-    // activitySummary is not leaked through the flattened profile
-    expect(reply.payload.users[0].profile).not.toHaveProperty('activitySummary')
-  })
-
-  it('returns lastSeenAt: null when profile is missing', async () => {
-    mockPrisma.user.findMany.mockResolvedValue([
-      {
-        id: 'user2',
-        email: 'x@y.z',
-        phonenumber: null,
-        isActive: false,
-        isBlocked: false,
-        roles: ['user'],
-        createdAt: new Date(),
-        profile: null,
-      },
-    ])
-    mockPrisma.user.count.mockResolvedValue(1)
-
-    const handler = fastify.routes['GET /users']
-    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
-
-    expect(reply.payload.users[0]).toMatchObject({ lastSeenAt: null, profile: null })
-  })
-
-  it('returns lastSeenAt: null when activitySummary is missing', async () => {
-    mockPrisma.user.findMany.mockResolvedValue([
-      {
-        id: 'user3',
-        email: 'a@b.c',
-        phonenumber: null,
-        isActive: true,
-        isBlocked: false,
-        roles: ['user'],
-        createdAt: new Date(),
-        profile: { id: 'prof3', publicName: 'Newbie', activitySummary: null },
-      },
-    ])
-    mockPrisma.user.count.mockResolvedValue(1)
-
-    const handler = fastify.routes['GET /users']
-    await handler({ query: { page: '1', pageSize: '25', search: '' } }, reply)
-
-    expect(reply.payload.users[0]).toMatchObject({
-      lastSeenAt: null,
-      profile: { id: 'prof3', publicName: 'Newbie' },
-    })
-  })
-
-  it('applies search filter', async () => {
-    mockPrisma.user.findMany.mockResolvedValue([])
-    mockPrisma.user.count.mockResolvedValue(0)
-
-    const handler = fastify.routes['GET /users']
-    await handler({ query: { page: '1', pageSize: '25', search: 'test@' } }, reply)
-
-    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          OR: [
-            { id: { contains: 'test@', mode: 'insensitive' } },
-            { email: { contains: 'test@', mode: 'insensitive' } },
-            { phonenumber: { contains: 'test@' } },
-          ],
-        },
-      })
-    )
-  })
-})
-
 describe('GET /users/:id', () => {
   it('returns user detail with lastSeenAt flattened from activitySummary', async () => {
     const seen = new Date('2026-04-22T09:00:00Z')
@@ -710,7 +607,7 @@ describe('GET /profiles', () => {
     )
   })
 
-  it('search OR clause includes id, publicName, cityName, country', async () => {
+  it('search OR clause includes id, publicName, cityName, country, userId, user email and phone', async () => {
     mockPrisma.profile.findMany.mockResolvedValue([])
     mockPrisma.profile.count.mockResolvedValue(0)
 
@@ -727,6 +624,9 @@ describe('GET /profiles', () => {
                 { publicName: { contains: 'cmod8', mode: 'insensitive' } },
                 { cityName: { contains: 'cmod8', mode: 'insensitive' } },
                 { country: { contains: 'cmod8', mode: 'insensitive' } },
+                { userId: { contains: 'cmod8', mode: 'insensitive' } },
+                { user: { email: { contains: 'cmod8', mode: 'insensitive' } } },
+                { user: { phonenumber: { contains: 'cmod8' } } },
               ],
             },
           ],
