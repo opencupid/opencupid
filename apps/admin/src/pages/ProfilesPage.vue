@@ -197,7 +197,12 @@ const editUserBlocked = ref(false)
 const userSaving = ref(false)
 const userSaveError = ref<string | null>(null)
 
+// Guards against a stale response overwriting state (and the User tab
+// PATCHing the wrong account) when another profile is opened mid-flight.
+let userFetchToken = 0
+
 async function fetchUserDetail(userId: string) {
+  const token = ++userFetchToken
   userDetail.value = null
   userError.value = null
   userSaveError.value = null
@@ -206,13 +211,15 @@ async function fetchUserDetail(userId: string) {
     const res = await apiRequest<{ success: boolean; user: AdminUserDetail }>(
       `/admin/users/${userId}`
     )
+    if (token !== userFetchToken) return
     userDetail.value = res.user
     editUserActive.value = res.user.isActive
     editUserBlocked.value = res.user.isBlocked
   } catch (err) {
+    if (token !== userFetchToken) return
     userError.value = err instanceof Error ? err.message : 'failed to load user'
   } finally {
-    userLoading.value = false
+    if (token === userFetchToken) userLoading.value = false
   }
 }
 

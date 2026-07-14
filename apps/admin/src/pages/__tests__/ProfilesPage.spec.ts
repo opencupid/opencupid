@@ -313,6 +313,49 @@ describe('ProfilesPage', () => {
     })
   })
 
+  it('ignores a stale user detail response when another profile was opened', async () => {
+    const profile2 = { ...baseProfile, id: 'p2', publicName: 'Bob', userId: 'u2' }
+    useApiCall.mockImplementation((path: string) => {
+      if (path === '/admin/profiles/countries') {
+        return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      return Promise.resolve(listResponse([baseProfile, profile2]))
+    })
+    let resolveU1!: (value: unknown) => void
+    apiRequestMock.mockImplementation((path: string) => {
+      if (path === '/admin/users/u1') {
+        return new Promise((resolve) => {
+          resolveU1 = resolve
+        })
+      }
+      if (path === '/admin/users/u2') {
+        return Promise.resolve({
+          success: true,
+          user: { ...baseUser, id: 'u2', email: 'bob@b.com' },
+        })
+      }
+      return Promise.resolve({ success: true, profile: { ...baseProfile, trustFlags: [] } })
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+
+    const rows = wrapper.findAll('tbody tr')
+    await rows[0].trigger('click') // u1 fetch stays pending
+    await rows[1].trigger('click') // u2 fetch resolves immediately
+    await flushPromises()
+    resolveU1({ success: true, user: baseUser }) // stale u1 response arrives last
+    await flushPromises()
+
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'User')[0]
+      .trigger('click')
+
+    expect(wrapper.text()).toContain('bob@b.com')
+    expect(wrapper.text()).not.toContain('a@b.com')
+  })
+
   it('quarantine controls are hidden on the User tab', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()
