@@ -48,6 +48,18 @@ interface AdminUserDetail {
   originDomain: string
 }
 
+interface AdminUserRow {
+  id: string
+  email: string
+  phonenumber: string | null
+  isActive: boolean
+  isBlocked: boolean
+  isRegistrationConfirmed: boolean
+  newsletterOptIn: boolean
+  createdAt: string
+  originDomain: string
+}
+
 interface ProfilesResponse {
   success: boolean
   profiles: AdminProfile[]
@@ -56,7 +68,16 @@ interface ProfilesResponse {
   pageSize: number
 }
 
+interface UsersResponse {
+  success: boolean
+  users: AdminUserRow[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 const { call, loading, error } = useApi()
+const pageTab = ref<'profiles' | 'users'>('profiles')
 const profiles = ref<AdminProfile[]>([])
 const total = ref(0)
 const page = ref(1)
@@ -173,6 +194,57 @@ async function loadMore() {
   await appendProfiles()
 }
 
+// "Not onboarded" tab: users that have no profile yet
+const users = ref<AdminUserRow[]>([])
+const usersTotal = ref(0)
+const usersPage = ref(1)
+const usersLoading = ref(false)
+const usersError = ref<string | null>(null)
+const usersLoadingMore = ref(false)
+const usersHasMore = computed(() => users.value.length < usersTotal.value)
+
+function buildUsersParams() {
+  return {
+    page: usersPage.value,
+    pageSize,
+    search: search.value || undefined,
+    hasProfile: 'false',
+  }
+}
+
+async function fetchUsers() {
+  usersLoading.value = true
+  usersError.value = null
+  try {
+    const res = await apiRequest<UsersResponse>('/admin/users', { params: buildUsersParams() })
+    users.value = res.users
+    usersTotal.value = res.total
+  } catch (err) {
+    usersError.value = err instanceof Error ? err.message : 'failed to load users'
+  } finally {
+    usersLoading.value = false
+  }
+}
+
+async function loadMoreUsers() {
+  if (usersLoadingMore.value || usersLoading.value || !usersHasMore.value) return
+  usersPage.value++
+  usersLoadingMore.value = true
+  try {
+    const res = await apiRequest<UsersResponse>('/admin/users', { params: buildUsersParams() })
+    users.value = [...users.value, ...res.users]
+    usersTotal.value = res.total
+  } finally {
+    usersLoadingMore.value = false
+  }
+}
+
+function switchTab(tab: 'profiles' | 'users') {
+  if (pageTab.value === tab) return
+  pageTab.value = tab
+  resetAndFetch()
+}
+
 const segmentColors: Record<string, string> = {
   new: 'bg-primary',
   returning: 'bg-success',
@@ -200,6 +272,14 @@ const userSaveError = ref<string | null>(null)
 // Guards against a stale response overwriting state (and the User tab
 // PATCHing the wrong account) when another profile is opened mid-flight.
 let userFetchToken = 0
+
+function resetUserDetail() {
+  userFetchToken++ // invalidate any in-flight fetch
+  userDetail.value = null
+  userError.value = null
+  userSaveError.value = null
+  userLoading.value = false
+}
 
 async function fetchUserDetail(userId: string) {
   const token = ++userFetchToken
@@ -237,6 +317,15 @@ async function saveUser() {
       isActive: editUserActive.value,
       isBlocked: editUserBlocked.value,
     }
+    const idx = users.value.findIndex((u) => u.id === userDetail.value?.id)
+    const row = idx >= 0 ? users.value[idx] : undefined
+    if (row) {
+      users.value[idx] = {
+        ...row,
+        isActive: editUserActive.value,
+        isBlocked: editUserBlocked.value,
+      }
+    }
   } catch (err) {
     userSaveError.value = err instanceof Error ? err.message : 'Failed to save'
   } finally {
@@ -244,13 +333,35 @@ async function saveUser() {
   }
 }
 
+// User-only detail modal, opened from the "Not onboarded" tab where no
+// profile exists.
+const userModalOpen = ref(false)
+
+function viewUser(user: AdminUserRow) {
+  userModalOpen.value = true
+  detailTab.value = 'user'
+  fetchUserDetail(user.id)
+}
+
+function closeDetail() {
+  selectedProfile.value = null
+  userModalOpen.value = false
+}
+
+// The User tab's data is fetched lazily on first switch, not on row click.
+watch(detailTab, (tab) => {
+  if (tab === 'user' && selectedProfile.value && !userDetail.value && !userLoading.value) {
+    fetchUserDetail(selectedProfile.value.userId)
+  }
+})
+
 async function viewProfile(profile: AdminProfile) {
   selectedProfile.value = profile
   selectedProfileDetail.value = null
   detailError.value = null
   detailTab.value = 'profile'
+  resetUserDetail()
   detailLoading.value = true
-  fetchUserDetail(profile.userId)
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
       `/admin/profiles/${profile.id}`
@@ -270,13 +381,13 @@ async function viewProfileById(id: string) {
   detailLoading.value = true
   detailError.value = null
   detailTab.value = 'profile'
+  resetUserDetail()
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
       `/admin/profiles/${id}`
     )
     selectedProfile.value = res.profile
     selectedProfileDetail.value = res.profile
-    fetchUserDetail(res.profile.userId)
   } catch (err) {
     detailError.value = err instanceof Error ? err.message : 'failed to load profile'
   } finally {
@@ -377,9 +488,15 @@ async function confirmClearFlag() {
 }
 
 function resetAndFetch() {
-  page.value = 1
-  profiles.value = []
-  fetchProfiles()
+  if (pageTab.value === 'profiles') {
+    page.value = 1
+    profiles.value = []
+    fetchProfiles()
+  } else {
+    usersPage.value = 1
+    users.value = []
+    fetchUsers()
+  }
 }
 
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -496,10 +613,14 @@ onMounted(() => {
   document.addEventListener('click', onClickOutside)
   fetchCountries()
   fetchProfiles()
+  fetchUsers()
 
   observer = new IntersectionObserver(
     ([entry]) => {
-      if (entry?.isIntersecting) loadMore()
+      if (entry?.isIntersecting) {
+        if (pageTab.value === 'profiles') loadMore()
+        else loadMoreUsers()
+      }
     },
     { rootMargin: '200px' }
   )
@@ -528,8 +649,35 @@ onUnmounted(() => {
   <div>
     <div class="d-flex align-items-baseline mb-4">
       <h2 class="mb-0">Profiles</h2>
-      <span class="text-muted ms-auto">{{ total }} result{{ total === 1 ? '' : 's' }}</span>
+      <span class="text-muted ms-auto">
+        {{ pageTab === 'profiles' ? total : usersTotal }} result{{
+          (pageTab === 'profiles' ? total : usersTotal) === 1 ? '' : 's'
+        }}
+      </span>
     </div>
+
+    <ul class="nav nav-pills mb-3">
+      <li class="nav-item">
+        <button
+          type="button"
+          class="nav-link"
+          :class="{ active: pageTab === 'profiles' }"
+          @click="switchTab('profiles')"
+        >
+          Profiles
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          type="button"
+          class="nav-link"
+          :class="{ active: pageTab === 'users' }"
+          @click="switchTab('users')"
+        >
+          Not onboarded ({{ usersTotal }})
+        </button>
+      </li>
+    </ul>
 
     <div
       v-if="error"
@@ -543,10 +691,15 @@ onUnmounted(() => {
         v-model="search"
         type="text"
         class="form-control"
-        placeholder="Search by name, city, email, phone, or ID..."
+        :placeholder="
+          pageTab === 'profiles'
+            ? 'Search by name, city, email, phone, or ID...'
+            : 'Search by email, phone, or user ID...'
+        "
         @input="onSearchInput"
       />
       <div
+        v-if="pageTab === 'profiles'"
         class="dropdown"
         style="max-width: 200px"
       >
@@ -584,6 +737,7 @@ onUnmounted(() => {
         </ul>
       </div>
       <select
+        v-if="pageTab === 'profiles'"
         v-model="selectedCountry"
         class="form-select"
         style="max-width: 200px"
@@ -599,6 +753,7 @@ onUnmounted(() => {
         </option>
       </select>
       <button
+        v-if="pageTab === 'profiles'"
         type="button"
         class="btn btn-primary ms-auto"
         :disabled="selectedProfileIds.size === 0"
@@ -609,173 +764,260 @@ onUnmounted(() => {
     </div>
 
     <div class="table-container p-3">
-      <div
-        v-if="loading"
-        class="text-muted"
-      >
-        Loading...
-      </div>
-      <table
-        v-else
-        class="table table-hover mb-0"
-      >
-        <thead>
-          <tr>
-            <th style="width: 2.5rem">
-              <input
-                type="checkbox"
-                class="form-check-input"
-                aria-label="Select all visible profiles"
-                :checked="allVisibleSelected"
-                :indeterminate="someVisibleSelected"
-                @change="toggleSelectAllVisible"
-              />
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('publicName')"
-            >
-              Name{{ sortIndicator('publicName') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('country')"
-            >
-              Location{{ sortIndicator('country') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('gender')"
-            >
-              Gender{{ sortIndicator('gender') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('isSocialActive')"
-            >
-              Social{{ sortIndicator('isSocialActive') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('isDatingActive')"
-            >
-              Dating{{ sortIndicator('isDatingActive') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('isActive')"
-            >
-              Active{{ sortIndicator('isActive') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('segment')"
-            >
-              Segment{{ sortIndicator('segment') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('createdAt')"
-            >
-              Created{{ sortIndicator('createdAt') }}
-            </th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="profile in sortedProfiles"
-            :key="profile.id"
-            :class="{ 'table-warning': profile.hasActiveTrustFlag }"
-            style="cursor: pointer"
-            @click="viewProfile(profile)"
-          >
-            <td @click.stop>
-              <input
-                type="checkbox"
-                class="form-check-input"
-                :aria-label="`Select profile ${profile.publicName || profile.id}`"
-                :checked="selectedProfileIds.has(profile.id)"
-                @change="toggleProfileSelection(profile)"
-              />
-            </td>
-            <td>{{ profile.publicName || '-' }}</td>
-            <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
-            <td>{{ profile.gender || '-' }}</td>
-            <td>
-              <span :class="profile.isSocialActive ? 'badge bg-success' : 'badge bg-secondary'">
-                {{ profile.isSocialActive ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span :class="profile.isDatingActive ? 'badge bg-success' : 'badge bg-secondary'">
-                {{ profile.isDatingActive ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span :class="profile.isActive ? 'badge bg-success' : 'badge bg-secondary'">
-                {{ profile.isActive ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span
-                v-if="profile.activitySummary?.segment"
-                :class="segmentBadgeClass(profile.activitySummary.segment)"
+      <template v-if="pageTab === 'profiles'">
+        <div
+          v-if="loading"
+          class="text-muted"
+        >
+          Loading...
+        </div>
+        <table
+          v-else
+          class="table table-hover mb-0"
+        >
+          <thead>
+            <tr>
+              <th style="width: 2.5rem">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  aria-label="Select all visible profiles"
+                  :checked="allVisibleSelected"
+                  :indeterminate="someVisibleSelected"
+                  @change="toggleSelectAllVisible"
+                />
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('publicName')"
               >
-                {{ profile.activitySummary.segment }}
-              </span>
-              <span v-else>—</span>
-            </td>
-            <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
-            <td>
-              <button
-                class="btn btn-sm btn-outline-primary"
-                @click.stop="viewProfile(profile)"
+                Name{{ sortIndicator('publicName') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('country')"
               >
-                View
-              </button>
-            </td>
-          </tr>
-          <tr v-if="profiles.length === 0">
-            <td
-              colspan="10"
-              class="text-center text-muted"
+                Location{{ sortIndicator('country') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('gender')"
+              >
+                Gender{{ sortIndicator('gender') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('isSocialActive')"
+              >
+                Social{{ sortIndicator('isSocialActive') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('isDatingActive')"
+              >
+                Dating{{ sortIndicator('isDatingActive') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('isActive')"
+              >
+                Active{{ sortIndicator('isActive') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('segment')"
+              >
+                Segment{{ sortIndicator('segment') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('createdAt')"
+              >
+                Created{{ sortIndicator('createdAt') }}
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="profile in sortedProfiles"
+              :key="profile.id"
+              :class="{ 'table-warning': profile.hasActiveTrustFlag }"
+              style="cursor: pointer"
+              @click="viewProfile(profile)"
             >
-              No profiles found
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td @click.stop>
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  :aria-label="`Select profile ${profile.publicName || profile.id}`"
+                  :checked="selectedProfileIds.has(profile.id)"
+                  @change="toggleProfileSelection(profile)"
+                />
+              </td>
+              <td>{{ profile.publicName || '-' }}</td>
+              <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
+              <td>{{ profile.gender || '-' }}</td>
+              <td>
+                <span :class="profile.isSocialActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ profile.isSocialActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="profile.isDatingActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ profile.isDatingActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="profile.isActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ profile.isActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span
+                  v-if="profile.activitySummary?.segment"
+                  :class="segmentBadgeClass(profile.activitySummary.segment)"
+                >
+                  {{ profile.activitySummary.segment }}
+                </span>
+                <span v-else>—</span>
+              </td>
+              <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  @click.stop="viewProfile(profile)"
+                >
+                  View
+                </button>
+              </td>
+            </tr>
+            <tr v-if="profiles.length === 0">
+              <td
+                colspan="10"
+                class="text-center text-muted"
+              >
+                No profiles found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+
+      <template v-else>
+        <div
+          v-if="usersError"
+          class="alert alert-danger"
+        >
+          {{ usersError }}
+        </div>
+        <div
+          v-if="usersLoading"
+          class="text-muted"
+        >
+          Loading...
+        </div>
+        <table
+          v-else
+          class="table table-hover mb-0"
+        >
+          <thead>
+            <tr>
+              <th>Email / Phone</th>
+              <th>Confirmed</th>
+              <th>Active</th>
+              <th>Blocked</th>
+              <th>Newsletter</th>
+              <th>Created</th>
+              <th>Origin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="user in users"
+              :key="user.id"
+              style="cursor: pointer"
+              @click="viewUser(user)"
+            >
+              <td>{{ user.email || user.phonenumber || '-' }}</td>
+              <td>
+                <span
+                  :class="user.isRegistrationConfirmed ? 'badge bg-success' : 'badge bg-warning'"
+                >
+                  {{ user.isRegistrationConfirmed ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="user.isActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ user.isActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="user.isBlocked ? 'badge bg-danger' : 'badge bg-secondary'">
+                  {{ user.isBlocked ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="user.newsletterOptIn ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ user.newsletterOptIn ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
+              <td>{{ user.originDomain || '-' }}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  @click.stop="viewUser(user)"
+                >
+                  View
+                </button>
+              </td>
+            </tr>
+            <tr v-if="users.length === 0">
+              <td
+                colspan="8"
+                class="text-center text-muted"
+              >
+                No users found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
       <div
         ref="sentinel"
         class="text-center text-muted py-2"
       >
-        <span v-if="loadingMore">Loading more...</span>
+        <span v-if="loadingMore || usersLoadingMore">Loading more...</span>
       </div>
     </div>
 
-    <!-- Profile Detail Modal -->
-    <div v-if="selectedProfile">
+    <!-- Detail Modal (profile + user tabs, or user-only from the Not onboarded tab) -->
+    <div v-if="selectedProfile || userModalOpen">
       <div
         class="modal d-block"
         tabindex="-1"
-        @click.self="selectedProfile = null"
-        @keydown.escape="selectedProfile = null"
-        @keydown.enter.prevent="detailTab === 'user' ? saveUser() : (selectedProfile = null)"
+        @click.self="closeDetail"
+        @keydown.escape="closeDetail"
+        @keydown.enter.prevent="detailTab === 'user' ? saveUser() : closeDetail()"
       >
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Profile Detail</h5>
+              <h5 class="modal-title">{{ selectedProfile ? 'Profile Detail' : 'User Detail' }}</h5>
               <button
                 type="button"
                 class="btn-close"
-                @click="selectedProfile = null"
+                @click="closeDetail"
               ></button>
             </div>
             <div class="modal-body">
-              <ul class="nav nav-tabs mb-3">
+              <ul
+                v-if="selectedProfile"
+                class="nav nav-tabs mb-3"
+              >
                 <li class="nav-item">
                   <button
                     type="button"
@@ -798,7 +1040,7 @@ onUnmounted(() => {
                 </li>
               </ul>
 
-              <template v-if="detailTab === 'profile'">
+              <template v-if="detailTab === 'profile' && selectedProfile">
                 <dl class="row mb-0">
                   <dt class="col-sm-4">ID</dt>
                   <dd class="col-sm-8">
@@ -974,7 +1216,7 @@ onUnmounted(() => {
               <template v-if="detailTab === 'user'">
                 <button
                   class="btn btn-secondary"
-                  @click="selectedProfile = null"
+                  @click="closeDetail"
                 >
                   Close
                 </button>
@@ -1031,7 +1273,7 @@ onUnmounted(() => {
                 </button>
                 <button
                   class="btn btn-secondary"
-                  @click="selectedProfile = null"
+                  @click="closeDetail"
                 >
                   Close
                 </button>

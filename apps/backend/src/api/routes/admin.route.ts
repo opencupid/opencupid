@@ -296,6 +296,79 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
+   * GET /users
+   * Returns a paginated, searchable list of users, optionally filtered by
+   * profile existence. Backs the "Not onboarded" tab on the admin Profiles
+   * page (hasProfile=false).
+   * @query {number} [page=1] - Page number
+   * @query {number} [pageSize=25] - Page size (max 100)
+   * @query {string} [search] - Search by email, phone, or user id
+   * @query {'true'|'false'} [hasProfile] - Filter by whether the user has a profile
+   * @returns {{ success, users, total, page, pageSize }}
+   */
+  fastify.get('/users', async (req, reply) => {
+    try {
+      const {
+        page = '1',
+        pageSize = '25',
+        search = '',
+        hasProfile = '',
+      } = req.query as Record<string, string>
+      const pageNum = Math.max(1, parseInt(page, 10) || 1)
+      const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
+      const skip = (pageNum - 1) * size
+
+      const conditions: any[] = []
+      if (search) {
+        conditions.push({
+          OR: [
+            { id: { contains: search, mode: 'insensitive' as const } },
+            { email: { contains: search, mode: 'insensitive' as const } },
+            { phonenumber: { contains: search } },
+          ],
+        })
+      }
+      if (hasProfile === 'true') conditions.push({ profile: { isNot: null } })
+      if (hasProfile === 'false') conditions.push({ profile: null })
+      const where = conditions.length > 0 ? { AND: conditions } : {}
+
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          where,
+          skip,
+          take: size,
+          orderBy: [{ createdAt: 'desc' }],
+          select: {
+            id: true,
+            email: true,
+            phonenumber: true,
+            isActive: true,
+            isBlocked: true,
+            isRegistrationConfirmed: true,
+            newsletterOptIn: true,
+            roles: true,
+            createdAt: true,
+            language: true,
+            originDomain: true,
+          },
+        }),
+        prisma.user.count({ where }),
+      ])
+
+      return reply.code(200).send({
+        success: true,
+        users,
+        total,
+        page: pageNum,
+        pageSize: size,
+      })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching admin users')
+      return sendError(reply, 500, 'Failed to fetch users')
+    }
+  })
+
+  /**
    * GET /users/:id
    * Returns detailed user information including profile data.
    * @param {string} id - User ID

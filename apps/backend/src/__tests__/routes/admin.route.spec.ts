@@ -400,6 +400,88 @@ describe('GET /stats/breakdown', () => {
   })
 })
 
+describe('GET /users', () => {
+  it('returns paginated user list', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 'user1',
+        email: 'test@test.com',
+        phonenumber: null,
+        isActive: true,
+        isBlocked: false,
+        isRegistrationConfirmed: true,
+        newsletterOptIn: false,
+        roles: ['user'],
+        createdAt: new Date(),
+        language: 'en',
+        originDomain: 'example.org',
+      },
+    ])
+    mockPrisma.user.count.mockResolvedValue(1)
+
+    const handler = fastify.routes['GET /users']
+    await handler({ query: { page: '1', pageSize: '25' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.total).toBe(1)
+    expect(reply.payload.users).toHaveLength(1)
+    expect(reply.payload.users[0]).toMatchObject({ id: 'user1', email: 'test@test.com' })
+  })
+
+  it('filters to users without a profile when hasProfile=false', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([])
+    mockPrisma.user.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /users']
+    await handler({ query: { page: '1', pageSize: '25', hasProfile: 'false' } }, reply)
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { AND: [{ profile: null }] } })
+    )
+  })
+
+  it('filters to users with a profile when hasProfile=true', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([])
+    mockPrisma.user.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /users']
+    await handler({ query: { page: '1', pageSize: '25', hasProfile: 'true' } }, reply)
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { AND: [{ profile: { isNot: null } }] } })
+    )
+  })
+
+  it('applies search filter alongside hasProfile', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([])
+    mockPrisma.user.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /users']
+    await handler(
+      { query: { page: '1', pageSize: '25', search: 'test@', hasProfile: 'false' } },
+      reply
+    )
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: [
+            {
+              OR: [
+                { id: { contains: 'test@', mode: 'insensitive' } },
+                { email: { contains: 'test@', mode: 'insensitive' } },
+                { phonenumber: { contains: 'test@' } },
+              ],
+            },
+            { profile: null },
+          ],
+        },
+      })
+    )
+  })
+})
+
 describe('GET /users/:id', () => {
   it('returns user detail with lastSeenAt flattened from activitySummary', async () => {
     const seen = new Date('2026-04-22T09:00:00Z')
