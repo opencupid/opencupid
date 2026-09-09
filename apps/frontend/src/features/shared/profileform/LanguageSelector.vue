@@ -3,7 +3,7 @@ import { useLanguages } from '@/features/shared/composables/useLanguages'
 
 import { computed, onMounted, reactive, useAttrs } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Multiselect from 'vue-multiselect'
+import Multiselect from '@/features/shared/ui/multiselect'
 import { type MultiselectOption } from '@/types/multiselect'
 import { useWindowSize } from '@vueuse/core'
 

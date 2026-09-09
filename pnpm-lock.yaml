@@ -506,9 +506,6 @@ importers:
       vue-draggable-next:
         specifier: 2.3.0
         version: 2.3.0(sortablejs@1.15.6)(vue@3.5.34(typescript@5.9.3))
-      vue-multiselect:
-        specifier: github:peterzen/vue-multiselect
-        version: https://codeload.github.com/peterzen/vue-multiselect/tar.gz/e3644bb9e92ba02ca3a274bc2cd40b0eb6a8e936
       vue-router:
         specifier: 5.0.6
         version: 5.0.6(@vue/compiler-sfc@3.5.34)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.34(typescript@5.9.3)))(vue@3.5.34(typescript@5.9.3))
@@ -7519,11 +7516,6 @@ packages:
   vue-i18n-extract@2.0.7:
     resolution: {integrity: sha512-i1NW5R58S720iQ1BEk+6ILo3hT6UA8mtYNNolSH4rt9345qvXdvA6GHy2+jHozdDAKHwlu9VvS/+vIMKs1UYQw==}
     hasBin: true
-
-  vue-multiselect@https://codeload.github.com/peterzen/vue-multiselect/tar.gz/e3644bb9e92ba02ca3a274bc2cd40b0eb6a8e936:
-    resolution: {tarball: https://codeload.github.com/peterzen/vue-multiselect/tar.gz/e3644bb9e92ba02ca3a274bc2cd40b0eb6a8e936}
-    version: 3.2.0
-    engines: {node: '>= 14.18.1', npm: '>= 6.14.15'}
 
   vue-router@5.0.6:
     resolution: {integrity: sha512-9+kmUTGbKMyW9Asoy98IXXYIzrTMT7JDAdpDDeEkorHvybpUvBI2wsrSM5jFOXrFydpzRFJ9vAh+80DN2PGu9w==}
@@ -14901,8 +14893,6 @@ snapshots:
       glob: 8.1.0
       is-valid-glob: 1.0.0
       js-yaml: 4.1.1
-
-  vue-multiselect@https://codeload.github.com/peterzen/vue-multiselect/tar.gz/e3644bb9e92ba02ca3a274bc2cd40b0eb6a8e936: {}
 
   vue-router@5.0.6(@vue/compiler-sfc@3.5.34)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.34(typescript@5.9.3)))(vue@3.5.34(typescript@5.9.3)):
     dependencies:

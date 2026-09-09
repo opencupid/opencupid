@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { ref, computed } from 'vue'
 
-vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k, locale: ref('en') }) }))
 // Each call to useGeocoder() returns its own refs, mirroring the per-instance
 // contract of the production composable so two LocationSelector mounts can't
