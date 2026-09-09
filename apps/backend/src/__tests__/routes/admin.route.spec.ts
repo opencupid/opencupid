@@ -168,6 +168,21 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+// Collects the `AND "senderId" <> ...` Prisma.Sql fragments interpolated into
+// the raw message queries, so tests can assert the ADMIN_PROFILE_ID exclusion
+// is applied (and only applied) when the system sender is configured.
+function adminSenderExclusionFragments(): any[] {
+  return mockPrisma.$queryRaw.mock.calls
+    .flat()
+    .filter(
+      (arg: any) =>
+        arg &&
+        typeof arg === 'object' &&
+        Array.isArray(arg.strings) &&
+        arg.strings.join('').includes('senderId')
+    )
+}
+
 describe('GET /stats', () => {
   it('returns dashboard stats', async () => {
     mockPrisma.user.count
@@ -281,6 +296,29 @@ describe('GET /stats/daily', () => {
     expect(reply.payload.dailyMessages.every((d: any) => d.count === 0)).toBe(true)
   })
 
+  it('excludes ADMIN_PROFILE_ID messages when a system sender is configured', async () => {
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
+    mockPrisma.$queryRaw.mockResolvedValue([])
+
+    const handler = fastify.routes['GET /stats/daily']
+    await handler({}, reply)
+
+    const fragments = adminSenderExclusionFragments()
+    expect(fragments).toHaveLength(1)
+    expect(fragments[0].values).toContain('sys-sender')
+  })
+
+  it('does not filter messages when ADMIN_PROFILE_ID is not configured', async () => {
+    mockAppConfig.ADMIN_PROFILE_ID = undefined as any
+    mockPrisma.$queryRaw.mockResolvedValue([])
+
+    const handler = fastify.routes['GET /stats/daily']
+    await handler({}, reply)
+
+    expect(adminSenderExclusionFragments()).toHaveLength(0)
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
+  })
+
   it('handles errors gracefully', async () => {
     mockPrisma.$queryRaw.mockRejectedValueOnce(new Error('DB error'))
 
@@ -365,6 +403,33 @@ describe('GET /stats/breakdown', () => {
     for (const s of reply.payload.series) {
       expect(s.data).toHaveLength(24)
     }
+  })
+
+  it('excludes ADMIN_PROFILE_ID from the messages series when configured', async () => {
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([]) // messages
+      .mockResolvedValueOnce([]) // conversations
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { metric: 'messages', range: '24h' } }, reply)
+
+    const fragments = adminSenderExclusionFragments()
+    expect(fragments).toHaveLength(1)
+    expect(fragments[0].values).toContain('sys-sender')
+  })
+
+  it('does not filter the messages series when ADMIN_PROFILE_ID is not configured', async () => {
+    mockAppConfig.ADMIN_PROFILE_ID = undefined as any
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([]) // messages
+      .mockResolvedValueOnce([]) // conversations
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { metric: 'messages', range: '24h' } }, reply)
+
+    expect(adminSenderExclusionFragments()).toHaveLength(0)
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
   })
 
   it('zero-fills missing buckets and preserves matched bucket counts', async () => {
