@@ -5,7 +5,7 @@ vi.mock('@/lib/languages', () => ({
   getLanguageSelectorOptions: () => [{ label: 'English', value: 'en' }],
 }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
-vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
+vi.mock('@/features/shared/ui/multiselect', () => ({ default: { template: '<div />' } }))
 
 import LanguageSelector from '../LanguageSelector.vue'
 

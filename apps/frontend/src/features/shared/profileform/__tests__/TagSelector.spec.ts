@@ -15,8 +15,6 @@ const create = vi
   .fn()
   .mockResolvedValue({ success: true, data: { result: { id: '2', slug: 'new', name: 'new' } } })
 vi.mock('@/store/tagStore', () => ({ useTagsStore: () => ({ search, create }) }))
-vi.mock('vue-multiselect', () => ({ default: { template: '<div />' } }))
-
 // A stub that exposes the multiselect open/close events.
 // Name must match the component's own `name: 'vue-multiselect'` for findComponent({ name }) to work.
 const MultiselectStub = {
