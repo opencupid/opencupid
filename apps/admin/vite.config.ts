@@ -42,6 +42,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       alias: {
         '@': path.resolve(__dirname, './src'),
         '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
+        '@shared': path.resolve(__dirname, '../../packages/shared'),
       },
     },
     build: {

@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
 import { Prisma } from '@prisma/client'
+import { appLocales } from '@shared/i18n/locales'
 import {
   TrustReasonSchema,
   type TrustReasonType,
@@ -446,20 +447,45 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * PATCH /users/:id
-   * Updates user admin fields (active/blocked status).
+   * Updates user admin fields (active/blocked status, language, origin domain).
    * @param {string} id - User ID
    * @body {boolean} [isActive] - Active status
    * @body {boolean} [isBlocked] - Blocked status
+   * @body {string} [language] - Must be one of the app's supported locales
+   * @body {string} [originDomain] - Brand domain the user originated from
    * @returns {{ success, user }}
    */
   fastify.patch('/users/:id', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
-      const body = req.body as { isActive?: boolean; isBlocked?: boolean }
+      const body = req.body as {
+        isActive?: boolean
+        isBlocked?: boolean
+        language?: string
+        originDomain?: string
+      }
 
-      const data: { isActive?: boolean; isBlocked?: boolean } = {}
+      const data: {
+        isActive?: boolean
+        isBlocked?: boolean
+        language?: string
+        originDomain?: string
+      } = {}
       if (typeof body.isActive === 'boolean') data.isActive = body.isActive
       if (typeof body.isBlocked === 'boolean') data.isBlocked = body.isBlocked
+      if (typeof body.language === 'string') {
+        if (!(body.language in appLocales)) {
+          return sendError(reply, 400, `invalid language: ${body.language}`)
+        }
+        data.language = body.language
+      }
+      if (typeof body.originDomain === 'string') {
+        const originDomain = body.originDomain.trim()
+        if (!originDomain) {
+          return sendError(reply, 400, 'originDomain must not be empty')
+        }
+        data.originDomain = originDomain
+      }
 
       if (Object.keys(data).length === 0) {
         return sendError(reply, 400, 'No valid fields to update')
@@ -479,6 +505,27 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error updating admin user')
       return sendError(reply, 500, 'Failed to update user')
+    }
+  })
+
+  /**
+   * GET /users/origins
+   * Returns a sorted list of distinct origin domains across all users, for
+   * populating the origin domain dropdown without hardcoding brand domains.
+   * @returns {{ success, origins: string[] }}
+   */
+  fastify.get('/users/origins', async (_req, reply) => {
+    try {
+      const groups = await prisma.user.groupBy({
+        by: ['originDomain'],
+        where: { originDomain: { not: '' } },
+        orderBy: { originDomain: 'asc' },
+      })
+      const origins = groups.map((g) => g.originDomain)
+      return reply.code(200).send({ success: true, origins })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching user origins')
+      return sendError(reply, 500, 'Failed to fetch origins')
     }
   })
 

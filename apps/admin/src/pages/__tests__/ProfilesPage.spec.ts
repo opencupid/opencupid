@@ -83,10 +83,13 @@ describe('ProfilesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRoute.query = {}
-    // /admin/profiles/countries + /admin/profiles list
+    // /admin/profiles/countries + /admin/users/origins + /admin/profiles list
     useApiCall.mockImplementation((path: string) => {
       if (path === '/admin/profiles/countries') {
         return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
       }
       return Promise.resolve(listResponse([baseProfile]))
     })
@@ -106,6 +109,9 @@ describe('ProfilesPage', () => {
     useApiCall.mockImplementation((path: string) => {
       if (path === '/admin/profiles/countries') {
         return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
       }
       return Promise.resolve(listResponse([flagged, baseProfile]))
     })
@@ -208,6 +214,9 @@ describe('ProfilesPage', () => {
       if (path === '/admin/profiles/countries') {
         return Promise.resolve({ success: true, countries: ['US'] })
       }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
+      }
       return Promise.resolve(listResponse([{ ...baseProfile, hasActiveTrustFlag: true }]))
     })
     clearTrustFlagMock.mockResolvedValue({ success: true })
@@ -280,6 +289,9 @@ describe('ProfilesPage', () => {
       if (path === '/admin/profiles/countries') {
         return Promise.resolve({ success: true, countries: ['US'] })
       }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
+      }
       return Promise.resolve(listResponse([])) // empty list — must hit slow path
     })
 
@@ -307,7 +319,7 @@ describe('ProfilesPage', () => {
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1')
     expect(wrapper.text()).toContain('a@b.com')
-    expect(wrapper.text()).toContain('example.org')
+    expect((wrapper.find('#editUserOrigin').element as HTMLInputElement).value).toBe('example.org')
     expect(wrapper.find('#editUserActive').exists()).toBe(true)
   })
 
@@ -331,7 +343,60 @@ describe('ProfilesPage', () => {
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1', {
       method: 'PATCH',
-      body: { isActive: true, isBlocked: true },
+      body: { isActive: true, isBlocked: true, language: 'en', originDomain: 'example.org' },
+    })
+  })
+
+  it('Language select and Origin datalist are populated without hardcoded options', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'User')[0]
+      .trigger('click')
+    await flushPromises()
+
+    const languageSelect = wrapper.find('#editUserLanguage')
+    const languageValues = languageSelect.findAll('option').map((o) => o.attributes('value'))
+    expect(languageValues).toEqual(['en', 'hu'])
+    expect((languageSelect.element as HTMLSelectElement).value).toBe('en')
+
+    const originDatalistValues = wrapper
+      .find('#origin-domain-options')
+      .findAll('option')
+      .map((o) => o.attributes('value'))
+    expect(originDatalistValues).toEqual(['example.org'])
+  })
+
+  it('saving from the User tab sends the edited language and origin domain', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'User')[0]
+      .trigger('click')
+    await flushPromises()
+
+    await wrapper.find('#editUserLanguage').setValue('hu')
+    await wrapper.find('#editUserOrigin').setValue('newbrand.example')
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Save')[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1', {
+      method: 'PATCH',
+      body: {
+        isActive: true,
+        isBlocked: false,
+        language: 'hu',
+        originDomain: 'newbrand.example',
+      },
     })
   })
 
@@ -340,6 +405,9 @@ describe('ProfilesPage', () => {
     useApiCall.mockImplementation((path: string) => {
       if (path === '/admin/profiles/countries') {
         return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
       }
       return Promise.resolve(listResponse([baseProfile, profile2]))
     })
@@ -448,7 +516,7 @@ describe('ProfilesPage', () => {
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u9', {
       method: 'PATCH',
-      body: { isActive: true, isBlocked: true },
+      body: { isActive: true, isBlocked: true, language: 'en', originDomain: 'example.org' },
     })
   })
 

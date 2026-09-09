@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi, apiRequest } from '../composables/useApi'
 import { flagProfile, clearTrustFlag } from '../composables/useTrustFlags'
+import { appLocales } from '@shared/i18n/locales'
 
 interface AdminProfile {
   id: string
@@ -266,8 +267,18 @@ const userLoading = ref(false)
 const userError = ref<string | null>(null)
 const editUserActive = ref(false)
 const editUserBlocked = ref(false)
+const editUserLanguage = ref('')
+const editUserOrigin = ref('')
 const userSaving = ref(false)
 const userSaveError = ref<string | null>(null)
+
+const languageOptions = Object.entries(appLocales).map(([code, label]) => ({ code, label }))
+const originOptions = ref<string[]>([])
+
+async function fetchOrigins() {
+  const res = await call<{ success: boolean; origins: string[] }>('/admin/users/origins')
+  if (res) originOptions.value = res.origins
+}
 
 // Guards against a stale response overwriting state (and the User tab
 // PATCHing the wrong account) when another profile is opened mid-flight.
@@ -295,6 +306,8 @@ async function fetchUserDetail(userId: string) {
     userDetail.value = res.user
     editUserActive.value = res.user.isActive
     editUserBlocked.value = res.user.isBlocked
+    editUserLanguage.value = res.user.language
+    editUserOrigin.value = res.user.originDomain
   } catch (err) {
     if (token !== userFetchToken) return
     userError.value = err instanceof Error ? err.message : 'failed to load user'
@@ -305,17 +318,25 @@ async function fetchUserDetail(userId: string) {
 
 async function saveUser() {
   if (!userDetail.value) return
+  const originDomain = editUserOrigin.value.trim()
   userSaving.value = true
   userSaveError.value = null
   try {
     await apiRequest(`/admin/users/${userDetail.value.id}`, {
       method: 'PATCH',
-      body: { isActive: editUserActive.value, isBlocked: editUserBlocked.value },
+      body: {
+        isActive: editUserActive.value,
+        isBlocked: editUserBlocked.value,
+        language: editUserLanguage.value,
+        originDomain,
+      },
     })
     userDetail.value = {
       ...userDetail.value,
       isActive: editUserActive.value,
       isBlocked: editUserBlocked.value,
+      language: editUserLanguage.value,
+      originDomain,
     }
     const idx = users.value.findIndex((u) => u.id === userDetail.value?.id)
     const row = idx >= 0 ? users.value[idx] : undefined
@@ -324,7 +345,11 @@ async function saveUser() {
         ...row,
         isActive: editUserActive.value,
         isBlocked: editUserBlocked.value,
+        originDomain,
       }
+    }
+    if (!originOptions.value.includes(originDomain)) {
+      originOptions.value = [...originOptions.value, originDomain].sort()
     }
   } catch (err) {
     userSaveError.value = err instanceof Error ? err.message : 'Failed to save'
@@ -612,6 +637,7 @@ const route = useRoute()
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
   fetchCountries()
+  fetchOrigins()
   fetchProfiles()
   fetchUsers()
 
@@ -1205,9 +1231,40 @@ onUnmounted(() => {
                       }}
                     </dd>
                     <dt class="col-sm-4">Language</dt>
-                    <dd class="col-sm-8">{{ userDetail.language || '-' }}</dd>
+                    <dd class="col-sm-8">
+                      <select
+                        id="editUserLanguage"
+                        v-model="editUserLanguage"
+                        class="form-select form-select-sm"
+                        style="max-width: 200px"
+                      >
+                        <option
+                          v-for="opt in languageOptions"
+                          :key="opt.code"
+                          :value="opt.code"
+                        >
+                          {{ opt.label }}
+                        </option>
+                      </select>
+                    </dd>
                     <dt class="col-sm-4">Origin</dt>
-                    <dd class="col-sm-8">{{ userDetail.originDomain || '-' }}</dd>
+                    <dd class="col-sm-8">
+                      <input
+                        id="editUserOrigin"
+                        v-model="editUserOrigin"
+                        type="text"
+                        list="origin-domain-options"
+                        class="form-control form-control-sm"
+                        style="max-width: 200px"
+                      />
+                      <datalist id="origin-domain-options">
+                        <option
+                          v-for="o in originOptions"
+                          :key="o"
+                          :value="o"
+                        />
+                      </datalist>
+                    </dd>
                   </dl>
                 </template>
               </template>

@@ -9,6 +9,7 @@ export default defineConfig(
       alias: {
         '@': path.resolve(__dirname, './src'),
         '@zod': path.resolve(__dirname, '../../packages/shared/zod'),
+        '@shared': path.resolve(__dirname, '../../packages/shared'),
       },
     },
     define: {
