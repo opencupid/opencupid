@@ -3,6 +3,7 @@ import { createEvent as createIcsEvent, type EventAttributes } from 'ics'
 import { EventService, EventNotVisibleError } from '@/services/event.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageServiceError } from '@/services/image.service'
+import { TagServiceError } from '@/services/tag.service'
 import {
   CreateEventPayloadSchema,
   UpdateEventPayloadSchema,
@@ -44,7 +45,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         cluster.evictAll()
         return reply.code(201).send({ success: true, event: mapDbEventToOwner(created) })
       } catch (err) {
-        if (err instanceof ImageServiceError) {
+        if (err instanceof ImageServiceError || err instanceof TagServiceError) {
           return sendError(reply, 400, err.message)
         }
         fastify.log.error(err)
@@ -130,6 +131,9 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         cluster.evictAll()
         return reply.code(200).send({ success: true, event: mapDbEventToOwner(row) })
       } catch (err) {
+        if (err instanceof TagServiceError) {
+          return sendError(reply, 400, err.message)
+        }
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to update event')
       }

@@ -6,6 +6,18 @@ import { CreateTagInput, type PopularTag } from '@zod/tag/tag.dto'
 import { TagWithTranslations } from '@zod/tag/tag.db'
 import { tagTranslationsInclude, translationWhereClause } from '@/db/includes/profileIncludes'
 
+export type TagServiceErrorCode = 'NOT_FOUND'
+
+export class TagServiceError extends Error {
+  constructor(
+    public readonly code: TagServiceErrorCode,
+    message: string
+  ) {
+    super(message)
+    this.name = 'TagServiceError'
+  }
+}
+
 export class TagService {
   private static instance: TagService
 
@@ -54,6 +66,38 @@ export class TagService {
         name: 'asc',
       },
     })
+  }
+
+  /**
+   * Validates that every id names a tag that may still be attached, and
+   * returns the deduped list. Callers pass the result straight to a Prisma
+   * `connect`/`set`, so an unknown id would otherwise surface as a P2025 and
+   * be reported to the client as a 500 — this turns it into a 400 naming the
+   * offending ids.
+   *
+   * `isHidden` tags are accepted: hidden means "keep out of the pickers", not
+   * "detach on sight", so moderating a tag mid-edit must not fail the write.
+   * Soft-deleted and unapproved tags are rejected.
+   */
+  public async resolveAttachableTagIdsTx(
+    tx: Prisma.TransactionClient,
+    tagIds: string[]
+  ): Promise<string[]> {
+    const uniqueIds = Array.from(new Set(tagIds))
+    if (uniqueIds.length === 0) return []
+
+    const found = await tx.tag.findMany({
+      where: { id: { in: uniqueIds }, isDeleted: false, isApproved: true },
+      select: { id: true },
+    })
+
+    if (found.length !== uniqueIds.length) {
+      const known = new Set(found.map((t) => t.id))
+      const missing = uniqueIds.filter((id) => !known.has(id))
+      throw new TagServiceError('NOT_FOUND', `Unknown or unavailable tag(s): ${missing.join(', ')}`)
+    }
+
+    return uniqueIds
   }
 
   public async create(locale: string, data: CreateTagInput): Promise<TagWithTranslations> {

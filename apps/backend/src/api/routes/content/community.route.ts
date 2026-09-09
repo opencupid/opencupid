@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { CommunityService } from '@/services/community.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageServiceError } from '@/services/image.service'
+import { TagServiceError } from '@/services/tag.service'
 import {
   CreateCommunityPayloadSchema,
   UpdateCommunityPayloadSchema,
@@ -37,7 +38,7 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
         cluster.evictAll()
         return reply.code(201).send({ success: true, community: mapDbCommunityToOwner(created) })
       } catch (err) {
-        if (err instanceof ImageServiceError) {
+        if (err instanceof ImageServiceError || err instanceof TagServiceError) {
           return sendError(reply, 400, err.message)
         }
         fastify.log.error(err)
@@ -81,6 +82,9 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
         cluster.evictAll()
         return reply.code(200).send({ success: true, community: mapDbCommunityToOwner(row) })
       } catch (err) {
+        if (err instanceof TagServiceError) {
+          return sendError(reply, 400, err.message)
+        }
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to update community')
       }

@@ -101,6 +101,24 @@ export function createMockPrisma() {
       deleteMany: vi.fn(),
       count: vi.fn(),
     },
+    postContent: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    eventContent: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    communityContent: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
     eventAttendance: {
       findUnique: vi.fn(),
       findMany: vi.fn(),

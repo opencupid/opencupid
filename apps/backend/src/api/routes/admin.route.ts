@@ -947,7 +947,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /tags/merge
    * Merges multiple "loser" tags into a single "winner" tag. Moves translations, profile
-   * associations, and filter associations to the winner, then soft-deletes the losers.
+   * associations, and user-content associations to the winner, then soft-deletes the losers.
    * @body {string} winnerTagId - Tag to keep
    * @body {string[]} loserTagIds - Tags to merge into the winner
    * @returns {{ success, mergedCount, tag }}
@@ -1005,7 +1005,24 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           loserTagIds
         )
 
-        // 3. Soft-delete losers
+        // 3. Reassign user-content associations. Note the inverted column
+        // order: Prisma names implicit join columns alphabetically by model,
+        // which puts the tag id in "A" for _UserContentTags but in "B" for
+        // _ProfileTags above.
+        await tx.$executeRawUnsafe(
+          `INSERT INTO "_UserContentTags" ("A", "B")
+           SELECT $1, "B" FROM "_UserContentTags"
+           WHERE "A" = ANY($2::text[])
+           ON CONFLICT DO NOTHING`,
+          winnerTagId,
+          loserTagIds
+        )
+        await tx.$executeRawUnsafe(
+          `DELETE FROM "_UserContentTags" WHERE "A" = ANY($1::text[])`,
+          loserTagIds
+        )
+
+        // 4. Soft-delete losers
         await tx.tag.updateMany({
           where: { id: { in: loserTagIds } },
           data: { isDeleted: true },

@@ -1155,6 +1155,58 @@ describe('POST /tags/merge', () => {
     expect(reply.payload.tag.id).toBe('winner1')
   })
 
+  /**
+   * Association reassignment is hand-written SQL against the two implicit
+   * join tables, so a new taggable relation is only carried across a merge if
+   * it is added here too. Missing it would silently strip tags off content
+   * with no error surfaced anywhere.
+   *
+   * The column order differs between the two tables: Prisma names implicit
+   * join columns alphabetically by model, so the tag id sits in "B" for
+   * _ProfileTags (Profile, Tag) but in "A" for _UserContentTags (Tag,
+   * UserContent).
+   */
+  it('reassigns both profile and user-content associations to the winner', async () => {
+    mockPrisma.tagTranslation.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([])
+    mockPrisma.$executeRawUnsafe.mockResolvedValue(0)
+    mockPrisma.tag.updateMany.mockResolvedValue({ count: 1 })
+    mockPrisma.tag.findUnique.mockResolvedValue({ id: 'winner1', _count: { profiles: 1 } })
+
+    const handler = fastify.routes['POST /tags/merge']
+    await handler({ body: { winnerTagId: 'winner1', loserTagIds: ['loser1'] } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+
+    const statements = mockPrisma.$executeRawUnsafe.mock.calls.map((c: any[]) => c[0])
+    const profileInsert = statements.find(
+      (s: string) => s.includes('INSERT') && s.includes('_ProfileTags')
+    )
+    const contentInsert = statements.find(
+      (s: string) => s.includes('INSERT') && s.includes('_UserContentTags')
+    )
+    const contentDelete = statements.find(
+      (s: string) => s.includes('DELETE') && s.includes('_UserContentTags')
+    )
+
+    expect(profileInsert).toBeDefined()
+    expect(contentInsert).toBeDefined()
+    expect(contentDelete).toBeDefined()
+
+    // Tag id is the second column for _ProfileTags, the first for _UserContentTags.
+    expect(profileInsert).toMatch(/SELECT\s+"A",\s*\$1/)
+    expect(profileInsert).toMatch(/WHERE\s+"B"\s*=\s*ANY/)
+    expect(contentInsert).toMatch(/SELECT\s+\$1,\s*"B"/)
+    expect(contentInsert).toMatch(/WHERE\s+"A"\s*=\s*ANY/)
+    expect(contentDelete).toMatch(/WHERE\s+"A"\s*=\s*ANY/)
+
+    for (const call of mockPrisma.$executeRawUnsafe.mock.calls) {
+      if (String(call[0]).includes('INSERT')) {
+        expect(call[1]).toBe('winner1')
+        expect(call[2]).toEqual(['loser1'])
+      }
+    }
+  })
+
   it('returns 400 when winnerTagId is missing', async () => {
     const handler = fastify.routes['POST /tags/merge']
     await handler({ body: { loserTagIds: ['a'] } }, reply)

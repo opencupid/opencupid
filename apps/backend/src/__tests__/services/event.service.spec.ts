@@ -89,3 +89,39 @@ describe('EventService.create — creator auto-RSVP', () => {
     })
   })
 })
+
+// Tag semantics are covered in post.service.spec.ts — the helpers live on the
+// shared UserContentService base. These assert EventService is wired to them.
+describe('EventService tag wiring', () => {
+  beforeEach(() => {
+    mockPrisma.tag.findMany = vi.fn().mockResolvedValue([{ id: 'tag-a' }])
+  })
+
+  it('connects tags on create', async () => {
+    await service.create('profile-1', {
+      content: 'x'.repeat(20),
+      startsAt: new Date('2030-01-01T10:00:00Z'),
+      tagIds: ['tag-a'],
+    })
+
+    const createArg = mockPrisma.userContent.create.mock.calls[0][0]
+    expect(createArg.data.tags).toEqual({ connect: [{ id: 'tag-a' }] })
+  })
+
+  it('replaces tags on update without leaking tagIds into the scalar update', async () => {
+    mockPrisma.userContent.updateMany = vi.fn().mockResolvedValue({ count: 1 })
+    mockPrisma.userContent.update = vi.fn().mockResolvedValue({})
+    mockPrisma.userContent.findFirst = vi.fn().mockResolvedValue({ id: 'content-1' })
+
+    await service.update('content-1', 'profile-1', {
+      startsAt: new Date('2030-02-01T10:00:00Z'),
+      tagIds: ['tag-a'],
+    })
+
+    expect(mockPrisma.userContent.update).toHaveBeenCalledWith({
+      where: { id: 'content-1' },
+      data: { tags: { set: [{ id: 'tag-a' }] } },
+    })
+    expect(mockPrisma.userContent.updateMany.mock.calls[0][0].data).not.toHaveProperty('tagIds')
+  })
+})

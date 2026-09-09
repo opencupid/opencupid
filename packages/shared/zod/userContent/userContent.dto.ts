@@ -3,6 +3,7 @@ import { ProfileSummarySchema } from '../profile/profile.dto'
 import { ConversationContextSchema } from '../interaction/interactionContext.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { PublicImageSchema } from '../image/image.dto'
+import { MAX_TAGS_PER_CONTENT } from '../tag/tag.dto'
 
 export const ContentKindSchema = z.enum(['post', 'event', 'community'])
 export type ContentKind = z.infer<typeof ContentKindSchema>
@@ -61,6 +62,13 @@ export type ContentParams = z.infer<typeof ContentParamsSchema>
  * Shared write-side fields for create payloads across all content kinds.
  * Per-kind schemas `.extend()` this with discriminator-bound fields
  * (e.g. `type` for posts, `startsAt` for events).
+ *
+ * `tagIds` lives here rather than on each kind so every present and future
+ * content kind is taggable by construction. It survives into the Update
+ * schemas (which derive from their Create counterpart), where an omitted
+ * value leaves tags untouched and `[]` clears them — unlike `imageIds`,
+ * which each kind omits from its Update schema because gallery edits go
+ * through the image routes.
  */
 export const BaseUserContentPayloadSchema = z.object({
   content: z.string().min(1).max(2000),
@@ -68,6 +76,7 @@ export const BaseUserContentPayloadSchema = z.object({
   cityName: z.string().nullable().optional(),
   lat: z.number().nullable().optional(),
   lon: z.number().nullable().optional(),
+  tagIds: z.array(z.string().cuid()).max(MAX_TAGS_PER_CONTENT).optional(),
 })
 export type BaseUserContentPayload = z.infer<typeof BaseUserContentPayloadSchema>
 

@@ -2,6 +2,14 @@
 import { z } from 'zod'
 import { TagSchema } from '../generated'
 
+/**
+ * Upper bound on tags attachable to a single UserContent row. Profiles are
+ * deliberately unbounded (tags there are an interest list the owner curates),
+ * but content is discovery surface — an item carrying dozens of tags is
+ * keyword-stuffing, not description.
+ */
+export const MAX_TAGS_PER_CONTENT = 10
+
 // Public tag fields
 const publicTagFields = {
   id: true,
@@ -19,7 +27,6 @@ const ownerTagFields = {
 
 export const OwnerTagSchema = TagSchema.pick(ownerTagFields)
 export type OwnerTag = z.infer<typeof OwnerTagSchema>
-
 
 /** Params (for route IDs) */
 export const TagParamsSchema = z.object({
@@ -43,8 +50,6 @@ export const CreateTagPayloadSchema = z.object({
 })
 export type CreateTagPayload = z.infer<typeof CreateTagPayloadSchema>
 
-
-
 // Popular tag (includes usage count)
 export const PopularTagSchema = PublicTagSchema.extend({
   count: z.number().int().min(0),
@@ -60,5 +65,4 @@ export type PopularTagsQuery = z.infer<typeof PopularTagsQuerySchema>
 // Route schemas
 export const SearchQuerySchema = z.object({
   q: z.string().min(1),
-});
-
+})

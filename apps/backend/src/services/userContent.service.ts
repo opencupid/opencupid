@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { TagService } from './tag.service'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
 /**
@@ -214,6 +215,45 @@ export class UserContentService {
       lat: data.lat ?? null,
       lon: data.lon ?? null,
     }
+  }
+
+  /**
+   * Validates a create payload's tag ids and shapes them as a nested
+   * `connect`, ready to spread into `tx.userContent.create`'s data. Returns
+   * an empty object when the caller supplied no tags, so the spread is a
+   * no-op rather than an explicit empty relation write.
+   */
+  protected async tagConnectTx(
+    tx: Prisma.TransactionClient,
+    tagIds: string[] | undefined
+  ): Promise<Pick<Prisma.UserContentCreateInput, 'tags'> | Record<string, never>> {
+    if (!tagIds || tagIds.length === 0) return {}
+    const ids = await TagService.getInstance().resolveAttachableTagIdsTx(tx, tagIds)
+    return { tags: { connect: ids.map((id) => ({ id })) } }
+  }
+
+  /**
+   * Replaces the tag set on an existing row. `set` alone is a full
+   * replacement, so an empty list clears the tags and an omitted `tagIds`
+   * leaves them untouched.
+   *
+   * This is a separate statement from `updateBaseScalars` because that gate
+   * uses `updateMany`, whose `data` accepts scalar updates only — nested
+   * relation writes are not expressible there. Running it unguarded is safe:
+   * callers invoke it only after `updateBaseScalars` has already proven
+   * ownership and kind inside the same transaction.
+   */
+  protected async setTagsTx(
+    tx: Prisma.TransactionClient,
+    id: string,
+    tagIds: string[] | undefined
+  ): Promise<void> {
+    if (tagIds === undefined) return
+    const ids = await TagService.getInstance().resolveAttachableTagIdsTx(tx, tagIds)
+    await tx.userContent.update({
+      where: { id },
+      data: { tags: { set: ids.map((tagId) => ({ id: tagId })) } },
+    })
   }
 
   /**

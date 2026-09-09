@@ -116,6 +116,100 @@ describe('POST /', () => {
     expect(reply.statusCode).toBe(400)
     expect(reply.payload).toMatchObject({ success: false })
   })
+
+  it('returns 400 with the service message when tag ids cannot be resolved', async () => {
+    const handler = fastify.routes['POST /']
+    const { TagServiceError } = await import('@/services/tag.service')
+    mockPostService.create.mockRejectedValue(
+      new TagServiceError('NOT_FOUND', 'Unknown or unavailable tag(s): cmtag00000000000000001')
+    )
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        body: {
+          content: 'hello world hello',
+          type: 'OFFER',
+          tagIds: ['cmtag00000000000000001'],
+        },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload).toMatchObject({
+      success: false,
+      message: expect.stringContaining('cmtag00000000000000001'),
+    })
+  })
+
+  it('forwards tagIds through payload validation to the service', async () => {
+    const handler = fastify.routes['POST /']
+    mockPostService.create.mockResolvedValue(makeRow(ownerProfileId))
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        body: {
+          content: 'hello world hello',
+          type: 'OFFER',
+          tagIds: ['cmtag00000000000000001', 'cmtag00000000000000002'],
+        },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(201)
+    expect(mockPostService.create).toHaveBeenCalledWith(
+      ownerProfileId,
+      expect.objectContaining({
+        tagIds: ['cmtag00000000000000001', 'cmtag00000000000000002'],
+      })
+    )
+  })
+})
+
+describe('PATCH /:id with tagIds', () => {
+  it('returns 400 when tag ids cannot be resolved', async () => {
+    const handler = fastify.routes['PATCH /:id']
+    const { TagServiceError } = await import('@/services/tag.service')
+    mockPostService.update.mockRejectedValue(
+      new TagServiceError('NOT_FOUND', 'Unknown or unavailable tag(s): cmtag00000000000000009')
+    )
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        params: { id: postId },
+        body: { tagIds: ['cmtag00000000000000009'] },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(reply.payload).toMatchObject({ success: false })
+  })
+
+  it('forwards an empty tagIds array so the owner can clear tags', async () => {
+    const handler = fastify.routes['PATCH /:id']
+    mockPostService.update.mockResolvedValue(makeRow(ownerProfileId))
+
+    await handler(
+      {
+        session: { profileId: ownerProfileId },
+        params: { id: postId },
+        body: { tagIds: [] },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPostService.update).toHaveBeenCalledWith(
+      postId,
+      ownerProfileId,
+      expect.objectContaining({ tagIds: [] })
+    )
+  })
 })
 
 describe('GET /:id', () => {

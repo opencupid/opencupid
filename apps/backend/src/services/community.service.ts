@@ -46,12 +46,14 @@ export class CommunityService extends UserContentService {
   }
 
   async create(profileId: string, data: CreateCommunityPayload): Promise<CommunityWithMetadata> {
-    const { imageIds, ...contentData } = data
+    const { imageIds, tagIds, ...contentData } = data
     return prisma.$transaction(
       async (tx) => {
+        const tagConnect = await this.tagConnectTx(tx, tagIds)
         const created = await tx.userContent.create({
           data: {
             ...this.baseCreateData(contentData),
+            ...tagConnect,
             kind: 'community',
             postedById: profileId,
             community: { create: { yearFounded: data.yearFounded ?? null } },
@@ -77,11 +79,13 @@ export class CommunityService extends UserContentService {
     profileId: string,
     data: UpdateCommunityPayload
   ): Promise<CommunityWithMetadata | null> {
-    const { yearFounded, ...baseFields } = data
+    const { yearFounded, tagIds, ...baseFields } = data
 
     return prisma.$transaction(async (tx) => {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'community', baseFields)
       if (!ok) return null
+
+      await this.setTagsTx(tx, id, tagIds)
 
       if (yearFounded !== undefined) {
         await tx.communityContent.update({
