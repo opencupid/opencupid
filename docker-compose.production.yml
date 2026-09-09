@@ -121,6 +121,10 @@ services:
       - .env
     depends_on:
       - backend
+    # Optional local branding/theming: mount a stylesheet over the empty
+    # placeholder baked into the image. Applies without rebuilding.
+    # volumes:
+    #   - './custom.css:/var/www/custom.css:ro'
     labels:
       traefik.enable: "true"
       traefik.docker.allownonrunning: "true"

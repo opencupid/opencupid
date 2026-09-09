@@ -1,3 +1,11 @@
+// Local branding/theming, fetched by the browser at runtime so a deployment can
+// bind-mount its own file over /var/www/custom.css without rebuilding the image.
+// Ships as an empty placeholder in apps/frontend/public/custom.css.
+// The ?runtime query is load-bearing: without it Vite resolves the import
+// against the public dir and inlines the placeholder into the bundle at build
+// time, which would make the bind mount a no-op.
+@import url('/custom.css?runtime');
+
 // custom variables
 @import './theme.scss';
 
