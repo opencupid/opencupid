@@ -1,5 +1,12 @@
 # @opencupid/admin
 
+## 0.70.0
+
+### Minor Changes
+
+- d218b81: Link the Signups and Daily Active dashboard KPI cards to the Profiles list page
+- 5b02d04: Consolidate the admin Users view into Profiles: the Users menu item and page are removed. The Profiles page gains a "Not onboarded (N)" tab listing users without a profile, and the profile detail modal gains Profile/User tabs — the User tab shows the user record with editable Active/Blocked flags (loaded lazily on first open). The `/admin/profiles` search now also matches user email, phone number, and user ID, and `GET /admin/users` is a leaner list endpoint with a `hasProfile` filter.
+
 ## 0.69.3
 
 ## 0.69.2

@@ -1,5 +1,16 @@
 # backend
 
+## 0.70.0
+
+### Minor Changes
+
+- 5b02d04: Consolidate the admin Users view into Profiles: the Users menu item and page are removed. The Profiles page gains a "Not onboarded (N)" tab listing users without a profile, and the profile detail modal gains Profile/User tabs — the User tab shows the user record with editable Active/Blocked flags (loaded lazily on first open). The `/admin/profiles` search now also matches user email, phone number, and user ID, and `GET /admin/users` is a leaner list endpoint with a `hasProfile` filter.
+
+### Patch Changes
+
+- a764ee3: Consolidate Prisma migrations into init + custom-indexes; restore UserContent trgm index (#1457).
+- deae7a7: Exclude ADMIN_PROFILE_ID broadcast messages from the admin dashboard message sparkline and drill-down charts so metrics reflect organic member activity.
+
 ## 0.69.3
 
 ## 0.69.2
