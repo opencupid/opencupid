@@ -297,28 +297,40 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /users
-   * Returns a paginated, searchable list of users.
+   * Returns a paginated, searchable list of users, optionally filtered by
+   * profile existence. Backs the "Not onboarded" tab on the admin Profiles
+   * page (hasProfile=false).
    * @query {number} [page=1] - Page number
    * @query {number} [pageSize=25] - Page size (max 100)
    * @query {string} [search] - Search by email, phone, or user id
+   * @query {'true'|'false'} [hasProfile] - Filter by whether the user has a profile
    * @returns {{ success, users, total, page, pageSize }}
    */
   fastify.get('/users', async (req, reply) => {
     try {
-      const { page = '1', pageSize = '25', search = '' } = req.query as Record<string, string>
+      const {
+        page = '1',
+        pageSize = '25',
+        search = '',
+        hasProfile = '',
+      } = req.query as Record<string, string>
       const pageNum = Math.max(1, parseInt(page, 10) || 1)
       const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
       const skip = (pageNum - 1) * size
 
-      const where = search
-        ? {
-            OR: [
-              { id: { contains: search, mode: 'insensitive' as const } },
-              { email: { contains: search, mode: 'insensitive' as const } },
-              { phonenumber: { contains: search } },
-            ],
-          }
-        : {}
+      const conditions: any[] = []
+      if (search) {
+        conditions.push({
+          OR: [
+            { id: { contains: search, mode: 'insensitive' as const } },
+            { email: { contains: search, mode: 'insensitive' as const } },
+            { phonenumber: { contains: search } },
+          ],
+        })
+      }
+      if (hasProfile === 'true') conditions.push({ profile: { isNot: null } })
+      if (hasProfile === 'false') conditions.push({ profile: null })
+      const where = conditions.length > 0 ? { AND: conditions } : {}
 
       const [users, total] = await Promise.all([
         prisma.user.findMany({
@@ -332,33 +344,20 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             phonenumber: true,
             isActive: true,
             isBlocked: true,
+            isRegistrationConfirmed: true,
+            newsletterOptIn: true,
             roles: true,
             createdAt: true,
             language: true,
             originDomain: true,
-            newsletterOptIn: true,
-            isRegistrationConfirmed: true,
-            profile: {
-              select: {
-                id: true,
-                publicName: true,
-                activitySummary: { select: { lastSeenAt: true } },
-              },
-            },
           },
         }),
         prisma.user.count({ where }),
       ])
 
-      const flattened = users.map(({ profile, ...rest }) => ({
-        ...rest,
-        lastSeenAt: profile?.activitySummary?.lastSeenAt ?? null,
-        profile: profile ? { id: profile.id, publicName: profile.publicName } : null,
-      }))
-
       return reply.code(200).send({
         success: true,
-        users: flattened,
+        users,
         total,
         page: pageNum,
         pageSize: size,
@@ -494,7 +493,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * Returns a paginated, searchable list of profiles with optional country filter.
    * @query {number} [page=1] - Page number
    * @query {number} [pageSize=25] - Page size (max 100)
-   * @query {string} [search] - Search by name, city, country, or profile id
+   * @query {string} [search] - Search by name, city, country, profile id, user id, email, or phone
    * @query {string} [country] - Country code filter
    * @query {string} [segments] - Comma-separated activity segments filter (e.g. "new,frequent")
    * @returns {{ success, profiles, total, page, pageSize }}
@@ -520,6 +519,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             { publicName: { contains: search, mode: 'insensitive' as const } },
             { cityName: { contains: search, mode: 'insensitive' as const } },
             { country: { contains: search, mode: 'insensitive' as const } },
+            { userId: { contains: search, mode: 'insensitive' as const } },
+            { user: { email: { contains: search, mode: 'insensitive' as const } } },
+            { user: { phonenumber: { contains: search } } },
           ],
         })
       }

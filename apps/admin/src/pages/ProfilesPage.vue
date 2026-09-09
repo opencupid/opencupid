@@ -35,6 +35,31 @@ interface AdminProfileDetail extends AdminProfile {
   trustFlags: AdminProfileTrustFlag[]
 }
 
+interface AdminUserDetail {
+  id: string
+  email: string
+  phonenumber: string | null
+  isActive: boolean
+  isBlocked: boolean
+  roles: string[]
+  createdAt: string
+  lastSeenAt: string | null
+  language: string
+  originDomain: string
+}
+
+interface AdminUserRow {
+  id: string
+  email: string
+  phonenumber: string | null
+  isActive: boolean
+  isBlocked: boolean
+  isRegistrationConfirmed: boolean
+  newsletterOptIn: boolean
+  createdAt: string
+  originDomain: string
+}
+
 interface ProfilesResponse {
   success: boolean
   profiles: AdminProfile[]
@@ -43,7 +68,16 @@ interface ProfilesResponse {
   pageSize: number
 }
 
+interface UsersResponse {
+  success: boolean
+  users: AdminUserRow[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 const { call, loading, error } = useApi()
+const pageTab = ref<'profiles' | 'users'>('profiles')
 const profiles = ref<AdminProfile[]>([])
 const total = ref(0)
 const page = ref(1)
@@ -160,6 +194,57 @@ async function loadMore() {
   await appendProfiles()
 }
 
+// "Not onboarded" tab: users that have no profile yet
+const users = ref<AdminUserRow[]>([])
+const usersTotal = ref(0)
+const usersPage = ref(1)
+const usersLoading = ref(false)
+const usersError = ref<string | null>(null)
+const usersLoadingMore = ref(false)
+const usersHasMore = computed(() => users.value.length < usersTotal.value)
+
+function buildUsersParams() {
+  return {
+    page: usersPage.value,
+    pageSize,
+    search: search.value || undefined,
+    hasProfile: 'false',
+  }
+}
+
+async function fetchUsers() {
+  usersLoading.value = true
+  usersError.value = null
+  try {
+    const res = await apiRequest<UsersResponse>('/admin/users', { params: buildUsersParams() })
+    users.value = res.users
+    usersTotal.value = res.total
+  } catch (err) {
+    usersError.value = err instanceof Error ? err.message : 'failed to load users'
+  } finally {
+    usersLoading.value = false
+  }
+}
+
+async function loadMoreUsers() {
+  if (usersLoadingMore.value || usersLoading.value || !usersHasMore.value) return
+  usersPage.value++
+  usersLoadingMore.value = true
+  try {
+    const res = await apiRequest<UsersResponse>('/admin/users', { params: buildUsersParams() })
+    users.value = [...users.value, ...res.users]
+    usersTotal.value = res.total
+  } finally {
+    usersLoadingMore.value = false
+  }
+}
+
+function switchTab(tab: 'profiles' | 'users') {
+  if (pageTab.value === tab) return
+  pageTab.value = tab
+  resetAndFetch()
+}
+
 const segmentColors: Record<string, string> = {
   new: 'bg-primary',
   returning: 'bg-success',
@@ -174,11 +259,108 @@ function segmentBadgeClass(segment: string) {
 const selectedProfileDetail = ref<AdminProfileDetail | null>(null)
 const detailLoading = ref(false)
 const detailError = ref<string | null>(null)
+const detailTab = ref<'profile' | 'user'>('profile')
+
+const userDetail = ref<AdminUserDetail | null>(null)
+const userLoading = ref(false)
+const userError = ref<string | null>(null)
+const editUserActive = ref(false)
+const editUserBlocked = ref(false)
+const userSaving = ref(false)
+const userSaveError = ref<string | null>(null)
+
+// Guards against a stale response overwriting state (and the User tab
+// PATCHing the wrong account) when another profile is opened mid-flight.
+let userFetchToken = 0
+
+function resetUserDetail() {
+  userFetchToken++ // invalidate any in-flight fetch
+  userDetail.value = null
+  userError.value = null
+  userSaveError.value = null
+  userLoading.value = false
+}
+
+async function fetchUserDetail(userId: string) {
+  const token = ++userFetchToken
+  userDetail.value = null
+  userError.value = null
+  userSaveError.value = null
+  userLoading.value = true
+  try {
+    const res = await apiRequest<{ success: boolean; user: AdminUserDetail }>(
+      `/admin/users/${userId}`
+    )
+    if (token !== userFetchToken) return
+    userDetail.value = res.user
+    editUserActive.value = res.user.isActive
+    editUserBlocked.value = res.user.isBlocked
+  } catch (err) {
+    if (token !== userFetchToken) return
+    userError.value = err instanceof Error ? err.message : 'failed to load user'
+  } finally {
+    if (token === userFetchToken) userLoading.value = false
+  }
+}
+
+async function saveUser() {
+  if (!userDetail.value) return
+  userSaving.value = true
+  userSaveError.value = null
+  try {
+    await apiRequest(`/admin/users/${userDetail.value.id}`, {
+      method: 'PATCH',
+      body: { isActive: editUserActive.value, isBlocked: editUserBlocked.value },
+    })
+    userDetail.value = {
+      ...userDetail.value,
+      isActive: editUserActive.value,
+      isBlocked: editUserBlocked.value,
+    }
+    const idx = users.value.findIndex((u) => u.id === userDetail.value?.id)
+    const row = idx >= 0 ? users.value[idx] : undefined
+    if (row) {
+      users.value[idx] = {
+        ...row,
+        isActive: editUserActive.value,
+        isBlocked: editUserBlocked.value,
+      }
+    }
+  } catch (err) {
+    userSaveError.value = err instanceof Error ? err.message : 'Failed to save'
+  } finally {
+    userSaving.value = false
+  }
+}
+
+// User-only detail modal, opened from the "Not onboarded" tab where no
+// profile exists.
+const userModalOpen = ref(false)
+
+function viewUser(user: AdminUserRow) {
+  userModalOpen.value = true
+  detailTab.value = 'user'
+  fetchUserDetail(user.id)
+}
+
+function closeDetail() {
+  selectedProfile.value = null
+  userModalOpen.value = false
+}
+
+// The User tab's data is fetched lazily on first switch, not on row click.
+watch(detailTab, (tab) => {
+  if (tab === 'user' && selectedProfile.value && !userDetail.value && !userLoading.value) {
+    fetchUserDetail(selectedProfile.value.userId)
+  }
+})
 
 async function viewProfile(profile: AdminProfile) {
   selectedProfile.value = profile
   selectedProfileDetail.value = null
   detailError.value = null
+  detailTab.value = 'profile'
+  resetUserDetail()
   detailLoading.value = true
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
@@ -198,6 +380,8 @@ async function viewProfileById(id: string) {
 
   detailLoading.value = true
   detailError.value = null
+  detailTab.value = 'profile'
+  resetUserDetail()
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
       `/admin/profiles/${id}`
@@ -304,9 +488,15 @@ async function confirmClearFlag() {
 }
 
 function resetAndFetch() {
-  page.value = 1
-  profiles.value = []
-  fetchProfiles()
+  if (pageTab.value === 'profiles') {
+    page.value = 1
+    profiles.value = []
+    fetchProfiles()
+  } else {
+    usersPage.value = 1
+    users.value = []
+    fetchUsers()
+  }
 }
 
 let searchTimeout: ReturnType<typeof setTimeout>
@@ -423,10 +613,14 @@ onMounted(() => {
   document.addEventListener('click', onClickOutside)
   fetchCountries()
   fetchProfiles()
+  fetchUsers()
 
   observer = new IntersectionObserver(
     ([entry]) => {
-      if (entry?.isIntersecting) loadMore()
+      if (entry?.isIntersecting) {
+        if (pageTab.value === 'profiles') loadMore()
+        else loadMoreUsers()
+      }
     },
     { rootMargin: '200px' }
   )
@@ -455,8 +649,35 @@ onUnmounted(() => {
   <div>
     <div class="d-flex align-items-baseline mb-4">
       <h2 class="mb-0">Profiles</h2>
-      <span class="text-muted ms-auto">{{ total }} result{{ total === 1 ? '' : 's' }}</span>
+      <span class="text-muted ms-auto">
+        {{ pageTab === 'profiles' ? total : usersTotal }} result{{
+          (pageTab === 'profiles' ? total : usersTotal) === 1 ? '' : 's'
+        }}
+      </span>
     </div>
+
+    <ul class="nav nav-pills mb-3">
+      <li class="nav-item">
+        <button
+          type="button"
+          class="nav-link"
+          :class="{ active: pageTab === 'profiles' }"
+          @click="switchTab('profiles')"
+        >
+          Profiles
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          type="button"
+          class="nav-link"
+          :class="{ active: pageTab === 'users' }"
+          @click="switchTab('users')"
+        >
+          Not onboarded ({{ usersTotal }})
+        </button>
+      </li>
+    </ul>
 
     <div
       v-if="error"
@@ -470,10 +691,15 @@ onUnmounted(() => {
         v-model="search"
         type="text"
         class="form-control"
-        placeholder="Search by name, city, or profile ID..."
+        :placeholder="
+          pageTab === 'profiles'
+            ? 'Search by name, city, email, phone, or ID...'
+            : 'Search by email, phone, or user ID...'
+        "
         @input="onSearchInput"
       />
       <div
+        v-if="pageTab === 'profiles'"
         class="dropdown"
         style="max-width: 200px"
       >
@@ -511,6 +737,7 @@ onUnmounted(() => {
         </ul>
       </div>
       <select
+        v-if="pageTab === 'profiles'"
         v-model="selectedCountry"
         class="form-select"
         style="max-width: 200px"
@@ -526,6 +753,7 @@ onUnmounted(() => {
         </option>
       </select>
       <button
+        v-if="pageTab === 'profiles'"
         type="button"
         class="btn btn-primary ms-auto"
         :disabled="selectedProfileIds.size === 0"
@@ -536,262 +764,472 @@ onUnmounted(() => {
     </div>
 
     <div class="table-container p-3">
-      <div
-        v-if="loading"
-        class="text-muted"
-      >
-        Loading...
-      </div>
-      <table
-        v-else
-        class="table table-hover mb-0"
-      >
-        <thead>
-          <tr>
-            <th style="width: 2.5rem">
-              <input
-                type="checkbox"
-                class="form-check-input"
-                aria-label="Select all visible profiles"
-                :checked="allVisibleSelected"
-                :indeterminate="someVisibleSelected"
-                @change="toggleSelectAllVisible"
-              />
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('publicName')"
-            >
-              Name{{ sortIndicator('publicName') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('country')"
-            >
-              Location{{ sortIndicator('country') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('gender')"
-            >
-              Gender{{ sortIndicator('gender') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('isSocialActive')"
-            >
-              Social{{ sortIndicator('isSocialActive') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('isDatingActive')"
-            >
-              Dating{{ sortIndicator('isDatingActive') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('isActive')"
-            >
-              Active{{ sortIndicator('isActive') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('segment')"
-            >
-              Segment{{ sortIndicator('segment') }}
-            </th>
-            <th
-              style="cursor: pointer"
-              @click="toggleSort('createdAt')"
-            >
-              Created{{ sortIndicator('createdAt') }}
-            </th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="profile in sortedProfiles"
-            :key="profile.id"
-            :class="{ 'table-warning': profile.hasActiveTrustFlag }"
-            style="cursor: pointer"
-            @click="viewProfile(profile)"
-          >
-            <td @click.stop>
-              <input
-                type="checkbox"
-                class="form-check-input"
-                :aria-label="`Select profile ${profile.publicName || profile.id}`"
-                :checked="selectedProfileIds.has(profile.id)"
-                @change="toggleProfileSelection(profile)"
-              />
-            </td>
-            <td>{{ profile.publicName || '-' }}</td>
-            <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
-            <td>{{ profile.gender || '-' }}</td>
-            <td>
-              <span :class="profile.isSocialActive ? 'badge bg-success' : 'badge bg-secondary'">
-                {{ profile.isSocialActive ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span :class="profile.isDatingActive ? 'badge bg-success' : 'badge bg-secondary'">
-                {{ profile.isDatingActive ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span :class="profile.isActive ? 'badge bg-success' : 'badge bg-secondary'">
-                {{ profile.isActive ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span
-                v-if="profile.activitySummary?.segment"
-                :class="segmentBadgeClass(profile.activitySummary.segment)"
+      <template v-if="pageTab === 'profiles'">
+        <div
+          v-if="loading"
+          class="text-muted"
+        >
+          Loading...
+        </div>
+        <table
+          v-else
+          class="table table-hover mb-0"
+        >
+          <thead>
+            <tr>
+              <th style="width: 2.5rem">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  aria-label="Select all visible profiles"
+                  :checked="allVisibleSelected"
+                  :indeterminate="someVisibleSelected"
+                  @change="toggleSelectAllVisible"
+                />
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('publicName')"
               >
-                {{ profile.activitySummary.segment }}
-              </span>
-              <span v-else>—</span>
-            </td>
-            <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
-            <td>
-              <button
-                class="btn btn-sm btn-outline-primary"
-                @click.stop="viewProfile(profile)"
+                Name{{ sortIndicator('publicName') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('country')"
               >
-                View
-              </button>
-            </td>
-          </tr>
-          <tr v-if="profiles.length === 0">
-            <td
-              colspan="10"
-              class="text-center text-muted"
+                Location{{ sortIndicator('country') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('gender')"
+              >
+                Gender{{ sortIndicator('gender') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('isSocialActive')"
+              >
+                Social{{ sortIndicator('isSocialActive') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('isDatingActive')"
+              >
+                Dating{{ sortIndicator('isDatingActive') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('isActive')"
+              >
+                Active{{ sortIndicator('isActive') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('segment')"
+              >
+                Segment{{ sortIndicator('segment') }}
+              </th>
+              <th
+                style="cursor: pointer"
+                @click="toggleSort('createdAt')"
+              >
+                Created{{ sortIndicator('createdAt') }}
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="profile in sortedProfiles"
+              :key="profile.id"
+              :class="{ 'table-warning': profile.hasActiveTrustFlag }"
+              style="cursor: pointer"
+              @click="viewProfile(profile)"
             >
-              No profiles found
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td @click.stop>
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  :aria-label="`Select profile ${profile.publicName || profile.id}`"
+                  :checked="selectedProfileIds.has(profile.id)"
+                  @change="toggleProfileSelection(profile)"
+                />
+              </td>
+              <td>{{ profile.publicName || '-' }}</td>
+              <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
+              <td>{{ profile.gender || '-' }}</td>
+              <td>
+                <span :class="profile.isSocialActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ profile.isSocialActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="profile.isDatingActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ profile.isDatingActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="profile.isActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ profile.isActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span
+                  v-if="profile.activitySummary?.segment"
+                  :class="segmentBadgeClass(profile.activitySummary.segment)"
+                >
+                  {{ profile.activitySummary.segment }}
+                </span>
+                <span v-else>—</span>
+              </td>
+              <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  @click.stop="viewProfile(profile)"
+                >
+                  View
+                </button>
+              </td>
+            </tr>
+            <tr v-if="profiles.length === 0">
+              <td
+                colspan="10"
+                class="text-center text-muted"
+              >
+                No profiles found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+
+      <template v-else>
+        <div
+          v-if="usersError"
+          class="alert alert-danger"
+        >
+          {{ usersError }}
+        </div>
+        <div
+          v-if="usersLoading"
+          class="text-muted"
+        >
+          Loading...
+        </div>
+        <table
+          v-else
+          class="table table-hover mb-0"
+        >
+          <thead>
+            <tr>
+              <th>Email / Phone</th>
+              <th>Confirmed</th>
+              <th>Active</th>
+              <th>Blocked</th>
+              <th>Newsletter</th>
+              <th>Created</th>
+              <th>Origin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="user in users"
+              :key="user.id"
+              style="cursor: pointer"
+              @click="viewUser(user)"
+            >
+              <td>{{ user.email || user.phonenumber || '-' }}</td>
+              <td>
+                <span
+                  :class="user.isRegistrationConfirmed ? 'badge bg-success' : 'badge bg-warning'"
+                >
+                  {{ user.isRegistrationConfirmed ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="user.isActive ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ user.isActive ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="user.isBlocked ? 'badge bg-danger' : 'badge bg-secondary'">
+                  {{ user.isBlocked ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span :class="user.newsletterOptIn ? 'badge bg-success' : 'badge bg-secondary'">
+                  {{ user.newsletterOptIn ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>
+              <td>{{ user.originDomain || '-' }}</td>
+              <td>
+                <button
+                  class="btn btn-sm btn-outline-primary"
+                  @click.stop="viewUser(user)"
+                >
+                  View
+                </button>
+              </td>
+            </tr>
+            <tr v-if="users.length === 0">
+              <td
+                colspan="8"
+                class="text-center text-muted"
+              >
+                No users found
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
       <div
         ref="sentinel"
         class="text-center text-muted py-2"
       >
-        <span v-if="loadingMore">Loading more...</span>
+        <span v-if="loadingMore || usersLoadingMore">Loading more...</span>
       </div>
     </div>
 
-    <!-- Profile Detail Modal -->
-    <div v-if="selectedProfile">
+    <!-- Detail Modal (profile + user tabs, or user-only from the Not onboarded tab) -->
+    <div v-if="selectedProfile || userModalOpen">
       <div
         class="modal d-block"
         tabindex="-1"
-        @click.self="selectedProfile = null"
-        @keydown.escape="selectedProfile = null"
-        @keydown.enter.prevent="selectedProfile = null"
+        @click.self="closeDetail"
+        @keydown.escape="closeDetail"
+        @keydown.enter.prevent="detailTab === 'user' ? saveUser() : closeDetail()"
       >
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Profile Detail</h5>
+              <h5 class="modal-title">{{ selectedProfile ? 'Profile Detail' : 'User Detail' }}</h5>
               <button
                 type="button"
                 class="btn-close"
-                @click="selectedProfile = null"
+                @click="closeDetail"
               ></button>
             </div>
             <div class="modal-body">
-              <dl class="row mb-0">
-                <dt class="col-sm-4">ID</dt>
-                <dd class="col-sm-8">
-                  <code>{{ selectedProfile.id }}</code>
-                </dd>
-                <dt class="col-sm-4">Name</dt>
-                <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
-                <dt class="col-sm-4">User Email</dt>
-                <dd class="col-sm-8">{{ selectedProfile.user?.email ?? '-' }}</dd>
-                <dt class="col-sm-4">User Phone</dt>
-                <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
-                <dt class="col-sm-4">Country</dt>
-                <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
-                <dt class="col-sm-4">City</dt>
-                <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
-                <dt class="col-sm-4">Gender</dt>
-                <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
-                <dt class="col-sm-4">Social Active</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Dating Active</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isDatingActive ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Onboarded</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isOnboarded ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Active</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Reported</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Blocked</dt>
-                <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
-                <dt class="col-sm-4">Activity Segment</dt>
-                <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
-                <dt class="col-sm-4">Created</dt>
-                <dd class="col-sm-8">{{ new Date(selectedProfile.createdAt).toLocaleString() }}</dd>
-              </dl>
+              <ul
+                v-if="selectedProfile"
+                class="nav nav-tabs mb-3"
+              >
+                <li class="nav-item">
+                  <button
+                    type="button"
+                    class="nav-link"
+                    :class="{ active: detailTab === 'profile' }"
+                    @click="detailTab = 'profile'"
+                  >
+                    Profile
+                  </button>
+                </li>
+                <li class="nav-item">
+                  <button
+                    type="button"
+                    class="nav-link"
+                    :class="{ active: detailTab === 'user' }"
+                    @click="detailTab = 'user'"
+                  >
+                    User
+                  </button>
+                </li>
+              </ul>
 
-              <div class="mt-3">
-                <h6 class="mb-2">Trust</h6>
-                <div
-                  v-if="detailLoading"
-                  class="text-muted small"
-                >
-                  Loading trust info...
-                </div>
-                <div
-                  v-else-if="detailError"
-                  class="alert alert-danger small mb-0"
-                >
-                  {{ detailError }}
-                </div>
-                <template v-else>
+              <template v-if="detailTab === 'profile' && selectedProfile">
+                <dl class="row mb-0">
+                  <dt class="col-sm-4">ID</dt>
+                  <dd class="col-sm-8">
+                    <code>{{ selectedProfile.id }}</code>
+                  </dd>
+                  <dt class="col-sm-4">Name</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
+                  <dt class="col-sm-4">User Email</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.user?.email ?? '-' }}</dd>
+                  <dt class="col-sm-4">User Phone</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
+                  <dt class="col-sm-4">Country</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
+                  <dt class="col-sm-4">City</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
+                  <dt class="col-sm-4">Gender</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
+                  <dt class="col-sm-4">Social Active</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Dating Active</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isDatingActive ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Onboarded</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isOnboarded ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Active</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Reported</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Blocked</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
+                  <dt class="col-sm-4">Activity Segment</dt>
+                  <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
+                  <dt class="col-sm-4">Created</dt>
+                  <dd class="col-sm-8">
+                    {{ new Date(selectedProfile.createdAt).toLocaleString() }}
+                  </dd>
+                </dl>
+
+                <div class="mt-3">
+                  <h6 class="mb-2">Trust</h6>
                   <div
-                    v-if="activeFlags.length === 0"
+                    v-if="detailLoading"
                     class="text-muted small"
                   >
-                    No active trust flags.
+                    Loading trust info...
                   </div>
                   <div
-                    v-for="f in activeFlags"
-                    v-else
-                    :key="f.id"
-                    class="border rounded p-2 mb-2 d-flex align-items-start gap-2"
+                    v-else-if="detailError"
+                    class="alert alert-danger small mb-0"
                   >
-                    <div class="flex-grow-1">
-                      <div>
-                        <strong>{{ f.reason }}</strong>
-                        <code class="ms-2 small">{{ f.flaggedBy }}</code>
-                      </div>
-                      <div class="small text-muted">
-                        {{ new Date(f.flaggedAt).toLocaleString() }}
-                      </div>
-                      <div
-                        v-if="f.evidence"
-                        class="small"
-                      >
-                        {{ f.evidence }}
-                      </div>
-                    </div>
-                    <button
-                      class="btn btn-sm btn-outline-primary"
-                      @click="askClearFlag(f.id)"
-                    >
-                      Clear
-                    </button>
+                    {{ detailError }}
                   </div>
+                  <template v-else>
+                    <div
+                      v-if="activeFlags.length === 0"
+                      class="text-muted small"
+                    >
+                      No active trust flags.
+                    </div>
+                    <div
+                      v-for="f in activeFlags"
+                      v-else
+                      :key="f.id"
+                      class="border rounded p-2 mb-2 d-flex align-items-start gap-2"
+                    >
+                      <div class="flex-grow-1">
+                        <div>
+                          <strong>{{ f.reason }}</strong>
+                          <code class="ms-2 small">{{ f.flaggedBy }}</code>
+                        </div>
+                        <div class="small text-muted">
+                          {{ new Date(f.flaggedAt).toLocaleString() }}
+                        </div>
+                        <div
+                          v-if="f.evidence"
+                          class="small"
+                        >
+                          {{ f.evidence }}
+                        </div>
+                      </div>
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        @click="askClearFlag(f.id)"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <template v-else>
+                <div
+                  v-if="userLoading"
+                  class="text-muted"
+                >
+                  Loading user...
+                </div>
+                <div
+                  v-else-if="userError"
+                  class="alert alert-danger mb-0"
+                >
+                  {{ userError }}
+                </div>
+                <template v-else-if="userDetail">
+                  <div
+                    v-if="userSaveError"
+                    class="alert alert-danger mb-3"
+                  >
+                    {{ userSaveError }}
+                  </div>
+                  <dl class="row mb-0">
+                    <dt class="col-sm-4">ID</dt>
+                    <dd class="col-sm-8">
+                      <code>{{ userDetail.id }}</code>
+                    </dd>
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">{{ userDetail.email }}</dd>
+                    <dt class="col-sm-4">Phone</dt>
+                    <dd class="col-sm-8">{{ userDetail.phonenumber || '-' }}</dd>
+                    <dt class="col-sm-4">Roles</dt>
+                    <dd class="col-sm-8">{{ userDetail.roles.join(', ') }}</dd>
+                    <dt class="col-sm-4">Active</dt>
+                    <dd class="col-sm-8">
+                      <div class="form-check">
+                        <input
+                          id="editUserActive"
+                          v-model="editUserActive"
+                          class="form-check-input"
+                          type="checkbox"
+                        />
+                        <label
+                          class="form-check-label"
+                          for="editUserActive"
+                          >Active</label
+                        >
+                      </div>
+                    </dd>
+                    <dt class="col-sm-4">Blocked</dt>
+                    <dd class="col-sm-8">
+                      <div class="form-check">
+                        <input
+                          id="editUserBlocked"
+                          v-model="editUserBlocked"
+                          class="form-check-input"
+                          type="checkbox"
+                        />
+                        <label
+                          class="form-check-label"
+                          for="editUserBlocked"
+                          >Blocked</label
+                        >
+                      </div>
+                    </dd>
+                    <dt class="col-sm-4">Created</dt>
+                    <dd class="col-sm-8">{{ new Date(userDetail.createdAt).toLocaleString() }}</dd>
+                    <dt class="col-sm-4">Last Seen</dt>
+                    <dd class="col-sm-8">
+                      {{
+                        userDetail.lastSeenAt
+                          ? new Date(userDetail.lastSeenAt).toLocaleString()
+                          : 'Never'
+                      }}
+                    </dd>
+                    <dt class="col-sm-4">Language</dt>
+                    <dd class="col-sm-8">{{ userDetail.language || '-' }}</dd>
+                    <dt class="col-sm-4">Origin</dt>
+                    <dd class="col-sm-8">{{ userDetail.originDomain || '-' }}</dd>
+                  </dl>
                 </template>
-              </div>
+              </template>
             </div>
             <div class="modal-footer flex-wrap">
+              <template v-if="detailTab === 'user'">
+                <button
+                  class="btn btn-secondary"
+                  @click="closeDetail"
+                >
+                  Close
+                </button>
+                <button
+                  class="btn btn-primary"
+                  :disabled="userSaving || !userDetail"
+                  @click="saveUser"
+                >
+                  {{ userSaving ? 'Saving...' : 'Save' }}
+                </button>
+              </template>
               <div
-                v-if="quarantineOpen"
+                v-else-if="quarantineOpen"
                 class="w-100"
               >
                 <div
@@ -835,7 +1273,7 @@ onUnmounted(() => {
                 </button>
                 <button
                   class="btn btn-secondary"
-                  @click="selectedProfile = null"
+                  @click="closeDetail"
                 >
                   Close
                 </button>
