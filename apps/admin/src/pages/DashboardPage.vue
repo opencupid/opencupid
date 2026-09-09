@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { Pie } from 'vue-chartjs'
 import {
@@ -15,6 +16,11 @@ import KpiCard from '../components/KpiCard.vue'
 import DashboardDrillDownModal from '../components/DashboardDrillDownModal.vue'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement)
+
+const router = useRouter()
+function goToProfiles() {
+  router.push({ name: 'profiles' })
+}
 
 type DrillDownMetric = 'interactions' | 'messages'
 const drillDown = ref<{ metric: DrillDownMetric; title: string } | null>(null)
@@ -134,6 +140,11 @@ onMounted(async () => {
         :value="stats.recentSignups"
         :series="series(dailyStats?.dailySignups)"
         color="#0d6efd"
+        clickable
+        data-test="kpi-signups"
+        @click="goToProfiles"
+        @keydown.enter="goToProfiles"
+        @keydown.space.prevent="goToProfiles"
       />
       <KpiCard
         title="Daily Active"
@@ -141,6 +152,11 @@ onMounted(async () => {
         :value="dailyActiveTotal"
         :series="series(dailyStats?.dailyLastSeen)"
         color="#198754"
+        clickable
+        data-test="kpi-daily-active"
+        @click="goToProfiles"
+        @keydown.enter="goToProfiles"
+        @keydown.space.prevent="goToProfiles"
       />
       <KpiCard
         title="Blocked Users"

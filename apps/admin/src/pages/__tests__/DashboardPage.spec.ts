@@ -18,6 +18,11 @@ vi.mock('vue-chartjs', () => ({
   Bar: { name: 'Bar', template: '<div data-test="bar-chart" />' },
 }))
 
+const routerPush = vi.fn()
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: routerPush }),
+}))
+
 import DashboardPage from '../DashboardPage.vue'
 
 const stats = {
@@ -167,5 +172,23 @@ describe('DashboardPage', () => {
       (c: any[]) => c[0] === '/admin/stats/breakdown' && c[1]?.params?.metric === 'messages'
     )
     expect(breakdownCall).toBeTruthy()
+  })
+
+  it('navigates to the Profiles list when the Signups KPI is clicked', async () => {
+    const wrapper = mount(DashboardPage)
+    await flushPromises()
+
+    await wrapper.find('[data-test="kpi-signups"]').trigger('click')
+
+    expect(routerPush).toHaveBeenCalledWith({ name: 'profiles' })
+  })
+
+  it('navigates to the Profiles list when the Daily Active KPI is clicked', async () => {
+    const wrapper = mount(DashboardPage)
+    await flushPromises()
+
+    await wrapper.find('[data-test="kpi-daily-active"]').trigger('click')
+
+    expect(routerPush).toHaveBeenCalledWith({ name: 'profiles' })
   })
 })
