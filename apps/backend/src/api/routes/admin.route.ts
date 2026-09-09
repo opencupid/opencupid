@@ -48,6 +48,12 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const days = getLast7Days()
       const since = days[0]
 
+      // Exclude the system sender's (ADMIN_PROFILE_ID) broadcast messages so
+      // dashboard metrics reflect organic member activity only.
+      const excludeAdminSender = appConfig.ADMIN_PROFILE_ID
+        ? Prisma.sql`AND "senderId" <> ${appConfig.ADMIN_PROFILE_ID}`
+        : Prisma.empty
+
       const [
         signupRows,
         lastSeenRows,
@@ -114,6 +120,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
           FROM "Message"
           WHERE "createdAt" >= ${since}::date
+          ${excludeAdminSender}
           GROUP BY DATE("createdAt")
           ORDER BY date
         `,
@@ -208,12 +215,19 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
+      // Exclude the system sender's (ADMIN_PROFILE_ID) broadcast messages so
+      // dashboard metrics reflect organic member activity only.
+      const excludeAdminSender = appConfig.ADMIN_PROFILE_ID
+        ? Prisma.sql`AND "senderId" <> ${appConfig.ADMIN_PROFILE_ID}`
+        : Prisma.empty
+
       const [messageRows, conversationRows] = await Promise.all([
         prisma.$queryRaw<BucketRow[]>`
           SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
                  COUNT(*)::bigint AS count
           FROM "Message"
           WHERE "createdAt" >= ${since}
+          ${excludeAdminSender}
           GROUP BY 1
           ORDER BY 1
         `,
