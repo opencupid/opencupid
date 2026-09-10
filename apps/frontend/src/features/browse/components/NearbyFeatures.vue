@@ -6,6 +6,7 @@ import EventTeaser from '@/features/events/components/EventTeaser.vue'
 import CommunityTeaser from '@/features/community/components/CommunityTeaser.vue'
 import IconExpand from '@/assets/icons/arrows/chevrons-up.svg'
 import IconCollapse from '@/assets/icons/arrows/chevrons-down.svg'
+import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   items: UserContentMetadata[]
@@ -75,6 +76,7 @@ const isVisible = computed(() => props.items.length > 0)
         v-for="item in items"
         :key="item.id"
         class="user-select-none col-12 col-sm-6 col-md-4 col-lg-3 p-1"
+        :data-tags="tagsDataAttr(item.tags)"
         @click="handleClick(item)"
       >
         <PostIt

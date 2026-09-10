@@ -11,6 +11,7 @@ import EventCalendarExportDropdown from './EventCalendarExportDropdown.vue'
 import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 import { useI18n } from 'vue-i18n'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
+import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
@@ -75,10 +76,15 @@ const displayContent = computed(() => {
   const lastSpace = truncated.lastIndexOf(' ')
   return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '…'
 })
+
+const tagSlugs = computed(() => tagsDataAttr(props.event.tags))
 </script>
 
 <template>
-  <div class="event-wrapper position-relative w-100 p-2">
+  <div
+    class="event-wrapper position-relative w-100 p-2"
+    :data-tags="tagSlugs"
+  >
     <div
       class="event-card overflow-hidden rounded border shadow-sm bg-subtle"
       :class="{ 'event-card--own': event.isOwn }"

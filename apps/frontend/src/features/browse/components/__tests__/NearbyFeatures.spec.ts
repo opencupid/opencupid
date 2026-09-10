@@ -56,7 +56,8 @@ const profileSummary = {
 function makeItem(
   id: string,
   kind: 'post' | 'event' | 'community',
-  content: string
+  content: string,
+  tags: UserContentMetadata['tags'] = []
 ): UserContentMetadata {
   return {
     id,
@@ -67,7 +68,7 @@ function makeItem(
     createdAt: new Date('2026-05-13T10:00:00Z'),
     isOwn: false,
     images: [],
-    tags: [],
+    tags,
   }
 }
 
@@ -91,6 +92,23 @@ describe('NearbyFeatures', () => {
     const emitted = wrapper.emitted('item:select')
     expect(emitted).toBeTruthy()
     expect(emitted![0]![0]).toMatchObject({ id: 'p1', kind: 'post' })
+  })
+
+  it('exposes tag slugs on the item via the data-tags attribute', () => {
+    const items = [
+      makeItem('p1', 'post', 'hello', [
+        { id: 't1', name: 'Hiking', slug: 'hiking' },
+        { id: 't2', name: 'Live Music', slug: 'live-music' },
+      ]),
+    ]
+    const wrapper = mount(NearbyFeatures, { props: { items }, global: { stubs } })
+    expect(wrapper.find('.user-select-none').attributes('data-tags')).toBe('hiking live-music')
+  })
+
+  it('renders an empty data-tags attribute for an untagged item', () => {
+    const items = [makeItem('p1', 'post', 'hello')]
+    const wrapper = mount(NearbyFeatures, { props: { items }, global: { stubs } })
+    expect(wrapper.find('.user-select-none').attributes('data-tags')).toBe('')
   })
 
   it('does not render offcanvas when items is empty', () => {

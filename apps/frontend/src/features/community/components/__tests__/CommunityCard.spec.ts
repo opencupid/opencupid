@@ -37,6 +37,7 @@ const baseCommunity = {
   postedBy: { id: 'p-1', publicName: 'Alice', profileImages: [] },
   isOwn: false,
   images: [],
+  tags: [],
 } as any
 
 const stubs = {
@@ -97,5 +98,28 @@ describe('CommunityCard', () => {
       global: { stubs },
     })
     expect(wrapper.find('.thumb').exists()).toBe(true)
+  })
+
+  it('exposes tag slugs on the wrapper via the data-tags attribute', () => {
+    const community = {
+      ...baseCommunity,
+      tags: [
+        { id: 't1', name: 'Hiking', slug: 'hiking' },
+        { id: 't2', name: 'Live Music', slug: 'live-music' },
+      ],
+    }
+    const wrapper = mount(CommunityCard, {
+      props: { community, showDetails: false },
+      global: { stubs },
+    })
+    expect(wrapper.get('.community-wrapper').attributes('data-tags')).toBe('hiking live-music')
+  })
+
+  it('renders an empty data-tags attribute for an untagged community', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: baseCommunity, showDetails: false },
+      global: { stubs },
+    })
+    expect(wrapper.get('.community-wrapper').attributes('data-tags')).toBe('')
   })
 })

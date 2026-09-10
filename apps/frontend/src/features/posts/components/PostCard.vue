@@ -14,6 +14,7 @@ import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.v
 
 import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
 import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
+import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
@@ -57,10 +58,15 @@ const sharePostPayload = computed<SharePayload>(() => ({
   text: t('posts.share.post_text', { publicName: props.post.postedBy.publicName }),
   url: `${window.location.origin}/posts/${props.post.id}`,
 }))
+
+const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
 </script>
 
 <template>
-  <div class="post-wrapper position-relative w-100 p-2">
+  <div
+    class="post-wrapper position-relative w-100 p-2"
+    :data-tags="tagSlugs"
+  >
     <PostIt
       class="position-relative"
       variant="post"
