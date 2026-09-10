@@ -59,12 +59,13 @@ describe('AttachImageButton', () => {
     expect(wrapper.find('[data-test="image-upload"]').exists()).toBe(true)
   })
 
-  it('aligns the upload button and thumbnails to the start of its field', () => {
-    // The stack fills the width of its form group, so centring it would float
-    // the button into the middle of the dialog.
+  it('lays the upload button and thumbnails out in a row', () => {
+    // A column would stack them down the dialog, and a full-width column with
+    // centred items would float them into the middle of the form field.
     const classes = mountWith().classes()
-    expect(classes).toContain('align-items-start')
-    expect(classes).not.toContain('align-items-center')
+    expect(classes).toContain('d-flex')
+    expect(classes).toContain('align-items-center')
+    expect(classes).not.toContain('flex-column')
   })
 
   it('forwards buttonClass to the ImageUpload control', () => {
