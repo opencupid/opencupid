@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import ProfileContent from '@/features/publicprofile/components/ProfileContent.vue'
+import ProfileContentPanel from '@/features/publicprofile/components/ProfileContentPanel.vue'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
@@ -25,7 +25,7 @@ const showModal = ref(false)
 
 function onProfileSelect() {
   if (vm.partner.value) {
-    panel.show(ProfileContent, { profile: vm.partner.value })
+    panel.show(ProfileContentPanel, { profile: vm.partner.value })
   }
 }
 
