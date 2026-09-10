@@ -3,7 +3,11 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { z } from 'zod'
-import type { OwnerCommunity } from '@zod/community/community.dto'
+import {
+  ContactEmailSchema,
+  ContactUrlSchema,
+  type OwnerCommunity,
+} from '@zod/community/community.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
 
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
@@ -16,6 +20,8 @@ const CommunityFormSchema = z.object({
   content: z.string().default(''),
   isVisible: z.boolean().default(true),
   yearFounded: z.number().int().nullable().default(null),
+  contactUrl: z.string().default(''),
+  contactEmail: z.string().default(''),
   location: LocationSchema,
 })
 type CommunityForm = z.infer<typeof CommunityFormSchema>
@@ -47,6 +53,8 @@ const form = ref<CommunityForm>(
     content: community?.content ?? '',
     isVisible: community?.isVisible ?? true,
     yearFounded: community?.yearFounded ?? null,
+    contactUrl: community?.contactUrl ?? '',
+    contactEmail: community?.contactEmail ?? '',
     location: community?.location ?? props.defaultLocation,
   })
 )
@@ -64,10 +72,24 @@ const yearOptions = computed(() => [
   }),
 ])
 
+// Both contact fields are optional: an empty input clears them.
+const contactUrl = computed(() => form.value.contactUrl.trim() || null)
+const contactEmail = computed(() => form.value.contactEmail.trim() || null)
+
+// `null` keeps an untouched field neutral, mirroring PublicNameInput.
+const contactUrlState = computed<boolean | null>(() =>
+  contactUrl.value === null ? null : ContactUrlSchema.safeParse(contactUrl.value).success
+)
+const contactEmailState = computed<boolean | null>(() =>
+  contactEmail.value === null ? null : ContactEmailSchema.safeParse(contactEmail.value).success
+)
+
 const isFormValid = computed(() => {
   return (
     form.value.content.trim().length > 10 &&
-    form.value.content.length <= COMMUNITY_CONTENT_MAX_LENGTH
+    form.value.content.length <= COMMUNITY_CONTENT_MAX_LENGTH &&
+    contactUrlState.value !== false &&
+    contactEmailState.value !== false
   )
 })
 
@@ -84,11 +106,15 @@ const handleSubmit = async () => {
             content,
             isVisible,
             yearFounded,
+            contactUrl: contactUrl.value,
+            contactEmail: contactEmail.value,
             ...location,
           })
         : await contentStore.createCommunity({
             content,
             yearFounded,
+            contactUrl: contactUrl.value,
+            contactEmail: contactEmail.value,
             ...location,
             imageIds: imageBtn.value?.getImageIds() ?? [],
           })
@@ -139,6 +165,52 @@ const handleSubmit = async () => {
         v-model="form.yearFounded"
         :options="yearOptions"
       />
+    </BFormGroup>
+
+    <BFormGroup
+      :label="$t('community.labels.contact_url')"
+      label-for="community-contact-url"
+      class="mb-3"
+      label-cols-sm="4"
+      label-cols-lg="4"
+      content-cols-sm="8"
+      content-cols-lg="8"
+    >
+      <BFormInput
+        id="community-contact-url"
+        v-model="form.contactUrl"
+        type="url"
+        inputmode="url"
+        autocomplete="url"
+        :placeholder="$t('community.placeholders.contact_url')"
+        :state="contactUrlState"
+      />
+      <BFormInvalidFeedback :state="contactUrlState">
+        {{ $t('community.messages.invalid_contact_url') }}
+      </BFormInvalidFeedback>
+    </BFormGroup>
+
+    <BFormGroup
+      :label="$t('community.labels.contact_email')"
+      label-for="community-contact-email"
+      class="mb-3"
+      label-cols-sm="4"
+      label-cols-lg="4"
+      content-cols-sm="8"
+      content-cols-lg="8"
+    >
+      <BFormInput
+        id="community-contact-email"
+        v-model="form.contactEmail"
+        type="email"
+        inputmode="email"
+        autocomplete="email"
+        :placeholder="$t('community.placeholders.contact_email')"
+        :state="contactEmailState"
+      />
+      <BFormInvalidFeedback :state="contactEmailState">
+        {{ $t('community.messages.invalid_contact_email') }}
+      </BFormInvalidFeedback>
     </BFormGroup>
 
     <BFormGroup class="mb-3">

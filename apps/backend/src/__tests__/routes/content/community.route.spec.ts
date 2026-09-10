@@ -344,3 +344,67 @@ describe('CreateCommunityPayloadSchema imageIds', () => {
     expect((parsed as any).imageIds).toBeUndefined()
   })
 })
+
+describe('CreateCommunityPayloadSchema contact fields', () => {
+  const baseFields = { content: 'x'.repeat(20) }
+
+  const parseContact = (contact: Record<string, unknown>) =>
+    CreateCommunityPayloadSchema.safeParse({ ...baseFields, ...contact })
+
+  it('omits both contact fields when absent', () => {
+    const parsed = CreateCommunityPayloadSchema.parse(baseFields)
+    expect(parsed.contactUrl).toBeUndefined()
+    expect(parsed.contactEmail).toBeUndefined()
+  })
+
+  it('accepts null for both contact fields', () => {
+    const parsed = CreateCommunityPayloadSchema.parse({
+      ...baseFields,
+      contactUrl: null,
+      contactEmail: null,
+    })
+    expect(parsed.contactUrl).toBeNull()
+    expect(parsed.contactEmail).toBeNull()
+  })
+
+  it('trims surrounding whitespace', () => {
+    const parsed = CreateCommunityPayloadSchema.parse({
+      ...baseFields,
+      contactUrl: '  https://example.org/guild  ',
+      contactEmail: '  hello@example.org  ',
+    })
+    expect(parsed.contactUrl).toBe('https://example.org/guild')
+    expect(parsed.contactEmail).toBe('hello@example.org')
+  })
+
+  it.each(['https://example.org', 'http://example.org/path?a=1'])(
+    'accepts %s as contactUrl',
+    (url) => {
+      expect(parseContact({ contactUrl: url }).success).toBe(true)
+    }
+  )
+
+  it.each([
+    'javascript:alert(1)',
+    'data:text/html,<script></script>',
+    'ftp://example.org',
+    'example.org',
+    '',
+  ])('rejects %s as contactUrl', (url) => {
+    expect(parseContact({ contactUrl: url }).success).toBe(false)
+  })
+
+  it('rejects a contactUrl longer than 2048 chars', () => {
+    const url = `https://example.org/${'a'.repeat(2100)}`
+    expect(parseContact({ contactUrl: url }).success).toBe(false)
+  })
+
+  it.each(['not-an-email', 'foo@', '@example.org', ''])('rejects %s as contactEmail', (email) => {
+    expect(parseContact({ contactEmail: email }).success).toBe(false)
+  })
+
+  it('rejects a contactEmail longer than 254 chars', () => {
+    const email = `${'a'.repeat(250)}@example.org`
+    expect(parseContact({ contactEmail: email }).success).toBe(false)
+  })
+})

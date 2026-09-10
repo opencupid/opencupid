@@ -58,7 +58,13 @@ export class CommunityService extends UserContentService {
             ...tagConnect,
             kind: 'community',
             postedById: profileId,
-            community: { create: { yearFounded: data.yearFounded ?? null } },
+            community: {
+              create: {
+                yearFounded: data.yearFounded ?? null,
+                contactUrl: data.contactUrl ?? null,
+                contactEmail: data.contactEmail ?? null,
+              },
+            },
           },
           include: communityWithMetadataInclude,
         })
@@ -81,7 +87,9 @@ export class CommunityService extends UserContentService {
     profileId: string,
     data: UpdateCommunityPayload
   ): Promise<CommunityWithMetadata | null> {
-    const { yearFounded, tagIds, ...baseFields } = data
+    const { yearFounded, contactUrl, contactEmail, tagIds, ...baseFields } = data
+    // Prisma ignores undefined members, so this only writes the fields present in the payload.
+    const communityFields = { yearFounded, contactUrl, contactEmail }
 
     return prisma.$transaction(async (tx) => {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'community', baseFields)
@@ -89,10 +97,10 @@ export class CommunityService extends UserContentService {
 
       await this.setTagsTx(tx, id, tagIds)
 
-      if (yearFounded !== undefined) {
+      if (Object.values(communityFields).some((value) => value !== undefined)) {
         await tx.communityContent.update({
           where: { userContentId: id },
-          data: { yearFounded },
+          data: communityFields,
         })
       }
 

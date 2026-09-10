@@ -44,15 +44,21 @@
       "save": "Közösség mentése"
     },
     "labels": {
+      "contact_email": "Kapcsolattartó e-mail",
+      "contact_url": "Weboldal",
       "content": "A közösségről",
       "founded_since": "{year} óta",
       "visibility": "Mutasd ezt a közösséget",
       "year_founded": "Alapítás éve"
     },
     "messages": {
-      "error_load": "Nem sikerült betölteni a közösséget"
+      "error_load": "Nem sikerült betölteni a közösséget",
+      "invalid_contact_email": "Ez nem tűnik érvényes e-mail címnek",
+      "invalid_contact_url": "Adj meg teljes webcímet, pl. https://example.org"
     },
     "placeholders": {
+      "contact_email": "hello@example.org",
+      "contact_url": "https://example.org",
       "content": "Mesélj a közösségről…",
       "year_unknown": "Nem tudom / nem biztos"
     },

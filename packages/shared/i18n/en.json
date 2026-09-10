@@ -44,15 +44,21 @@
       "save": "Save"
     },
     "labels": {
+      "contact_email": "Contact email",
+      "contact_url": "Website",
       "content": "About this community",
       "founded_since": "Since {year}",
       "visibility": "Show this community",
       "year_founded": "Founded in"
     },
     "messages": {
-      "error_load": "Failed to load community"
+      "error_load": "Failed to load community",
+      "invalid_contact_email": "That doesn't look like an email address",
+      "invalid_contact_url": "Enter a full web address, e.g. https://example.org"
     },
     "placeholders": {
+      "contact_email": "hello@example.org",
+      "contact_url": "https://example.org",
       "content": "Describe your community…",
       "year_unknown": "Don't know / not sure"
     },

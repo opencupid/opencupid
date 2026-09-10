@@ -15,6 +15,9 @@ const COMMUNITY_KIND = z.literal('community')
 
 const MIN_YEAR_FOUNDED = 1
 
+const CONTACT_URL_MAX_LENGTH = 2048
+const CONTACT_EMAIL_MAX_LENGTH = 254
+
 // Upper bound is re-evaluated per parse so a long-running process doesn't keep
 // rejecting the new year after a calendar rollover.
 const YearFoundedSchema = z
@@ -26,15 +29,41 @@ const YearFoundedSchema = z
   })
   .nullable()
 
+// Restricted to http(s) on a resolvable domain so the value is always safe to
+// render as an href.
+export const ContactUrlSchema = z
+  .string()
+  .trim()
+  .pipe(
+    z.url({ protocol: /^https?$/, hostname: z.regexes.domain }).max(CONTACT_URL_MAX_LENGTH, {
+      message: 'contactUrl is too long',
+    })
+  )
+  .nullable()
+
+export const ContactEmailSchema = z
+  .string()
+  .trim()
+  .pipe(
+    z.email('Invalid email address').max(CONTACT_EMAIL_MAX_LENGTH, {
+      message: 'contactEmail is too long',
+    })
+  )
+  .nullable()
+
 export const PublicCommunitySchema = UserContentMetadataSchema.extend({
   kind: COMMUNITY_KIND,
   yearFounded: YearFoundedSchema,
+  contactUrl: ContactUrlSchema,
+  contactEmail: ContactEmailSchema,
 })
 export type PublicCommunity = z.infer<typeof PublicCommunitySchema>
 
 export const PublicCommunityDetailSchema = PublicUserContentDetailBaseSchema.extend({
   kind: COMMUNITY_KIND,
   yearFounded: YearFoundedSchema,
+  contactUrl: ContactUrlSchema,
+  contactEmail: ContactEmailSchema,
 })
 export type PublicCommunityDetail = z.infer<typeof PublicCommunityDetailSchema>
 
@@ -45,6 +74,8 @@ export type OwnerCommunity = z.infer<typeof OwnerCommunitySchema>
 
 export const CreateCommunityPayloadSchema = BaseUserContentPayloadSchema.extend({
   yearFounded: YearFoundedSchema.optional(),
+  contactUrl: ContactUrlSchema.optional(),
+  contactEmail: ContactEmailSchema.optional(),
   imageIds: z.array(z.string().cuid()).max(MAX_IMAGES_PER_GALLERY).optional(),
 })
 export type CreateCommunityPayload = z.infer<typeof CreateCommunityPayloadSchema>

@@ -73,6 +73,8 @@ function makeOwnerCommunity(id: string, overrides: Record<string, unknown> = {})
     id,
     kind: 'community' as const,
     yearFounded: 1998,
+    contactUrl: null,
+    contactEmail: null,
     postedBy: profileSummary,
     isDeleted: false,
     isVisible: true,
@@ -287,6 +289,8 @@ describe('useUserContentStore', () => {
         id: CUID_1,
         kind: 'community',
         yearFounded: 1998,
+        contactUrl: null,
+        contactEmail: null,
         isOwn: false,
         postedBy: { ...profileSummary, haveConversation: false, canMessage: true },
       }

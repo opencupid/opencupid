@@ -64,6 +64,10 @@ const stubs = {
     template:
       '<select :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value === \'null\' ? null : Number($event.target.value))"><option v-for="o in options" :key="o.value ?? \'null\'" :value="o.value ?? \'null\'">{{ o.text }}</option></select>',
   },
+  BFormInvalidFeedback: {
+    props: ['state'],
+    template: '<div class="invalid-feedback" :data-state="String(state)"><slot /></div>',
+  },
   BFormCheckbox: {
     props: ['modelValue'],
     template:
@@ -135,5 +139,99 @@ describe('EditCommunityDialog', () => {
     expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe(
       'Existing community description longer than 10'
     )
+  })
+})
+
+describe('EditCommunityDialog contact fields', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    createCommunityMock.mockClear()
+    updateCommunityMock.mockClear()
+  })
+
+  const mountCreate = () =>
+    mount(EditCommunityDialog, {
+      props: { isEdit: false, defaultLocation },
+      global: globalOptions,
+    })
+
+  const contactInputs = (wrapper: ReturnType<typeof mountCreate>) => {
+    const inputs = wrapper.findAll('input')
+    return { url: inputs[0]!, email: inputs[1]! }
+  }
+
+  const submitBtn = (wrapper: ReturnType<typeof mountCreate>) =>
+    wrapper
+      .findAll('button')
+      .filter((b) => b.attributes('type') === 'submit')
+      .at(-1)!
+
+  it('submits null for both contact fields when left empty', async () => {
+    const wrapper = mountCreate()
+    await wrapper.find('textarea').setValue('This is a long-enough description.')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(createCommunityMock.mock.calls[0]![0]).toMatchObject({
+      contactUrl: null,
+      contactEmail: null,
+    })
+  })
+
+  it('submits trimmed contact values', async () => {
+    const wrapper = mountCreate()
+    await wrapper.find('textarea').setValue('This is a long-enough description.')
+    const { url, email } = contactInputs(wrapper)
+    await url.setValue('  https://example.org/guild  ')
+    await email.setValue('  hello@example.org  ')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(createCommunityMock.mock.calls[0]![0]).toMatchObject({
+      contactUrl: 'https://example.org/guild',
+      contactEmail: 'hello@example.org',
+    })
+  })
+
+  it('blocks submit on an invalid contactUrl', async () => {
+    const wrapper = mountCreate()
+    await wrapper.find('textarea').setValue('This is a long-enough description.')
+    await contactInputs(wrapper).url.setValue('javascript:alert(1)')
+    expect(submitBtn(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  it('blocks submit on an invalid contactEmail', async () => {
+    const wrapper = mountCreate()
+    await wrapper.find('textarea').setValue('This is a long-enough description.')
+    await contactInputs(wrapper).email.setValue('not-an-email')
+    expect(submitBtn(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  it('pre-populates contact fields in edit mode and clears them when emptied', async () => {
+    const community = {
+      id: 'c-existing',
+      kind: 'community',
+      content: 'Existing community description longer than 10',
+      yearFounded: 2015,
+      contactUrl: 'https://example.org/guild',
+      contactEmail: 'hello@example.org',
+      isVisible: true,
+      location: defaultLocation,
+      postedBy: { id: 'p', publicName: 'Alice' },
+    }
+    const wrapper = mount(EditCommunityDialog, {
+      props: { isEdit: true, community: community as any, defaultLocation },
+      global: globalOptions,
+    })
+    const { url, email } = contactInputs(wrapper)
+    expect((url.element as HTMLInputElement).value).toBe('https://example.org/guild')
+    expect((email.element as HTMLInputElement).value).toBe('hello@example.org')
+
+    await url.setValue('')
+    await email.setValue('')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(updateCommunityMock.mock.calls[0]![1]).toMatchObject({
+      contactUrl: null,
+      contactEmail: null,
+    })
   })
 })

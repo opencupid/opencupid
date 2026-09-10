@@ -87,6 +87,8 @@ const baseDbCommunity: any = {
   community: {
     userContentId: 'cucomm00000000000001',
     yearFounded: 2010,
+    contactUrl: 'https://example.org/guild',
+    contactEmail: 'hello@example.org',
   },
   images: baseImages,
   tags: [],
@@ -109,11 +111,37 @@ describe('mapDbCommunityToPublic', () => {
   })
 })
 
+describe('mapDbCommunityToPublic contact fields', () => {
+  it('maps contactUrl and contactEmail', () => {
+    const result = mapDbCommunityToPublic(baseDbCommunity, ctx('viewer-profile-id'))
+    expect(result.contactUrl).toBe('https://example.org/guild')
+    expect(result.contactEmail).toBe('hello@example.org')
+  })
+
+  it('passes null contact fields through', () => {
+    const result = mapDbCommunityToPublic(
+      {
+        ...baseDbCommunity,
+        community: { ...baseDbCommunity.community, contactUrl: null, contactEmail: null },
+      },
+      ctx('viewer-profile-id')
+    )
+    expect(result.contactUrl).toBeNull()
+    expect(result.contactEmail).toBeNull()
+  })
+})
+
 describe('mapDbCommunityToDetail', () => {
   it('attaches conversation context on postedBy', () => {
     const result = mapDbCommunityToDetail(baseDbCommunity, ctx('viewer-profile-id'))
     expect(result.postedBy).toHaveProperty('haveConversation')
     expect(result.postedBy).toHaveProperty('canMessage')
+  })
+
+  it('maps contact fields', () => {
+    const result = mapDbCommunityToDetail(baseDbCommunity, ctx('viewer-profile-id'))
+    expect(result.contactUrl).toBe('https://example.org/guild')
+    expect(result.contactEmail).toBe('hello@example.org')
   })
 })
 
@@ -124,6 +152,20 @@ describe('mapDbCommunityToOwner', () => {
     expect(result.isOwn).toBe(true)
     expect(result.yearFounded).toBe(2010)
     expect(result.isVisible).toBe(true)
+    expect(result.contactUrl).toBe('https://example.org/guild')
+    expect(result.contactEmail).toBe('hello@example.org')
+  })
+
+  it('rejects a community whose stored contactUrl is not a valid http(s) URL', () => {
+    expect(() =>
+      mapDbCommunityToOwner(
+        {
+          ...baseDbCommunity,
+          community: { ...baseDbCommunity.community, contactUrl: 'javascript:alert(1)' },
+        },
+        ctx('owner')
+      )
+    ).toThrow()
   })
 })
 
