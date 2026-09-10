@@ -1,6 +1,8 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { userContentTagsInclude } from '@/db/includes/profileIncludes'
+import { TagService } from './tag.service'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
 /**
@@ -40,6 +42,20 @@ export const userContentImagesInclude = {
 const profileSummaryInclude = {
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
+} as const
+
+/**
+ * `profileSummaryInclude` minus the tag subtree, for reads that never
+ * serialize `row.tags`: `findByIdMetadata` (result used only for kind/owner
+ * before re-fetching per-kind) and `findAllWithLocation` (cluster index reads
+ * poster summary only and builds GeoJSON by hand). Loading tags + all their
+ * translations for these — up to `CLUSTER_INDEX_LIMIT` rows per index rebuild —
+ * would be discarded work.
+ */
+const contentSummaryInclude = {
+  postedBy: { include: { profileImages: { include: { image: true } } } },
+  ...userContentImagesInclude,
 } as const
 
 const ownerHydratedInclude = {
@@ -48,10 +64,15 @@ const ownerHydratedInclude = {
   community: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
 } as const
 
 export type UserContentMetadataRow = Prisma.UserContentGetPayload<{
   include: typeof profileSummaryInclude
+}>
+
+export type ContentSummaryRow = Prisma.UserContentGetPayload<{
+  include: typeof contentSummaryInclude
 }>
 
 export type OwnerHydratedRow = Prisma.UserContentGetPayload<{
@@ -164,17 +185,14 @@ export class UserContentService {
     })
   }
 
-  async findByIdMetadata(
-    id: string,
-    viewerProfileId: string
-  ): Promise<UserContentMetadataRow | null> {
+  async findByIdMetadata(id: string, viewerProfileId: string): Promise<ContentSummaryRow | null> {
     return prisma.userContent.findFirst({
       where: {
         id,
         isDeleted: false,
         OR: [{ postedById: viewerProfileId }, { isVisible: true }],
       },
-      include: profileSummaryInclude,
+      include: contentSummaryInclude,
     })
   }
 
@@ -217,6 +235,45 @@ export class UserContentService {
   }
 
   /**
+   * Validates a create payload's tag ids and shapes them as a nested
+   * `connect`, ready to spread into `tx.userContent.create`'s data. Returns
+   * an empty object when the caller supplied no tags, so the spread is a
+   * no-op rather than an explicit empty relation write.
+   */
+  protected async tagConnectTx(
+    tx: Prisma.TransactionClient,
+    tagIds: string[] | undefined
+  ): Promise<Pick<Prisma.UserContentCreateInput, 'tags'> | Record<string, never>> {
+    if (!tagIds || tagIds.length === 0) return {}
+    const ids = await TagService.getInstance().resolveAttachableTagIdsTx(tx, tagIds)
+    return { tags: { connect: ids.map((id) => ({ id })) } }
+  }
+
+  /**
+   * Replaces the tag set on an existing row. `set` alone is a full
+   * replacement, so an empty list clears the tags and an omitted `tagIds`
+   * leaves them untouched.
+   *
+   * This is a separate statement from `updateBaseScalars` because that gate
+   * uses `updateMany`, whose `data` accepts scalar updates only — nested
+   * relation writes are not expressible there. Running it unguarded is safe:
+   * callers invoke it only after `updateBaseScalars` has already proven
+   * ownership and kind inside the same transaction.
+   */
+  protected async setTagsTx(
+    tx: Prisma.TransactionClient,
+    id: string,
+    tagIds: string[] | undefined
+  ): Promise<void> {
+    if (tagIds === undefined) return
+    const ids = await TagService.getInstance().resolveAttachableTagIdsTx(tx, tagIds)
+    await tx.userContent.update({
+      where: { id },
+      data: { tags: { set: ids.map((tagId) => ({ id: tagId })) } },
+    })
+  }
+
+  /**
    * Atomically gates a UserContent scalar update on ownership and kind.
    * Used by per-kind services (PostService, EventService) inside a tx that
    * also writes to the kind-specific content table. Always bumps
@@ -240,7 +297,7 @@ export class UserContentService {
   async findAllWithLocation(
     viewerProfileId: string,
     kinds: ContentKind[]
-  ): Promise<UserContentMetadataRow[]> {
+  ): Promise<ContentSummaryRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,
@@ -250,7 +307,7 @@ export class UserContentService {
         postedBy: blocklistWhereClause(viewerProfileId),
         kind: { in: kinds },
       },
-      include: profileSummaryInclude,
+      include: contentSummaryInclude,
       orderBy: { createdAt: 'desc' },
       take: CLUSTER_INDEX_LIMIT,
     })

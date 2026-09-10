@@ -33,6 +33,12 @@ import {
   mapDbCommunityToOwner,
 } from '../../api/mappers/community.mappers'
 
+/**
+ * Mappers take a MapperContext rather than a bare viewer id — two adjacent
+ * string parameters would let a transposition through the type checker.
+ */
+const ctx = (viewerProfileId: string, locale = 'en') => ({ viewerProfileId, locale })
+
 const baseImages = [
   {
     image: {
@@ -83,11 +89,12 @@ const baseDbCommunity: any = {
     yearFounded: 2010,
   },
   images: baseImages,
+  tags: [],
 }
 
 describe('mapDbCommunityToPublic', () => {
   it('maps a community with yearFounded and location', () => {
-    const result = mapDbCommunityToPublic(baseDbCommunity, 'viewer-profile-id')
+    const result = mapDbCommunityToPublic(baseDbCommunity, ctx('viewer-profile-id'))
     expect(result.id).toBe(baseDbCommunity.id)
     expect(result.kind).toBe('community')
     expect(result.content).toBe(baseDbCommunity.content)
@@ -97,14 +104,14 @@ describe('mapDbCommunityToPublic', () => {
   })
 
   it('isOwn=true when viewer is poster', () => {
-    const result = mapDbCommunityToPublic(baseDbCommunity, 'clprofile000000000001')
+    const result = mapDbCommunityToPublic(baseDbCommunity, ctx('clprofile000000000001'))
     expect(result.isOwn).toBe(true)
   })
 })
 
 describe('mapDbCommunityToDetail', () => {
   it('attaches conversation context on postedBy', () => {
-    const result = mapDbCommunityToDetail(baseDbCommunity, 'viewer-profile-id')
+    const result = mapDbCommunityToDetail(baseDbCommunity, ctx('viewer-profile-id'))
     expect(result.postedBy).toHaveProperty('haveConversation')
     expect(result.postedBy).toHaveProperty('canMessage')
   })
@@ -112,7 +119,7 @@ describe('mapDbCommunityToDetail', () => {
 
 describe('mapDbCommunityToOwner', () => {
   it('parses through OwnerCommunitySchema', () => {
-    const result = mapDbCommunityToOwner(baseDbCommunity)
+    const result = mapDbCommunityToOwner(baseDbCommunity, ctx('owner'))
     expect(result.kind).toBe('community')
     expect(result.isOwn).toBe(true)
     expect(result.yearFounded).toBe(2010)
@@ -122,7 +129,7 @@ describe('mapDbCommunityToOwner', () => {
 
 describe('mapDbCommunityToPublic images', () => {
   it('projects attached images in PublicCommunity shape (no id)', () => {
-    const result = mapDbCommunityToPublic(baseDbCommunity, 'viewer-profile-id')
+    const result = mapDbCommunityToPublic(baseDbCommunity, ctx('viewer-profile-id'))
     expect(result.images).toHaveLength(2)
     expect(result.images[0]).toEqual({
       mimeType: 'image/jpeg',
@@ -135,14 +142,17 @@ describe('mapDbCommunityToPublic images', () => {
   })
 
   it('returns empty images array when content has none', () => {
-    const result = mapDbCommunityToPublic({ ...baseDbCommunity, images: [] }, 'viewer-profile-id')
+    const result = mapDbCommunityToPublic(
+      { ...baseDbCommunity, images: [] },
+      ctx('viewer-profile-id')
+    )
     expect(result.images).toEqual([])
   })
 })
 
 describe('mapDbCommunityToOwner images', () => {
   it('projects attached images in OwnerCommunity shape (with id)', () => {
-    const result = mapDbCommunityToOwner(baseDbCommunity)
+    const result = mapDbCommunityToOwner(baseDbCommunity, ctx('owner'))
     expect(result.images).toHaveLength(2)
     expect(result.images[0]?.id).toBe('climg00000000000000001')
   })

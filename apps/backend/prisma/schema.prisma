@@ -101,6 +101,7 @@ model Tag {
   updatedAt      DateTime         @updatedAt
   translations   TagTranslation[]
   profiles       Profile[]        @relation("ProfileTags")
+  userContent    UserContent[]    @relation("UserContentTags")
 }
 
 model TagTranslation {
@@ -414,6 +415,7 @@ model UserContent {
   event     EventContent?
   community CommunityContent?
   images    UserContentImage[]
+  tags      Tag[]              @relation("UserContentTags")
 
   @@index([postedById])
   @@index([kind])

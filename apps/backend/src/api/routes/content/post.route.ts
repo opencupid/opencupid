@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { PostService } from '@/services/post.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageServiceError } from '@/services/image.service'
+import { TagServiceError } from '@/services/tag.service'
 import {
   CreatePostPayloadSchema,
   UpdatePostPayloadSchema,
@@ -14,6 +15,7 @@ import { PaginationSchema } from '@zod/userContent/userContent.dto'
 import { z } from 'zod'
 import { mapDbPostToOwner, mapDbPostToDetail, mapDbPostToPublic } from '../../mappers/post.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
+import { mapperContext } from '../../mappers/context'
 import { validateBody } from '@/utils/zodValidate'
 
 const ProfileParamsSchema = z.object({ profileId: z.string().cuid() })
@@ -29,6 +31,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       config: rateLimitConfig(fastify, '1 minute', 10),
     },
     async (req, reply) => {
+      const ctx = mapperContext(req)
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile required')
       const data = validateBody<CreatePostPayload>(CreatePostPayloadSchema, req, reply)
@@ -36,9 +39,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const created = await svc.create(profileId, data)
         cluster.evictAll()
-        return reply.code(201).send({ success: true, post: mapDbPostToOwner(created) })
+        return reply.code(201).send({ success: true, post: mapDbPostToOwner(created, ctx) })
       } catch (err) {
-        if (err instanceof ImageServiceError) {
+        if (err instanceof ImageServiceError || err instanceof TagServiceError) {
           return sendError(reply, 400, err.message)
         }
         fastify.log.error(err)
@@ -48,11 +51,11 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get('/feed', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const viewerProfileId = req.session.profileId
+    const ctx = mapperContext(req)
     try {
       const page = PaginationSchema.parse(req.query)
       const rows = await svc.findFeedHydrated({ ...page, includeInvisible: false })
-      const posts = rows.map((r) => mapDbPostToPublic(r, viewerProfileId))
+      const posts = rows.map((r) => mapDbPostToPublic(r, ctx))
       return reply.code(200).send({ success: true, posts })
     } catch (err) {
       fastify.log.error(err)
@@ -61,14 +64,14 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.get('/nearby', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const viewerProfileId = req.session.profileId
+    const ctx = mapperContext(req)
     try {
       const q = NearbyPostQuerySchema.parse(req.query)
       const rows = await svc.findNearbyHydrated(q.lat, q.lon, q.radius, {
         ...q,
         includeInvisible: false,
       })
-      const posts = rows.map((r) => mapDbPostToPublic(r, viewerProfileId))
+      const posts = rows.map((r) => mapDbPostToPublic(r, ctx))
       return reply.code(200).send({ success: true, posts })
     } catch (err) {
       fastify.log.error(err)
@@ -77,13 +80,14 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { id } = PostParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Post not found')
       const isOwner = row.postedById === viewerProfileId
-      const post = isOwner ? mapDbPostToOwner(row) : mapDbPostToDetail(row, viewerProfileId)
+      const post = isOwner ? mapDbPostToOwner(row, ctx) : mapDbPostToDetail(row, ctx)
       return reply.code(200).send({ success: true, post })
     } catch (err) {
       fastify.log.error(err)
@@ -98,6 +102,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
       config: rateLimitConfig(fastify, '1 minute', 5),
     },
     async (req, reply) => {
+      const ctx = mapperContext(req)
       const { id } = PostParamsSchema.parse(req.params)
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile required')
@@ -107,8 +112,11 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
         const row = await svc.update(id, profileId, data)
         if (!row) return sendError(reply, 404, 'Post not found or access denied')
         cluster.evictAll()
-        return reply.code(200).send({ success: true, post: mapDbPostToOwner(row) })
+        return reply.code(200).send({ success: true, post: mapDbPostToOwner(row, ctx) })
       } catch (err) {
+        if (err instanceof TagServiceError) {
+          return sendError(reply, 400, err.message)
+        }
         fastify.log.error(err)
         return sendError(reply, 500, 'Failed to update post')
       }
@@ -138,6 +146,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 401, 'Profile required')
     try {
@@ -146,7 +155,9 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
         ...page,
         includeInvisible: true,
       })
-      return reply.code(200).send({ success: true, posts: rows.map(mapDbPostToOwner) })
+      return reply
+        .code(200)
+        .send({ success: true, posts: rows.map((r) => mapDbPostToOwner(r, ctx)) })
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch own posts')
@@ -154,6 +165,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.get('/profile/:profileId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { profileId } = ProfileParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
@@ -163,7 +175,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
         includeInvisible: viewerProfileId === profileId,
       })
       const posts = rows.map((r) =>
-        viewerProfileId === profileId ? mapDbPostToOwner(r) : mapDbPostToDetail(r, viewerProfileId)
+        viewerProfileId === profileId ? mapDbPostToOwner(r, ctx) : mapDbPostToDetail(r, ctx)
       )
       return reply.code(200).send({ success: true, posts })
     } catch (err) {

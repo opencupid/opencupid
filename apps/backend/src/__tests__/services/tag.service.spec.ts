@@ -9,7 +9,7 @@ beforeEach(async () => {
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
   const module = await import('../../services/tag.service')
-    ; (module.TagService as any).instance = undefined
+  ;(module.TagService as any).instance = undefined
   service = module.TagService.getInstance()
 })
 
@@ -126,5 +126,38 @@ describe('TagService', () => {
       expect(call.include._count.select.profiles).toBe(true)
       expect(call.orderBy).toEqual({ profiles: { _count: 'desc' } })
     })
+  })
+})
+
+describe('TagService.resolveAttachableTagIdsTx', () => {
+  it('returns the deduped id list when every tag is attachable', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([{ id: 'tag-a' }, { id: 'tag-b' }])
+
+    const ids = await service.resolveAttachableTagIdsTx(mockPrisma, ['tag-a', 'tag-b', 'tag-a'])
+
+    expect(ids).toEqual(['tag-a', 'tag-b'])
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith({
+      where: { id: { in: ['tag-a', 'tag-b'] }, isDeleted: false, isApproved: true },
+      select: { id: true },
+    })
+  })
+
+  it('short-circuits on an empty list without querying', async () => {
+    const ids = await service.resolveAttachableTagIdsTx(mockPrisma, [])
+
+    expect(ids).toEqual([])
+    expect(mockPrisma.tag.findMany).not.toHaveBeenCalled()
+  })
+
+  it('throws TagServiceError naming the ids that could not be resolved', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([{ id: 'tag-a' }])
+
+    await expect(
+      service.resolveAttachableTagIdsTx(mockPrisma, ['tag-a', 'tag-deleted', 'tag-unknown'])
+    ).rejects.toMatchObject({ name: 'TagServiceError', code: 'NOT_FOUND' })
+
+    await expect(
+      service.resolveAttachableTagIdsTx(mockPrisma, ['tag-a', 'tag-deleted'])
+    ).rejects.toThrow(/tag-deleted/)
   })
 })

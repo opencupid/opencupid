@@ -109,6 +109,7 @@ describe('GET /bounds', () => {
         lat: null,
         lon: null,
         images: [],
+        tags: [],
       },
       {
         id: 'e1',
@@ -122,6 +123,7 @@ describe('GET /bounds', () => {
         lat: null,
         lon: null,
         images: [],
+        tags: [],
       },
       {
         id: 'c1',
@@ -135,6 +137,7 @@ describe('GET /bounds', () => {
         lat: null,
         lon: null,
         images: [],
+        tags: [],
       },
     ]
     mockUserContentService.findInBounds.mockResolvedValueOnce(rows)
@@ -233,6 +236,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsB: [],
       },
       images: [],
+      tags: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000001' } } as any,
@@ -276,6 +280,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsB: [],
       },
       images: [],
+      tags: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000002' } } as any,
@@ -314,6 +319,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsB: [],
       },
       images: [],
+      tags: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000003' } } as any,
@@ -352,6 +358,7 @@ describe('GET /:id (unified detail)', () => {
         conversationAsB: [],
       },
       images: [],
+      tags: [],
     })
     await handler(
       { session: { profileId: 'p1' }, params: { id: 'cuc00000000000000001' } } as any,
@@ -362,5 +369,66 @@ describe('GET /:id (unified detail)', () => {
       success: true,
       item: expect.objectContaining({ isOwn: true }),
     })
+  })
+})
+
+/**
+ * The session locale has to reach the mapper for tag names to be resolved
+ * correctly — the route builds a MapperContext from `req.session`, and a
+ * regression here would silently serve every viewer the same language.
+ */
+describe('tag localisation through the route', () => {
+  const tagRow = {
+    id: 'cltag00000000000000001',
+    slug: 'farm-stay',
+    name: 'Farm stay',
+    originalLocale: 'en',
+    isUserCreated: false,
+    isApproved: true,
+    isHidden: false,
+    isDeleted: false,
+    createdBy: null,
+    createdAt: new Date('2026-01-01'),
+    updatedAt: new Date('2026-01-01'),
+    translations: [
+      { locale: 'en', name: 'Farm stay' },
+      { locale: 'hu', name: 'Tanyasi szállás' },
+    ],
+  }
+
+  const taggedRow = {
+    id: 'p1',
+    kind: 'post',
+    content: 'post content',
+    createdAt: new Date('2026-05-13T10:00:00Z'),
+    postedById: 'author1',
+    postedBy: { id: 'author1', publicName: 'Author', profileImages: [] },
+    country: null,
+    cityName: null,
+    lat: null,
+    lon: null,
+    images: [],
+    tags: [tagRow],
+  }
+
+  it('resolves tag names using the session locale', async () => {
+    const handler = fastify.routes['GET /feed']
+    mockUserContentService.findFeed.mockResolvedValueOnce([taggedRow])
+
+    await handler({ session: { profileId: 'viewer', lang: 'hu' }, query: {} } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.items[0].tags).toEqual([
+      { id: 'cltag00000000000000001', slug: 'farm-stay', name: 'Tanyasi szállás' },
+    ])
+  })
+
+  it('serves the English name to an English session from the same row', async () => {
+    const handler = fastify.routes['GET /feed']
+    mockUserContentService.findFeed.mockResolvedValueOnce([taggedRow])
+
+    await handler({ session: { profileId: 'viewer', lang: 'en' }, query: {} } as any, reply as any)
+
+    expect(reply.payload.items[0].tags[0].name).toBe('Farm stay')
   })
 })

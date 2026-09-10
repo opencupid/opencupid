@@ -10,13 +10,13 @@ import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
 import { type OwnerImage, type PublicImage } from '@zod/image/image.dto'
-import { mapProfileTagsTranslated } from './tag.mappers'
+import { mapTagsTranslated } from './tag.mappers'
 import { Image } from '@zod/generated'
 import { toOwnerImage, toPublicImage } from './image.mappers'
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
-  const tags = mapProfileTagsTranslated(db.tags, locale)
+  const tags = mapTagsTranslated(db.tags, locale)
   const images = db.profileImages
     ? mapProfileImagesToOwner(db.profileImages.map((g) => g.image))
     : []
@@ -70,7 +70,7 @@ export function mapProfileToPublic(
   const publicImages = dbProfile.profileImages
     ? mapProfileImagesToPublic(dbProfile.profileImages.map((g) => g.image))
     : []
-  const publicTags = dbProfile.tags ? mapProfileTagsTranslated(dbProfile.tags, locale) : []
+  const publicTags = dbProfile.tags ? mapTagsTranslated(dbProfile.tags, locale) : []
 
   return {
     ...scalars,

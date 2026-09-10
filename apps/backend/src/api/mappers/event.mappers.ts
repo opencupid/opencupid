@@ -9,8 +9,10 @@ import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { extractLocation } from './location.mappers'
 import { toOwnerImage, toPublicImage } from './image.mappers'
+import { mapTagsTranslated } from './tag.mappers'
+import type { MapperContext } from './context'
 
-export function mapDbEventToPublic(row: EventWithMetadata, viewerProfileId: string): PublicEvent {
+export function mapDbEventToPublic(row: EventWithMetadata, ctx: MapperContext): PublicEvent {
   return {
     id: row.id,
     kind: 'event',
@@ -18,16 +20,17 @@ export function mapDbEventToPublic(row: EventWithMetadata, viewerProfileId: stri
     venue: row.event!.venue,
     content: row.content,
     createdAt: row.createdAt,
-    isOwn: row.postedById === viewerProfileId,
+    isOwn: row.postedById === ctx.viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
     images: row.images.map((j) => toPublicImage(j.image)),
+    tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
 
 export function mapDbEventToDetail(
   row: EventWithMetadataAndContext,
-  viewerProfileId: string
+  ctx: MapperContext
 ): PublicEventDetail {
   return {
     id: row.id,
@@ -39,14 +42,15 @@ export function mapDbEventToDetail(
     isOwn: false,
     postedBy: {
       ...mapProfileSummary(row.postedBy),
-      ...mapConversationContext(row.postedBy, viewerProfileId),
+      ...mapConversationContext(row.postedBy, ctx.viewerProfileId),
     },
     location: extractLocation(row) ?? undefined,
     images: row.images.map((j) => toPublicImage(j.image)),
+    tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
 
-export function mapDbEventToOwner(row: EventWithMetadata): OwnerEvent {
+export function mapDbEventToOwner(row: EventWithMetadata, ctx: MapperContext): OwnerEvent {
   return OwnerEventSchema.parse({
     id: row.id,
     kind: 'event',
@@ -61,5 +65,6 @@ export function mapDbEventToOwner(row: EventWithMetadata): OwnerEvent {
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
     images: row.images.map((j) => toOwnerImage(j.image)),
+    tags: mapTagsTranslated(row.tags, ctx.locale),
   })
 }

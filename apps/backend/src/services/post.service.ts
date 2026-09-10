@@ -7,13 +7,14 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
-import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 const postWithMetadataInclude = {
   post: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
 } as const
 
 const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -26,6 +27,7 @@ const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
       },
     },
     ...userContentImagesInclude,
+    ...userContentTagsInclude,
   }) as const
 
 export type PostWithMetadata = Prisma.UserContentGetPayload<{
@@ -47,12 +49,14 @@ export class PostService extends UserContentService {
   }
 
   async create(profileId: string, data: CreatePostPayload): Promise<PostWithMetadata> {
-    const { imageIds, ...contentData } = data
+    const { imageIds, tagIds, ...contentData } = data
     return prisma.$transaction(
       async (tx) => {
+        const tagConnect = await this.tagConnectTx(tx, tagIds)
         const created = await tx.userContent.create({
           data: {
             ...this.baseCreateData(contentData),
+            ...tagConnect,
             kind: 'post',
             postedById: profileId,
             post: { create: { type: data.type } },
@@ -78,11 +82,13 @@ export class PostService extends UserContentService {
     profileId: string,
     data: UpdatePostPayload
   ): Promise<PostWithMetadata | null> {
-    const { type, ...baseFields } = data
+    const { type, tagIds, ...baseFields } = data
 
     return prisma.$transaction(async (tx) => {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'post', baseFields)
       if (!ok) return null
+
+      await this.setTagsTx(tx, id, tagIds)
 
       await tx.postContent.update({
         where: { userContentId: id },

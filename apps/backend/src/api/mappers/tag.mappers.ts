@@ -33,6 +33,6 @@ export function DbTagToPublicTagTransform(dbTag: TagWithTranslations, locale: st
   }
 }
 
-export function mapProfileTagsTranslated(tags: TagWithTranslations[], locale: string): PublicTag[] {
+export function mapTagsTranslated(tags: TagWithTranslations[], locale: string): PublicTag[] {
   return tags.map((tag) => DbTagToPublicTagTransform(TagWithTranslationsSchema.parse(tag), locale))
 }

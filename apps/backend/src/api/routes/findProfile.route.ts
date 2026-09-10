@@ -10,7 +10,7 @@ import { ClusterService } from '@/services/cluster.service'
 import { GetProfilesResponse } from '@zod/apiResponse.dto'
 
 import { MAP_MAX_ZOOM, MAX_BROWSE_TAGS } from '@shared/maps'
-import { mapProfileTagsTranslated } from '../mappers/tag.mappers'
+import { mapTagsTranslated } from '../mappers/tag.mappers'
 
 /** Zod schema: optional comma-separated tag IDs → deduped string[]. */
 const TagIdsSchema = z
@@ -75,7 +75,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
         tagIds,
         kinds
       )
-      const tags = mapProfileTagsTranslated(rawTags, req.session.lang)
+      const tags = mapTagsTranslated(rawTags, req.session.lang)
       return reply.code(200).send({ success: true, features, tags })
     } catch (err) {
       req.log.error(err)

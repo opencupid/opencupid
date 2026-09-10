@@ -6,7 +6,7 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dto'
-import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 export class EventNotVisibleError extends Error {
@@ -20,6 +20,7 @@ const eventWithMetadataInclude = {
   event: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
 } as const
 
 const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -32,6 +33,7 @@ const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
       },
     },
     ...userContentImagesInclude,
+    ...userContentTagsInclude,
   }) as const
 
 export type EventWithMetadata = Prisma.UserContentGetPayload<{
@@ -53,12 +55,14 @@ export class EventService extends UserContentService {
   }
 
   async create(profileId: string, data: CreateEventPayload): Promise<EventWithMetadata> {
-    const { imageIds, ...contentData } = data
+    const { imageIds, tagIds, ...contentData } = data
     return prisma.$transaction(
       async (tx) => {
+        const tagConnect = await this.tagConnectTx(tx, tagIds)
         const created = await tx.userContent.create({
           data: {
             ...this.baseCreateData(contentData),
+            ...tagConnect,
             kind: 'event',
             postedById: profileId,
             event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
@@ -91,11 +95,13 @@ export class EventService extends UserContentService {
     profileId: string,
     data: UpdateEventPayload
   ): Promise<EventWithMetadata | null> {
-    const { startsAt, venue, ...baseFields } = data
+    const { startsAt, venue, tagIds, ...baseFields } = data
 
     return prisma.$transaction(async (tx) => {
       const ok = await this.updateBaseScalars(tx, id, profileId, 'event', baseFields)
       if (!ok) return null
+
+      await this.setTagsTx(tx, id, tagIds)
 
       await tx.eventContent.update({
         where: { userContentId: id },

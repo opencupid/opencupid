@@ -14,51 +14,58 @@ import {
 } from '@zod/userContent/userContent.dto'
 import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import { sendError } from '../helpers'
+import { mapperContext } from '../mappers/context'
 
 const contentRoutes: FastifyPluginAsync = async (fastify) => {
   const svc = UserContentService.getInstance()
 
   fastify.get('/feed', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const query = UserContentQuerySchema.parse(req.query)
     const rows = await svc.findFeed({ ...query, includeInvisible: false })
-    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, ctx))
     return reply.code(200).send({ success: true, items })
   })
 
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const query = UserContentQuerySchema.parse(req.query)
     const rows = await svc.findByProfileIdOwner(req.session.profileId, query)
-    const items = rows.map(mapOwnerUserContent)
+    const items = rows.map((r) => mapOwnerUserContent(r, ctx))
     return reply.code(200).send({ success: true, items })
   })
 
   fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const parsed = BoundsQuerySchema.safeParse(req.query)
     if (!parsed.success) return sendError(reply, 400, 'Invalid bounds')
     const rows = await svc.findInBounds(parsed.data, { limit: 50 })
-    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, ctx))
     return reply.code(200).send({ success: true, items })
   })
 
   fastify.get('/nearby', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const q = NearbyContentQuerySchema.parse(req.query)
     const rows = await svc.findNearby(q.lat, q.lon, q.radius, { ...q, includeInvisible: false })
-    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, ctx))
     return reply.code(200).send({ success: true, items })
   })
 
   fastify.get('/profile/:profileId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { profileId } = req.params as { profileId: string }
     const q = UserContentQuerySchema.parse(req.query)
     const rows = await svc.findByProfileId(profileId, {
       ...q,
       includeInvisible: req.session.profileId === profileId,
     })
-    const items = rows.map((r) => mapUserContentMetadata(r, req.session.profileId))
+    const items = rows.map((r) => mapUserContentMetadata(r, ctx))
     return reply.code(200).send({ success: true, items })
   })
 
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { id } = ContentParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     const metadata = await svc.findByIdMetadata(id, viewerProfileId)
@@ -70,25 +77,21 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
       case 'post': {
         const hydrated = await PostService.getInstance().findByIdHydrated(id, viewerProfileId)
         if (!hydrated) return sendError(reply, 404, 'Content not found')
-        const item = isOwner
-          ? mapDbPostToOwner(hydrated)
-          : mapDbPostToDetail(hydrated, viewerProfileId)
+        const item = isOwner ? mapDbPostToOwner(hydrated, ctx) : mapDbPostToDetail(hydrated, ctx)
         return reply.code(200).send({ success: true, item })
       }
       case 'event': {
         const hydrated = await EventService.getInstance().findByIdHydrated(id, viewerProfileId)
         if (!hydrated) return sendError(reply, 404, 'Content not found')
-        const item = isOwner
-          ? mapDbEventToOwner(hydrated)
-          : mapDbEventToDetail(hydrated, viewerProfileId)
+        const item = isOwner ? mapDbEventToOwner(hydrated, ctx) : mapDbEventToDetail(hydrated, ctx)
         return reply.code(200).send({ success: true, item })
       }
       case 'community': {
         const hydrated = await CommunityService.getInstance().findByIdHydrated(id, viewerProfileId)
         if (!hydrated) return sendError(reply, 404, 'Content not found')
         const item = isOwner
-          ? mapDbCommunityToOwner(hydrated)
-          : mapDbCommunityToDetail(hydrated, viewerProfileId)
+          ? mapDbCommunityToOwner(hydrated, ctx)
+          : mapDbCommunityToDetail(hydrated, ctx)
         return reply.code(200).send({ success: true, item })
       }
     }

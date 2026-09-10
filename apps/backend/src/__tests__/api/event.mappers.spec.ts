@@ -29,6 +29,12 @@ vi.mock('../../api/mappers/image.mappers', () => ({
 
 import { mapDbEventToPublic, mapDbEventToOwner } from '../../api/mappers/event.mappers'
 
+/**
+ * Mappers take a MapperContext rather than a bare viewer id — two adjacent
+ * string parameters would let a transposition through the type checker.
+ */
+const ctx = (viewerProfileId: string, locale = 'en') => ({ viewerProfileId, locale })
+
 const baseImages = [
   {
     image: {
@@ -76,11 +82,12 @@ const baseDbEvent: any = {
     venue: null,
   },
   images: baseImages,
+  tags: [],
 }
 
 describe('mapDbEventToPublic', () => {
   it('maps an event with location and startsAt', () => {
-    const result = mapDbEventToPublic(baseDbEvent, 'viewer-profile-id')
+    const result = mapDbEventToPublic(baseDbEvent, ctx('viewer-profile-id'))
     expect(result.id).toBe(baseDbEvent.id)
     expect(result.kind).toBe('event')
     expect(result.content).toBe(baseDbEvent.content)
@@ -90,14 +97,14 @@ describe('mapDbEventToPublic', () => {
   })
 
   it('isOwn=true when viewer is poster', () => {
-    const result = mapDbEventToPublic(baseDbEvent, 'clprofile000000000001')
+    const result = mapDbEventToPublic(baseDbEvent, ctx('clprofile000000000001'))
     expect(result.isOwn).toBe(true)
   })
 })
 
 describe('mapDbEventToOwner', () => {
   it('parses through OwnerEventSchema', () => {
-    const result = mapDbEventToOwner(baseDbEvent)
+    const result = mapDbEventToOwner(baseDbEvent, ctx('owner'))
     expect(result.kind).toBe('event')
     expect(result.isOwn).toBe(true)
     expect(result.startsAt.toISOString()).toBe('2027-06-01T18:00:00.000Z')
@@ -107,7 +114,7 @@ describe('mapDbEventToOwner', () => {
 
 describe('mapDbEventToPublic images', () => {
   it('projects attached images in PublicEvent shape (no id)', () => {
-    const result = mapDbEventToPublic(baseDbEvent, 'viewer-profile-id')
+    const result = mapDbEventToPublic(baseDbEvent, ctx('viewer-profile-id'))
     expect(result.images).toHaveLength(2)
     expect(result.images[0]).toEqual({
       mimeType: 'image/jpeg',
@@ -120,14 +127,14 @@ describe('mapDbEventToPublic images', () => {
   })
 
   it('returns empty images array when content has none', () => {
-    const result = mapDbEventToPublic({ ...baseDbEvent, images: [] }, 'viewer-profile-id')
+    const result = mapDbEventToPublic({ ...baseDbEvent, images: [] }, ctx('viewer-profile-id'))
     expect(result.images).toEqual([])
   })
 })
 
 describe('mapDbEventToOwner images', () => {
   it('projects attached images in OwnerEvent shape (with id)', () => {
-    const result = mapDbEventToOwner(baseDbEvent)
+    const result = mapDbEventToOwner(baseDbEvent, ctx('owner'))
     expect(result.images).toHaveLength(2)
     expect(result.images[0]?.id).toBe('climg00000000000000001')
   })
