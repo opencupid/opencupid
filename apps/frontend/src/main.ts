@@ -9,6 +9,7 @@ import { useAuthStore } from './features/auth/stores/authStore'
 import { initUmami } from './lib/umami'
 import { initSentry } from './lib/sentry'
 import { initOpenReplay } from './lib/openreplay'
+import { clearPreloadErrorReloadGuard } from './lib/preloadErrorReload'
 
 // Register push-only service worker
 if ('serviceWorker' in navigator) {
@@ -68,6 +69,7 @@ appUseI18n(app)
 
   app.mount('#app')
   document.getElementById('splash')?.remove()
+  clearPreloadErrorReloadGuard()
 
   // Load observability tools after mount. The Sentry/OpenReplay wrappers
   // are eagerly imported but their heavy dependencies (@sentry/vue,
