@@ -13,6 +13,10 @@
 --                                          in Prisma schema syntax)
 --   * 20260601000000_add_usercontent_trgm_index — DELETED (its lone index now
 --                                          lives in init)
+--   * 20260910183019_add_usercontent_tags — comment trimmed: the note explaining
+--                                          which DROP INDEX lines to strip is
+--                                          obsolete now that the indexes are
+--                                          declared in schema.prisma
 --
 -- Existing databases already contain every one of these indexes, so their
 -- schema is unchanged. This script only reconciles the _prisma_migrations
@@ -36,6 +40,10 @@ UPDATE "_prisma_migrations"
 UPDATE "_prisma_migrations"
    SET checksum = '4ba9d579dac23367936af7f3646b5512edb2450503ab86450dc009bb8f0993d9'
  WHERE migration_name = '20260415000000_add_custom_indexes';
+
+UPDATE "_prisma_migrations"
+   SET checksum = 'b2775337cb2c00b5feb0881b88f13d2809959548cb79944bebeb66e2176d6668'
+ WHERE migration_name = '20260910183019_add_usercontent_tags';
 
 DELETE FROM "_prisma_migrations"
  WHERE migration_name = '20260601000000_add_usercontent_trgm_index';
