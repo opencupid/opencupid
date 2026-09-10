@@ -7,6 +7,7 @@ const mockPrisma = vi.hoisted(() => {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      groupBy: vi.fn(),
     },
     profile: {
       count: vi.fn(),
@@ -636,11 +637,91 @@ describe('PATCH /users/:id', () => {
     expect(reply.statusCode).toBe(400)
   })
 
+  it('updates language and originDomain', async () => {
+    const updatedUser = { id: 'user1', language: 'hu', originDomain: 'newbrand.example' }
+    mockPrisma.user.update.mockResolvedValue(updatedUser)
+
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler(
+      { params: { id: 'user1' }, body: { language: 'hu', originDomain: 'newbrand.example' } },
+      reply
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user1' },
+      data: { language: 'hu', originDomain: 'newbrand.example' },
+      omit: {
+        tokenVersion: true,
+        loginToken: true,
+        loginTokenExp: true,
+      },
+    })
+  })
+
+  it('trims originDomain before saving', async () => {
+    mockPrisma.user.update.mockResolvedValue({ id: 'user1', originDomain: 'example.org' })
+
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler({ params: { id: 'user1' }, body: { originDomain: '  example.org  ' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { originDomain: 'example.org' } })
+    )
+  })
+
+  it('returns 400 for an unsupported language', async () => {
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler({ params: { id: 'user1' }, body: { language: 'xx' } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+  })
+
+  it('returns 400 for a blank originDomain', async () => {
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler({ params: { id: 'user1' }, body: { originDomain: '   ' } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+  })
+
   it('handles errors gracefully', async () => {
     mockPrisma.user.update.mockRejectedValueOnce(new Error('DB error'))
 
     const handler = fastify.routes['PATCH /users/:id']
     await handler({ params: { id: 'user1' }, body: { isActive: true } }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('GET /users/origins', () => {
+  it('returns distinct origin domain list', async () => {
+    mockPrisma.user.groupBy.mockResolvedValue([
+      { originDomain: 'example.org' },
+      { originDomain: 'other.example' },
+    ])
+
+    const handler = fastify.routes['GET /users/origins']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.success).toBe(true)
+    expect(reply.payload.origins).toEqual(['example.org', 'other.example'])
+    expect(mockPrisma.user.groupBy).toHaveBeenCalledWith({
+      by: ['originDomain'],
+      where: { originDomain: { not: '' } },
+      orderBy: { originDomain: 'asc' },
+    })
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.user.groupBy.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['GET /users/origins']
+    await handler({}, reply)
 
     expect(reply.statusCode).toBe(500)
   })
