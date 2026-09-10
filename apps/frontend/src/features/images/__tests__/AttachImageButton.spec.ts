@@ -16,7 +16,7 @@ import AttachImageButton from '../components/AttachImageButton.vue'
 
 const stubs = {
   ImageUpload: {
-    props: ['store'],
+    props: ['store', 'buttonClass'],
     template: '<div data-test="image-upload" />',
   },
   ImageTag: {
@@ -57,6 +57,27 @@ describe('AttachImageButton', () => {
   it('renders the ImageUpload control', () => {
     const wrapper = mountWith()
     expect(wrapper.find('[data-test="image-upload"]').exists()).toBe(true)
+  })
+
+  it('lays the upload button and thumbnails out in a row', () => {
+    // A column would stack them down the dialog, and a full-width column with
+    // centred items would float them into the middle of the form field.
+    const classes = mountWith().classes()
+    expect(classes).toContain('d-flex')
+    expect(classes).toContain('align-items-center')
+    expect(classes).not.toContain('flex-column')
+  })
+
+  it('forwards buttonClass to the ImageUpload control', () => {
+    const wrapper = mountWith({ buttonClass: 'btn btn-secondary btn-icon' })
+    expect(wrapper.findComponent(stubs.ImageUpload).props('buttonClass')).toBe(
+      'btn btn-secondary btn-icon'
+    )
+  })
+
+  it('leaves buttonClass unset so ImageUpload applies its own default', () => {
+    const wrapper = mountWith()
+    expect(wrapper.findComponent(stubs.ImageUpload).props('buttonClass')).toBeUndefined()
   })
 
   it('exposes getImageIds reflecting the underlying store images', () => {

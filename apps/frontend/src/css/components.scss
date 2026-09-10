@@ -60,11 +60,6 @@ main {
   }
 }
 
-.btn-rounded {
-  width: 2.5rem;
-  height: 2.5rem;
-}
-
 // SVG icon styles
 .svg-icon {
   width: 1rem;
@@ -90,9 +85,16 @@ main {
   fill: currentColor;
 }
 
+// Circular icon button. Owns its own box so the result is identical whatever
+// Bootstrap size class (.btn-sm, .btn-lg, none) the caller adds, and does not
+// shrink when it sits in a flex row next to wider siblings.
 .btn-rounded {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.625rem;
   border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 

@@ -45,7 +45,10 @@ const currentLanguage = defineModel<string>({ required: true })
       title-class="d-none"
     >
       <template #target>
-        <button type="button" class="btn btn-info btn-sm btn-icon">
+        <button
+          type="button"
+          class="btn btn-info btn-icon"
+        >
           <IconQuestion class="svg-icon-sm" />
         </button>
       </template>

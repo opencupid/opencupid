@@ -65,7 +65,7 @@ const {
           >
             <div class="actions nodrag">
               <button
-                class="btn btn-sm btn-secondary btn-rounded"
+                class="btn btn-secondary btn-rounded"
                 @mousedown.stop.prevent
                 @click="handleDelete(img)"
                 :disabled="isRemoving[img.id]"

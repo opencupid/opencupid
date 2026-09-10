@@ -38,7 +38,7 @@ const VoiceRecorderStub = {
 const ImageUploadStub = {
   name: 'ImageUpload',
   template: '<div data-testid="image-upload" />',
-  props: ['store', 'preview'],
+  props: ['store', 'preview', 'buttonClass'],
 }
 
 describe('SendMessageForm', () => {
@@ -157,6 +157,23 @@ describe('SendMessageForm', () => {
       },
     })
   }
+
+  it('gives the call and attach buttons the same rounded button class', () => {
+    const wrapper = mountForm({ canCall: true })
+
+    const call = wrapper.find('[title="calls.call_button_title"]')
+    expect(call.classes()).toContain('btn-rounded')
+
+    const attach = wrapper.findComponent(ImageUploadStub)
+    expect(attach.props('buttonClass')).toContain('btn-rounded')
+
+    // A Bootstrap size modifier would change the padding and break the circle.
+    const sizeModifiers = ['btn-sm', 'btn-lg']
+    for (const modifier of sizeModifiers) {
+      expect(call.classes()).not.toContain(modifier)
+      expect(attach.props('buttonClass')).not.toContain(modifier)
+    }
+  })
 
   it('shows call button when canCall is true', () => {
     const wrapper = mountForm({ canCall: true })

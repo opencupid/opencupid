@@ -60,9 +60,13 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
   opacity: 0 !important;
   z-index: -1 !important;
 }
+// The label is the clickable button itself, so it fills whatever box its
+// caller-supplied classes give it rather than forcing a width of its own.
 .file-upload-label {
-  width: 100%;
   margin-bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   svg {
     width: 100%;
     height: 100%;
