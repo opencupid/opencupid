@@ -9,6 +9,7 @@ import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import IconCommunity from '@/assets/icons/interface/community.svg'
 import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
+import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   community: PublicCommunity | OwnerCommunity
@@ -37,15 +38,21 @@ const displayContent = computed(() => {
   const lastSpace = truncated.lastIndexOf(' ')
   return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '…'
 })
+
+const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
 </script>
 
 <template>
-  <div class="community-wrapper position-relative w-100 p-2">
+  <div
+    class="community-wrapper position-relative w-100 p-2"
+    :data-tags="tagSlugs"
+  >
     <div
       class="community-card overflow-hidden rounded border shadow-sm bg-subtle"
       :class="{ 'community-card--own': community.isOwn }"
       @click="$emit('click', community)"
     >
+      <span class="brand-container"></span>
       <ImageCarousel
         v-if="community.images.length > 0"
         :images="community.images"
