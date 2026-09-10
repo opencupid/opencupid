@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.71.0
+
+### Minor Changes
+
+- 690c333: Make the admin Profile Detail User panel's Language and Origin fields editable, with options populated dynamically (supported locales from the shared i18n config, origin domains from distinct existing values) instead of hardcoded.
+
 ## 0.70.0
 
 ### Minor Changes
