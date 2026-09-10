@@ -19,6 +19,7 @@ import { z, ZodError } from 'zod'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../../mappers/event.mappers'
 import { mapProfileSummary } from '../../mappers/profile.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
+import { mapperContext } from '../../mappers/context'
 import { validateBody } from '@/utils/zodValidate'
 
 const ICS_DEFAULT_DURATION_HOURS = 2
@@ -36,6 +37,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       config: rateLimitConfig(fastify, '1 minute', 10),
     },
     async (req, reply) => {
+      const ctx = mapperContext(req)
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile required')
       const data = validateBody<CreateEventPayload>(CreateEventPayloadSchema, req, reply)
@@ -43,7 +45,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const created = await svc.create(profileId, data)
         cluster.evictAll()
-        return reply.code(201).send({ success: true, event: mapDbEventToOwner(created) })
+        return reply.code(201).send({ success: true, event: mapDbEventToOwner(created, ctx) })
       } catch (err) {
         if (err instanceof ImageServiceError || err instanceof TagServiceError) {
           return sendError(reply, 400, err.message)
@@ -55,13 +57,14 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { id } = EventParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Event not found')
       const isOwner = row.postedById === viewerProfileId
-      const event = isOwner ? mapDbEventToOwner(row) : mapDbEventToDetail(row, viewerProfileId)
+      const event = isOwner ? mapDbEventToOwner(row, ctx) : mapDbEventToDetail(row, ctx)
       return reply.code(200).send({ success: true, event })
     } catch (err) {
       fastify.log.error(err)
@@ -120,6 +123,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
       config: rateLimitConfig(fastify, '1 minute', 5),
     },
     async (req, reply) => {
+      const ctx = mapperContext(req)
       const { id } = EventParamsSchema.parse(req.params)
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile required')
@@ -129,7 +133,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         const row = await svc.update(id, profileId, data)
         if (!row) return sendError(reply, 404, 'Event not found or access denied')
         cluster.evictAll()
-        return reply.code(200).send({ success: true, event: mapDbEventToOwner(row) })
+        return reply.code(200).send({ success: true, event: mapDbEventToOwner(row, ctx) })
       } catch (err) {
         if (err instanceof TagServiceError) {
           return sendError(reply, 400, err.message)
@@ -163,6 +167,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 401, 'Profile required')
     try {
@@ -171,7 +176,9 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         ...page,
         includeInvisible: true,
       })
-      return reply.code(200).send({ success: true, events: rows.map(mapDbEventToOwner) })
+      return reply
+        .code(200)
+        .send({ success: true, events: rows.map((r) => mapDbEventToOwner(r, ctx)) })
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch own events')
@@ -179,6 +186,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.get('/profile/:profileId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { profileId } = ProfileParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
@@ -188,9 +196,7 @@ const eventRoutes: FastifyPluginAsync = async (fastify) => {
         includeInvisible: viewerProfileId === profileId,
       })
       const events = rows.map((r) =>
-        viewerProfileId === profileId
-          ? mapDbEventToOwner(r)
-          : mapDbEventToDetail(r, viewerProfileId)
+        viewerProfileId === profileId ? mapDbEventToOwner(r, ctx) : mapDbEventToDetail(r, ctx)
       )
       return reply.code(200).send({ success: true, events })
     } catch (err) {

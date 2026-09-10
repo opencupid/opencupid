@@ -1,10 +1,33 @@
 import { Prisma } from '@prisma/client'
 
-export function tagTranslationsInclude(locale: string) {
+/**
+ * The tag subtree every taggable model loads. Shared so Profile and
+ * UserContent cannot drift apart in what they select, and so a change to
+ * tag visibility (e.g. excluding soft-deleted tags, which neither does
+ * today) is one edit rather than two.
+ *
+ * All translations are loaded, not just the session locale's:
+ * `DbTagToPublicTagTransform` falls back locale → en → any, and narrowing
+ * the query would render an empty name for a tag translated into neither.
+ */
+export const tagTranslationsSubtree = {
+  include: {
+    translations: {
+      select: { name: true, locale: true },
+    },
+  },
+} as const
+
+export function tagTranslationsInclude() {
   return {
     translations: true,
   }
 }
+
+/** Tag subtree for UserContent reads — the Profile-side shape without `localized`. */
+export const userContentTagsInclude = {
+  tags: tagTranslationsSubtree,
+} as const satisfies Prisma.UserContentInclude
 
 export function translationWhereClause(term: string, locale: string) {
   return {
@@ -31,14 +54,7 @@ export function profileImageInclude() {
 
 export function tagsInclude() {
   const clause = {
-    tags: {
-      include: {
-        translations: {
-          // where: { locale: 'de' },
-          select: { name: true, locale: true },
-        },
-      },
-    },
+    tags: tagTranslationsSubtree,
     localized: true,
   } satisfies Prisma.ProfileInclude
 

@@ -6,7 +6,7 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dto'
-import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 export class EventNotVisibleError extends Error {
@@ -20,6 +20,7 @@ const eventWithMetadataInclude = {
   event: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
 } as const
 
 const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -32,6 +33,7 @@ const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
       },
     },
     ...userContentImagesInclude,
+    ...userContentTagsInclude,
   }) as const
 
 export type EventWithMetadata = Prisma.UserContentGetPayload<{

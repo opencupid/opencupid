@@ -14,24 +14,27 @@ import { mapProfileSummary } from './profile.mappers'
 import { mapConversationContext } from './interaction.mappers'
 import { DbLocationToLocationDTO, extractLocation } from './location.mappers'
 import { toOwnerImage, toPublicImage } from './image.mappers'
+import { mapTagsTranslated } from './tag.mappers'
+import type { MapperContext } from './context'
 
-export function mapDbPostToPublic(row: PostWithMetadata, viewerProfileId: string): PublicPost {
+export function mapDbPostToPublic(row: PostWithMetadata, ctx: MapperContext): PublicPost {
   return {
     id: row.id,
     kind: 'post',
     type: row.post!.type,
     content: row.content,
     createdAt: row.createdAt,
-    isOwn: row.postedById === viewerProfileId,
+    isOwn: row.postedById === ctx.viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
     images: row.images.map((j) => toPublicImage(j.image)),
+    tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
 
 export function mapDbPostToDetail(
   row: PostWithMetadataAndContext,
-  viewerProfileId: string
+  ctx: MapperContext
 ): PublicPostDetail {
   return {
     id: row.id,
@@ -42,14 +45,15 @@ export function mapDbPostToDetail(
     isOwn: false,
     postedBy: {
       ...mapProfileSummary(row.postedBy),
-      ...mapConversationContext(row.postedBy, viewerProfileId),
+      ...mapConversationContext(row.postedBy, ctx.viewerProfileId),
     },
     location: extractLocation(row) ?? undefined,
     images: row.images.map((j) => toPublicImage(j.image)),
+    tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
 
-export function mapDbPostToOwner(row: PostWithMetadata): OwnerPost {
+export function mapDbPostToOwner(row: PostWithMetadata, ctx: MapperContext): OwnerPost {
   return OwnerPostSchema.parse({
     id: row.id,
     kind: 'post',
@@ -63,6 +67,7 @@ export function mapDbPostToOwner(row: PostWithMetadata): OwnerPost {
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
     images: row.images.map((j) => toOwnerImage(j.image)),
+    tags: mapTagsTranslated(row.tags, ctx.locale),
   })
 }
 

@@ -35,7 +35,7 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
 }))
 
 vi.mock('../../api/mappers/tag.mappers', () => ({
-  mapProfileTagsTranslated: vi.fn((tags: any[]) =>
+  mapTagsTranslated: vi.fn((tags: any[]) =>
     tags.map((t: any) => ({ id: t.id, name: t.name, slug: t.slug }))
   ),
 }))

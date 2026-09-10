@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { TagService } from './tag.service'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
@@ -41,6 +42,7 @@ export const userContentImagesInclude = {
 const profileSummaryInclude = {
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
 } as const
 
 const ownerHydratedInclude = {
@@ -49,6 +51,7 @@ const ownerHydratedInclude = {
   community: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
 } as const
 
 export type UserContentMetadataRow = Prisma.UserContentGetPayload<{

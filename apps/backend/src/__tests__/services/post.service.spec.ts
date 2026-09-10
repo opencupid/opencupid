@@ -190,3 +190,28 @@ describe('PostService.update with tagIds', () => {
     expect(mockPrisma.userContent.update).not.toHaveBeenCalled()
   })
 })
+
+/**
+ * Every read include must load the tag subtree: the mappers call
+ * `mapTagsTranslated(row.tags, …)` unconditionally, so an include that
+ * drops `tags` turns into a 500 on every content read rather than a missing
+ * field. Cheap to assert, expensive to discover in production.
+ */
+describe('PostService read includes', () => {
+  it('loads tags with their translations on hydrated reads', async () => {
+    mockPrisma.userContent.findFirst = vi.fn().mockResolvedValue(null)
+    await service.findByIdHydrated('content-1', 'profile-1')
+
+    const include = mockPrisma.userContent.findFirst.mock.calls[0][0].include
+    expect(include.tags).toBeDefined()
+    expect(include.tags.include.translations.select).toEqual({ name: true, locale: true })
+  })
+
+  it('loads tags on the row returned from create', async () => {
+    mockPrisma.tag.findMany = vi.fn().mockResolvedValue([])
+    await service.create('profile-1', { content: 'x'.repeat(20), type: 'OFFER' })
+
+    const include = mockPrisma.userContent.create.mock.calls[0][0].include
+    expect(include.tags).toBeDefined()
+  })
+})

@@ -7,13 +7,14 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
-import { conversationContextInclude } from '@/db/includes/profileIncludes'
+import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 const postWithMetadataInclude = {
   post: true,
   postedBy: { include: { profileImages: { include: { image: true } } } },
   ...userContentImagesInclude,
+  ...userContentTagsInclude,
 } as const
 
 const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
@@ -26,6 +27,7 @@ const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
       },
     },
     ...userContentImagesInclude,
+    ...userContentTagsInclude,
   }) as const
 
 export type PostWithMetadata = Prisma.UserContentGetPayload<{

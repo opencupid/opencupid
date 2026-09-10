@@ -60,7 +60,7 @@ export class TagService {
         isHidden: false,
         ...translationWhereClause(term, locale),
       },
-      include: tagTranslationsInclude(locale),
+      include: tagTranslationsInclude(),
       take: opts.limit ?? 20,
       orderBy: {
         name: 'asc',
@@ -118,7 +118,7 @@ export class TagService {
             },
           },
         },
-        include: tagTranslationsInclude(locale),
+        include: tagTranslationsInclude(),
       })
       return tag
     } catch (err) {
@@ -130,7 +130,7 @@ export class TagService {
             OR: [{ slug }, { name: data.name }],
             isDeleted: false,
           },
-          include: tagTranslationsInclude(locale),
+          include: tagTranslationsInclude(),
         })
         if (existing) return existing
       }

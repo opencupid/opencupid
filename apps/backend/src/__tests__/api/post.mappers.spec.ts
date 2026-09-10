@@ -31,6 +31,12 @@ vi.mock('../../api/mappers/image.mappers', () => ({
 
 import { mapDbPostToPublic, mapDbPostToOwner } from '../../api/mappers/post.mappers'
 
+/**
+ * Mappers take a MapperContext rather than a bare viewer id — two adjacent
+ * string parameters would let a transposition through the type checker.
+ */
+const ctx = (viewerProfileId: string, locale = 'en') => ({ viewerProfileId, locale })
+
 const basePostedBy = {
   id: 'clprofile000000000001',
   publicName: 'Test User',
@@ -79,11 +85,12 @@ const baseDbPost: any = {
     type: 'OFFER',
   },
   images: baseImages,
+  tags: [],
 }
 
 describe('mapDbPostToPublic', () => {
   it('maps a post with location', () => {
-    const result = mapDbPostToPublic(baseDbPost, 'viewer-profile-id')
+    const result = mapDbPostToPublic(baseDbPost, ctx('viewer-profile-id'))
 
     expect(result.id).toBe(baseDbPost.id)
     expect(result.content).toBe(baseDbPost.content)
@@ -111,7 +118,7 @@ describe('mapDbPostToPublic', () => {
       lon: 13.405,
     }
 
-    const result = mapDbPostToPublic(postWithLocation, 'viewer-profile-id')
+    const result = mapDbPostToPublic(postWithLocation, ctx('viewer-profile-id'))
 
     expect(result.location).toEqual({
       country: 'DE',
@@ -122,14 +129,14 @@ describe('mapDbPostToPublic', () => {
   })
 
   it('strips owner-only fields (isDeleted, isVisible)', () => {
-    const result = mapDbPostToPublic(baseDbPost, 'viewer-profile-id')
+    const result = mapDbPostToPublic(baseDbPost, ctx('viewer-profile-id'))
 
     expect(result).not.toHaveProperty('isDeleted')
     expect(result).not.toHaveProperty('isVisible')
   })
 
   it('includes standard public fields', () => {
-    const result = mapDbPostToPublic(baseDbPost, 'viewer-profile-id')
+    const result = mapDbPostToPublic(baseDbPost, ctx('viewer-profile-id'))
 
     expect(result).toHaveProperty('id')
     expect(result).toHaveProperty('kind', 'post')
@@ -143,7 +150,7 @@ describe('mapDbPostToPublic', () => {
 
 describe('mapDbPostToOwner', () => {
   it('includes owner fields (isDeleted, isVisible)', () => {
-    const result = mapDbPostToOwner(baseDbPost)
+    const result = mapDbPostToOwner(baseDbPost, ctx('owner'))
 
     expect(result).toHaveProperty('isDeleted', false)
     expect(result).toHaveProperty('isVisible', true)
@@ -158,7 +165,7 @@ describe('mapDbPostToOwner', () => {
       lon: 2.3522,
     }
 
-    const result = mapDbPostToOwner(postWithLocation)
+    const result = mapDbPostToOwner(postWithLocation, ctx('owner'))
 
     expect(result.location).toEqual({
       country: 'FR',
@@ -169,7 +176,7 @@ describe('mapDbPostToOwner', () => {
   })
 
   it('maps location from base post', () => {
-    const result = mapDbPostToOwner(baseDbPost)
+    const result = mapDbPostToOwner(baseDbPost, ctx('owner'))
 
     expect(result.location).toEqual({
       country: 'AT',
@@ -182,7 +189,7 @@ describe('mapDbPostToOwner', () => {
 
 describe('mapDbPostToPublic images', () => {
   it('projects attached images in PublicPost shape (no id)', () => {
-    const result = mapDbPostToPublic(baseDbPost, 'viewer-profile-id')
+    const result = mapDbPostToPublic(baseDbPost, ctx('viewer-profile-id'))
     expect(result.images).toHaveLength(2)
     expect(result.images[0]).toEqual({
       mimeType: 'image/jpeg',
@@ -195,14 +202,14 @@ describe('mapDbPostToPublic images', () => {
   })
 
   it('returns empty images array when content has none', () => {
-    const result = mapDbPostToPublic({ ...baseDbPost, images: [] }, 'viewer-profile-id')
+    const result = mapDbPostToPublic({ ...baseDbPost, images: [] }, ctx('viewer-profile-id'))
     expect(result.images).toEqual([])
   })
 })
 
 describe('mapDbPostToOwner images', () => {
   it('projects attached images in OwnerPost shape (with id)', () => {
-    const result = mapDbPostToOwner(baseDbPost)
+    const result = mapDbPostToOwner(baseDbPost, ctx('owner'))
     expect(result.images).toHaveLength(2)
     expect(result.images[0]?.id).toBe('climg00000000000000001')
   })

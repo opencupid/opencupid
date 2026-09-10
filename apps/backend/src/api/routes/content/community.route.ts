@@ -14,6 +14,7 @@ import { PaginationSchema } from '@zod/userContent/userContent.dto'
 import { z } from 'zod'
 import { mapDbCommunityToOwner, mapDbCommunityToDetail } from '../../mappers/community.mappers'
 import { rateLimitConfig, sendError } from '../../helpers'
+import { mapperContext } from '../../mappers/context'
 import { validateBody } from '@/utils/zodValidate'
 
 const ProfileParamsSchema = z.object({ profileId: z.string().cuid() })
@@ -29,6 +30,7 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
       config: rateLimitConfig(fastify, '1 minute', 10),
     },
     async (req, reply) => {
+      const ctx = mapperContext(req)
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile required')
       const data = validateBody<CreateCommunityPayload>(CreateCommunityPayloadSchema, req, reply)
@@ -36,7 +38,9 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const created = await svc.create(profileId, data)
         cluster.evictAll()
-        return reply.code(201).send({ success: true, community: mapDbCommunityToOwner(created) })
+        return reply
+          .code(201)
+          .send({ success: true, community: mapDbCommunityToOwner(created, ctx) })
       } catch (err) {
         if (err instanceof ImageServiceError || err instanceof TagServiceError) {
           return sendError(reply, 400, err.message)
@@ -48,15 +52,14 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get('/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { id } = CommunityParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
       const row = await svc.findByIdHydrated(id, viewerProfileId)
       if (!row) return sendError(reply, 404, 'Community not found')
       const isOwner = row.postedById === viewerProfileId
-      const community = isOwner
-        ? mapDbCommunityToOwner(row)
-        : mapDbCommunityToDetail(row, viewerProfileId)
+      const community = isOwner ? mapDbCommunityToOwner(row, ctx) : mapDbCommunityToDetail(row, ctx)
       return reply.code(200).send({ success: true, community })
     } catch (err) {
       fastify.log.error(err)
@@ -71,6 +74,7 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
       config: rateLimitConfig(fastify, '1 minute', 5),
     },
     async (req, reply) => {
+      const ctx = mapperContext(req)
       const { id } = CommunityParamsSchema.parse(req.params)
       const profileId = req.session.profileId
       if (!profileId) return sendError(reply, 401, 'Profile required')
@@ -80,7 +84,7 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
         const row = await svc.update(id, profileId, data)
         if (!row) return sendError(reply, 404, 'Community not found or access denied')
         cluster.evictAll()
-        return reply.code(200).send({ success: true, community: mapDbCommunityToOwner(row) })
+        return reply.code(200).send({ success: true, community: mapDbCommunityToOwner(row, ctx) })
       } catch (err) {
         if (err instanceof TagServiceError) {
           return sendError(reply, 400, err.message)
@@ -114,6 +118,7 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 401, 'Profile required')
     try {
@@ -122,7 +127,9 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
         ...page,
         includeInvisible: true,
       })
-      return reply.code(200).send({ success: true, communities: rows.map(mapDbCommunityToOwner) })
+      return reply
+        .code(200)
+        .send({ success: true, communities: rows.map((r) => mapDbCommunityToOwner(r, ctx)) })
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to fetch own communities')
@@ -130,6 +137,7 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.get('/profile/:profileId', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const ctx = mapperContext(req)
     const { profileId } = ProfileParamsSchema.parse(req.params)
     const viewerProfileId = req.session.profileId
     try {
@@ -140,8 +148,8 @@ const communityRoutes: FastifyPluginAsync = async (fastify) => {
       })
       const communities = rows.map((r) =>
         viewerProfileId === profileId
-          ? mapDbCommunityToOwner(r)
-          : mapDbCommunityToDetail(r, viewerProfileId)
+          ? mapDbCommunityToOwner(r, ctx)
+          : mapDbCommunityToDetail(r, ctx)
       )
       return reply.code(200).send({ success: true, communities })
     } catch (err) {
