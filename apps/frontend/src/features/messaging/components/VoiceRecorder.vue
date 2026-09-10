@@ -98,7 +98,7 @@ defineExpose({ triggerStart: handleRecordClick, reset })
         v-if="canRecord"
         :variant="buttonVariant"
         size="sm"
-        class="btn-rounded d-inline-flex"
+        class="btn-rounded"
         :disabled="props.disabled || micNotFound"
         @click="handleRecordClick"
         :title="
@@ -169,16 +169,6 @@ defineExpose({ triggerStart: handleRecordClick, reset })
 
 .btn {
   transition: all 0.2s ease;
-}
-
-.icon-btn-round {
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .btn-danger {

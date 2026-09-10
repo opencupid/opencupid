@@ -261,7 +261,7 @@ function handleVoiceRecordingError(error: string) {
             />
             <a
               v-if="canCall && !isVoiceActive"
-              class="btn btn-secondary btn-sm btn-rounded"
+              class="btn btn-secondary btn-rounded"
               role="button"
               :title="$t('calls.call_button_title')"
               @click="emit('call:start')"
@@ -272,7 +272,7 @@ function handleVoiceRecordingError(error: string) {
               :store="imageStore"
               :preview="false"
               :button-title="$t('messaging.attach_image')"
-              button-class="btn btn-sm btn-secondary btn-rounded"
+              button-class="btn btn-secondary btn-rounded"
             >
               <template #button>
                 <IconPhoto class="svg-icon" />

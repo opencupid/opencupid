@@ -16,7 +16,8 @@ const props = withDefaults(
     buttonTitle?: string
     buttonClass?: string
   }>(),
-  { preview: true }
+  // Callers that don't style the button get one that fills its container.
+  { preview: true, buttonClass: 'w-100 h-100' }
 )
 const imageStore = props.store
 const { t } = useI18n()
@@ -117,11 +118,10 @@ function onModalHidden() {
 </script>
 
 <template>
-  <div class="image-upload h-100 d-flex align-items-center p-1">
+  <div class="image-upload h-100 d-flex align-items-center">
     <BButton
       v-if="isMobile"
       variant="secondary"
-      class="w-100 h-100"
       :class="buttonClass"
       :title="buttonTitle"
       @click="openModal"

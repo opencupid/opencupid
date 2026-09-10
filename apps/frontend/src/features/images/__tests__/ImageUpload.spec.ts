@@ -81,4 +81,26 @@ describe('ImageUpload', () => {
     await (wrapper.vm as any).handleFileChange({ target: { files: [file] } } as any)
     expect((wrapper.vm as any).uploadButtonKey).toBe(before + 1)
   })
+
+  it('applies the caller-supplied buttonClass verbatim, without fill classes', () => {
+    const wrapper = mount(ImageUpload, {
+      props: { store: makeStubStore(), buttonClass: 'btn btn-secondary btn-rounded' },
+      global: { stubs: mountStubs },
+    })
+    const button = wrapper.find('.image-upload > *')
+    expect(button.classes()).toEqual(
+      expect.arrayContaining(['btn', 'btn-secondary', 'btn-rounded'])
+    )
+    expect(button.classes()).not.toContain('w-100')
+    expect(button.classes()).not.toContain('h-100')
+  })
+
+  it('fills its container when the caller supplies no buttonClass', () => {
+    const wrapper = mount(ImageUpload, {
+      props: { store: makeStubStore() },
+      global: { stubs: mountStubs },
+    })
+    const button = wrapper.find('.image-upload > *')
+    expect(button.classes()).toEqual(expect.arrayContaining(['w-100', 'h-100']))
+  })
 })
