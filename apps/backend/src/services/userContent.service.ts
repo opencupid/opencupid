@@ -45,6 +45,19 @@ const profileSummaryInclude = {
   ...userContentTagsInclude,
 } as const
 
+/**
+ * `profileSummaryInclude` minus the tag subtree, for reads that never
+ * serialize `row.tags`: `findByIdMetadata` (result used only for kind/owner
+ * before re-fetching per-kind) and `findAllWithLocation` (cluster index reads
+ * poster summary only and builds GeoJSON by hand). Loading tags + all their
+ * translations for these — up to `CLUSTER_INDEX_LIMIT` rows per index rebuild —
+ * would be discarded work.
+ */
+const contentSummaryInclude = {
+  postedBy: { include: { profileImages: { include: { image: true } } } },
+  ...userContentImagesInclude,
+} as const
+
 const ownerHydratedInclude = {
   post: true,
   event: true,
@@ -56,6 +69,10 @@ const ownerHydratedInclude = {
 
 export type UserContentMetadataRow = Prisma.UserContentGetPayload<{
   include: typeof profileSummaryInclude
+}>
+
+export type ContentSummaryRow = Prisma.UserContentGetPayload<{
+  include: typeof contentSummaryInclude
 }>
 
 export type OwnerHydratedRow = Prisma.UserContentGetPayload<{
@@ -168,17 +185,14 @@ export class UserContentService {
     })
   }
 
-  async findByIdMetadata(
-    id: string,
-    viewerProfileId: string
-  ): Promise<UserContentMetadataRow | null> {
+  async findByIdMetadata(id: string, viewerProfileId: string): Promise<ContentSummaryRow | null> {
     return prisma.userContent.findFirst({
       where: {
         id,
         isDeleted: false,
         OR: [{ postedById: viewerProfileId }, { isVisible: true }],
       },
-      include: profileSummaryInclude,
+      include: contentSummaryInclude,
     })
   }
 
@@ -283,7 +297,7 @@ export class UserContentService {
   async findAllWithLocation(
     viewerProfileId: string,
     kinds: ContentKind[]
-  ): Promise<UserContentMetadataRow[]> {
+  ): Promise<ContentSummaryRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,
@@ -293,7 +307,7 @@ export class UserContentService {
         postedBy: blocklistWhereClause(viewerProfileId),
         kind: { in: kinds },
       },
-      include: profileSummaryInclude,
+      include: contentSummaryInclude,
       orderBy: { createdAt: 'desc' },
       take: CLUSTER_INDEX_LIMIT,
     })
