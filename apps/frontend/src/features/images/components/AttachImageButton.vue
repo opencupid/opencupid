@@ -35,7 +35,9 @@ defineExpose({
 </script>
 
 <template>
-  <div class="d-flex flex-column align-items-center flex-wrap gap-2">
+  <div class="d-flex flex-column align-items-start flex-wrap gap-2">
+    <!-- align-items-start: the stack spans the full width of its form field, so
+         it hugs the field's leading edge like every other control in the dialogs. -->
     <div
       class="attach-image-button__upload"
       :class="{ 'attach-image-button__upload--disabled': remainingSlots <= 0 }"
