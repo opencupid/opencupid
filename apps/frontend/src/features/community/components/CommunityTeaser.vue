@@ -9,8 +9,8 @@ defineProps<{
 
 <template>
   <div class="community-teaser d-flex flex-row">
+    <span class="brand-container"></span>
     <IconCommunity class="flex-shrink-0 flex-grow-0 me-2 d-block svg-icon-lg" />
     <div class="flex-grow-1 text-truncate">{{ item.content }}</div>
   </div>
 </template>
-

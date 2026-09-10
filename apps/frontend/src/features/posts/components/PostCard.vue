@@ -88,6 +88,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
         ]"
         @click="$emit('click', post)"
       >
+        <span class="brand-container"></span>
         <ImageCarousel
           v-if="post.images.length > 0"
           :images="post.images"

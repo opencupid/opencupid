@@ -90,6 +90,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.event.tags))
       :class="{ 'event-card--own': event.isOwn }"
       @click="$emit('click', event)"
     >
+      <span class="brand-container"></span>
       <ImageCarousel
         v-if="event.images.length > 0"
         :images="event.images"

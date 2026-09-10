@@ -52,6 +52,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
       :class="{ 'community-card--own': community.isOwn }"
       @click="$emit('click', community)"
     >
+      <span class="brand-container"></span>
       <ImageCarousel
         v-if="community.images.length > 0"
         :images="community.images"
