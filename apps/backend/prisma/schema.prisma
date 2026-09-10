@@ -225,6 +225,10 @@ model LocalizedProfileField {
   value     String
 
   @@unique([profileId, field, locale])
+  /// pg_trgm GIN index backing substring search and similarity() ranking in SearchService.
+  /// Declared here — not only in SQL — so Prisma sees it as part of the datamodel; an index
+  /// it cannot represent shows up as drift and gets dropped by every generated migration.
+  @@index([value(ops: raw("gin_trgm_ops"))], map: "LocalizedProfileField_value_trgm_idx", type: Gin)
 }
 
 model Image {
@@ -422,6 +426,8 @@ model UserContent {
   @@index([createdAt])
   @@index([kind, isVisible, isDeleted])
   @@index([lat, lon])
+  /// pg_trgm GIN index backing the /search endpoint. See LocalizedProfileField.value.
+  @@index([content(ops: raw("gin_trgm_ops"))], map: "UserContent_content_trgm_idx", type: Gin)
 }
 
 model PostContent {

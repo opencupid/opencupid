@@ -589,3 +589,19 @@ ALTER TABLE "_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_A_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "_BlockedProfiles" ADD CONSTRAINT "_BlockedProfiles_B_fkey" FOREIGN KEY ("B") REFERENCES "Profile"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- pg_trgm GIN indexes backing substring search and similarity() ranking in
+-- SearchService. Declared in schema.prisma with `type: Gin` + `gin_trgm_ops`,
+-- but the extension and the `USING GIN (... gin_trgm_ops)` SQL are hand-written:
+-- Prisma does not emit `CREATE EXTENSION` (the postgresqlExtensions preview
+-- feature is deprecated). `IF NOT EXISTS` is idempotent, so on managed Postgres
+-- where pg_trgm is pre-provisioned this line no-ops.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+CREATE INDEX "LocalizedProfileField_value_trgm_idx"
+  ON "LocalizedProfileField"
+  USING GIN ("value" gin_trgm_ops);
+
+CREATE INDEX "UserContent_content_trgm_idx"
+  ON "UserContent"
+  USING GIN ("content" gin_trgm_ops);

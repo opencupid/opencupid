@@ -46,9 +46,9 @@ function escapeLikePattern(term: string): string {
  * for an omnibox UI.
  *
  * Profile intro text and UserContent.content are indexed with pg_trgm GIN
- * indexes (see migrations/20260415000000_add_search_trgm_indexes). This
- * gives fast, language-agnostic substring matching — no per-locale
- * dictionary configuration is needed.
+ * indexes, declared on LocalizedProfileField and UserContent in
+ * schema.prisma. This gives fast, language-agnostic substring matching —
+ * no per-locale dictionary configuration is needed.
  */
 export class SearchService {
   private static instance: SearchService

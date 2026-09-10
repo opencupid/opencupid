@@ -1,66 +1,43 @@
 -- Migration history reconciliation script
 --
--- Run this script on existing installations before running `prisma migrate deploy`.
--- It replaces all accumulated migration history entries with the two consolidated
--- migrations whose effects existing installations have already applied:
---   1. 20250704205603_init                — full schema from current schema.prisma
---   2. 20260415000000_add_custom_indexes  — pg_trgm + partial indexes that aren't
---                                           expressible in Prisma schema syntax
+-- Run this ONCE on existing installations BEFORE `prisma migrate deploy`, after
+-- the pg_trgm GIN indexes were consolidated into the init migration (PR:
+-- "declare pg_trgm GIN indexes in schema.prisma").
 --
--- The on-disk database structure of existing installations already matches what
--- these two migrations produce, so after reconciliation the next
--- `prisma migrate deploy` only needs to apply genuinely new migrations
--- (e.g. 20260601000000_add_usercontent_trgm_index, which restores the trgm
--- index on UserContent.content that no existing installation has yet).
+-- What changed on disk:
+--   * 20250704205603_init                — now also creates pg_trgm + both GIN
+--                                          trigram indexes (moved here from the
+--                                          two migrations below)
+--   * 20260415000000_add_custom_indexes  — trimmed to the two partial indexes
+--                                          only (WHERE-clause; not expressible
+--                                          in Prisma schema syntax)
+--   * 20260601000000_add_usercontent_trgm_index — DELETED (its lone index now
+--                                          lives in init)
+--
+-- Existing databases already contain every one of these indexes, so their
+-- schema is unchanged. This script only reconciles the _prisma_migrations
+-- bookkeeping: it sets the recorded checksums of the two edited migrations to
+-- match their new file contents and removes the row for the deleted migration.
+-- The next `prisma migrate deploy` then accepts init + add_custom_indexes as
+-- already-applied and applies only genuinely new migrations.
+--
+-- Idempotent: safe to re-run, and a no-op on rows that are already correct.
+-- New databases never need it — they build the consolidated history from empty.
 --
 -- Usage:
 --   psql $DATABASE_URL -f reconcile_migration_history.sql
 
 BEGIN;
 
--- Remove all previously recorded migration entries
-DELETE FROM "_prisma_migrations";
+UPDATE "_prisma_migrations"
+   SET checksum = '404242cec5f761cdc37d79f7b7ad5036fbd64d376b6d1aae228055cc761365cc'
+ WHERE migration_name = '20250704205603_init';
 
--- Record the consolidated init migration as already applied
-INSERT INTO "_prisma_migrations" (
-  id,
-  checksum,
-  finished_at,
-  migration_name,
-  logs,
-  rolled_back_at,
-  started_at,
-  applied_steps_count
-) VALUES (
-  gen_random_uuid()::text,
-  '96610de43666283e91d30759b5b03d62ea1b93148dcc358e5cde6aa9688358c3',
-  now(),
-  '20250704205603_init',
-  NULL,
-  NULL,
-  now(),
-  1
-);
+UPDATE "_prisma_migrations"
+   SET checksum = '4ba9d579dac23367936af7f3646b5512edb2450503ab86450dc009bb8f0993d9'
+ WHERE migration_name = '20260415000000_add_custom_indexes';
 
--- Record the custom-indexes migration as already applied
-INSERT INTO "_prisma_migrations" (
-  id,
-  checksum,
-  finished_at,
-  migration_name,
-  logs,
-  rolled_back_at,
-  started_at,
-  applied_steps_count
-) VALUES (
-  gen_random_uuid()::text,
-  'fb6567710ccbc30bed2ab87026eb6a0a6beb0c33fc1f12893cb09bff2d6666c2',
-  now(),
-  '20260415000000_add_custom_indexes',
-  NULL,
-  NULL,
-  now(),
-  1
-);
+DELETE FROM "_prisma_migrations"
+ WHERE migration_name = '20260601000000_add_usercontent_trgm_index';
 
 COMMIT;
