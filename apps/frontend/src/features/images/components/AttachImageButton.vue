@@ -10,9 +10,10 @@ import ImageUpload from '@/features/images/components/ImageUpload.vue'
 import ImageTag from '@/features/images/components/ImageTag.vue'
 import { MAX_IMAGES_PER_GALLERY } from '@zod/image/image.dto'
 
-const props = withDefaults(defineProps<{ contentId?: string; maxImages?: number }>(), {
-  maxImages: MAX_IMAGES_PER_GALLERY,
-})
+const props = withDefaults(
+  defineProps<{ contentId?: string; maxImages?: number; buttonClass?: string }>(),
+  { maxImages: MAX_IMAGES_PER_GALLERY }
+)
 const { t } = useI18n()
 
 const draftKey = useId()
@@ -40,7 +41,10 @@ defineExpose({
       :class="{ 'attach-image-button__upload--disabled': remainingSlots <= 0 }"
       :aria-disabled="remainingSlots <= 0"
     >
-      <ImageUpload :store="store" />
+      <ImageUpload
+        :store="store"
+        :button-class="buttonClass"
+      />
     </div>
     <div
       v-for="img in store.images"

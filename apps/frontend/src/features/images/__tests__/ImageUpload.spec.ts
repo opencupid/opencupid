@@ -103,4 +103,15 @@ describe('ImageUpload', () => {
     const button = wrapper.find('.image-upload > *')
     expect(button.classes()).toEqual(expect.arrayContaining(['w-100', 'h-100']))
   })
+
+  // AttachImageButton forwards its own optional prop, so undefined reaches us
+  // explicitly and must still resolve to the fill default.
+  it('fills its container when buttonClass is passed as undefined', () => {
+    const wrapper = mount(ImageUpload, {
+      props: { store: makeStubStore(), buttonClass: undefined },
+      global: { stubs: mountStubs },
+    })
+    const button = wrapper.find('.image-upload > *')
+    expect(button.classes()).toEqual(expect.arrayContaining(['w-100', 'h-100']))
+  })
 })
