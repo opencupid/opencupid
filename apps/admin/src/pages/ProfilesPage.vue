@@ -280,6 +280,15 @@ async function fetchOrigins() {
   if (res) originOptions.value = res.origins
 }
 
+// The dropdown only ever offers values the API returned, but a user's
+// current origin might not be among them yet (e.g. fetchOrigins hasn't
+// resolved, or the value was just saved) — keep it selectable regardless.
+function ensureOriginOption(origin: string) {
+  if (origin && !originOptions.value.includes(origin)) {
+    originOptions.value = [...originOptions.value, origin].sort()
+  }
+}
+
 // Guards against a stale response overwriting state (and the User tab
 // PATCHing the wrong account) when another profile is opened mid-flight.
 let userFetchToken = 0
@@ -308,6 +317,7 @@ async function fetchUserDetail(userId: string) {
     editUserBlocked.value = res.user.isBlocked
     editUserLanguage.value = res.user.language
     editUserOrigin.value = res.user.originDomain
+    ensureOriginOption(res.user.originDomain)
   } catch (err) {
     if (token !== userFetchToken) return
     userError.value = err instanceof Error ? err.message : 'failed to load user'
@@ -348,9 +358,7 @@ async function saveUser() {
         originDomain,
       }
     }
-    if (!originOptions.value.includes(originDomain)) {
-      originOptions.value = [...originOptions.value, originDomain].sort()
-    }
+    ensureOriginOption(originDomain)
   } catch (err) {
     userSaveError.value = err instanceof Error ? err.message : 'Failed to save'
   } finally {
@@ -1249,21 +1257,20 @@ onUnmounted(() => {
                     </dd>
                     <dt class="col-sm-4">Origin</dt>
                     <dd class="col-sm-8">
-                      <input
+                      <select
                         id="editUserOrigin"
                         v-model="editUserOrigin"
-                        type="text"
-                        list="origin-domain-options"
-                        class="form-control form-control-sm"
+                        class="form-select form-select-sm"
                         style="max-width: 200px"
-                      />
-                      <datalist id="origin-domain-options">
+                      >
                         <option
                           v-for="o in originOptions"
                           :key="o"
                           :value="o"
-                        />
-                      </datalist>
+                        >
+                          {{ o }}
+                        </option>
+                      </select>
                     </dd>
                   </dl>
                 </template>

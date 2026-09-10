@@ -319,7 +319,7 @@ describe('ProfilesPage', () => {
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1')
     expect(wrapper.text()).toContain('a@b.com')
-    expect((wrapper.find('#editUserOrigin').element as HTMLInputElement).value).toBe('example.org')
+    expect((wrapper.find('#editUserOrigin').element as HTMLSelectElement).value).toBe('example.org')
     expect(wrapper.find('#editUserActive').exists()).toBe(true)
   })
 
@@ -347,7 +347,17 @@ describe('ProfilesPage', () => {
     })
   })
 
-  it('Language select and Origin datalist are populated without hardcoded options', async () => {
+  it('Language and Origin selects are populated without hardcoded options', async () => {
+    useApiCall.mockImplementation((path: string) => {
+      if (path === '/admin/profiles/countries') {
+        return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org', 'otherbrand.example'] })
+      }
+      return Promise.resolve(listResponse([baseProfile]))
+    })
+
     const wrapper = mount(ProfilesPage)
     await flushPromises()
     await wrapper.find('tbody tr').trigger('click')
@@ -363,14 +373,23 @@ describe('ProfilesPage', () => {
     expect(languageValues).toEqual(['en', 'hu'])
     expect((languageSelect.element as HTMLSelectElement).value).toBe('en')
 
-    const originDatalistValues = wrapper
-      .find('#origin-domain-options')
-      .findAll('option')
-      .map((o) => o.attributes('value'))
-    expect(originDatalistValues).toEqual(['example.org'])
+    const originSelect = wrapper.find('#editUserOrigin')
+    const originValues = originSelect.findAll('option').map((o) => o.attributes('value'))
+    expect(originValues).toEqual(['example.org', 'otherbrand.example'])
+    expect((originSelect.element as HTMLSelectElement).value).toBe('example.org')
   })
 
   it('saving from the User tab sends the edited language and origin domain', async () => {
+    useApiCall.mockImplementation((path: string) => {
+      if (path === '/admin/profiles/countries') {
+        return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org', 'otherbrand.example'] })
+      }
+      return Promise.resolve(listResponse([baseProfile]))
+    })
+
     const wrapper = mount(ProfilesPage)
     await flushPromises()
     await wrapper.find('tbody tr').trigger('click')
@@ -382,7 +401,7 @@ describe('ProfilesPage', () => {
     await flushPromises()
 
     await wrapper.find('#editUserLanguage').setValue('hu')
-    await wrapper.find('#editUserOrigin').setValue('newbrand.example')
+    await wrapper.find('#editUserOrigin').setValue('otherbrand.example')
     await wrapper
       .findAll('button')
       .filter((b) => b.text() === 'Save')[0]
@@ -395,7 +414,7 @@ describe('ProfilesPage', () => {
         isActive: true,
         isBlocked: false,
         language: 'hu',
-        originDomain: 'newbrand.example',
+        originDomain: 'otherbrand.example',
       },
     })
   })
