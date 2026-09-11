@@ -55,42 +55,28 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
       @click="$emit('click', community)"
     >
       <span class="brand-container"></span>
+      <span class="position-absolute p-2 p-md-3 bg-community-light shadow-sm floating-icon">
+        <IconCommunity class="text-primary d-block svg-icon-lg" />
+      </span>
       <ImageCarousel
         v-if="community.images.length > 0"
         :images="community.images"
         class="mb-2"
       />
-      <BRow class="g-2 align-items-start m-2">
-        <BCol
-          cols="12"
-          md="8"
+      <div class="p-2">
+        <h5 class="community-name lh-sm mb-1">
+          {{ community.content }}
+          <!-- Parens stay inside the guard so a community without a location
+             does not render an empty "()". -->
+          <span v-if="communityLocation"> (<LocationLabel :location="communityLocation" />) </span>
+        </h5>
+        <p
+          v-if="displayDescription"
+          class="lh-sm small mb-0 pre-line"
         >
-          <h5 class="community-name lh-sm mb-1">{{ community.content }}</h5>
-          <p
-            v-if="displayDescription"
-            class="lh-sm small mb-0 pre-line"
-          >
-            {{ displayDescription }}
-          </p>
-        </BCol>
-        <BCol
-          cols="12"
-          md="4"
-          class="small lh-sm text-center d-flex align-items-center flex-column"
-        >
-          <IconCommunity class="text-primary d-block svg-icon-lg mb-1" />
-          <h6
-            v-if="community.yearFounded != null"
-            class="m-0"
-          >
-            {{ t('community.labels.founded_since', { year: community.yearFounded }) }}
-          </h6>
-          <LocationLabel
-            v-if="communityLocation"
-            :location="communityLocation"
-          />
-        </BCol>
-      </BRow>
+          {{ displayDescription }}
+        </p>
+      </div>
 
       <!-- Detail-view extras (e.g. contact links) sit above the meta/toolbar row. -->
       <slot name="details" />
@@ -122,5 +108,11 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
 <style scoped>
 .community-card {
   background-color: var(--bs-community-light);
+}
+.floating-icon {
+  top: 0.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  border-radius: 50%;
 }
 </style>

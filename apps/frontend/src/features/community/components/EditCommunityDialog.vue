@@ -172,19 +172,12 @@ const handleSubmit = async () => {
       </div>
     </BFormGroup>
 
-    <BFormGroup
-      :label="$t('community.labels.year_founded')"
-      label-for="community-year-founded"
-      class="mb-3"
-      label-cols-sm="4"
-      label-cols-lg="4"
-      content-cols-sm="8"
-      content-cols-lg="8"
-    >
-      <BFormSelect
-        id="community-year-founded"
-        v-model="form.yearFounded"
-        :options="yearOptions"
+    <BFormGroup class="mb-3">
+      <LocationSelector
+        v-model="form.location"
+        open-direction="top"
+        :allow-empty="true"
+        :close-on-select="true"
       />
     </BFormGroup>
 
@@ -225,15 +218,6 @@ const handleSubmit = async () => {
         autocomplete="email"
         :placeholder="$t('community.placeholders.contact_email')"
         :state="contactEmailState"
-      />
-    </BFormGroup>
-
-    <BFormGroup class="mb-3">
-      <LocationSelector
-        v-model="form.location"
-        open-direction="top"
-        :allow-empty="true"
-        :close-on-select="true"
       />
     </BFormGroup>
 

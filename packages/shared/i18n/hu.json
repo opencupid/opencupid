@@ -44,7 +44,7 @@
       "save": "Közösség mentése"
     },
     "labels": {
-      "contact_email": "Kapcsolattartó e-mail",
+      "contact_email": "E-mail",
       "contact_url": "Weboldal",
       "content": "A közösségről",
       "founded_since": "{year} óta",

@@ -52,7 +52,15 @@ describe('CommunityCard', () => {
       props: { community: baseCommunity, showDetails: true },
       global: { stubs },
     })
-    expect(wrapper.find('.community-name').text()).toBe('A welcoming community for hikers')
+    expect(wrapper.find('.community-name').text()).toContain('A welcoming community for hikers')
+  })
+
+  it('omits the location parens when the community has no location', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, location: null }, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.find('.community-name').text()).not.toContain('(')
   })
 
   it('renders the description as the body when showDetails is true', () => {
@@ -97,24 +105,7 @@ describe('CommunityCard', () => {
     })
     expect(wrapper.find('p.small').exists()).toBe(false)
     // The name still renders.
-    expect(wrapper.find('.community-name').text()).toBe('A welcoming community for hikers')
-  })
-
-  it('renders "Since {year}" when yearFounded is set', () => {
-    const wrapper = mount(CommunityCard, {
-      props: { community: baseCommunity, showDetails: true },
-      global: { stubs },
-    })
-    expect(wrapper.text()).toContain('community.labels.founded_since')
-    expect(wrapper.text()).toContain('1987')
-  })
-
-  it('omits the founded line when yearFounded is null', () => {
-    const wrapper = mount(CommunityCard, {
-      props: { community: { ...baseCommunity, yearFounded: null }, showDetails: true },
-      global: { stubs },
-    })
-    expect(wrapper.text()).not.toContain('community.labels.founded_since')
+    expect(wrapper.find('.community-name').text()).toContain('A welcoming community for hikers')
   })
 
   it('emits click with the community', async () => {
