@@ -12,7 +12,9 @@ import { MAX_IMAGES_PER_GALLERY } from '@zod/image/image.dto'
 
 const props = withDefaults(
   defineProps<{ contentId?: string; maxImages?: number; buttonClass?: string }>(),
-  { maxImages: MAX_IMAGES_PER_GALLERY }
+  // Without an explicit class ImageUpload falls back to its own `w-100 h-100`
+  // fill default, which renders a full-width unstyled icon rather than a button.
+  { maxImages: MAX_IMAGES_PER_GALLERY, buttonClass: 'btn btn-secondary btn-icon' }
 )
 const { t } = useI18n()
 
