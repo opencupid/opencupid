@@ -41,7 +41,7 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const ctx = mapperContext(req)
     const parsed = ContentBoundsQuerySchema.safeParse(req.query)
-    if (!parsed.success) return sendError(reply, 400, 'Invalid bounds')
+    if (!parsed.success) return sendError(reply, 400, 'Missing or invalid query parameters')
     const { kinds, ...box } = parsed.data
     const rows = await svc.findInBounds(box, { limit: 50, kinds })
     const items = rows.map((r) => mapUserContentMetadata(r, ctx))

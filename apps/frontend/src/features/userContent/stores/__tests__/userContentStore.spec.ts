@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { CanceledError } from 'axios'
 
 const mockApi = vi.hoisted(() => ({
   post: vi.fn(),
@@ -338,9 +339,13 @@ describe('useUserContentStore', () => {
       const result = await store.fetchFeedInBounds(bounds, ['post', 'event'])
 
       expect(result.success).toBe(true)
-      expect(mockApi.get).toHaveBeenCalledWith('/content/bounds', {
-        params: { ...bounds, kinds: 'post,event' },
-      })
+      expect(mockApi.get).toHaveBeenCalledWith(
+        '/content/bounds',
+        expect.objectContaining({
+          params: { ...bounds, kinds: 'post,event' },
+          signal: expect.any(Object),
+        })
+      )
       expect(store.feedItems.map((i) => [i.id, i.kind])).toEqual([
         [CUID_1, 'post'],
         ['event-2', 'event'],
@@ -369,9 +374,13 @@ describe('useUserContentStore', () => {
 
       await store.refetchFeedInBounds(['event'])
 
-      expect(mockApi.get).toHaveBeenCalledWith('/content/bounds', {
-        params: { ...bounds, kinds: 'event' },
-      })
+      expect(mockApi.get).toHaveBeenCalledWith(
+        '/content/bounds',
+        expect.objectContaining({
+          params: { ...bounds, kinds: 'event' },
+          signal: expect.any(Object),
+        })
+      )
     })
 
     it('does not refetch before a viewport is known', async () => {
@@ -380,6 +389,43 @@ describe('useUserContentStore', () => {
       await store.refetchFeedInBounds(['post'])
 
       expect(mockApi.get).not.toHaveBeenCalled()
+    })
+
+    it('does not let a stale in-flight request overwrite a newer empty-kinds clear', async () => {
+      const store = useUserContentStore()
+      const bounds: MapBounds = { north: 0, south: 0, east: 0, west: 0 }
+
+      let resolveFirst!: (value: unknown) => void
+      mockApi.get.mockImplementationOnce(
+        (_url: string, opts: { signal: AbortSignal }) =>
+          new Promise((resolve, reject) => {
+            resolveFirst = resolve
+            opts.signal.addEventListener('abort', () => reject(new CanceledError()))
+          })
+      )
+
+      const firstFetch = store.fetchFeedInBounds(bounds, ['post'])
+      // A layer change to only 'profile' fires while the first request is
+      // still in flight and takes the synchronous empty-kinds branch.
+      const secondFetch = store.fetchFeedInBounds(bounds, [])
+      await secondFetch
+      expect(store.feedItems).toEqual([])
+
+      // The first request's abort signal was fired by the second call above;
+      // simulate it losing the race and its (stale) response arriving late.
+      const staleItem = {
+        id: CUID_1,
+        kind: 'post',
+        content: 'stale',
+        createdAt: new Date('2026-05-13T10:00:00Z').toISOString(),
+        isOwn: false,
+        postedBy: profileSummary,
+        location: { country: 'US' },
+      }
+      resolveFirst({ data: { success: true, items: [staleItem] } })
+      await firstFetch
+
+      expect(store.feedItems).toEqual([])
     })
   })
 
