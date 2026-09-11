@@ -11,10 +11,13 @@ import {
   UserContentQuerySchema,
   NearbyContentQuerySchema,
   ContentParamsSchema,
+  ContentKindsSchema,
 } from '@zod/userContent/userContent.dto'
 import { BoundsQuerySchema } from '@zod/dto/bounds.dto'
 import { sendError } from '../helpers'
 import { mapperContext } from '../mappers/context'
+
+const ContentBoundsQuerySchema = BoundsQuerySchema.extend({ kinds: ContentKindsSchema })
 
 const contentRoutes: FastifyPluginAsync = async (fastify) => {
   const svc = UserContentService.getInstance()
@@ -37,9 +40,10 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/bounds', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const ctx = mapperContext(req)
-    const parsed = BoundsQuerySchema.safeParse(req.query)
-    if (!parsed.success) return sendError(reply, 400, 'Invalid bounds')
-    const rows = await svc.findInBounds(parsed.data, { limit: 50 })
+    const parsed = ContentBoundsQuerySchema.safeParse(req.query)
+    if (!parsed.success) return sendError(reply, 400, 'Missing or invalid query parameters')
+    const { kinds, ...box } = parsed.data
+    const rows = await svc.findInBounds(box, { limit: 50, kinds })
     const items = rows.map((r) => mapUserContentMetadata(r, ctx))
     return reply.code(200).send({ success: true, items })
   })

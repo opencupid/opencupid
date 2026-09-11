@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 const mockGet = vi.fn()
 
@@ -14,9 +14,10 @@ vi.mock('@/lib/bus', () => ({
 }))
 
 const fetchFeedInBounds = vi.fn().mockResolvedValue({ success: true })
+const refetchFeedInBounds = vi.fn().mockResolvedValue(undefined)
 const feedItems = ref<any[]>([])
 vi.mock('@/features/userContent/stores/userContentStore', () => ({
-  useUserContentStore: () => ({ fetchFeedInBounds, feedItems }),
+  useUserContentStore: () => ({ fetchFeedInBounds, refetchFeedInBounds, feedItems }),
 }))
 
 import { useBrowseViewModel } from '../useBrowseViewModel'
@@ -194,12 +195,47 @@ describe('useBrowseViewModel', () => {
       })
 
       expect(fetchBoundsSpy).toHaveBeenCalledWith({ south: 47, north: 48, west: 18, east: 20 }, 7)
-      expect(fetchFeedInBounds).toHaveBeenCalledWith({
-        south: 47,
-        north: 48,
-        west: 18,
-        east: 20,
-      })
+      expect(fetchFeedInBounds).toHaveBeenCalledWith({ south: 47, north: 48, west: 18, east: 20 }, [
+        'post',
+        'event',
+        'community',
+      ])
+    })
+
+    it('sends only the selected content kinds', async () => {
+      const store = useFindProfileStore()
+      vi.spyOn(store, 'fetchBounds').mockResolvedValue()
+      store.selectedLayers = ['profile', 'event']
+
+      const { onBoundsChanged } = useBrowseViewModel()
+      await onBoundsChanged({ bounds: mockBounds, zoom: 7 })
+
+      expect(fetchFeedInBounds).toHaveBeenCalledWith(mockBounds, ['event'])
+    })
+  })
+
+  describe('selectedLayers watcher', () => {
+    it('refetches both the map and the feed when layers change', async () => {
+      const store = useFindProfileStore()
+      const refetchBoundsSpy = vi.spyOn(store, 'refetchBounds').mockResolvedValue()
+
+      useBrowseViewModel()
+      store.selectedLayers = ['profile', 'post']
+      await nextTick()
+
+      expect(refetchBoundsSpy).toHaveBeenCalled()
+      expect(refetchFeedInBounds).toHaveBeenCalledWith(['post'])
+    })
+
+    it('refetches the feed with no kinds when only profiles remain', async () => {
+      const store = useFindProfileStore()
+      vi.spyOn(store, 'refetchBounds').mockResolvedValue()
+
+      useBrowseViewModel()
+      store.selectedLayers = ['profile']
+      await nextTick()
+
+      expect(refetchFeedInBounds).toHaveBeenCalledWith([])
     })
   })
 })

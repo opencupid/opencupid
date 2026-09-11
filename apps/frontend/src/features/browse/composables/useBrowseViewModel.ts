@@ -1,5 +1,6 @@
-import { computed, markRaw, ref } from 'vue'
+import { computed, markRaw, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import type { ContentKind } from '@zod/userContent/userContent.dto'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -16,9 +17,18 @@ export function useBrowseViewModel() {
   const findProfileStore = useFindProfileStore()
   const ownerStore = useOwnerProfileStore()
   const contentStore = useUserContentStore()
-  const { clusterFeatures, availableTags, isLoading } = storeToRefs(findProfileStore)
+  const { clusterFeatures, availableTags, isLoading, selectedLayers } =
+    storeToRefs(findProfileStore)
 
   const viewerProfile = computed(() => ownerStore.profile)
+
+  /**
+   * `selectedLayers` narrowed to the kinds UserContent can hold — 'profile'
+   * is a map layer with no content rows behind it.
+   */
+  const contentKinds = computed(() =>
+    selectedLayers.value.filter((k): k is ContentKind => k !== 'profile')
+  )
 
   // ── DTO → map-layer mapping ─────────────────────────────────────
   // The map layer renders cluster-service DTOs directly: MapPoi is
@@ -140,9 +150,21 @@ export function useBrowseViewModel() {
   async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
     await Promise.all([
       findProfileStore.fetchBounds(bounds, zoom),
-      contentStore.fetchFeedInBounds(bounds),
+      contentStore.fetchFeedInBounds(bounds, contentKinds.value),
     ])
   }
+
+  /**
+   * Layer visibility is server-side for both data sources, so a change has
+   * to re-query each one. Both refetch their own last viewport — this is
+   * the sole place that knows a layer change fans out to more than the map.
+   */
+  watch(selectedLayers, () =>
+    Promise.all([
+      findProfileStore.refetchBounds(),
+      contentStore.refetchFeedInBounds(contentKinds.value),
+    ])
+  )
 
   const fetchPopupData = async (id: string, signal?: AbortSignal) => {
     const poi = allPois.value.find((p) => p.id === id)

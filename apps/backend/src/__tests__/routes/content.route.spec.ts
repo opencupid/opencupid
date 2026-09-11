@@ -63,7 +63,29 @@ describe('GET /feed', () => {
 })
 
 describe('GET /bounds', () => {
-  it('parses bounds and calls findInBounds', async () => {
+  it('parses bounds and kinds and calls findInBounds', async () => {
+    const handler = fastify.routes['GET /bounds']
+    await handler(
+      {
+        session: { profileId: 'p1' },
+        query: { south: '40', north: '50', west: '10', east: '20', kinds: 'post,event' },
+      } as any,
+      reply as any
+    )
+    expect(mockUserContentService.findInBounds).toHaveBeenCalledWith(
+      { south: 40, north: 50, west: 10, east: 20 },
+      { limit: 50, kinds: ['post', 'event'] }
+    )
+    expect(reply.statusCode).toBe(200)
+  })
+
+  it('returns 400 on invalid bounds', async () => {
+    const handler = fastify.routes['GET /bounds']
+    await handler({ session: { profileId: 'p1' }, query: { kinds: 'post' } } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 400 when kinds is missing', async () => {
     const handler = fastify.routes['GET /bounds']
     await handler(
       {
@@ -72,16 +94,18 @@ describe('GET /bounds', () => {
       } as any,
       reply as any
     )
-    expect(mockUserContentService.findInBounds).toHaveBeenCalledWith(
-      { south: 40, north: 50, west: 10, east: 20 },
-      { limit: 50 }
-    )
-    expect(reply.statusCode).toBe(200)
+    expect(reply.statusCode).toBe(400)
   })
 
-  it('returns 400 on invalid bounds', async () => {
+  it('returns 400 on an unknown kind', async () => {
     const handler = fastify.routes['GET /bounds']
-    await handler({ session: { profileId: 'p1' }, query: {} } as any, reply as any)
+    await handler(
+      {
+        session: { profileId: 'p1' },
+        query: { south: '40', north: '50', west: '10', east: '20', kinds: 'profile' },
+      } as any,
+      reply as any
+    )
     expect(reply.statusCode).toBe(400)
   })
 
@@ -144,7 +168,13 @@ describe('GET /bounds', () => {
     await handler(
       {
         session: { profileId: 'viewer' },
-        query: { south: '40', north: '50', west: '10', east: '20' },
+        query: {
+          south: '40',
+          north: '50',
+          west: '10',
+          east: '20',
+          kinds: 'post,event,community',
+        },
       } as any,
       reply as any
     )

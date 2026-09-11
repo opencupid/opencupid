@@ -48,6 +48,7 @@ import type {
 import {
   UserContentMetadataSchema,
   type UserContentMetadata,
+  type ContentKind,
 } from '@zod/userContent/userContent.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 import { bus } from '@/lib/bus'
@@ -62,6 +63,7 @@ type StoreEventResponse = StoreResponse<{ event: OwnerEvent }>
 type StoreCommunityResponse = StoreResponse<{ community: OwnerCommunity }>
 type StoreFeedItemsResponse = StoreResponse<{ items: UserContentMetadata[] }>
 
+let feedInBoundsAbortController: AbortController | null = null
 let publicPostAbortController: AbortController | null = null
 let publicEventAbortController: AbortController | null = null
 let publicCommunityAbortController: AbortController | null = null
@@ -83,6 +85,8 @@ export const useUserContentStore = defineStore('userContent', {
     myContent: [] as OwnerUserContent[],
     /** Map-bounds feed items — populated by fetchFeedInBounds. */
     feedItems: [] as UserContentMetadata[],
+    /** Viewport of the last feed fetch, so a kind-filter change can refetch it. */
+    lastFeedBounds: null as MapBounds | null,
     isLoading: false,
     isInitialized: false,
     /** Viewer's own RSVP status per event id. null = explicitly not attending; undefined = not yet fetched. */
@@ -421,19 +425,45 @@ export const useUserContentStore = defineStore('userContent', {
       }
     },
 
-    async fetchFeedInBounds(bounds: MapBounds): Promise<StoreFeedItemsResponse> {
+    async fetchFeedInBounds(
+      bounds: MapBounds,
+      kinds: ContentKind[]
+    ): Promise<StoreFeedItemsResponse> {
+      this.lastFeedBounds = bounds
+      // A newer request (bounds pan, or a layer change firing a refetch)
+      // must win over a still-in-flight older one, or its late response can
+      // overwrite feedItems with stale kinds.
+      if (feedInBoundsAbortController) feedInBoundsAbortController.abort()
+
+      // The wire schema requires at least one kind; nothing selected means
+      // nothing to show.
+      if (kinds.length === 0) {
+        feedInBoundsAbortController = null
+        this.feedItems = []
+        return storeSuccess({ items: [] })
+      }
+
+      const controller = new AbortController()
+      feedInBoundsAbortController = controller
       try {
         const res = await safeApiCall(() =>
           api.get<ContentBoundsResponse>('/content/bounds', {
-            params: bounds,
+            params: { ...bounds, kinds: kinds.join(',') },
+            signal: controller.signal,
           })
         )
         const items = UserContentMetadataArraySchema.parse(res.data.items)
         this.feedItems = items
         return storeSuccess({ items })
       } catch (error: any) {
+        if (error instanceof CanceledError) return storeSuccess()
         return storeError(error, 'Failed to fetch feed in bounds')
       }
+    },
+
+    async refetchFeedInBounds(kinds: ContentKind[]): Promise<void> {
+      if (!this.lastFeedBounds) return
+      await this.fetchFeedInBounds(this.lastFeedBounds, kinds)
     },
   },
 })

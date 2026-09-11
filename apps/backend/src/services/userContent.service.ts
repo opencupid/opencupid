@@ -107,12 +107,13 @@ export class UserContentService {
 
   async findInBounds(
     box: BoundsBox,
-    opts: { limit?: number } = {}
+    opts: { limit?: number; kinds: ContentKind[] }
   ): Promise<UserContentMetadataRow[]> {
     return prisma.userContent.findMany({
       where: {
         isDeleted: false,
         isVisible: true,
+        kind: { in: opts.kinds },
         lat: { gte: box.south, lte: box.north },
         lon: { gte: box.west, lte: box.east },
       },
