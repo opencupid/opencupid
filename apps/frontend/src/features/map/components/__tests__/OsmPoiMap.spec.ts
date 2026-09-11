@@ -97,6 +97,14 @@ vi.mock('leaflet', () => {
       lat: p.y / 10,
       lng: p.x / 10,
     })),
+    latLngToContainerPoint: vi.fn((latlng: { lat: number; lng: number }) => ({
+      x: latlng.lng * 10,
+      y: latlng.lat * 10,
+    })),
+    containerPointToLatLng: vi.fn((p: { x: number; y: number }) => ({
+      lat: p.y / 10,
+      lng: p.x / 10,
+    })),
     on: vi.fn().mockReturnThis(),
     once: vi.fn(function (this: any, _event: string, cb: () => void) {
       cb()
@@ -158,29 +166,6 @@ vi.mock('leaflet', () => {
     control,
   }
 })
-
-// vi.mock is hoisted before const declarations, so omsInstance must be defined
-// via vi.hoisted() to be available when the mock factory runs.
-const { omsInstance } = vi.hoisted(() => ({
-  omsInstance: {
-    addMarker: vi.fn().mockReturnThis(),
-    removeMarker: vi.fn().mockReturnThis(),
-    clearMarkers: vi.fn().mockReturnThis(),
-    addListener: vi.fn().mockReturnThis(),
-    getMarkers: vi.fn(() => []),
-    circleSpiralSwitchover: 9,
-    circleFootSeparation: 25,
-    spiralFootSeparation: 28,
-    spiralLengthStart: 11,
-    spiralLengthFactor: 5,
-    spiderListener: vi.fn(),
-  },
-}))
-vi.mock('ts-overlapping-marker-spiderfier-leaflet', () => ({
-  OverlappingMarkerSpiderfier: vi.fn(function () {
-    return omsInstance
-  }),
-}))
 
 // Mock blurhash (canvas unavailable in jsdom)
 vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
@@ -278,12 +263,6 @@ beforeEach(() => {
   createdMarkers.length = 0
   resizeObserverCallbacks.length = 0
   vi.clearAllMocks()
-  omsInstance.addMarker.mockReturnThis()
-  omsInstance.removeMarker.mockReturnThis()
-  omsInstance.clearMarkers.mockReturnThis()
-  omsInstance.addListener.mockReturnThis()
-  omsInstance.getMarkers.mockReturnValue([])
-  omsInstance.spiderListener.mockReset()
 })
 
 describe('OsmPoiMap', () => {
@@ -696,7 +675,7 @@ describe('OsmPoiMap', () => {
     })
   })
 
-  describe('init guard and OMS registration', () => {
+  describe('init guard', () => {
     it('calls L.map exactly once even after reactive prop updates', async () => {
       const wrapper = await mountMap()
       await flushPromises()
@@ -711,115 +690,43 @@ describe('OsmPoiMap', () => {
 
       expect((L.map as any).mock.calls.length).toBe(mapCallsBefore)
     })
-
-    it('registers new markers with OMS via addMarker', async () => {
-      await mountMap({ items: [items[0]] })
-      await flushPromises()
-
-      expect(omsInstance.addMarker).toHaveBeenCalledTimes(1)
-    })
   })
 
-  describe('spiderfy after max-zoom cluster dissolve', () => {
-    const maxZoomCluster: MapCluster = {
-      type: 'cluster',
-      id: 300,
-      lat: 47.0,
-      lon: 19.0,
-      count: 2,
-      expansionZoom: MAP_MAX_ZOOM,
-    }
-
-    it('auto-spiderfies after max-zoom cluster click followed by items update', async () => {
-      vi.useFakeTimers()
-
-      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
+  describe('density-based marker spreading', () => {
+    it('emits item:select on marker click (replacing the OMS click bridge)', async () => {
+      const wrapper = await mountMap({ items: [items[0]] })
       await flushPromises()
 
-      // The cluster marker is the only marker created (no point markers)
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
+      const markerInstance = (L.marker as any).mock.results[0].value
+      const clickHandler = markerInstance.on.mock.calls.find((c: any) => c[0] === 'click')?.[1]
       expect(clickHandler).toBeDefined()
 
-      // Click the cluster at max zoom — pending spiderfy is armed
       clickHandler()
-
-      // spiderfy not yet triggered (no leaf markers arrived yet)
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
-
-      // Simulate leaf markers arriving via items update
-      await wrapper.setProps({ items: [items[0]] })
-      await flushPromises()
-      vi.runAllTimers()
-
-      expect(omsInstance.spiderListener).toHaveBeenCalledTimes(1)
-
-      vi.useRealTimers()
+      expect(wrapper.emitted('item:select')).toEqual([['1']])
     })
 
-    it('pending spiderfy is consumed only once even if items update is called twice', async () => {
-      vi.useFakeTimers()
-
-      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
+    it('recomputes spread on zoomend by calling setLatLng for displaced markers', async () => {
+      // Two POIs whose mock pixel projection lands within the default
+      // overlapThresholdPx (20) — items[0] (47.5, 19.0) → (190, 475) and
+      // items[2] (46.0, 18.0) → (180, 460), distance ≈ 18px.
+      await mountMap({ items: [items[0], items[2]] })
       await flushPromises()
 
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
-      clickHandler()
+      const m0 = (L.marker as any).mock.results[0].value
+      const m2 = (L.marker as any).mock.results[1].value
 
-      // First items update — drains the pending callback, triggers spiderfy
-      await wrapper.setProps({ items: [items[0]] })
-      await flushPromises()
-      vi.runAllTimers()
-      omsInstance.spiderListener.mockClear()
+      const mapInstance = (L.map as any).mock.results[0].value
+      const zoomendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'zoomend')?.[1]
+      expect(zoomendHandler).toBeDefined()
 
-      // Second items update — should NOT re-trigger spiderfy
-      await wrapper.setProps({ items: [...[items[0]]] })
-      await flushPromises()
-      vi.runAllTimers()
+      m0.setLatLng.mockClear()
+      m2.setLatLng.mockClear()
 
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
+      zoomendHandler()
 
-      vi.useRealTimers()
-    })
-
-    it('does not fire phantom spiderfy on a later items batch when the first batch had no leaves', async () => {
-      // Regression: pre-fix, the dissolvedClusterAt flag stayed armed when
-      // an items batch arrived without matching leaves (e.g., user panned
-      // before the fetch returned). Any later batch with nearby markers —
-      // possibly from a wholly unrelated viewport later — would fire a
-      // phantom spiderfy. The fix binds the intent to the click's closure
-      // and consumes it on the first batch regardless of match success.
-      vi.useFakeTimers()
-
-      const wrapper = await mountMap({ items: [], clusters: [maxZoomCluster] })
-      await flushPromises()
-
-      const clusterMarkerInstance = (L.marker as any).mock.results[0].value
-      const clickHandler = clusterMarkerInstance.on.mock.calls.find(
-        (c: any) => c[0] === 'click'
-      )?.[1]
-      clickHandler()
-
-      // First batch: empty (user panned, leaves never arrived). The pending
-      // callback runs against zero markers and silently consumes itself.
-      await wrapper.setProps({ items: [] })
-      await flushPromises()
-      vi.runAllTimers()
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
-
-      // Second batch: leaves are now present (mock distanceTo = 0 means any
-      // marker matches). Pre-fix this would have fired phantom spiderfy.
-      await wrapper.setProps({ items: [items[0]] })
-      await flushPromises()
-      vi.runAllTimers()
-      expect(omsInstance.spiderListener).not.toHaveBeenCalled()
-
-      vi.useRealTimers()
+      // Both displaced markers get new positions written.
+      expect(m0.setLatLng).toHaveBeenCalled()
+      expect(m2.setLatLng).toHaveBeenCalled()
     })
   })
 
