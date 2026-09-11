@@ -206,9 +206,6 @@ const handleSubmit = async () => {
         :placeholder="$t('community.placeholders.contact_url')"
         :state="contactUrlState"
       />
-      <BFormInvalidFeedback :state="contactUrlState">
-        {{ $t('community.messages.invalid_contact_url') }}
-      </BFormInvalidFeedback>
     </BFormGroup>
 
     <BFormGroup
@@ -229,9 +226,6 @@ const handleSubmit = async () => {
         :placeholder="$t('community.placeholders.contact_email')"
         :state="contactEmailState"
       />
-      <BFormInvalidFeedback :state="contactEmailState">
-        {{ $t('community.messages.invalid_contact_email') }}
-      </BFormInvalidFeedback>
     </BFormGroup>
 
     <BFormGroup class="mb-3">

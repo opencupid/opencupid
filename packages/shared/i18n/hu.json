@@ -52,9 +52,7 @@
       "year_founded": "Alapítás éve"
     },
     "messages": {
-      "error_load": "Nem sikerült betölteni a közösséget",
-      "invalid_contact_email": "Ez nem tűnik érvényes e-mail címnek",
-      "invalid_contact_url": "Adj meg teljes webcímet, pl. https://example.org"
+      "error_load": "Nem sikerült betölteni a közösséget"
     },
     "placeholders": {
       "contact_email": "hello@example.org",

@@ -64,10 +64,6 @@ const stubs = {
     template:
       '<select :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value === \'null\' ? null : Number($event.target.value))"><option v-for="o in options" :key="o.value ?? \'null\'" :value="o.value ?? \'null\'">{{ o.text }}</option></select>',
   },
-  BFormInvalidFeedback: {
-    props: ['state'],
-    template: '<div class="invalid-feedback" :data-state="String(state)"><slot /></div>',
-  },
   BFormCheckbox: {
     props: ['modelValue'],
     template:

@@ -52,9 +52,7 @@
       "year_founded": "Founded in"
     },
     "messages": {
-      "error_load": "Failed to load community",
-      "invalid_contact_email": "That doesn't look like an email address",
-      "invalid_contact_url": "Enter a full web address, e.g. https://example.org"
+      "error_load": "Failed to load community"
     },
     "placeholders": {
       "contact_email": "hello@example.org",
