@@ -69,23 +69,26 @@ describe('CommunityService.create with imageIds', () => {
 describe('CommunityService.create contact fields', () => {
   const baseData = { content: 'x'.repeat(20) }
 
-  it('persists the supplied contact fields', async () => {
+  it('persists the supplied description and contact fields', async () => {
     await service.create('profile-1', {
       ...baseData,
+      description: 'A long description.',
       contactUrl: 'https://example.org',
       contactEmail: 'hello@example.org',
     })
     expect(mockPrisma.userContent.create.mock.calls[0][0].data.community.create).toEqual({
       yearFounded: null,
+      description: 'A long description.',
       contactUrl: 'https://example.org',
       contactEmail: 'hello@example.org',
     })
   })
 
-  it('defaults omitted contact fields to null', async () => {
+  it('defaults omitted description and contact fields to null', async () => {
     await service.create('profile-1', baseData)
     expect(mockPrisma.userContent.create.mock.calls[0][0].data.community.create).toEqual({
       yearFounded: null,
+      description: null,
       contactUrl: null,
       contactEmail: null,
     })
@@ -99,19 +102,42 @@ describe('CommunityService.update contact fields', () => {
     mockPrisma.communityContent.update = vi.fn().mockResolvedValue({})
   })
 
-  it('writes only the contact fields present in the payload', async () => {
+  it('writes only the fields present in the payload', async () => {
     await service.update('content-1', 'profile-1', { contactEmail: 'hello@example.org' })
     expect(mockPrisma.communityContent.update).toHaveBeenCalledWith({
       where: { userContentId: 'content-1' },
-      data: { yearFounded: undefined, contactUrl: undefined, contactEmail: 'hello@example.org' },
+      data: {
+        yearFounded: undefined,
+        description: undefined,
+        contactUrl: undefined,
+        contactEmail: 'hello@example.org',
+      },
     })
   })
 
-  it('clears a contact field when explicitly set to null', async () => {
+  it('writes the description when present in the payload', async () => {
+    await service.update('content-1', 'profile-1', { description: 'Updated description.' })
+    expect(mockPrisma.communityContent.update).toHaveBeenCalledWith({
+      where: { userContentId: 'content-1' },
+      data: {
+        yearFounded: undefined,
+        description: 'Updated description.',
+        contactUrl: undefined,
+        contactEmail: undefined,
+      },
+    })
+  })
+
+  it('clears a field when explicitly set to null', async () => {
     await service.update('content-1', 'profile-1', { contactUrl: null })
     expect(mockPrisma.communityContent.update).toHaveBeenCalledWith({
       where: { userContentId: 'content-1' },
-      data: { yearFounded: undefined, contactUrl: null, contactEmail: undefined },
+      data: {
+        yearFounded: undefined,
+        description: undefined,
+        contactUrl: null,
+        contactEmail: undefined,
+      },
     })
   })
 

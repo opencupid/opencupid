@@ -87,6 +87,7 @@ const baseDbCommunity: any = {
   community: {
     userContentId: 'cucomm00000000000001',
     yearFounded: 2010,
+    description: 'A friendly guild for testers.',
     contactUrl: 'https://example.org/guild',
     contactEmail: 'hello@example.org',
   },
@@ -112,20 +113,27 @@ describe('mapDbCommunityToPublic', () => {
 })
 
 describe('mapDbCommunityToPublic contact fields', () => {
-  it('maps contactUrl and contactEmail', () => {
+  it('maps description, contactUrl and contactEmail', () => {
     const result = mapDbCommunityToPublic(baseDbCommunity, ctx('viewer-profile-id'))
+    expect(result.description).toBe('A friendly guild for testers.')
     expect(result.contactUrl).toBe('https://example.org/guild')
     expect(result.contactEmail).toBe('hello@example.org')
   })
 
-  it('passes null contact fields through', () => {
+  it('passes null description and contact fields through', () => {
     const result = mapDbCommunityToPublic(
       {
         ...baseDbCommunity,
-        community: { ...baseDbCommunity.community, contactUrl: null, contactEmail: null },
+        community: {
+          ...baseDbCommunity.community,
+          description: null,
+          contactUrl: null,
+          contactEmail: null,
+        },
       },
       ctx('viewer-profile-id')
     )
+    expect(result.description).toBeNull()
     expect(result.contactUrl).toBeNull()
     expect(result.contactEmail).toBeNull()
   })
@@ -138,8 +146,9 @@ describe('mapDbCommunityToDetail', () => {
     expect(result.postedBy).toHaveProperty('canMessage')
   })
 
-  it('maps contact fields', () => {
+  it('maps description and contact fields', () => {
     const result = mapDbCommunityToDetail(baseDbCommunity, ctx('viewer-profile-id'))
+    expect(result.description).toBe('A friendly guild for testers.')
     expect(result.contactUrl).toBe('https://example.org/guild')
     expect(result.contactEmail).toBe('hello@example.org')
   })
@@ -152,6 +161,7 @@ describe('mapDbCommunityToOwner', () => {
     expect(result.isOwn).toBe(true)
     expect(result.yearFounded).toBe(2010)
     expect(result.isVisible).toBe(true)
+    expect(result.description).toBe('A friendly guild for testers.')
     expect(result.contactUrl).toBe('https://example.org/guild')
     expect(result.contactEmail).toBe('hello@example.org')
   })

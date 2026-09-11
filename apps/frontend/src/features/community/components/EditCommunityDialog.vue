@@ -6,6 +6,7 @@ import { z } from 'zod'
 import {
   ContactEmailSchema,
   ContactUrlSchema,
+  DescriptionSchema,
   type OwnerCommunity,
 } from '@zod/community/community.dto'
 import { LocationSchema, type LocationDTO } from '@zod/dto/location.dto'
@@ -14,10 +15,13 @@ import LocationSelector from '@/features/shared/profileform/LocationSelector.vue
 import AttachImageButton from '@/features/images/components/AttachImageButton.vue'
 import VisibilityToggle from '@/features/shared/ui/VisibilityToggle.vue'
 
-const COMMUNITY_CONTENT_MAX_LENGTH = 300
+// `content` holds the short community name; `description` holds the long body.
+const COMMUNITY_NAME_MAX_LENGTH = 300
+const COMMUNITY_DESCRIPTION_MAX_LENGTH = 2000
 
 const CommunityFormSchema = z.object({
   content: z.string().default(''),
+  description: z.string().default(''),
   isVisible: z.boolean().default(true),
   yearFounded: z.number().int().nullable().default(null),
   contactUrl: z.string().default(''),
@@ -51,6 +55,7 @@ const community = props.community
 const form = ref<CommunityForm>(
   CommunityFormSchema.parse({
     content: community?.content ?? '',
+    description: community?.description ?? '',
     isVisible: community?.isVisible ?? true,
     yearFounded: community?.yearFounded ?? null,
     contactUrl: community?.contactUrl ?? '',
@@ -72,11 +77,15 @@ const yearOptions = computed(() => [
   }),
 ])
 
-// Both contact fields are optional: an empty input clears them.
+// Description and both contact fields are optional: an empty input clears them.
+const description = computed(() => form.value.description.trim() || null)
 const contactUrl = computed(() => form.value.contactUrl.trim() || null)
 const contactEmail = computed(() => form.value.contactEmail.trim() || null)
 
 // `null` keeps an untouched field neutral, mirroring PublicNameInput.
+const descriptionState = computed<boolean | null>(() =>
+  description.value === null ? null : DescriptionSchema.safeParse(description.value).success
+)
 const contactUrlState = computed<boolean | null>(() =>
   contactUrl.value === null ? null : ContactUrlSchema.safeParse(contactUrl.value).success
 )
@@ -86,8 +95,9 @@ const contactEmailState = computed<boolean | null>(() =>
 
 const isFormValid = computed(() => {
   return (
-    form.value.content.trim().length > 10 &&
-    form.value.content.length <= COMMUNITY_CONTENT_MAX_LENGTH &&
+    form.value.content.trim().length > 0 &&
+    form.value.content.length <= COMMUNITY_NAME_MAX_LENGTH &&
+    descriptionState.value !== false &&
     contactUrlState.value !== false &&
     contactEmailState.value !== false
   )
@@ -106,6 +116,7 @@ const handleSubmit = async () => {
             content,
             isVisible,
             yearFounded,
+            description: description.value,
             contactUrl: contactUrl.value,
             contactEmail: contactEmail.value,
             ...location,
@@ -113,6 +124,7 @@ const handleSubmit = async () => {
         : await contentStore.createCommunity({
             content,
             yearFounded,
+            description: description.value,
             contactUrl: contactUrl.value,
             contactEmail: contactEmail.value,
             ...location,
@@ -136,18 +148,27 @@ const handleSubmit = async () => {
     @submit.prevent="handleSubmit"
     class="w-100 p-2 p-md-4 p-lg-5 mt-2 scrollable hide-scrollbar"
   >
+    <BFormGroup class="mb-2 mb-lg-3">
+      <BFormInput
+        v-model="form.content"
+        :placeholder="$t('community.placeholders.name')"
+        :maxlength="COMMUNITY_NAME_MAX_LENGTH"
+        required
+      />
+    </BFormGroup>
+
     <BFormGroup class="mb-2 mb-lg-3 position-relative">
       <BFormTextarea
-        v-model="form.content"
-        :placeholder="$t('community.placeholders.content')"
-        :maxlength="COMMUNITY_CONTENT_MAX_LENGTH"
-        required
+        v-model="form.description"
+        :placeholder="$t('community.placeholders.description')"
+        :maxlength="COMMUNITY_DESCRIPTION_MAX_LENGTH"
+        :state="descriptionState"
         rows="6"
       />
       <div
         class="form-hint text-muted small position-absolute bottom-0 start-50 translate-middle-x"
       >
-        {{ form.content.length }}/{{ COMMUNITY_CONTENT_MAX_LENGTH }}
+        {{ form.description.length }}/{{ COMMUNITY_DESCRIPTION_MAX_LENGTH }}
       </div>
     </BFormGroup>
 

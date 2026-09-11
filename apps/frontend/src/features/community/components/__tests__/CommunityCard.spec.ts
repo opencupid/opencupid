@@ -32,6 +32,7 @@ const baseCommunity = {
   id: 'c-1',
   kind: 'community' as const,
   content: 'A welcoming community for hikers',
+  description: 'We meet every weekend to explore trails around the city.',
   yearFounded: 1987,
   location: { country: 'HU', cityName: 'Budapest', lat: null, lon: null },
   postedBy: { id: 'p-1', publicName: 'Alice', profileImages: [] },
@@ -46,12 +47,42 @@ const stubs = {
 }
 
 describe('CommunityCard', () => {
-  it('renders content text', () => {
+  it('renders the name as the card heading', () => {
     const wrapper = mount(CommunityCard, {
       props: { community: baseCommunity, showDetails: true },
       global: { stubs },
     })
-    expect(wrapper.text()).toContain('A welcoming community for hikers')
+    expect(wrapper.find('.community-name').text()).toBe('A welcoming community for hikers')
+  })
+
+  it('renders the description as the body when showDetails is true', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: baseCommunity, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.text()).toContain('We meet every weekend to explore trails around the city.')
+  })
+
+  it('truncates a long description in grid mode (showDetails false)', () => {
+    const longDescription = 'word '.repeat(60).trim() // ~300 chars, well over the 100 cap
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, description: longDescription }, showDetails: false },
+      global: { stubs },
+    })
+    const body = wrapper.find('p.small')
+    expect(body.exists()).toBe(true)
+    expect(body.text().endsWith('…')).toBe(true)
+    expect(body.text().length).toBeLessThan(longDescription.length)
+  })
+
+  it('renders no body paragraph when the description is null', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, description: null }, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.find('p.small').exists()).toBe(false)
+    // The name still renders.
+    expect(wrapper.find('.community-name').text()).toBe('A welcoming community for hikers')
   })
 
   it('renders "Since {year}" when yearFounded is set', () => {

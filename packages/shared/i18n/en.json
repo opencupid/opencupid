@@ -59,7 +59,8 @@
     "placeholders": {
       "contact_email": "hello@example.org",
       "contact_url": "https://example.org",
-      "content": "Describe your community…",
+      "description": "Describe your community…",
+      "name": "Community name",
       "year_unknown": "Don't know / not sure"
     },
     "share": {

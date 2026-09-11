@@ -59,7 +59,8 @@
     "placeholders": {
       "contact_email": "hello@example.org",
       "contact_url": "https://example.org",
-      "content": "Mesélj a közösségről…",
+      "description": "Mesélj a közösségről…",
+      "name": "Közösség neve",
       "year_unknown": "Nem tudom / nem biztos"
     },
     "share": {

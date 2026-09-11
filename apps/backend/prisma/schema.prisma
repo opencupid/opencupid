@@ -472,6 +472,7 @@ model CommunityContent {
   userContentId String      @id
   userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
   yearFounded   Int?
+  description   String?
   contactUrl    String?
   contactEmail  String?
 }

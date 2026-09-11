@@ -94,12 +94,15 @@ describe('EditCommunityDialog', () => {
     updateCommunityMock.mockClear()
   })
 
-  it('disables submit when content shorter than 11 chars', async () => {
+  // The name is the first input; the description is the (only) textarea.
+  const nameInput = (wrapper: ReturnType<typeof mount>) => wrapper.findAll('input')[0]!
+
+  it('disables submit when the name is empty', async () => {
     const wrapper = mount(EditCommunityDialog, {
       props: { isEdit: false, defaultLocation },
       global: globalOptions,
     })
-    await wrapper.find('textarea').setValue('short')
+    await wrapper.find('textarea').setValue('This is a long-enough description.')
     const submitBtn = wrapper
       .findAll('button')
       .filter((b) => b.attributes('type') === 'submit')
@@ -107,26 +110,27 @@ describe('EditCommunityDialog', () => {
     expect(submitBtn.attributes('disabled')).toBeDefined()
   })
 
-  it('calls createCommunity in create-mode with null yearFounded by default', async () => {
+  it('calls createCommunity with the name as content and null yearFounded by default', async () => {
     const wrapper = mount(EditCommunityDialog, {
       props: { isEdit: false, defaultLocation },
       global: globalOptions,
     })
-    await wrapper.find('textarea').setValue('This is a long-enough description.')
+    await nameInput(wrapper).setValue('Test Guild')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(createCommunityMock).toHaveBeenCalledTimes(1)
     expect(createCommunityMock.mock.calls[0]![0]).toMatchObject({
-      content: 'This is a long-enough description.',
+      content: 'Test Guild',
       yearFounded: null,
     })
   })
 
-  it('pre-populates content from props.community in edit mode', () => {
+  it('pre-populates the name and description from props.community in edit mode', () => {
     const community = {
       id: 'c-existing',
       kind: 'community',
-      content: 'Existing community description longer than 10',
+      content: 'Test Guild',
+      description: 'A long description of the guild.',
       yearFounded: 2015,
       isVisible: false,
       location: defaultLocation,
@@ -136,8 +140,9 @@ describe('EditCommunityDialog', () => {
       props: { isEdit: true, community: community as any, defaultLocation },
       global: globalOptions,
     })
+    expect((nameInput(wrapper).element as HTMLInputElement).value).toBe('Test Guild')
     expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe(
-      'Existing community description longer than 10'
+      'A long description of the guild.'
     )
   })
 })
@@ -155,9 +160,11 @@ describe('EditCommunityDialog contact fields', () => {
       global: globalOptions,
     })
 
-  const contactInputs = (wrapper: ReturnType<typeof mountCreate>) => {
+  // Inputs are ordered: [name, contactUrl, contactEmail]. The description is
+  // the sole textarea. A non-empty name is required for the form to be valid.
+  const fields = (wrapper: ReturnType<typeof mountCreate>) => {
     const inputs = wrapper.findAll('input')
-    return { url: inputs[0]!, email: inputs[1]! }
+    return { name: inputs[0]!, url: inputs[1]!, email: inputs[2]! }
   }
 
   const submitBtn = (wrapper: ReturnType<typeof mountCreate>) =>
@@ -166,26 +173,29 @@ describe('EditCommunityDialog contact fields', () => {
       .filter((b) => b.attributes('type') === 'submit')
       .at(-1)!
 
-  it('submits null for both contact fields when left empty', async () => {
+  it('submits null for description and both contact fields when left empty', async () => {
     const wrapper = mountCreate()
-    await wrapper.find('textarea').setValue('This is a long-enough description.')
+    await fields(wrapper).name.setValue('Test Guild')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(createCommunityMock.mock.calls[0]![0]).toMatchObject({
+      description: null,
       contactUrl: null,
       contactEmail: null,
     })
   })
 
-  it('submits trimmed contact values', async () => {
+  it('submits trimmed description and contact values', async () => {
     const wrapper = mountCreate()
-    await wrapper.find('textarea').setValue('This is a long-enough description.')
-    const { url, email } = contactInputs(wrapper)
+    const { name, url, email } = fields(wrapper)
+    await name.setValue('Test Guild')
+    await wrapper.find('textarea').setValue('  A long description.  ')
     await url.setValue('  https://example.org/guild  ')
     await email.setValue('  hello@example.org  ')
     await wrapper.find('form').trigger('submit')
     await flushPromises()
     expect(createCommunityMock.mock.calls[0]![0]).toMatchObject({
+      description: 'A long description.',
       contactUrl: 'https://example.org/guild',
       contactEmail: 'hello@example.org',
     })
@@ -193,15 +203,17 @@ describe('EditCommunityDialog contact fields', () => {
 
   it('blocks submit on an invalid contactUrl', async () => {
     const wrapper = mountCreate()
-    await wrapper.find('textarea').setValue('This is a long-enough description.')
-    await contactInputs(wrapper).url.setValue('javascript:alert(1)')
+    const { name, url } = fields(wrapper)
+    await name.setValue('Test Guild')
+    await url.setValue('javascript:alert(1)')
     expect(submitBtn(wrapper).attributes('disabled')).toBeDefined()
   })
 
   it('blocks submit on an invalid contactEmail', async () => {
     const wrapper = mountCreate()
-    await wrapper.find('textarea').setValue('This is a long-enough description.')
-    await contactInputs(wrapper).email.setValue('not-an-email')
+    const { name, email } = fields(wrapper)
+    await name.setValue('Test Guild')
+    await email.setValue('not-an-email')
     expect(submitBtn(wrapper).attributes('disabled')).toBeDefined()
   })
 
@@ -209,7 +221,8 @@ describe('EditCommunityDialog contact fields', () => {
     const community = {
       id: 'c-existing',
       kind: 'community',
-      content: 'Existing community description longer than 10',
+      content: 'Test Guild',
+      description: 'A long description.',
       yearFounded: 2015,
       contactUrl: 'https://example.org/guild',
       contactEmail: 'hello@example.org',
@@ -221,7 +234,7 @@ describe('EditCommunityDialog contact fields', () => {
       props: { isEdit: true, community: community as any, defaultLocation },
       global: globalOptions,
     })
-    const { url, email } = contactInputs(wrapper)
+    const { url, email } = fields(wrapper)
     expect((url.element as HTMLInputElement).value).toBe('https://example.org/guild')
     expect((email.element as HTMLInputElement).value).toBe('hello@example.org')
 
@@ -233,5 +246,29 @@ describe('EditCommunityDialog contact fields', () => {
       contactUrl: null,
       contactEmail: null,
     })
+  })
+
+  it('submits null description when the description textarea is cleared', async () => {
+    const community = {
+      id: 'c-existing',
+      kind: 'community',
+      content: 'Test Guild',
+      description: 'A long description.',
+      yearFounded: 2015,
+      isVisible: true,
+      location: defaultLocation,
+      postedBy: { id: 'p', publicName: 'Alice' },
+    }
+    const wrapper = mount(EditCommunityDialog, {
+      props: { isEdit: true, community: community as any, defaultLocation },
+      global: globalOptions,
+    })
+    expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe(
+      'A long description.'
+    )
+    await wrapper.find('textarea').setValue('')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+    expect(updateCommunityMock.mock.calls[0]![1]).toMatchObject({ description: null })
   })
 })

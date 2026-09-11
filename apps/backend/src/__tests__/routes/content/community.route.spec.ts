@@ -407,4 +407,26 @@ describe('CreateCommunityPayloadSchema contact fields', () => {
     const email = `${'a'.repeat(250)}@example.org`
     expect(parseContact({ contactEmail: email }).success).toBe(false)
   })
+
+  it('omits description when absent', () => {
+    const parsed = CreateCommunityPayloadSchema.parse(baseFields)
+    expect(parsed.description).toBeUndefined()
+  })
+
+  it('accepts null for description', () => {
+    const parsed = CreateCommunityPayloadSchema.parse({ ...baseFields, description: null })
+    expect(parsed.description).toBeNull()
+  })
+
+  it('trims surrounding whitespace on description', () => {
+    const parsed = CreateCommunityPayloadSchema.parse({
+      ...baseFields,
+      description: '  A long description.  ',
+    })
+    expect(parsed.description).toBe('A long description.')
+  })
+
+  it('rejects a description longer than 2000 chars', () => {
+    expect(parseContact({ description: 'a'.repeat(2001) }).success).toBe(false)
+  })
 })

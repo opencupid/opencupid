@@ -7,6 +7,7 @@ import { z } from 'zod';
 export const CommunityContentSchema = z.object({
   userContentId: z.string(),
   yearFounded: z.number().int().nullable(),
+  description: z.string().nullable(),
   contactUrl: z.string().nullable(),
   contactEmail: z.string().nullable(),
 })

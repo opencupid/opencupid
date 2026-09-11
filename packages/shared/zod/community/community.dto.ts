@@ -18,6 +18,8 @@ const MIN_YEAR_FOUNDED = 1
 const CONTACT_URL_MAX_LENGTH = 2048
 const CONTACT_EMAIL_MAX_LENGTH = 254
 
+const DESCRIPTION_MAX_LENGTH = 2000
+
 // Upper bound is re-evaluated per parse so a long-running process doesn't keep
 // rejecting the new year after a calendar rollover.
 const YearFoundedSchema = z
@@ -51,9 +53,16 @@ export const ContactEmailSchema = z
   )
   .nullable()
 
+export const DescriptionSchema = z
+  .string()
+  .trim()
+  .max(DESCRIPTION_MAX_LENGTH, { message: 'description is too long' })
+  .nullable()
+
 export const PublicCommunitySchema = UserContentMetadataSchema.extend({
   kind: COMMUNITY_KIND,
   yearFounded: YearFoundedSchema,
+  description: DescriptionSchema,
   contactUrl: ContactUrlSchema,
   contactEmail: ContactEmailSchema,
 })
@@ -62,6 +71,7 @@ export type PublicCommunity = z.infer<typeof PublicCommunitySchema>
 export const PublicCommunityDetailSchema = PublicUserContentDetailBaseSchema.extend({
   kind: COMMUNITY_KIND,
   yearFounded: YearFoundedSchema,
+  description: DescriptionSchema,
   contactUrl: ContactUrlSchema,
   contactEmail: ContactEmailSchema,
 })
@@ -74,6 +84,7 @@ export type OwnerCommunity = z.infer<typeof OwnerCommunitySchema>
 
 export const CreateCommunityPayloadSchema = BaseUserContentPayloadSchema.extend({
   yearFounded: YearFoundedSchema.optional(),
+  description: DescriptionSchema.optional(),
   contactUrl: ContactUrlSchema.optional(),
   contactEmail: ContactEmailSchema.optional(),
   imageIds: z.array(z.string().cuid()).max(MAX_IMAGES_PER_GALLERY).optional(),

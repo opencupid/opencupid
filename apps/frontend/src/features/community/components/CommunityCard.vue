@@ -30,11 +30,13 @@ const shareCommunityPayload = computed<SharePayload>(() => ({
 
 const communityLocation = computed(() => props.community.location ?? null)
 
+// The name (content) is the card title; the description is shown as the body
+// only in the detail view, truncated to keep grid cards compact.
 const GRID_TRUNCATE_LENGTH = 100
-const displayContent = computed(() => {
-  const content = props.community.content
-  if (props.showDetails || content.length <= GRID_TRUNCATE_LENGTH) return content
-  const truncated = content.substring(0, GRID_TRUNCATE_LENGTH)
+const displayDescription = computed(() => {
+  const description = props.community.description ?? ''
+  if (props.showDetails || description.length <= GRID_TRUNCATE_LENGTH) return description
+  const truncated = description.substring(0, GRID_TRUNCATE_LENGTH)
   const lastSpace = truncated.lastIndexOf(' ')
   return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '…'
 })
@@ -63,7 +65,13 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
           cols="12"
           md="8"
         >
-          <p class="lh-sm small mb-0">{{ displayContent }}</p>
+          <h5 class="community-name lh-sm mb-1">{{ community.content }}</h5>
+          <p
+            v-if="displayDescription"
+            class="lh-sm small mb-0"
+          >
+            {{ displayDescription }}
+          </p>
         </BCol>
         <BCol
           cols="12"
