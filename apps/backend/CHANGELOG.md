@@ -1,5 +1,11 @@
 # backend
 
+## 0.73.0
+
+### Minor Changes
+
+- 980f1f9: Filter the nearby features list by the map's layer selection
+
 ## 0.72.1
 
 ## 0.72.0

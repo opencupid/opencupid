@@ -1,5 +1,15 @@
 # frontend
 
+## 0.73.0
+
+### Minor Changes
+
+- 980f1f9: Filter the nearby features list by the map's layer selection
+
+### Patch Changes
+
+- 016b9eb: Remove the posted-by profile thumbnail and name from CommunityCard's meta row, leaving only the ViewerToolbar
+
 ## 0.72.1
 
 ### Patch Changes
