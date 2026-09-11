@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { PublicTagSchema } from '../tag/tag.dto'
 import { USER_CONTENT_KINDS } from '../../maps'
+import { csvEnumSchema } from '../dto/csvEnum.dto'
 
 export const ClusterFeatureSchema = z.object({
   type: z.literal('cluster'),
@@ -47,20 +48,6 @@ export type ClusterMapResponse = z.infer<typeof ClusterMapResponseSchema>
 
 /**
  * Parses a comma-separated `kinds` query param into a deduped array of
- * `UserContentKind` values. Empty input is rejected by `.min(1)` — callers
- * must explicitly select at least one kind. Mirrors the parser style used
- * for `tagIds` in `findProfile.route.ts`. Order is preserved from input;
- * cache-key callers sort separately when stability is required.
+ * `UserContentKind` values — every layer the social map can display.
  */
-export const KindsSchema = z
-  .string()
-  .default('')
-  .transform((raw) => [
-    ...new Set(
-      raw
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-    ),
-  ])
-  .pipe(z.array(z.enum(USER_CONTENT_KINDS)).min(1).max(USER_CONTENT_KINDS.length))
+export const KindsSchema = csvEnumSchema(USER_CONTENT_KINDS)

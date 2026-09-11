@@ -48,6 +48,7 @@ import type {
 import {
   UserContentMetadataSchema,
   type UserContentMetadata,
+  type ContentKind,
 } from '@zod/userContent/userContent.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 import { bus } from '@/lib/bus'
@@ -83,6 +84,8 @@ export const useUserContentStore = defineStore('userContent', {
     myContent: [] as OwnerUserContent[],
     /** Map-bounds feed items — populated by fetchFeedInBounds. */
     feedItems: [] as UserContentMetadata[],
+    /** Viewport of the last feed fetch, so a kind-filter change can refetch it. */
+    lastFeedBounds: null as MapBounds | null,
     isLoading: false,
     isInitialized: false,
     /** Viewer's own RSVP status per event id. null = explicitly not attending; undefined = not yet fetched. */
@@ -421,11 +424,21 @@ export const useUserContentStore = defineStore('userContent', {
       }
     },
 
-    async fetchFeedInBounds(bounds: MapBounds): Promise<StoreFeedItemsResponse> {
+    async fetchFeedInBounds(
+      bounds: MapBounds,
+      kinds: ContentKind[]
+    ): Promise<StoreFeedItemsResponse> {
+      this.lastFeedBounds = bounds
+      // The wire schema requires at least one kind; nothing selected means
+      // nothing to show.
+      if (kinds.length === 0) {
+        this.feedItems = []
+        return storeSuccess({ items: [] })
+      }
       try {
         const res = await safeApiCall(() =>
           api.get<ContentBoundsResponse>('/content/bounds', {
-            params: bounds,
+            params: { ...bounds, kinds: kinds.join(',') },
           })
         )
         const items = UserContentMetadataArraySchema.parse(res.data.items)
@@ -434,6 +447,11 @@ export const useUserContentStore = defineStore('userContent', {
       } catch (error: any) {
         return storeError(error, 'Failed to fetch feed in bounds')
       }
+    },
+
+    async refetchFeedInBounds(kinds: ContentKind[]): Promise<void> {
+      if (!this.lastFeedBounds) return
+      await this.fetchFeedInBounds(this.lastFeedBounds, kinds)
     },
   },
 })

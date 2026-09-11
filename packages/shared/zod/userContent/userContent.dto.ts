@@ -4,8 +4,15 @@ import { ConversationContextSchema } from '../interaction/interactionContext.dto
 import { LocationSchema } from '@zod/dto/location.dto'
 import { PublicImageSchema } from '../image/image.dto'
 import { MAX_TAGS_PER_CONTENT, PublicTagSchema } from '../tag/tag.dto'
+import { csvEnumSchema } from '../dto/csvEnum.dto'
 
-export const ContentKindSchema = z.enum(['post', 'event', 'community'])
+/**
+ * The kinds a `UserContent` row can hold. A subset of the map's
+ * `USER_CONTENT_KINDS`, which additionally covers profiles — those live in
+ * their own table and never appear as user content.
+ */
+export const CONTENT_KINDS = ['post', 'event', 'community'] as const
+export const ContentKindSchema = z.enum(CONTENT_KINDS)
 export type ContentKind = z.infer<typeof ContentKindSchema>
 
 /**
@@ -45,6 +52,12 @@ export const UserContentQueryShape = {
 
 export const UserContentQuerySchema = z.object(UserContentQueryShape)
 export type UserContentQuery = z.infer<typeof UserContentQuerySchema>
+
+/**
+ * Parses a comma-separated `kinds` query param into a deduped array of
+ * `ContentKind` values — the kinds `UserContent` rows can actually hold.
+ */
+export const ContentKindsSchema = csvEnumSchema(CONTENT_KINDS)
 
 export const NearbyContentQueryShape = {
   ...UserContentQueryShape,

@@ -69,12 +69,7 @@ watch(selectedTagIds, () => {
   findProfileStore.refetchBounds()
 })
 
-// Server-side layer filtering: toggling a layer changes the `kinds` query
-// param sent on cluster fetches. Invalidate the bounds cache and refetch.
 const { selectedLayers } = storeToRefs(findProfileStore)
-watch(selectedLayers, () => {
-  findProfileStore.refetchBounds()
-})
 
 // Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from

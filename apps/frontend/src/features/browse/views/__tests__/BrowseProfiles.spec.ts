@@ -1,4 +1,4 @@
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { nextTick, ref, computed } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
@@ -120,7 +120,6 @@ vi.mock('../../composables/useBrowseViewModel', () => ({
 
 // findProfileStore is real (so storeToRefs works); spies attach in beforeEach.
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
-let mockRefetchBounds: ReturnType<typeof vi.spyOn>
 
 const mockFeedItems = ref<any[]>([])
 vi.mock('@/features/userContent/stores/userContentStore', () => ({
@@ -196,7 +195,7 @@ describe('BrowseProfiles view', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     const findProfileStore = useFindProfileStore()
-    mockRefetchBounds = vi.spyOn(findProfileStore, 'refetchBounds').mockResolvedValue(undefined)
+    vi.spyOn(findProfileStore, 'refetchBounds').mockResolvedValue(undefined)
     vi.spyOn(findProfileStore, 'fetchBounds').mockResolvedValue(undefined)
     vmState.isNoOneAround.value = false
     vmState.viewerProfile.value = {
@@ -374,17 +373,5 @@ describe('BrowseProfiles view', () => {
     await nextTick()
     const map = wrapper.findComponent({ name: 'OsmPoiMap' })
     expect(map.props('highlightedLocation')).toEqual([51.5, -0.1])
-  })
-
-  it('refetches bounds when findProfileStore.selectedLayers changes', async () => {
-    mountComponent()
-    await flushPromises()
-
-    const findProfileStore = useFindProfileStore()
-    mockRefetchBounds.mockClear()
-    findProfileStore.selectedLayers = ['post']
-    await nextTick()
-
-    expect(mockRefetchBounds).toHaveBeenCalledTimes(1)
   })
 })

@@ -335,14 +335,51 @@ describe('useUserContentStore', () => {
       mockApi.get.mockResolvedValue({ data: { success: true, items } })
 
       const bounds: MapBounds = { north: 0, south: 0, east: 0, west: 0 }
-      const result = await store.fetchFeedInBounds(bounds)
+      const result = await store.fetchFeedInBounds(bounds, ['post', 'event'])
 
       expect(result.success).toBe(true)
-      expect(mockApi.get).toHaveBeenCalledWith('/content/bounds', { params: bounds })
+      expect(mockApi.get).toHaveBeenCalledWith('/content/bounds', {
+        params: { ...bounds, kinds: 'post,event' },
+      })
       expect(store.feedItems.map((i) => [i.id, i.kind])).toEqual([
         [CUID_1, 'post'],
         ['event-2', 'event'],
       ])
+    })
+
+    it('clears feedItems without a request when no kinds are selected', async () => {
+      const store = useUserContentStore()
+      store.feedItems = [{ id: CUID_1 }] as any
+
+      const bounds: MapBounds = { north: 0, south: 0, east: 0, west: 0 }
+      const result = await store.fetchFeedInBounds(bounds, [])
+
+      expect(result.success).toBe(true)
+      expect(mockApi.get).not.toHaveBeenCalled()
+      expect(store.feedItems).toEqual([])
+    })
+
+    it('refetches the last viewport with new kinds', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockResolvedValue({ data: { success: true, items: [] } })
+
+      const bounds: MapBounds = { north: 1, south: 2, east: 3, west: 4 }
+      await store.fetchFeedInBounds(bounds, ['post'])
+      mockApi.get.mockClear()
+
+      await store.refetchFeedInBounds(['event'])
+
+      expect(mockApi.get).toHaveBeenCalledWith('/content/bounds', {
+        params: { ...bounds, kinds: 'event' },
+      })
+    })
+
+    it('does not refetch before a viewport is known', async () => {
+      const store = useUserContentStore()
+
+      await store.refetchFeedInBounds(['post'])
+
+      expect(mockApi.get).not.toHaveBeenCalled()
     })
   })
 
