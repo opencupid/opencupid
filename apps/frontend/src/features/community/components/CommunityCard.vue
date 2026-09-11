@@ -68,7 +68,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
           <h5 class="community-name lh-sm mb-1">{{ community.content }}</h5>
           <p
             v-if="displayDescription"
-            class="lh-sm small mb-0"
+            class="lh-sm small mb-0 pre-line"
           >
             {{ displayDescription }}
           </p>
@@ -91,6 +91,9 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
           />
         </BCol>
       </BRow>
+
+      <!-- Detail-view extras (e.g. contact links) sit above the meta/toolbar row. -->
+      <slot name="details" />
 
       <div
         class="community-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"

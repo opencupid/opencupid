@@ -44,9 +44,9 @@ const handleBack = () => {
 </script>
 
 <template>
-  <div class="w-100">
+  <div class="w-100 h-100 d-flex flex-column">
     <div
-      class="d-flex justify-content-end align-items-center w-100"
+      class="d-flex justify-content-end align-items-center w-100 flex-shrink-0"
       v-if="isMdUp"
     >
       <BButton
@@ -58,51 +58,69 @@ const handleBack = () => {
         <IconCross class="svg-icon" />
       </BButton>
     </div>
-    <CommunityCard
-      :community="community"
-      :show-details="true"
-      class="pt-2 pt-md-3 pt-lg-5"
-    />
-    <dl
-      v-if="community.contactUrl || community.contactEmail"
-      class="community-contact d-flex flex-column gap-2 px-2 pt-2 mb-0 small"
-    >
-      <div
-        v-if="community.contactUrl"
-        class="d-flex align-items-center gap-2"
+    <!--
+      The md+ detail panel body is `overflow-hidden`, so content owns its own
+      scroll container (matching PublicProfile). Without this the description
+      is clipped instead of scrolling.
+    -->
+    <div class="community-scroll flex-grow-1 overflow-auto hide-scrollbar">
+      <CommunityCard
+        :community="community"
+        :show-details="true"
+        class="pt-2 pt-md-3 pt-lg-5"
       >
-        <dt class="text-muted mb-0">
-          <IconGlobe
-            class="svg-icon"
-            aria-hidden="true"
-          />
-          <span class="visually-hidden">{{ $t('community.labels.contact_url') }}</span>
-        </dt>
-        <dd class="mb-0 text-truncate">
-          <a
-            :href="community.contactUrl"
-            target="_blank"
-            rel="noopener noreferrer external"
+        <template #details>
+          <dl
+            v-if="community.contactUrl || community.contactEmail"
+            class="community-contact d-flex flex-column gap-2 px-2 pt-2 mb-0 small"
           >
-            {{ contactUrlLabel }}
-          </a>
-        </dd>
-      </div>
-      <div
-        v-if="community.contactEmail"
-        class="d-flex align-items-center gap-2"
-      >
-        <dt class="text-muted mb-0">
-          <IconMail
-            class="svg-icon"
-            aria-hidden="true"
-          />
-          <span class="visually-hidden">{{ $t('community.labels.contact_email') }}</span>
-        </dt>
-        <dd class="mb-0 text-truncate">
-          <a :href="contactEmailHref">{{ community.contactEmail }}</a>
-        </dd>
-      </div>
-    </dl>
+            <div
+              v-if="community.contactUrl"
+              class="d-flex align-items-center gap-2"
+            >
+              <dt class="text-muted mb-0">
+                <IconGlobe
+                  class="svg-icon"
+                  aria-hidden="true"
+                />
+                <span class="visually-hidden">{{ $t('community.labels.contact_url') }}</span>
+              </dt>
+              <dd class="mb-0 text-truncate">
+                <a
+                  :href="community.contactUrl"
+                  target="_blank"
+                  rel="noopener noreferrer external"
+                >
+                  {{ contactUrlLabel }}
+                </a>
+              </dd>
+            </div>
+            <div
+              v-if="community.contactEmail"
+              class="d-flex align-items-center gap-2"
+            >
+              <dt class="text-muted mb-0">
+                <IconMail
+                  class="svg-icon"
+                  aria-hidden="true"
+                />
+                <span class="visually-hidden">{{ $t('community.labels.contact_email') }}</span>
+              </dt>
+              <dd class="mb-0 text-truncate">
+                <a :href="contactEmailHref">{{ community.contactEmail }}</a>
+              </dd>
+            </div>
+          </dl>
+        </template>
+      </CommunityCard>
+    </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.community-scroll {
+  // Without this a flex child keeps `min-height: auto` and refuses to shrink
+  // below its content, so `overflow-auto` would never actually scroll.
+  min-height: 0;
+}
+</style>

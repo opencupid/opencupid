@@ -63,6 +63,21 @@ describe('CommunityCard', () => {
     expect(wrapper.text()).toContain('We meet every weekend to explore trails around the city.')
   })
 
+  // HTML collapses newlines, so the paragraph carries the global `.pre-line`
+  // utility (white-space: pre-line) to keep authored paragraph breaks visible.
+  it('preserves authored paragraph breaks in the description', () => {
+    const wrapper = mount(CommunityCard, {
+      props: {
+        community: { ...baseCommunity, description: 'First para.\n\nSecond para.' },
+        showDetails: true,
+      },
+      global: { stubs },
+    })
+    const body = wrapper.find('p.pre-line')
+    expect(body.exists()).toBe(true)
+    expect(body.element.textContent).toContain('First para.\n\nSecond para.')
+  })
+
   it('truncates a long description in grid mode (showDetails false)', () => {
     const longDescription = 'word '.repeat(60).trim() // ~300 chars, well over the 100 cap
     const wrapper = mount(CommunityCard, {

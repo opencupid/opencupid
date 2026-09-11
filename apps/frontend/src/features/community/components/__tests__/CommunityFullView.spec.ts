@@ -29,7 +29,8 @@ import CommunityFullView from '../CommunityFullView.vue'
 const stubs = {
   CommunityCard: {
     props: ['community'],
-    template: '<div class="community-card-stub">{{ community.id }}</div>',
+    // Renders the `details` slot so contact-block assertions still see it.
+    template: '<div class="community-card-stub">{{ community.id }}<slot name="details" /></div>',
   },
   BButton: { template: '<button @click="$emit(\'click\')"><slot /></button>' },
 }
@@ -65,6 +66,28 @@ describe('CommunityFullView', () => {
     })
     await wrapper.find('button').trigger('click')
     expect(replaceMock).toHaveBeenCalledWith({ name: 'Browse' })
+  })
+
+  // The md+ detail panel body is `overflow-hidden`, so the content component
+  // must own its scroll container or long descriptions are clipped rather than
+  // scrolled. Mirrors the height chain PublicProfile establishes.
+  it('owns a full-height scroll container for the md+ panel', () => {
+    const wrapper = mount(CommunityFullView, {
+      props: { community },
+      global: globalConfig,
+    })
+    const root = wrapper.element as HTMLElement
+    expect(root.className).toContain('h-100')
+    expect(root.className).toContain('d-flex')
+    expect(root.className).toContain('flex-column')
+
+    // `min-height: 0` comes from the component's scoped style, not a utility
+    // class (Bootstrap ships no min-height utilities).
+    const scroller = wrapper.find('.community-scroll')
+    expect(scroller.exists()).toBe(true)
+    expect(scroller.classes()).toEqual(expect.arrayContaining(['flex-grow-1', 'overflow-auto']))
+    // The card must live inside the scroller, not as a sibling above it.
+    expect(scroller.find('.community-card-stub').exists()).toBe(true)
   })
 })
 
