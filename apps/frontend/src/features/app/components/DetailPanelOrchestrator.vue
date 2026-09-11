@@ -43,6 +43,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
 
   <BottomSheet
     v-else
+    class="detail-panel"
     v-model="isOpen"
     @hidden="notifyHidden"
   >
