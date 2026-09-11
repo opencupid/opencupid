@@ -153,7 +153,6 @@ const handleSubmit = async () => {
       <AttachImageButton
         ref="imageBtn"
         :contentId="post?.id"
-        button-class="btn btn-secondary btn-icon"
       />
     </BFormGroup>
     <div class="d-flex justify-content-end mt-3">

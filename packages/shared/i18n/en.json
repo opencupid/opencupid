@@ -44,6 +44,8 @@
       "save": "Save"
     },
     "labels": {
+      "contact_email": "Contact email",
+      "contact_url": "Website",
       "content": "About this community",
       "founded_since": "Since {year}",
       "visibility": "Show this community",
@@ -53,7 +55,10 @@
       "error_load": "Failed to load community"
     },
     "placeholders": {
-      "content": "Describe your community…",
+      "contact_email": "hello@example.org",
+      "contact_url": "https://example.org",
+      "description": "Describe your community…",
+      "name": "Community name",
       "year_unknown": "Don't know / not sure"
     },
     "share": {

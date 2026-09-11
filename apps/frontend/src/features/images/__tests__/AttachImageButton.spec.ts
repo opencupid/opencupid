@@ -68,16 +68,18 @@ describe('AttachImageButton', () => {
     expect(classes).not.toContain('flex-column')
   })
 
-  it('forwards buttonClass to the ImageUpload control', () => {
-    const wrapper = mountWith({ buttonClass: 'btn btn-secondary btn-icon' })
+  it('forwards an explicit buttonClass to the ImageUpload control', () => {
+    const wrapper = mountWith({ buttonClass: 'btn btn-primary' })
+    expect(wrapper.findComponent(stubs.ImageUpload).props('buttonClass')).toBe('btn btn-primary')
+  })
+
+  // Falling through to ImageUpload's own `w-100 h-100` default renders a
+  // full-width unstyled icon instead of a button.
+  it('defaults to button styling rather than letting ImageUpload fill its container', () => {
+    const wrapper = mountWith()
     expect(wrapper.findComponent(stubs.ImageUpload).props('buttonClass')).toBe(
       'btn btn-secondary btn-icon'
     )
-  })
-
-  it('leaves buttonClass unset so ImageUpload applies its own default', () => {
-    const wrapper = mountWith()
-    expect(wrapper.findComponent(stubs.ImageUpload).props('buttonClass')).toBeUndefined()
   })
 
   it('exposes getImageIds reflecting the underlying store images', () => {

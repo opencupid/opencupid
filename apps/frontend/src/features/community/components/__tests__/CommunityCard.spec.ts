@@ -32,6 +32,7 @@ const baseCommunity = {
   id: 'c-1',
   kind: 'community' as const,
   content: 'A welcoming community for hikers',
+  description: 'We meet every weekend to explore trails around the city.',
   yearFounded: 1987,
   location: { country: 'HU', cityName: 'Budapest', lat: null, lon: null },
   postedBy: { id: 'p-1', publicName: 'Alice', profileImages: [] },
@@ -46,29 +47,65 @@ const stubs = {
 }
 
 describe('CommunityCard', () => {
-  it('renders content text', () => {
+  it('renders the name as the card heading', () => {
     const wrapper = mount(CommunityCard, {
       props: { community: baseCommunity, showDetails: true },
       global: { stubs },
     })
-    expect(wrapper.text()).toContain('A welcoming community for hikers')
+    expect(wrapper.find('.community-name').text()).toContain('A welcoming community for hikers')
   })
 
-  it('renders "Since {year}" when yearFounded is set', () => {
+  it('omits the location parens when the community has no location', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, location: null }, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.find('.community-name').text()).not.toContain('(')
+  })
+
+  it('renders the description as the body when showDetails is true', () => {
     const wrapper = mount(CommunityCard, {
       props: { community: baseCommunity, showDetails: true },
       global: { stubs },
     })
-    expect(wrapper.text()).toContain('community.labels.founded_since')
-    expect(wrapper.text()).toContain('1987')
+    expect(wrapper.text()).toContain('We meet every weekend to explore trails around the city.')
   })
 
-  it('omits the founded line when yearFounded is null', () => {
+  // HTML collapses newlines, so the paragraph carries the global `.pre-line`
+  // utility (white-space: pre-line) to keep authored paragraph breaks visible.
+  it('preserves authored paragraph breaks in the description', () => {
     const wrapper = mount(CommunityCard, {
-      props: { community: { ...baseCommunity, yearFounded: null }, showDetails: true },
+      props: {
+        community: { ...baseCommunity, description: 'First para.\n\nSecond para.' },
+        showDetails: true,
+      },
       global: { stubs },
     })
-    expect(wrapper.text()).not.toContain('community.labels.founded_since')
+    const body = wrapper.find('p.pre-line')
+    expect(body.exists()).toBe(true)
+    expect(body.element.textContent).toContain('First para.\n\nSecond para.')
+  })
+
+  it('truncates a long description in grid mode (showDetails false)', () => {
+    const longDescription = 'word '.repeat(60).trim() // ~300 chars, well over the 100 cap
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, description: longDescription }, showDetails: false },
+      global: { stubs },
+    })
+    const body = wrapper.find('p.small')
+    expect(body.exists()).toBe(true)
+    expect(body.text().endsWith('…')).toBe(true)
+    expect(body.text().length).toBeLessThan(longDescription.length)
+  })
+
+  it('renders no body paragraph when the description is null', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, description: null }, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.find('p.small').exists()).toBe(false)
+    // The name still renders.
+    expect(wrapper.find('.community-name').text()).toContain('A welcoming community for hikers')
   })
 
   it('emits click with the community', async () => {
