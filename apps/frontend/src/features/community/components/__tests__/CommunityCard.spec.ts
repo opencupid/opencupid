@@ -12,9 +12,6 @@ vi.mock('@/assets/icons/interface/community.svg', () => ({
   default: { template: '<span class="icon-community" />' },
 }))
 
-vi.mock('@/features/images/components/ProfileThumbnail.vue', () => ({
-  default: { template: '<div class="thumb" />' },
-}))
 vi.mock('@/features/userContent/components/ViewerToolbar.vue', () => ({
   default: {
     props: ['actions', 'copyText', 'sharePayload'],
@@ -127,14 +124,6 @@ describe('CommunityCard', () => {
     expect(toolbar.exists()).toBe(true)
     expect(toolbar.attributes('data-actions')).toBe('["copy","share"]')
     expect(toolbar.attributes('data-copy-text')).toBe(baseCommunity.content)
-  })
-
-  it('renders viewer profile thumbnail when not isOwn', () => {
-    const wrapper = mount(CommunityCard, {
-      props: { community: baseCommunity, showDetails: true },
-      global: { stubs },
-    })
-    expect(wrapper.find('.thumb').exists()).toBe(true)
   })
 
   it('exposes tag slugs on the wrapper via the data-tags attribute', () => {

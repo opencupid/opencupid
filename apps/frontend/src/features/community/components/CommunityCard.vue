@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import type { PublicCommunity, OwnerCommunity } from '@zod/community/community.dto'
 import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
 import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
@@ -84,16 +83,6 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
       <div
         class="community-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"
       >
-        <div
-          v-if="!community.isOwn"
-          class="d-flex align-items-center gap-2"
-        >
-          <ProfileThumbnail
-            :profile="community.postedBy"
-            size="sm"
-          />
-          <span>{{ community.postedBy.publicName }}</span>
-        </div>
         <ViewerToolbar
           v-if="showDetails"
           :actions="['copy', 'share']"
