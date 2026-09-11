@@ -1,5 +1,11 @@
 # frontend
 
+## 0.72.1
+
+### Patch Changes
+
+- 22ba218: Add detail-panel class to BottomSheet in DetailPanelOrchestrator
+
 ## 0.72.0
 
 ### Minor Changes
