@@ -1,5 +1,15 @@
 # frontend
 
+## 0.72.0
+
+### Minor Changes
+
+- e331066: Add an optional long-form description plus contactUrl and contactEmail to communities, editable in the community form and shown on the community detail view. The community name is now a dedicated field above the description.
+
+### Patch Changes
+
+- 13d6aae: Expose UserContent tag slugs as a `data-tags` attribute on nearby-feature cards and the post, event, and community content cards (#1513).
+
 ## 0.71.0
 
 ### Minor Changes

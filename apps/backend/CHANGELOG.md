@@ -1,5 +1,20 @@
 # backend
 
+## 0.72.0
+
+### Minor Changes
+
+- e331066: Add an optional long-form description plus contactUrl and contactEmail to communities, editable in the community form and shown on the community detail view. The community name is now a dedicated field above the description.
+- 810d678: Allow UserContent (posts, events, communities) to carry Tags via a new implicit
+  many-to-many relation, mirroring Profile tagging. Adds `tagIds` to the shared
+  content create/update payloads, carries content associations through the admin
+  tag merge, and exposes a locale-resolved `tags` array on every content DTO.
+  Content mappers take a `MapperContext` (`viewerProfileId` + `locale`).
+
+### Patch Changes
+
+- b76f5ba: Declare the pg_trgm GIN indexes in `schema.prisma` so Prisma no longer reads them as drift and proposes dropping them in every generated migration.
+
 ## 0.71.0
 
 ### Minor Changes
