@@ -1,5 +1,11 @@
 # frontend
 
+## 0.73.1
+
+### Patch Changes
+
+- 979478e: Fix language tags on other profiles showing in English instead of the GUI locale after a hard refresh
+
 ## 0.73.0
 
 ### Minor Changes
