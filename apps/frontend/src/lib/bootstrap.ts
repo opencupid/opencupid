@@ -8,7 +8,6 @@ import { bus } from './bus'
 import { useInteractionStore } from '../features/interaction/stores/useInteractionStore'
 import { useMessageStore } from '../features/messaging/stores/messageStore'
 import { useOwnerProfileStore } from '../features/myprofile/stores/ownerProfileStore'
-import { useLocalStore } from '../store/localStore'
 
 export const useBootstrap = defineStore('bootstrap', () => {
   // Singleton promise — subsequent calls to bootstrap() return the same promise
@@ -29,8 +28,8 @@ export const useBootstrap = defineStore('bootstrap', () => {
     if (bootstrapPromise.value) return bootstrapPromise.value
 
     bootstrapPromise.value = (async () => {
-      const localStore = useLocalStore()
-      localStore.initialize()
+      // localStore.initialize() now runs eagerly in main.ts, before the app
+      // mounts, so the saved language preference is available immediately.
 
       // authStore.initialize() is intentionally NOT called here — it lives in
       // app.ts (cold-start path) and in authStore.verifyToken (hot-start path).

@@ -26,7 +26,6 @@ const localeLoaders: Record<string, () => Promise<any>> = {
   de: () => import('@cospired/i18n-iso-languages/langs/de.json'),
   es: () => import('@cospired/i18n-iso-languages/langs/es.json'),
   fr: () => import('@cospired/i18n-iso-languages/langs/fr.json'),
-  hu: () => import('@cospired/i18n-iso-languages/langs/hu.json'),
   it: () => import('@cospired/i18n-iso-languages/langs/it.json'),
   nl: () => import('@cospired/i18n-iso-languages/langs/nl.json'),
   pl: () => import('@cospired/i18n-iso-languages/langs/pl.json'),
@@ -34,10 +33,15 @@ const localeLoaders: Record<string, () => Promise<any>> = {
   ro: () => import('@cospired/i18n-iso-languages/langs/ro.json'),
   sk: () => import('@cospired/i18n-iso-languages/langs/sk.json'),
 }
-const loadedLocales = new Set(['en'])
+const loadedLocales = new Set(['en', 'hu'])
 
-import lang from '@cospired/i18n-iso-languages/langs/en.json'
-languages.registerLocale(lang)
+// Always register the app's own locales synchronously (not lazily) so the
+// active language is available immediately, without waiting on the async
+// language-change flow that only fires from an explicit in-app switch.
+import enLang from '@cospired/i18n-iso-languages/langs/en.json'
+import huLang from '@cospired/i18n-iso-languages/langs/hu.json'
+languages.registerLocale(enLang)
+languages.registerLocale(huLang)
 
 // Lazy-register other languages only when first needed
 async function ensureCountryLocale(locale: string) {

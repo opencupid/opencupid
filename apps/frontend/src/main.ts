@@ -28,6 +28,7 @@ import { createBootstrap } from 'bootstrap-vue-next'
 import App from './App.vue'
 import router from './router'
 import './lib/auth'
+import { useLocalStore } from './store/localStore'
 
 const app = createApp(App)
 
@@ -47,6 +48,11 @@ app.use(createPinia())
 app.use(router)
 app.use(createBootstrap()) // bootstrap-vue-next
 registerToast(app) // vue-toastification plugin (used by lazy authenticated UI)
+
+// Must run before appUseI18n()/App.vue mount so the saved language
+// preference is available the moment i18nStore computes its initial
+// locale, instead of only being read later when bootstrap() runs.
+useLocalStore().initialize()
 
 useAuthStore().initialize()
 

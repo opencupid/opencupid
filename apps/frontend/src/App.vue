@@ -21,8 +21,12 @@ const AuthenticatedSurface = defineAsyncComponent(
 )
 
 const i18nStore = useI18nStore()
-useCountries().initialize(i18nStore.getLanguage())
-useLanguages().initialize(i18nStore.getLanguage())
+// Use currentLanguage (settled synchronously when the store was created),
+// not getLanguage() (Tolgee's locale) — Tolgee's changeLanguage() triggered
+// by the store's own immediate watcher above is still resolving at this
+// point, so getLanguage() would read back the stale pre-correction value.
+useCountries().initialize(i18nStore.currentLanguage)
+useLanguages().initialize(i18nStore.currentLanguage)
 
 useUpdateChecker()
 

@@ -30,10 +30,6 @@ vi.mock('@/features/interaction/stores/useInteractionStore', () => ({
   useInteractionStore: () => ({ initialize: mockInteractionInit }),
 }))
 
-vi.mock('@/store/localStore', () => ({
-  useLocalStore: () => ({ initialize: vi.fn() }),
-}))
-
 vi.stubGlobal('__APP_CONFIG__', { NODE_ENV: 'test' })
 
 import { useBootstrap } from '../bootstrap'
