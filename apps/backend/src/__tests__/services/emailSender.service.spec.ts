@@ -20,6 +20,7 @@ vi.mock('@/lib/appconfig', () => ({
     SMTP_PORT: 587,
     SMTP_USER: 'user',
     SMTP_PASS: 'pass',
+    EMAIL_REPLY_TO: 'support@example.com',
   },
 }))
 
@@ -84,5 +85,30 @@ describe('EmailService.sendEmail', () => {
         headers: { 'List-Unsubscribe': '<https://x>' },
       })
     )
+  })
+
+  it('sets Reply-To from EMAIL_REPLY_TO config', async () => {
+    await emailService.sendEmail(payload, 'Komatérkép <hello@example.com>')
+
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ replyTo: 'support@example.com' })
+    )
+  })
+
+  it('leaves Reply-To undefined when EMAIL_REPLY_TO is not configured', async () => {
+    vi.doMock('@/lib/appconfig', () => ({
+      appConfig: {
+        SMTP_HOST: 'smtp.test',
+        SMTP_PORT: 587,
+        SMTP_USER: 'user',
+        SMTP_PASS: 'pass',
+      },
+    }))
+    vi.resetModules()
+    const mod = await import('../../services/email/emailSender.service')
+
+    await mod.emailService.sendEmail(payload, 'Komatérkép <hello@example.com>')
+
+    expect(mockSendMail).toHaveBeenCalledWith(expect.objectContaining({ replyTo: undefined }))
   })
 })

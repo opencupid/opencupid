@@ -26,6 +26,7 @@ export class EmailService {
     const mailOptions = {
       from,
       to: payload.to,
+      replyTo: appConfig.EMAIL_REPLY_TO,
       subject: payload.subject,
       text: renderEmailText(payload.templateProps),
       html,
