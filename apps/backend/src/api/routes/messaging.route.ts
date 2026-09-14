@@ -584,9 +584,12 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
                   where: { id: payload.data.profileId },
                   select: { user: { select: { language: true } } },
                 })
-                return i18next.getFixedT(recipientProfile?.user?.language || 'en')(
-                  'notifications.voice_message_sent'
-                )
+                // null, not a hardcoded 'en': i18next then applies the
+                // configured fallbackLng rather than pinning this to English.
+                return i18next.getFixedT(
+                  recipientProfile?.user?.language ?? null,
+                  'translation'
+                )('notifications.voice_message_sent')
               },
             })
           }

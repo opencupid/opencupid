@@ -17,11 +17,28 @@ const supportedLocales = new Set(Object.keys(appLocales))
  * for attacker-chosen input.
  *
  * `fallback` is treated as untrusted: it arrives from deployment config that
- * nothing validates — the frontend's reaches the browser through `envsubst`,
+ * nothing validates — the frontend config reaches the browser through `envsubst`,
  * which writes an unset var as `''` — and returning it unchecked would leave
  * the caller with a locale that has no catalog.
  */
 export function normalizeLocale(language: string, fallback: string = fallbackLocale): string {
-  const candidates = [language, ...language.split('-', 1), fallback]
-  return candidates.find((code) => supportedLocales.has(code)) ?? fallbackLocale
+  return matchLocale(language) ?? matchLocale(fallback) ?? fallbackLocale
+}
+
+/**
+ * The supported locale for a language tag — exact match, then base tag
+ * (`hu-HU` → `hu`) — or null when neither has translations.
+ */
+function matchLocale(language: string): string | null {
+  const candidates = [language, ...language.split('-', 1)]
+  return candidates.find((code) => supportedLocales.has(code)) ?? null
+}
+
+/**
+ * Bound a configured fallback locale to one that has translations, applying
+ * the same base-tag policy as a requested language so a deployment setting of
+ * `hu-HU` resolves identically everywhere it is read.
+ */
+export function resolveFallbackLocale(configured: string): string {
+  return matchLocale(configured) ?? fallbackLocale
 }

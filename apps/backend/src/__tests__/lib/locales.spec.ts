@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fallbackLocale, normalizeLocale } from '@shared/i18n/locales'
+import { fallbackLocale, normalizeLocale, resolveFallbackLocale } from '@shared/i18n/locales'
 
 describe('normalizeLocale', () => {
   it('passes through a supported locale', () => {
@@ -49,5 +49,29 @@ describe('normalizeLocale with a configured fallback', () => {
   it('does not accept an Object prototype member as the fallback', () => {
     expect(normalizeLocale('zz', 'constructor')).toBe(fallbackLocale)
     expect(normalizeLocale('zz', '__proto__')).toBe(fallbackLocale)
+  })
+})
+
+describe('resolveFallbackLocale', () => {
+  it('passes through a locale with translations', () => {
+    expect(resolveFallbackLocale('hu')).toBe('hu')
+    expect(resolveFallbackLocale('en')).toBe('en')
+  })
+
+  it('narrows a region-tagged configured locale to its supported base', () => {
+    expect(resolveFallbackLocale('hu-HU')).toBe('hu')
+  })
+
+  it('degrades a configured locale that has no translations', () => {
+    expect(resolveFallbackLocale('de')).toBe(fallbackLocale)
+    expect(resolveFallbackLocale('')).toBe(fallbackLocale)
+    expect(resolveFallbackLocale('${FALLBACK_LOCALE}')).toBe(fallbackLocale)
+    expect(resolveFallbackLocale('constructor')).toBe(fallbackLocale)
+  })
+
+  // Backend i18next and the frontend store both read FALLBACK_LOCALE; a
+  // region tag must not resolve to a different locale in each.
+  it('agrees with normalizeLocale on a region-tagged fallback', () => {
+    expect(normalizeLocale('zz', 'hu-HU')).toBe(resolveFallbackLocale('hu-HU'))
   })
 })
