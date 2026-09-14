@@ -72,4 +72,47 @@ describe('useI18nStore', () => {
       expect(store.currentLanguage).toBe(before)
     })
   })
+
+  // The store computes its initial locale at setup time from navigator.language
+  // and __APP_CONFIG__, so each case needs a fresh Pinia to re-run that.
+  describe('initial language', () => {
+    const setBrowserLanguage = (value: string) => {
+      Object.defineProperty(navigator, 'language', { value, configurable: true })
+    }
+    const setConfiguredFallback = (value: string) => {
+      ;(globalThis as any).__APP_CONFIG__ = {
+        ...(globalThis as any).__APP_CONFIG__,
+        FALLBACK_LOCALE: value,
+      }
+    }
+
+    it('uses the configured fallback when the browser language is unsupported', () => {
+      setBrowserLanguage('de-DE')
+      setConfiguredFallback('hu')
+      setActivePinia(createPinia())
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+
+    it('prefers a supported browser language over the fallback', () => {
+      setBrowserLanguage('en-GB')
+      setConfiguredFallback('hu')
+      setActivePinia(createPinia())
+
+      expect(useI18nStore().currentLanguage).toBe('en')
+    })
+
+    // envsubst writes an unset var as '' and nothing validates it in the
+    // browser, so an unusable fallback must not become the active locale.
+    it.each(['', 'de', '${FALLBACK_LOCALE}'])(
+      'degrades the unusable fallback %o to a translated locale',
+      (fallback) => {
+        setBrowserLanguage('de-DE')
+        setConfiguredFallback(fallback)
+        setActivePinia(createPinia())
+
+        expect(useI18nStore().currentLanguage).toBe('en')
+      }
+    )
+  })
 })

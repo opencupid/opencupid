@@ -26,3 +26,28 @@ describe('normalizeLocale', () => {
     expect(normalizeLocale('__proto__')).toBe(fallbackLocale)
   })
 })
+
+describe('normalizeLocale with a configured fallback', () => {
+  it('applies the configured fallback for an unsupported language', () => {
+    expect(normalizeLocale('zz', 'hu')).toBe('hu')
+    expect(normalizeLocale('', 'hu')).toBe('hu')
+  })
+
+  it('prefers a supported language over the fallback', () => {
+    expect(normalizeLocale('en', 'hu')).toBe('en')
+    expect(normalizeLocale('en-GB', 'hu')).toBe('en')
+  })
+
+  // The configured value is untrusted: envsubst writes an unset var as '',
+  // and nothing validates it before it reaches here.
+  it('degrades a fallback that has no translations', () => {
+    expect(normalizeLocale('zz', 'de')).toBe(fallbackLocale)
+    expect(normalizeLocale('zz', '')).toBe(fallbackLocale)
+    expect(normalizeLocale('zz', '${FALLBACK_LOCALE}')).toBe(fallbackLocale)
+  })
+
+  it('does not accept an Object prototype member as the fallback', () => {
+    expect(normalizeLocale('zz', 'constructor')).toBe(fallbackLocale)
+    expect(normalizeLocale('zz', '__proto__')).toBe(fallbackLocale)
+  })
+})

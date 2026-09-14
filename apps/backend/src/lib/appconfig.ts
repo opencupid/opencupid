@@ -46,6 +46,10 @@ export const configSchema = z.object({
 
   SITE_NAME: z.string().default('OpenCupid'),
 
+  // Not validated here: normalizeLocale() bounds it at each use site, so an
+  // unusable value degrades instead of refusing to boot.
+  FALLBACK_LOCALE: z.string().default('en'),
+
   JITSI_DOMAIN: z.string().default('meet.jit.si'),
 
   DEEPL_API_KEY: z.string().optional(),
