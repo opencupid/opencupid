@@ -138,6 +138,9 @@ vi.mock('fs', () => ({
 
 beforeEach(async () => {
   vi.clearAllMocks()
+  // A plain array is untouched by clearAllMocks(), so reset it alongside the
+  // mocks it belongs to rather than leaving assertions order-dependent.
+  getFixedTCalls.length = 0
   fastify = new MockFastify()
   reply = new MockReply()
   mockTrustService = {
@@ -715,7 +718,6 @@ describe('POST /voice', () => {
   // Passing null lets i18next apply the configured fallbackLng; a hardcoded
   // 'en' here would pin these notifications to English on a hu deployment.
   it('renders through the i18next fallback when the recipient has no language', async () => {
-    getFixedTCalls.length = 0
     const handler = fastify.routes['POST /voice']
 
     fastify.prisma.profile.findUnique.mockResolvedValue(null)
