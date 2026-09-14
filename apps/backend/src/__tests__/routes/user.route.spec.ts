@@ -74,7 +74,7 @@ describe('PATCH /me', () => {
     const updateSession = vi.fn()
     const req = {
       user: { userId: 'u1' },
-      body: { language: 'de' },
+      body: { language: 'hu' },
       updateSession,
     }
     await handler(req as any, reply as any)
@@ -82,8 +82,27 @@ describe('PATCH /me', () => {
     expect(reply.payload.success).toBe(true)
     expect(fastify.prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
-      data: { language: 'de' },
+      data: { language: 'hu' },
     })
-    expect(updateSession).toHaveBeenCalledWith({ lang: 'de' })
+    expect(updateSession).toHaveBeenCalledWith({ lang: 'hu' })
+  })
+
+  // appLocales is only {en, hu}; a language outside that set is normalized to
+  // the fallback rather than stored as-is.
+  it('normalizes an unsupported language before storing it', async () => {
+    const handler = fastify.routes['PATCH /me']
+    const updateSession = vi.fn()
+    const req = {
+      user: { userId: 'u1' },
+      body: { language: 'de' },
+      updateSession,
+    }
+    await handler(req as any, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(fastify.prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { language: 'en' },
+    })
+    expect(updateSession).toHaveBeenCalledWith({ lang: 'en' })
   })
 })

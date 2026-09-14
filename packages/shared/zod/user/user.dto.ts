@@ -1,6 +1,7 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
 import { ProfileSchema, UserRoleSchema, UserSchema } from '../generated'
+import { normalizeLocale } from '../../i18n/locales'
 
 export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
@@ -16,7 +17,7 @@ export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
 export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
   captchaSolution: z.string().min(1, 'Captcha solution is required'),
-  language: z.string(),
+  language: z.string().transform(normalizeLocale),
 })
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 
@@ -63,7 +64,7 @@ export const LoginUserSchema = UserSchema.pick({
 export type LoginUser = z.infer<typeof LoginUserSchema>
 
 export const UpdateUserLanguagePayloadSchema = z.object({
-  language: z.string().min(2).max(5),
+  language: z.string().min(2).max(5).transform(normalizeLocale),
 })
 export type UpdateUserLanguagePayload = z.infer<typeof UpdateUserLanguagePayloadSchema>
 
