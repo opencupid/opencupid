@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { fallbackLocale, isSupportedLocale } from '../../i18n/locales'
 
 export const appConfigSchema = z.object({
   API_BASE_URL: z.string().default('/api'),
@@ -10,6 +11,14 @@ export const appConfigSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().default(''),
   SENTRY_DSN: z.string().default(''),
   SITE_NAME: z.string().default('OpenCupid'),
+  // Unsubstituted envsubst placeholders reach the browser as the literal
+  // '${FALLBACK_LOCALE}', so an unusable value must degrade to a locale that
+  // has translations rather than leave the UI with no catalog.
+  FALLBACK_LOCALE: z
+    .string()
+    .refine(isSupportedLocale)
+    .catch(fallbackLocale)
+    .default(fallbackLocale),
   JITSI_DOMAIN: z.string().default(''),
   VOICE_MESSAGE_MAX_DURATION: z.string().default('120'),
   MAP_TILE_URL: z.string().default(''),

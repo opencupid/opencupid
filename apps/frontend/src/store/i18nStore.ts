@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { ref, watch } from 'vue'
 import { bus } from '@/lib/bus'
 import { useLocalStore } from '@/store/localStore'
-import { appLocales, normalizeLocale } from '@shared/i18n/locales'
+import { appLocales, isSupportedLocale, negotiateLocale } from '@shared/i18n/locales'
 
 export const useI18nStore = defineStore('i18n', () => {
   const localStore = useLocalStore()
@@ -11,7 +11,7 @@ export const useI18nStore = defineStore('i18n', () => {
   const { locale } = useI18n()
 
   const preferredLanguage =
-    localStore.getLanguage ?? getBrowserLanguage(Object.keys(appLocales)) ?? 'en'
+    localStore.getLanguage ?? negotiateLocale(navigator.languages, __APP_CONFIG__.FALLBACK_LOCALE)
   const currentLanguage = ref(preferredLanguage)
 
   // Sync changes vue-i18n
@@ -33,7 +33,7 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 
   function setLanguage(lang: string) {
-    if (normalizeLocale(lang) !== lang) {
+    if (!isSupportedLocale(lang)) {
       console.error(`Unsupported language: ${lang}`)
       return
     }
@@ -60,8 +60,3 @@ export const useI18nStore = defineStore('i18n', () => {
     getLanguage,
   }
 })
-
-function getBrowserLanguage(availableLocales: string[]): string {
-  const browserLang = (navigator.language || 'en').split('-')[0] ?? 'en'
-  return availableLocales.includes(browserLang) ? browserLang : 'en'
-}

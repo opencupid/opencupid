@@ -39,6 +39,20 @@ describe('appConfig schema', () => {
     expect(result.WS_BASE_URL).toBe('/ws')
   })
 
+  it('keeps a configured FALLBACK_LOCALE that has translations', () => {
+    expect(appConfigSchema.parse({ FALLBACK_LOCALE: 'hu' }).FALLBACK_LOCALE).toBe('hu')
+  })
+
+  // envsubst leaves '${FALLBACK_LOCALE}' verbatim when the var is unset, so an
+  // unusable value must degrade rather than leave the UI without a catalog.
+  it('degrades an unusable FALLBACK_LOCALE to a locale with translations', () => {
+    expect(appConfigSchema.parse({ FALLBACK_LOCALE: '${FALLBACK_LOCALE}' }).FALLBACK_LOCALE).toBe(
+      'en'
+    )
+    expect(appConfigSchema.parse({ FALLBACK_LOCALE: 'de' }).FALLBACK_LOCALE).toBe('en')
+    expect(appConfigSchema.parse({}).FALLBACK_LOCALE).toBe('en')
+  })
+
   it('rejects non-string values without coercion', () => {
     expect(() => appConfigSchema.parse({ API_BASE_URL: 42 })).toThrow()
   })

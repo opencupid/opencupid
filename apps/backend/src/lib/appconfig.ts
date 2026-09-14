@@ -2,6 +2,7 @@ import { z } from 'zod'
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
 import { findUpSync } from '@shared/findUp'
+import { appLocales, isSupportedLocale } from '@shared/i18n/locales'
 
 // Zod schema
 export const configSchema = z.object({
@@ -44,6 +45,10 @@ export const configSchema = z.object({
   DOMAIN: z.string().min(1),
 
   SITE_NAME: z.string().default('OpenCupid'),
+
+  FALLBACK_LOCALE: z
+    .string()
+    .refine(isSupportedLocale, `must be a locale with translations: ${Object.keys(appLocales)}`),
 
   JITSI_DOMAIN: z.string().default('meet.jit.si'),
 
