@@ -116,6 +116,9 @@ describe('NotifierService', () => {
     expect(payload).toMatchObject({
       to: 'user@example.com',
       subject: 'emails.new_like.subject-translated',
+      // Drives <html lang> on the rendered document — the recipient's language,
+      // not the sending container's.
+      language: 'de',
       brand: {
         siteName: 'OpenCupid',
         frontendUrl: 'https://frontend.test',

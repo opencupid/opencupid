@@ -45,10 +45,7 @@ defineProps<EmailTemplateProps>()
 
                 <tr>
                   <td class="body">
-                    <div
-                      class="content"
-                      v-html="contentBody"
-                    ></div>
+                    <div class="content">{{ contentBody }}</div>
 
                     <table
                       role="presentation"

@@ -19,6 +19,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
     const payload = {
       to: 'user@example.com',
       subject: 'Welcome',
+      language: 'en',
       brand: brandStub,
       templateProps: {
         publicName: 'Alice',
@@ -46,6 +47,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
     const payload = {
       to: 'other@example.com',
       subject: 'Reset',
+      language: 'en',
       brand: brandStub,
       templateProps: {
         publicName: 'Bob',

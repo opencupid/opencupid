@@ -135,6 +135,7 @@ export class NotifierService {
     return {
       to: user.email,
       subject: t(`emails.${emailType}.subject`, { siteName }),
+      language: user.language,
       brand,
       templateProps: {
         siteName,

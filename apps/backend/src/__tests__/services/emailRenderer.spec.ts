@@ -26,6 +26,7 @@ const defaultProps: EmailTemplateProps = {
 const defaultPayload: EmailPayload = {
   to: 'alice@example.com',
   subject: 'Welcome',
+  language: 'en',
   brand: brandStub,
   templateProps: defaultProps,
 }
@@ -118,6 +119,7 @@ describe('renderEmail', () => {
     const result = await renderEmail(SimpleComponent, {
       to: 'bob@example.com',
       subject: 'Hello',
+      language: 'en',
       brand: brandStub,
       templateProps: props,
     })
@@ -138,10 +140,77 @@ describe('renderEmail', () => {
     const result = await renderEmail(SimpleComponent, {
       to: 'carol@example.com',
       subject: 'No footer',
+      language: 'en',
       brand: brandStub,
       templateProps: props,
     })
     expect(result).toBeDefined()
     expect(result.length).toBeGreaterThan(0)
+  })
+
+  it('stamps the recipient language on <html lang>', async () => {
+    const result = await renderEmail(SimpleComponent, { ...defaultPayload, language: 'hu' })
+    expect(result).toMatch(/<html lang="hu"/)
+  })
+
+  it('escapes the subject interpolated into <title>', async () => {
+    const result = await renderEmail(SimpleComponent, {
+      ...defaultPayload,
+      subject: 'Hi <script>alert(1)</script> & "you"',
+    })
+    expect(result).toContain(
+      '<title>Hi &lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;you&quot;</title>'
+    )
+    expect(result).not.toContain('<script>')
+  })
+})
+
+describe('renderEmailText', () => {
+  let renderEmailText: (props: EmailTemplateProps) => string
+
+  beforeEach(async () => {
+    vi.resetModules()
+    const mod = await import('../../services/email/emailRenderer')
+    renderEmailText = mod.renderEmailText
+  })
+
+  it('renders site name, body, CTA, footer and unsubscribe as blank-line separated blocks', () => {
+    const result = renderEmailText({
+      ...defaultProps,
+      contentBody: 'Someone smiled at you.',
+      unsubscribeUrl: 'https://example.com/unsubscribe/tok',
+      unsubscribeLabel: 'Unsubscribe',
+    })
+    expect(result).toBe(
+      [
+        'TestSite',
+        'Someone smiled at you.',
+        'Get Started: https://example.com/start',
+        'You received this because you signed up.',
+        'Unsubscribe: https://example.com/unsubscribe/tok',
+      ].join('\n\n') + '\n'
+    )
+  })
+
+  it('includes the CTA URL exactly once', () => {
+    const result = renderEmailText({ ...defaultProps, contentBody: 'Log in.' })
+    const occurrences = result.split(defaultProps.callToActionUrl).length - 1
+    expect(occurrences).toBe(1)
+  })
+
+  it('omits the fallback hint, which describes a button that does not exist in text', () => {
+    const result = renderEmailText(defaultProps)
+    expect(result).not.toContain(defaultProps.fallbackHint)
+  })
+
+  it('omits the unsubscribe block when no unsubscribe URL is present', () => {
+    const result = renderEmailText({ ...defaultProps, unsubscribeLabel: 'Unsubscribe' })
+    expect(result).not.toContain('Unsubscribe')
+  })
+
+  it('omits empty optional blocks rather than emitting blank gaps', () => {
+    const result = renderEmailText({ ...defaultProps, footer: '   ' })
+    expect(result).not.toMatch(/\n\n\n/)
+    expect(result.endsWith('\n')).toBe(true)
   })
 })
