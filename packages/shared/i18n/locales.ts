@@ -6,6 +6,8 @@ export const appLocales: Record<string, string> = {
 /** Locale used when a requested one has no translations. */
 export const fallbackLocale = 'en'
 
+const supportedLocales = new Set(Object.keys(appLocales))
+
 /**
  * Resolve a requested language to the locale its content will actually render
  * in, mirroring how i18next walks `hu-HU` → `hu` → fallbackLocale.
@@ -18,11 +20,6 @@ export const fallbackLocale = 'en'
  * misdescribe its own content.
  */
 export function resolveLocale(language: string): string {
-  // hasOwnProperty.call, not `in`: appLocales is a plain object, so `in` would
-  // report prototype members ('constructor', 'toString') as supported locales.
-  const supported = (code: string) => Object.prototype.hasOwnProperty.call(appLocales, code)
-  if (supported(language)) return language
-  const [base] = language.split('-')
-  if (base !== undefined && supported(base)) return base
-  return fallbackLocale
+  const candidates = [language, ...language.split('-', 1)]
+  return candidates.find((code) => supportedLocales.has(code)) ?? fallbackLocale
 }

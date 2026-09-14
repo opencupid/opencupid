@@ -21,8 +21,8 @@ describe('resolveLocale', () => {
     expect(resolveLocale('')).toBe(fallbackLocale)
   })
 
-  // appLocales is a plain object, so a naive `in` check would report prototype
-  // members as supported for attacker-chosen values.
+  // Set membership, not `in` or index access on appLocales: both report
+  // prototype members as supported for attacker-chosen values.
   it('does not treat Object prototype members as locales', () => {
     expect(resolveLocale('constructor')).toBe(fallbackLocale)
     expect(resolveLocale('toString')).toBe(fallbackLocale)
