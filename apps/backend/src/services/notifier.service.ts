@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import type { User } from '@prisma/client'
 import i18next from 'i18next'
+import { resolveLocale } from '@shared/i18n/locales'
 import { currentBrand, type Brand } from '@/lib/brand'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
@@ -135,7 +136,7 @@ export class NotifierService {
     return {
       to: user.email,
       subject: t(`emails.${emailType}.subject`, { siteName }),
-      language: user.language,
+      language: resolveLocale(user.language),
       brand,
       templateProps: {
         siteName,

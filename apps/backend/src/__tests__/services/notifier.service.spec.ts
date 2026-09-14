@@ -116,9 +116,10 @@ describe('NotifierService', () => {
     expect(payload).toMatchObject({
       to: 'user@example.com',
       subject: 'emails.new_like.subject-translated',
-      // Drives <html lang> on the rendered document — the recipient's language,
-      // not the sending container's.
-      language: 'de',
+      // Drives <html lang> on the rendered document. 'de' has no translations,
+      // so i18next renders this in English and the advertised language follows
+      // the content rather than the request.
+      language: 'en',
       brand: {
         siteName: 'OpenCupid',
         frontendUrl: 'https://frontend.test',
@@ -146,6 +147,45 @@ describe('NotifierService', () => {
       new RegExp(`^<https://frontend\\.test/api/unsubscribe/${jwtPath.source}>$`)
     )
     expect(payload.headers['List-Unsubscribe-Post']).toBe('List-Unsubscribe=One-Click')
+  })
+
+  it('notifyUser: resolves an unsupported stored language to the rendered one', async () => {
+    // User.language is unvalidated at its write boundaries, so a value like
+    // 'zz' can be stored. i18next renders it in English; <html lang> must say
+    // so rather than echoing the request.
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-9',
+      email: 'user9@example.com',
+      language: 'zz',
+      emailNotificationsOptIn: true,
+      profile: { publicName: 'Dana' },
+    })
+
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyUser('user-9', 'welcome', { link: 'https://frontend.test/me' })
+
+    expect(mockDispatchEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ language: 'en' }),
+      'welcome-user-9'
+    )
+  })
+
+  it('notifyUser: narrows a region-tagged language to its supported base', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-10',
+      email: 'user10@example.com',
+      language: 'hu-HU',
+      emailNotificationsOptIn: true,
+      profile: { publicName: 'Eszter' },
+    })
+
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyUser('user-10', 'welcome', { link: 'https://frontend.test/me' })
+
+    expect(mockDispatchEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ language: 'hu' }),
+      'welcome-user-10'
+    )
   })
 
   it('notifyProfile: uses sender-scoped deterministic jobId for new_message', async () => {
