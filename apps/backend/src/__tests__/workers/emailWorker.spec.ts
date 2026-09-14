@@ -8,6 +8,7 @@ describe('processEmailJob', () => {
     const payload: EmailPayload = {
       to: 'user@example.com',
       subject: 'Welcome',
+      language: 'en',
       brand: brandStub,
       templateProps: {
         siteName: 'OpenCupid',

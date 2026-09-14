@@ -1,6 +1,6 @@
 import { appConfig } from '@/lib/appconfig'
 import nodemailer from 'nodemailer'
-import { renderEmail } from './emailRenderer'
+import { renderEmail, renderEmailText } from './emailRenderer'
 import EmailTemplate from './EmailTemplate.ssr.mjs'
 import type { EmailPayload } from './types'
 
@@ -26,7 +26,9 @@ export class EmailService {
     const mailOptions = {
       from,
       to: payload.to,
+      replyTo: appConfig.EMAIL_REPLY_TO,
       subject: payload.subject,
+      text: renderEmailText(payload.templateProps),
       html,
       headers: payload.headers,
     }

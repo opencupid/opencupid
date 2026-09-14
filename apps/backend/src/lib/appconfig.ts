@@ -25,6 +25,7 @@ export const configSchema = z.object({
   SMTP_USER: z.string(),
   SMTP_PASS: z.string(),
   EMAIL_FROM: z.string(),
+  EMAIL_REPLY_TO: z.string().optional(),
 
   MEDIA_UPLOAD_DIR: z.string(),
   MEDIA_URL_BASE: z.string(),
