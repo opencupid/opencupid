@@ -12,6 +12,7 @@ vi.mock('@/lib/i18n', () => ({
 }))
 
 import { useI18nStore } from '../i18nStore'
+import { useLocalStore } from '../localStore'
 import { bus } from '@/lib/bus'
 
 describe('useI18nStore', () => {
@@ -141,5 +142,40 @@ describe('useI18nStore', () => {
 
       expect(useI18nStore().currentLanguage).toBe('hu')
     })
+  })
+
+  // localStorage is user-editable and can hold a value written before the
+  // supported set changed, so it is a preference rather than an override.
+  describe('persisted language', () => {
+    const setStoredLanguage = async (value: string) => {
+      localStorage.setItem('language', value)
+      setActivePinia(createPinia())
+      await useLocalStore().initialize()
+    }
+
+    it('prefers a supported stored language over the browser list', async () => {
+      Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
+      await setStoredLanguage('hu')
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+
+    it('narrows a region-tagged stored language to its supported base', async () => {
+      Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
+      await setStoredLanguage('hu-HU')
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+
+    it.each(['de', 'constructor', ''])(
+      'recovers from the unsupported stored value %o',
+      async (stored) => {
+        Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        await setStoredLanguage(stored)
+
+        expect(useI18nStore().currentLanguage).toBe('en')
+      }
+    )
   })
 })

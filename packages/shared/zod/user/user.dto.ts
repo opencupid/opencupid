@@ -1,7 +1,10 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
 import { ProfileSchema, UserRoleSchema, UserSchema } from '../generated'
-import { normalizeLocale } from '../../i18n/locales'
+import { fallbackLocale, normalizeLocale } from '../../i18n/locales'
+
+// These schemas run in both runtimes and cannot read FALLBACK_LOCALE, so a
+// stored language falls back to the built-in locale rather than the configured one.
 
 export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
@@ -17,7 +20,7 @@ export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
 export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
   captchaSolution: z.string().min(1, 'Captcha solution is required'),
-  language: z.string().transform((lang) => normalizeLocale(lang)),
+  language: z.string().transform((lang) => normalizeLocale(lang, fallbackLocale)),
 })
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 
@@ -68,7 +71,7 @@ export const UpdateUserLanguagePayloadSchema = z.object({
     .string()
     .min(2)
     .max(5)
-    .transform((lang) => normalizeLocale(lang)),
+    .transform((lang) => normalizeLocale(lang, fallbackLocale)),
 })
 export type UpdateUserLanguagePayload = z.infer<typeof UpdateUserLanguagePayloadSchema>
 

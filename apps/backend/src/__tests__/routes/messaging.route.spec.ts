@@ -101,13 +101,20 @@ vi.mock('@/services/audioTranscoder', () => ({
 
 vi.mock('@fastify/multipart', () => ({ default: vi.fn() }))
 
+// Records the language argument so a regression to a hardcoded 'en' default
+// is caught: without this the route could stop honoring fallbackLng silently.
+const getFixedTCalls = vi.hoisted(() => [] as (string | null)[])
+
 vi.mock('i18next', () => ({
   default: {
-    getFixedT: (_lang: string) => (key: string) => {
-      const translations: Record<string, string> = {
-        'notifications.voice_message_sent': 'Sent a voice message',
+    getFixedT: (lang: string | null) => {
+      getFixedTCalls.push(lang)
+      return (key: string) => {
+        const translations: Record<string, string> = {
+          'notifications.voice_message_sent': 'Sent a voice message',
+        }
+        return translations[key] || key
       }
-      return translations[key] || key
     },
   },
 }))
@@ -700,6 +707,55 @@ describe('POST /voice', () => {
       where: { id: 'ck1234567890abcd12345678' },
       select: { user: { select: { language: true } } },
     })
+
+    // The recipient's stored language is what gets rendered, not a default.
+    expect(getFixedTCalls).toContain('de')
+  })
+
+  // Passing null lets i18next apply the configured fallbackLng; a hardcoded
+  // 'en' here would pin these notifications to English on a hu deployment.
+  it('renders through the i18next fallback when the recipient has no language', async () => {
+    getFixedTCalls.length = 0
+    const handler = fastify.routes['POST /voice']
+
+    fastify.prisma.profile.findUnique.mockResolvedValue(null)
+
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: {
+        id: 'conv1',
+        status: 'ACCEPTED',
+        initiatorProfileId: 'other',
+        profileAId: 'p1',
+        profileBId: 'ck1234567890abcd12345678',
+      },
+      wasCreated: false,
+    })
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', senderId: 'p1' },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({
+      conversation: { status: 'ACTIVE' },
+    })
+
+    const parts = (async function* () {
+      yield {
+        type: 'file',
+        fieldname: 'voice',
+        filename: 'voice.webm',
+        mimetype: 'audio/webm',
+        toBuffer: async () => Buffer.from('fake-audio'),
+      }
+      yield { type: 'field', fieldname: 'profileId', value: 'ck1234567890abcd12345678' }
+      yield { type: 'field', fieldname: 'content', value: '' }
+      yield { type: 'field', fieldname: 'duration', value: '5' }
+    })()
+
+    await handler({ session: { profileId: 'p1' }, parts: () => parts } as any, reply as any)
+
+    expect(reply.statusCode).toBe(200)
+    expect(getFixedTCalls).toContain(null)
+    expect(getFixedTCalls).not.toContain('en')
   })
 
   it('returns 401 when session missing', async () => {
