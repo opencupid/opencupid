@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { ref, watch } from 'vue'
 import { bus } from '@/lib/bus'
 import { useLocalStore } from '@/store/localStore'
-import { appLocales, normalizeLocale } from '@shared/i18n/locales'
+import { appLocales, negotiateLocale, normalizeLocale } from '@shared/i18n/locales'
 
 export const useI18nStore = defineStore('i18n', () => {
   const localStore = useLocalStore()
@@ -61,5 +61,5 @@ export const useI18nStore = defineStore('i18n', () => {
 })
 
 function getBrowserLanguage(): string {
-  return normalizeLocale(navigator.language, __APP_CONFIG__.FALLBACK_LOCALE)
+  return negotiateLocale(navigator.languages, __APP_CONFIG__.FALLBACK_LOCALE)
 }

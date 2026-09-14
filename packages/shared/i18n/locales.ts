@@ -22,12 +22,13 @@ const supportedLocales = new Set(Object.keys(appLocales))
  * the caller with a locale that has no catalog.
  */
 export function normalizeLocale(language: string, fallback: string = fallbackLocale): string {
-  return matchLocale(language) ?? matchLocale(fallback) ?? fallbackLocale
+  return matchLocale(language) ?? resolveFallbackLocale(fallback)
 }
 
 /**
  * The supported locale for a language tag — exact match, then base tag
- * (`hu-HU` → `hu`) — or null when neither has translations.
+ * (`hu-HU` → `hu`) — or null when neither has translations. Reporting the miss
+ * lets a caller try its next preference instead of settling for the fallback.
  */
 function matchLocale(language: string): string | null {
   const candidates = [language, ...language.split('-', 1)]
@@ -41,4 +42,21 @@ function matchLocale(language: string): string | null {
  */
 export function resolveFallbackLocale(configured: string): string {
   return matchLocale(configured) ?? fallbackLocale
+}
+
+/**
+ * The first supported locale among ordered language preferences, else
+ * `fallback`. Suits `navigator.languages` and `Accept-Language`: a miss on the
+ * most-preferred tag should try the next rather than give up, so a visitor
+ * sending `['de-AT', 'de', 'en']` gets `en` rather than the fallback.
+ */
+export function negotiateLocale(
+  languages: readonly string[],
+  fallback: string = fallbackLocale
+): string {
+  for (const language of languages) {
+    const match = matchLocale(language)
+    if (match) return match
+  }
+  return resolveFallbackLocale(fallback)
 }
