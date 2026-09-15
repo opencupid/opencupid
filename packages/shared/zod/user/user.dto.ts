@@ -17,7 +17,7 @@ export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
 export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
   captchaSolution: z.string().min(1, 'Captcha solution is required'),
-  language: z.string().transform(normalizeLocale),
+  language: z.string().transform((lang) => normalizeLocale(lang)),
 })
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 
@@ -64,7 +64,11 @@ export const LoginUserSchema = UserSchema.pick({
 export type LoginUser = z.infer<typeof LoginUserSchema>
 
 export const UpdateUserLanguagePayloadSchema = z.object({
-  language: z.string().min(2).max(5).transform(normalizeLocale),
+  language: z
+    .string()
+    .min(2)
+    .max(5)
+    .transform((lang) => normalizeLocale(lang)),
 })
 export type UpdateUserLanguagePayload = z.infer<typeof UpdateUserLanguagePayloadSchema>
 

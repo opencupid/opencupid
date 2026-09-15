@@ -10,8 +10,7 @@ export const useI18nStore = defineStore('i18n', () => {
 
   const { locale } = useI18n()
 
-  const preferredLanguage =
-    localStore.getLanguage ?? getBrowserLanguage(Object.keys(appLocales)) ?? 'en'
+  const preferredLanguage = localStore.getLanguage ?? getBrowserLanguage()
   const currentLanguage = ref(preferredLanguage)
 
   // Sync changes vue-i18n
@@ -61,7 +60,6 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 })
 
-function getBrowserLanguage(availableLocales: string[]): string {
-  const browserLang = (navigator.language || 'en').split('-')[0] ?? 'en'
-  return availableLocales.includes(browserLang) ? browserLang : 'en'
+function getBrowserLanguage(): string {
+  return normalizeLocale(navigator.language, __APP_CONFIG__.FALLBACK_LOCALE)
 }
