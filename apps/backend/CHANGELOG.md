@@ -1,5 +1,15 @@
 # backend
 
+## 0.75.0
+
+### Minor Changes
+
+- 404186d: Add an optional `FALLBACK_LOCALE` env var for the locale used when a requested language has no translations. Defaults to `en`; a value without translations degrades to `en` rather than failing.
+
+### Patch Changes
+
+- abbdd5b: Normalize `User.language` to a supported locale at every write boundary (signup, self-service update, admin update), instead of only validating it on read. Fixes prototype-pollution-shaped `in appLocales` checks in the admin route and the frontend i18n store.
+
 ## 0.74.0
 
 ### Minor Changes
