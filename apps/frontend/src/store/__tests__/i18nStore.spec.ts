@@ -12,6 +12,7 @@ vi.mock('@/lib/i18n', () => ({
 }))
 
 import { useI18nStore } from '../i18nStore'
+import { useLocalStore } from '../localStore'
 import { bus } from '@/lib/bus'
 
 describe('useI18nStore', () => {
@@ -73,11 +74,12 @@ describe('useI18nStore', () => {
     })
   })
 
-  // The store computes its initial locale at setup time from navigator.language
-  // and __APP_CONFIG__, so each case needs a fresh Pinia to re-run that.
+  // The store computes its initial locale at setup time from
+  // navigator.languages and __APP_CONFIG__, so each case needs a fresh Pinia
+  // to re-run that.
   describe('initial language', () => {
-    const setBrowserLanguage = (value: string) => {
-      Object.defineProperty(navigator, 'language', { value, configurable: true })
+    const setBrowserLanguages = (...values: string[]) => {
+      Object.defineProperty(navigator, 'languages', { value: values, configurable: true })
     }
     const setConfiguredFallback = (value: string) => {
       ;(globalThis as any).__APP_CONFIG__ = {
@@ -87,7 +89,7 @@ describe('useI18nStore', () => {
     }
 
     it('uses the configured fallback when the browser language is unsupported', () => {
-      setBrowserLanguage('de-DE')
+      setBrowserLanguages('de-DE')
       setConfiguredFallback('hu')
       setActivePinia(createPinia())
 
@@ -95,7 +97,7 @@ describe('useI18nStore', () => {
     })
 
     it('prefers a supported browser language over the fallback', () => {
-      setBrowserLanguage('en-GB')
+      setBrowserLanguages('en-GB')
       setConfiguredFallback('hu')
       setActivePinia(createPinia())
 
@@ -107,9 +109,70 @@ describe('useI18nStore', () => {
     it.each(['', 'de', '${FALLBACK_LOCALE}'])(
       'degrades the unusable fallback %o to a translated locale',
       (fallback) => {
-        setBrowserLanguage('de-DE')
+        setBrowserLanguages('de-DE')
         setConfiguredFallback(fallback)
         setActivePinia(createPinia())
+
+        expect(useI18nStore().currentLanguage).toBe('en')
+      }
+    )
+
+    // #995: only the first entry was consulted before, so this visitor got
+    // the fallback instead of the English they also asked for.
+    it('walks past unsupported preferences to a supported one', () => {
+      setBrowserLanguages('de-AT', 'de', 'en')
+      setConfiguredFallback('hu')
+      setActivePinia(createPinia())
+
+      expect(useI18nStore().currentLanguage).toBe('en')
+    })
+
+    it('takes the most preferred supported language', () => {
+      setBrowserLanguages('hu-HU', 'en')
+      setConfiguredFallback('en')
+      setActivePinia(createPinia())
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+
+    it('falls back when no preference is supported', () => {
+      setBrowserLanguages('de-AT', 'fr')
+      setConfiguredFallback('hu')
+      setActivePinia(createPinia())
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+  })
+
+  // localStorage is user-editable and can hold a value written before the
+  // supported set changed, so it is a preference rather than an override.
+  describe('persisted language', () => {
+    const setStoredLanguage = async (value: string) => {
+      localStorage.setItem('language', value)
+      setActivePinia(createPinia())
+      await useLocalStore().initialize()
+    }
+
+    it('prefers a supported stored language over the browser list', async () => {
+      Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
+      await setStoredLanguage('hu')
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+
+    it('narrows a region-tagged stored language to its supported base', async () => {
+      Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
+      await setStoredLanguage('hu-HU')
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+
+    it.each(['de', 'constructor', ''])(
+      'recovers from the unsupported stored value %o',
+      async (stored) => {
+        Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        await setStoredLanguage(stored)
 
         expect(useI18nStore().currentLanguage).toBe('en')
       }
