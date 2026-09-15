@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from 'fastify'
 import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
 import { Prisma } from '@prisma/client'
-import { appLocales } from '@shared/i18n/locales'
+import { normalizeLocale } from '@shared/i18n/locales'
 import {
   TrustReasonSchema,
   type TrustReasonType,
@@ -474,7 +474,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       if (typeof body.isActive === 'boolean') data.isActive = body.isActive
       if (typeof body.isBlocked === 'boolean') data.isBlocked = body.isBlocked
       if (typeof body.language === 'string') {
-        if (!(body.language in appLocales)) {
+        if (normalizeLocale(body.language) !== body.language) {
           return sendError(reply, 400, `invalid language: ${body.language}`)
         }
         data.language = body.language

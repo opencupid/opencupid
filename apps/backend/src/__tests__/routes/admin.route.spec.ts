@@ -679,6 +679,16 @@ describe('PATCH /users/:id', () => {
     expect(mockPrisma.user.update).not.toHaveBeenCalled()
   })
 
+  // Object prototype members must not be accepted as locales: appLocales is a
+  // plain object, so `'constructor' in appLocales` was true.
+  it('returns 400 for an Object prototype member as language', async () => {
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler({ params: { id: 'user1' }, body: { language: 'constructor' } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+  })
+
   it('returns 400 for a blank originDomain', async () => {
     const handler = fastify.routes['PATCH /users/:id']
     await handler({ params: { id: 'user1' }, body: { originDomain: '   ' } }, reply)
