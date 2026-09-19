@@ -169,10 +169,10 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-// Collects the `AND "senderId" <> ...` Prisma.Sql fragments interpolated into
-// the raw message queries, so tests can assert the ADMIN_PROFILE_ID exclusion
+// Collects the `AND "<column>" <> ...` Prisma.Sql fragments interpolated into
+// the raw stats queries, so tests can assert the ADMIN_PROFILE_ID exclusion
 // is applied (and only applied) when the system sender is configured.
-function adminSenderExclusionFragments(): any[] {
+function adminExclusionFragments(column: string): any[] {
   return mockPrisma.$queryRaw.mock.calls
     .flat()
     .filter(
@@ -180,8 +180,16 @@ function adminSenderExclusionFragments(): any[] {
         arg &&
         typeof arg === 'object' &&
         Array.isArray(arg.strings) &&
-        arg.strings.join('').includes('senderId')
+        arg.strings.join('').includes(column)
     )
+}
+
+function adminSenderExclusionFragments(): any[] {
+  return adminExclusionFragments('senderId')
+}
+
+function adminInitiatorExclusionFragments(): any[] {
+  return adminExclusionFragments('initiatorProfileId')
 }
 
 describe('GET /stats', () => {
@@ -420,6 +428,20 @@ describe('GET /stats/breakdown', () => {
     expect(fragments[0].values).toContain('sys-sender')
   })
 
+  it('excludes ADMIN_PROFILE_ID-initiated conversations when configured', async () => {
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([]) // messages
+      .mockResolvedValueOnce([]) // conversations
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { metric: 'messages', range: '24h' } }, reply)
+
+    const fragments = adminInitiatorExclusionFragments()
+    expect(fragments).toHaveLength(1)
+    expect(fragments[0].values).toContain('sys-sender')
+  })
+
   it('does not filter the messages series when ADMIN_PROFILE_ID is not configured', async () => {
     mockAppConfig.ADMIN_PROFILE_ID = undefined as any
     mockPrisma.$queryRaw
@@ -430,6 +452,7 @@ describe('GET /stats/breakdown', () => {
     await handler({ query: { metric: 'messages', range: '24h' } }, reply)
 
     expect(adminSenderExclusionFragments()).toHaveLength(0)
+    expect(adminInitiatorExclusionFragments()).toHaveLength(0)
     mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
   })
 
