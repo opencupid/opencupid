@@ -24,6 +24,20 @@ import { mapMessageToDTO } from '../mappers/messaging.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { ProfileTrustService } from '@/services/profileTrust.service'
 
+/**
+ * Rows attributable to the system sender (ADMIN_PROFILE_ID) — welcome messages
+ * and admin broadcasts — are not organic member activity, so they are excluded
+ * from the dashboard metrics. `column` is the profile-id column identifying the
+ * originator of the row ("senderId" on Message, "initiatorProfileId" on
+ * Conversation). Yields `Prisma.empty` when no system sender is configured, so
+ * the queries are unfiltered in that case.
+ */
+function excludeAdminProfile(column: Prisma.Sql): Prisma.Sql {
+  return appConfig.ADMIN_PROFILE_ID
+    ? Prisma.sql`AND ${column} <> ${appConfig.ADMIN_PROFILE_ID}`
+    : Prisma.empty
+}
+
 // DeepL locale codes require region suffixes for some languages
 const DEEPL_LOCALE_MAP: Record<string, string> = {
   en: 'en-GB',
@@ -49,11 +63,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const days = getLast7Days()
       const since = days[0]
 
-      // Exclude the system sender's (ADMIN_PROFILE_ID) broadcast messages so
-      // dashboard metrics reflect organic member activity only.
-      const excludeAdminSender = appConfig.ADMIN_PROFILE_ID
-        ? Prisma.sql`AND "senderId" <> ${appConfig.ADMIN_PROFILE_ID}`
-        : Prisma.empty
+      const excludeAdminSender = excludeAdminProfile(Prisma.sql`"senderId"`)
 
       const [
         signupRows,
@@ -216,11 +226,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      // Exclude the system sender's (ADMIN_PROFILE_ID) broadcast messages so
-      // dashboard metrics reflect organic member activity only.
-      const excludeAdminSender = appConfig.ADMIN_PROFILE_ID
-        ? Prisma.sql`AND "senderId" <> ${appConfig.ADMIN_PROFILE_ID}`
-        : Prisma.empty
+      const excludeAdminSender = excludeAdminProfile(Prisma.sql`"senderId"`)
+      const excludeAdminInitiator = excludeAdminProfile(Prisma.sql`"initiatorProfileId"`)
 
       const [messageRows, conversationRows] = await Promise.all([
         prisma.$queryRaw<BucketRow[]>`
@@ -237,6 +244,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
                  COUNT(*)::bigint AS count
           FROM "Conversation"
           WHERE "createdAt" >= ${since}
+          ${excludeAdminInitiator}
           GROUP BY 1
           ORDER BY 1
         `,
