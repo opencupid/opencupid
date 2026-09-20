@@ -177,10 +177,7 @@ function adminExclusionFragments(column: string): any[] {
     .flat()
     .filter(
       (arg: any) =>
-        arg &&
-        typeof arg === 'object' &&
-        Array.isArray(arg.strings) &&
-        arg.strings.join('').includes(column)
+        arg && typeof arg === 'object' && typeof arg.sql === 'string' && arg.sql.includes(column)
     )
 }
 
