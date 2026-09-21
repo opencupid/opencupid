@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLanguages } from '@/features/shared/composables/useLanguages'
 
-import { computed, onMounted, reactive, useAttrs } from 'vue'
+import { computed, useAttrs } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Multiselect from '@/features/shared/ui/multiselect'
 import { type MultiselectOption } from '@/types/multiselect'
@@ -19,19 +19,19 @@ const emit = defineEmits<{
 
 const attrs = useAttrs()
 
-const languageOptions = reactive([] as MultiselectOption[])
+const { getLanguageSelectorOptions } = useLanguages()
+
+// Computed, not a snapshot taken on mount: the option labels are localized,
+// so they have to follow a language change while the selector stays mounted.
+const languageOptions = computed(() => getLanguageSelectorOptions())
+
 const languagesComputed = computed({
   get: () =>
-    (props.modelValue ?? []).map((lang) => languageOptions.find((opt) => opt.value === lang)),
+    (props.modelValue ?? []).map((lang) => languageOptions.value.find((opt) => opt.value === lang)),
   set: (options: MultiselectOption[]) => {
     const newVal = options.map((opt) => opt.value)
     emit('update:modelValue', newVal)
   },
-})
-
-const { getLanguageSelectorOptions } = useLanguages()
-onMounted(() => {
-  languageOptions.push(...getLanguageSelectorOptions())
 })
 
 const { width, height } = useWindowSize()
