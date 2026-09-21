@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { ref } from 'vue'
 import type { App } from 'vue'
 
 const busHandlers: Record<string, (payload: unknown) => void> = {}
@@ -28,13 +29,13 @@ vi.mock('../tolgee', () => ({
     changeLanguage: (...args: unknown[]) => changeLanguageMock(...args),
     run: vi.fn(),
   },
+  activeLocale: ref('en'),
   availableLanguages: ['en'],
 }))
 
 vi.mock('@tolgee/vue', () => ({
   VueTolgee: { install: vi.fn() },
   useTranslate: vi.fn(),
-  useTolgee: vi.fn(),
 }))
 
 const getLanguageMock = vi.fn<() => string | null>(() => null)
