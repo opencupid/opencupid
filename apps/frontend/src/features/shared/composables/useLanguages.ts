@@ -1,85 +1,20 @@
-import { ref } from 'vue'
-import { bus } from '@/lib/bus'
 import { type MultiselectOption } from '@/types/multiselect'
 import languages from '@cospired/i18n-iso-languages'
+import { activeLocale } from '@/lib/tolgee'
 
 // https://www.npmjs.com/package/@cospired/i18n-iso-languages
 
-// const localeModules = import.meta.glob<{ default: any }>(
-//   './src/node_modules/i18n-iso-languages/langs/*.json',
-//   { eager: true }
-// );
-
-// async function registerLocales() {
-//   for (const locale of getAvailableLocales()) {
-//     const path = `@cospired/i18n-iso-languages/langs/${locale}.json`;
-//     const lang = localeModules[path];
-//     if (lang && lang.default) {
-//       languages.registerLocale(lang.default);
-//     }
-//   }
-// }
-
-const language = ref('en')
-
-const localeLoaders: Record<string, () => Promise<any>> = {
-  de: () => import('@cospired/i18n-iso-languages/langs/de.json'),
-  es: () => import('@cospired/i18n-iso-languages/langs/es.json'),
-  fr: () => import('@cospired/i18n-iso-languages/langs/fr.json'),
-  it: () => import('@cospired/i18n-iso-languages/langs/it.json'),
-  nl: () => import('@cospired/i18n-iso-languages/langs/nl.json'),
-  pl: () => import('@cospired/i18n-iso-languages/langs/pl.json'),
-  pt: () => import('@cospired/i18n-iso-languages/langs/pt.json'),
-  ro: () => import('@cospired/i18n-iso-languages/langs/ro.json'),
-  sk: () => import('@cospired/i18n-iso-languages/langs/sk.json'),
-}
-const loadedLocales = new Set(['en', 'hu'])
-
-// Always register the app's own locales synchronously (not lazily) so the
-// active language is available immediately, without waiting on the async
-// language-change flow that only fires from an explicit in-app switch.
+// Every locale in appLocales has its name catalog bundled here, so the
+// active locale is always registered and nothing has to be loaded, or kept
+// in sync, at runtime.
 import enLang from '@cospired/i18n-iso-languages/langs/en.json'
 import huLang from '@cospired/i18n-iso-languages/langs/hu.json'
 languages.registerLocale(enLang)
 languages.registerLocale(huLang)
 
-// Lazy-register other languages only when first needed
-async function ensureCountryLocale(locale: string) {
-  if (loadedLocales.has(locale)) {
-    language.value = locale
-    return
-  }
-
-  const loader = localeLoaders[locale]
-  if (!loader) {
-    console.warn(`Unsupported locale: ${locale}`)
-    return
-  }
-  const mod = await loader()
-  languages.registerLocale(mod.default)
-  loadedLocales.add(locale)
-  language.value = locale
-}
-
-export async function initialize(locale: string) {
-  await ensureCountryLocale(locale)
-  bus.on('language:changed', async ({ language: lang }) => {
-    await useLanguages().ensureCountryLocale(lang)
-  })
-}
-
 export function useLanguages() {
-  const getLanguageSelectorOptions = (): MultiselectOption[] => {
-    const langs = languages.getNames(language.value)
-    const englishLangs = languages.getNames('en')
-    return Object.keys(langs).map((code) => ({
-      value: code,
-      label: langs[code] || englishLangs[code] || code,
-    }))
-  }
-
-  const getLanguageLabels = (codes: string[]) => {
-    const langs = languages.getNames(language.value)
+  const labelsFor = (codes: string[]) => {
+    const langs = languages.getNames(activeLocale.value)
     const englishLangs = languages.getNames('en')
     return codes.map((code) => ({
       value: code,
@@ -87,9 +22,12 @@ export function useLanguages() {
     }))
   }
 
+  const getLanguageSelectorOptions = (): MultiselectOption[] =>
+    labelsFor(Object.keys(languages.getNames(activeLocale.value)))
+
+  const getLanguageLabels = (codes: string[]) => labelsFor(codes)
+
   return {
-    initialize,
-    ensureCountryLocale,
     getLanguageSelectorOptions,
     getLanguageLabels,
   }

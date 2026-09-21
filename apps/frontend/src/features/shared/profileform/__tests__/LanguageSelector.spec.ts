@@ -1,10 +1,12 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
+import { ref } from 'vue'
 
 vi.mock('@/lib/languages', () => ({
   getLanguageSelectorOptions: () => [{ label: 'English', value: 'en' }],
 }))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('@/lib/tolgee', () => ({ activeLocale: ref('en') }))
 vi.mock('@/features/shared/ui/multiselect', () => ({ default: { template: '<div />' } }))
 
 import LanguageSelector from '../LanguageSelector.vue'

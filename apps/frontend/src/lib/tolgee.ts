@@ -1,6 +1,8 @@
+import { ref } from 'vue'
 import { Tolgee, DevTools } from '@tolgee/vue'
 import type { TolgeeStaticData } from '@tolgee/vue'
 import { FormatIcu } from '@tolgee/format-icu'
+import { fallbackLocale } from '@shared/i18n/locales'
 
 // Locale files are statically imported so they are bundled into the main chunk
 // rather than emitted as separate content-hashed files. Lazy loading would
@@ -44,3 +46,15 @@ if (import.meta.hot?.data) {
     tolgee.addStaticData({ hu: freshHu.default as TolgeeStaticData[string] })
   })
 }
+
+/**
+ * The locale Tolgee is currently rendering, as a module-level ref.
+ *
+ * Code that localizes outside of Tolgee's own catalogs — the country and
+ * language name lookups — reads this rather than keeping its own copy of the
+ * locale, so there is no second value that a language change can leave behind.
+ */
+export const activeLocale = ref(tolgee.getLanguage() ?? fallbackLocale)
+tolgee.on('language', ({ value }) => {
+  activeLocale.value = value
+})

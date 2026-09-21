@@ -1,63 +1,17 @@
 import countries from 'i18n-iso-countries'
-import { bus } from '@/lib/bus'
+import { activeLocale } from '@/lib/tolgee'
 
-import { useI18nStore } from '@/store/i18nStore'
-
-// Always register English (fallback)
+// Every locale in appLocales has its name catalog bundled here, so the
+// active locale is always registered and nothing has to be loaded, or kept
+// in sync, at runtime.
 import enLocale from 'i18n-iso-countries/langs/en.json'
 import huLocale from 'i18n-iso-countries/langs/hu.json'
 countries.registerLocale(enLocale)
 countries.registerLocale(huLocale)
 
-const loadedLocales = new Set(['en', 'hu'])
-
-const localeLoaders: Record<string, () => Promise<any>> = {
-  // keep this
-  // hu: () => import('i18n-iso-countries/langs/hu.json'),
-  // de: () => import('i18n-iso-countries/langs/de.json'),
-  // es: () => import('i18n-iso-countries/langs/es.json'),
-  // fr: () => import('i18n-iso-countries/langs/fr.json'),
-  // it: () => import('i18n-iso-countries/langs/it.json'),
-  // nl: () => import('i18n-iso-countries/langs/nl.json'),
-  // pl: () => import('i18n-iso-countries/langs/pl.json'),
-  // pt: () => import('i18n-iso-countries/langs/pt.json'),
-  // ro: () => import('i18n-iso-countries/langs/ro.json'),
-  // sk: () => import('i18n-iso-countries/langs/sk.json'),
-}
-
-let language = 'en'
-
-// Lazy-register other languages only when first needed.
-async function ensureCountryLocale(locale: string) {
-  // If the locale is already registered (en/hu are pre-registered, others
-  // become loaded on first request), update the active language
-  // immediately so subsequent getNames/getName calls switch.
-  if (loadedLocales.has(locale)) {
-    language = locale
-    return
-  }
-
-  const loader = localeLoaders[locale]
-  if (!loader) {
-    console.warn(`Unsupported locale: ${locale}`)
-    return
-  }
-  const mod = await loader()
-  countries.registerLocale(mod.default)
-  loadedLocales.add(locale)
-  language = locale
-}
-
-export async function initialize(locale: string) {
-  await ensureCountryLocale(locale)
-  bus.on('language:changed', async ({ language }) => {
-    await useCountries().ensureCountryLocale(language)
-  })
-}
-
 export function useCountries() {
   const getCountryOptions = () => {
-    const list = countries.getNames(language, {
+    const list = countries.getNames(activeLocale.value, {
       select: 'official',
     })
     const options = Object.entries(list)
@@ -67,13 +21,11 @@ export function useCountries() {
   }
 
   const countryCodeToName = (code: string) => {
-    return countries.getName(code, language, { select: 'official' })
+    return countries.getName(code, activeLocale.value, { select: 'official' })
   }
 
   return {
-    initialize,
     getCountryOptions,
-    ensureCountryLocale,
     countryCodeToName,
   }
 }

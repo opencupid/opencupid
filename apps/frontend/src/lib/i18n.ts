@@ -1,11 +1,12 @@
 import type { App } from 'vue'
 import { computed } from 'vue'
-import { VueTolgee, useTranslate, useTolgee } from '@tolgee/vue'
+import { VueTolgee, useTranslate } from '@tolgee/vue'
 import type { CombinedOptions, DefaultParamType } from '@tolgee/vue'
 import { Settings } from 'luxon'
+import { fallbackLocale } from '@shared/i18n/locales'
 import { useLocalStore } from '@/store/localStore'
 import { bus } from './bus'
-import { tolgee } from './tolgee'
+import { activeLocale, tolgee } from './tolgee'
 
 type TolgeeParams = CombinedOptions<DefaultParamType>
 
@@ -25,16 +26,15 @@ declare global {
 
 /**
  * Compatibility shim for vue-i18n's useI18n().
- * Returns { t, locale } backed by Tolgee's useTranslate() and useTolgee().
+ * Returns { t, locale } backed by Tolgee's useTranslate() and activeLocale.
  */
 export function useI18n() {
   const { t: tolgeeT } = useTranslate()
-  const tolgeeInstance = useTolgee(['language'])
 
   const locale = computed({
-    get: () => tolgeeInstance.value.getLanguage() ?? 'en',
+    get: () => activeLocale.value,
     set: (lang: string) => {
-      tolgeeInstance.value.changeLanguage(lang)
+      tolgee.changeLanguage(lang)
     },
   })
 
@@ -81,7 +81,7 @@ export function appUseI18n(app: App) {
   const globalT = createGlobalT()
   window.__APP_I18N__ = { global: { t: globalT } }
 
-  const initialLocale = getLocale() ?? 'en'
+  const initialLocale = getLocale() ?? fallbackLocale
   tolgee.changeLanguage(initialLocale)
   Settings.defaultLocale = initialLocale
 

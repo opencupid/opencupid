@@ -3,8 +3,6 @@ import { defineAsyncComponent } from 'vue'
 import { storeToRefs } from 'pinia'
 import UpdateBanner from '@/features/app/components/UpdateBanner.vue'
 import { useI18nStore } from './store/i18nStore'
-import { useCountries } from './features/shared/composables/useCountries'
-import { useLanguages } from './features/shared/composables/useLanguages'
 import { useUpdateChecker } from './features/app/composables/useUpdateChecker'
 import { useAuthStore } from './features/auth/stores/authStore'
 
@@ -20,13 +18,10 @@ const AuthenticatedSurface = defineAsyncComponent(
   () => import('@/features/app/components/AuthenticatedSurface.vue')
 )
 
-const i18nStore = useI18nStore()
-// Use currentLanguage (settled synchronously when the store was created),
-// not getLanguage() (Tolgee's locale) — Tolgee's changeLanguage() triggered
-// by the store's own immediate watcher above is still resolving at this
-// point, so getLanguage() would read back the stale pre-correction value.
-useCountries().initialize(i18nStore.currentLanguage)
-useLanguages().initialize(i18nStore.currentLanguage)
+// Instantiated here rather than on demand: creating the store is what
+// negotiates the initial locale and applies it to Tolgee, and it needs a
+// component context for Tolgee's injection.
+useI18nStore()
 
 useUpdateChecker()
 
