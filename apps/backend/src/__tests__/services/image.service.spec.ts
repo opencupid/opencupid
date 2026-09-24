@@ -225,6 +225,7 @@ describe('deleteImage', () => {
       profileGallery: { profileId: 'profile-1' },
       userContentGallery: null,
     } as any)
+    mockPrisma.profileImage.count.mockResolvedValue(2) // 2 in gallery, so deleting 1 is allowed
     mockPrisma.profileImage.findFirst.mockResolvedValue({
       image: { hasFace: true },
     } as any)
@@ -237,6 +238,24 @@ describe('deleteImage', () => {
       where: { id: 'profile-1' },
       data: { hasFace: true },
     })
+  })
+
+  it('rejects deleting the last image in a profile gallery', async () => {
+    const svc = service
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'img-last',
+      ownerProfileId: 'profile-1',
+      storagePath: 'profile-1/last',
+      profileGallery: { profileId: 'profile-1' },
+      userContentGallery: null,
+    } as any)
+    mockPrisma.profileImage.count.mockResolvedValue(1) // only 1 left
+
+    await expect(svc.deleteImage('img-last', 'profile-1')).rejects.toMatchObject({
+      code: 'PROFILE_GALLERY_MIN',
+    })
+    expect(mockPrisma.profileImage.delete).not.toHaveBeenCalled()
+    expect(mockPrisma.image.delete).not.toHaveBeenCalled()
   })
 
   it('deletes a usercontent-gallery image: drops join + Image, does NOT touch Profile.hasFace', async () => {
@@ -454,6 +473,7 @@ describe('detachFromProfile', () => {
       ownerProfileId: ME,
       profileGallery: { profileId: ME },
     })
+    mockPrisma.profileImage.count.mockResolvedValue(2) // > min, detach allowed
     mockPrisma.profileImage.delete.mockResolvedValue(undefined)
     mockPrisma.profileImage.findFirst.mockResolvedValue({
       image: { hasFace: true },
@@ -468,6 +488,20 @@ describe('detachFromProfile', () => {
       where: { id: ME },
       data: { hasFace: true },
     })
+  })
+
+  it('throws PROFILE_GALLERY_MIN when detaching the last image', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: IMG,
+      ownerProfileId: ME,
+      profileGallery: { profileId: ME },
+    })
+    mockPrisma.profileImage.count.mockResolvedValue(1) // only 1 left
+
+    await expect(service.detachFromProfile(IMG, ME)).rejects.toMatchObject({
+      code: 'PROFILE_GALLERY_MIN',
+    })
+    expect(mockPrisma.profileImage.delete).not.toHaveBeenCalled()
   })
 })
 
