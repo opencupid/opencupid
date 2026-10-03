@@ -12,12 +12,12 @@ This uses Turbo to run both the frontend (Vite, port 5173, 5174) and backend (Fa
 
 ### Local URLs
 
-| Service                 | URL                           |
-| ----------------------- | ----------------------------- |
-| Frontend (entry point)  | <https://localhost:5173/home> |
-| Backend API             | <https://localhost:3000>      |
-| Mailpit (email inbox)   | <http://localhost:1080/>      |
-| Tolgee (translation UI) | <http://localhost:8085>       |
+| Service                 | URL                             |
+| ----------------------- | ------------------------------- |
+| Frontend (entry point)  | <https://localhost:5173/browse> |
+| Backend API             | <https://localhost:3000>        |
+| Mailpit (email inbox)   | <http://localhost:1080/>        |
+| Tolgee (translation UI) | <http://localhost:8085>         |
 
 ### Login flow
 
@@ -25,7 +25,7 @@ The app uses magic link (OTP) authentication — no passwords.
 
 1. Go to <https://localhost:5173/auth>
 2. Enter email: `me@example.org`, check captcha, click Continue
-3. Click Continue on next page. You are now on home page.
+3. Click Continue on next page. You are now on the browse page.
 
 Mailpit captures all transactional emails sent by the app (login tokens, notifications, etc.) regardless of recipient address.
 
@@ -56,9 +56,9 @@ apps/
   frontend/     Vue 3 + Bootstrap 5 + SCSS SPA
   admin/        Vue 3 + Bootstrap 5 + SCSS SPA admin GUI
   backend/      Fastify + Prisma + WebSocket API
-  traefik/      Traefik reverse proxy config (TLS, routing via Docker labels)
+  ingress/      Traefik reverse proxy config (TLS, routing via Docker labels)
 packages/
-  shared/       Shared types, validation, i18n, utilities and reused UI components
+  shared/       Shared types, validation, i18n and utilities
 ```
 
 ### Frontend (`apps/frontend`)
@@ -70,10 +70,10 @@ packages/
 
 ### Backend (`apps/backend`)
 
-- Entry: `src/main.ts`
+- Entries: `src/api.ts` (API server) and `src/worker.ts` (queue worker)
 - API routes: `src/api/routes/` (user, profile, messaging, image, media, etc.)
 - Database: Prisma ORM, schema at `prisma/schema.prisma`, migrations in `prisma/migrations/`
-- Config schema: `src/lib/appConfig.ts` — all env vars must be registered here and in `/.env.example`
+- Config schema: `src/lib/appconfig.ts` — all env vars must be registered here and in `/.env.example`
 - Services: `src/services/`
 - Workers/queues: `src/workers/`, `src/queues/`
 
@@ -81,17 +81,18 @@ packages/
 
 | Route                          | View                                               |
 | ------------------------------ | -------------------------------------------------- |
-| `/home`                        | User home / dashboard                              |
+| `/`                            | Redirects to `/browse`                             |
 | `/auth`                        | Login (email entry)                                |
-| `/auth/otp`                    | OTP token entry                                    |
+| `/magic-link`                  | Magic-link landing                                 |
 | `/browse`                      | Browse profiles (social)                           |
-| `/profile/:profileId`   | Public profile                                     |
+| `/profile/:profileId`          | Public profile                                     |
+| `/posts/:postId`               | Public post                                        |
 | `/me`                          | My profile                                         |
-| `/me/edit`                     | Edit profile                                       |
+| `/me/posts`                    | My posts                                           |
+| `/me/settings`                 | Settings                                           |
+| `/me/dating`                   | Dating profile                                     |
 | `/inbox`                       | Conversation list                                  |
 | `/inbox/:conversationId`       | Messaging                                          |
-| `/posts`                       | Posts                                              |
-| `/settings`                    | Settings                                           |
 | `/onboarding`                  | Onboarding (only when profile `isActive` is false) |
 
 ## Tests
@@ -188,7 +189,7 @@ gh pr create
 
 ## CI workflow
 
-Only watch CI when **finalizing** a PR (all work done, ready for review/merge). Always start a subagent watching CI tests to finish, do not wait in foreground. Assign subagent to watch CI after every intermediate push:
+Watch CI when **finalizing** a PR (all work done, ready for review/merge), in a background subagent rather than in the foreground:
 
 ```bash
 gh run list --limit 1
@@ -327,7 +328,7 @@ When debugging any problem, after you found an issue that looks suspect, do not 
 
 ### Vue MCP (live frontend debugging)
 
-The `vue-mcp` MCP server (configured in `.mcp.json`) connects to the running frontend via `vite-plugin-vue-mcp`. **You MUST use vue-mcp tools when debugging Vue component state, Pinia store data, or router issues** — do not guess at runtime state from source code alone.
+The `vue-mcp` MCP server (configured in `.mcp.json`) connects to the running frontend via `vite-plugin-vue-mcp`. Use vue-mcp tools when debugging Vue component state, Pinia store data, or router issues, because runtime state often differs from what the source suggests. If the server isn't reachable (the dev server isn't running), say so instead of inferring state from source.
 
 Available tools:
 
@@ -346,9 +347,7 @@ Available tools:
 
 Development guidelines and best practices for this project.
 
-- always adhere to SOLID Principles (DRY, KISS, YAGNI)
-- avoid over-engineering - always make an effort to find the simplest solution and be on the lookup for opportunities to simplify code
-- always try to use stock solutions - prefer integrating a mature 3rd party library instead of reimplementing the wheel.
-- watch out for stinky code and flag if you see such
+- Prefer the simplest solution that works; point out simplification opportunities and flag code smells you notice.
+- Prefer a mature third-party library over reimplementing one.
 
 - Before implementing a fix, check whether the problem originates from a pattern, repeated configuration, or systemic weakness. If so, implement a structural solution that removes the root cause or prevents recurrence. Avoid local patches, duplicated logic, and hidden fallbacks when a centralized or enforceable mechanism can solve the problem. Avoid adding fallback values - ask for permission before adding such.
