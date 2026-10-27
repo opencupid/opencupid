@@ -100,6 +100,16 @@ describe('DELETE /:id', () => {
     expect(reply.statusCode).toBe(200)
   })
 
+  it('refuses to delete an attached image', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      ownerProfileId: profileId,
+      userContentGallery: { imageId },
+    })
+    await remove()
+    expect(reply.statusCode).toBe(409)
+    expect(mockImageService.deleteImage).not.toHaveBeenCalled()
+  })
+
   it('returns 404 for an unknown image', async () => {
     mockPrisma.image.findUnique.mockResolvedValue(null)
     await remove()

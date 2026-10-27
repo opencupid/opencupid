@@ -64,16 +64,29 @@ const adminImageRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * DELETE /:id
-   * Deletes an image and its files regardless of its owner.
-   * @returns {{ success }} 200, 404 when not found
+   * Deletes an unattached image and its files regardless of its owner. Images
+   * already in a gallery are refused, so a cleanup after an ambiguous failure
+   * can never strip images from content that was in fact created.
+   * @returns {{ success }} 200, 404 when not found, 409 when attached
    */
   fastify.delete('/:id', async (req, reply) => {
     const params = ImageParamsSchema.safeParse(req.params)
     if (!params.success) return sendError(reply, 400, 'Invalid image id')
     const { id } = params.data
 
-    const image = await prisma.image.findUnique({ where: { id }, select: { ownerProfileId: true } })
+    const image = await prisma.image.findUnique({
+      where: { id },
+      select: {
+        ownerProfileId: true,
+        profileGallery: { select: { imageId: true } },
+        userContentGallery: { select: { imageId: true } },
+        messageGallery: { select: { imageId: true } },
+      },
+    })
     if (!image) return sendError(reply, 404, 'Image not found')
+    if (image.profileGallery || image.userContentGallery || image.messageGallery) {
+      return sendError(reply, 409, 'Image is attached')
+    }
 
     try {
       await imageService.deleteImage(id, image.ownerProfileId)
