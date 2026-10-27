@@ -24,7 +24,7 @@ const adminEventRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /?externalSource=<source>
-   * Lists live (not deleted) events imported from the given source.
+   * Lists events imported from the given source, including poster-deleted ones.
    * @returns {{ success, events: AdminExternalEvent[] }}
    */
   fastify.get('/', async (req, reply) => {
@@ -71,7 +71,7 @@ const adminEventRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * DELETE /:id
-   * Soft-deletes an event regardless of its poster.
+   * Soft-deletes an event regardless of its poster and releases its external ref.
    * @returns {{ success }} 200, 404 when not found or already deleted
    */
   fastify.delete('/:id', async (req, reply) => {

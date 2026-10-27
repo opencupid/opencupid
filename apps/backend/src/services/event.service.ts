@@ -158,21 +158,38 @@ export class EventService extends UserContentService {
     })
   }
 
-  /** Live (not deleted) events imported from `externalSource`. */
+  /**
+   * Events imported from `externalSource`, including ones their poster
+   * deleted (those keep their external ref so importers don't recreate them).
+   */
   async findByExternalSource(externalSource: string) {
     const rows = await prisma.userContent.findMany({
-      where: { kind: 'event', externalSource, isDeleted: false },
-      select: { id: true, externalId: true, event: { select: { startsAt: true } } },
+      where: { kind: 'event', externalSource },
+      select: {
+        id: true,
+        externalId: true,
+        isDeleted: true,
+        event: { select: { startsAt: true } },
+      },
       orderBy: { createdAt: 'asc' },
     })
-    return rows.map((r) => ({ id: r.id, externalId: r.externalId!, startsAt: r.event!.startsAt }))
+    return rows.map((r) => ({
+      id: r.id,
+      externalId: r.externalId!,
+      startsAt: r.event!.startsAt,
+      isDeleted: r.isDeleted,
+    }))
   }
 
-  /** Soft-deletes an event regardless of its poster. Admin use only. */
+  /**
+   * Soft-deletes an event regardless of its poster. Admin use only. Releases
+   * the external ref, so an item withdrawn and later republished at its
+   * source is imported again as a new event.
+   */
   async adminSoftDelete(id: string): Promise<{ id: string } | null> {
     const result = await prisma.userContent.updateMany({
       where: { id, kind: 'event', isDeleted: false },
-      data: { isDeleted: true },
+      data: { isDeleted: true, externalSource: null, externalId: null },
     })
     return result.count === 1 ? { id } : null
   }

@@ -70,6 +70,8 @@ export const AdminExternalEventSchema = z.object({
   id: z.string(),
   externalId: z.string(),
   startsAt: z.coerce.date(),
+  /** Deleted by its poster; importers must not recreate it. */
+  isDeleted: z.boolean(),
 })
 export type AdminExternalEvent = z.infer<typeof AdminExternalEventSchema>
 

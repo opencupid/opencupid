@@ -1,15 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
 
-const mockPrisma = vi.hoisted(() => ({ profile: { findUnique: vi.fn() } }))
+const mockPrisma = vi.hoisted(() => ({
+  profile: { findUnique: vi.fn() },
+  image: { findUnique: vi.fn() },
+}))
 vi.mock('@/lib/prisma', () => ({ prisma: mockPrisma }))
 vi.mock('@/lib/appconfig', () => ({ appConfig: { IMAGE_MAX_SIZE: 1024 } }))
 vi.mock('@/lib/media', () => ({ uploadTmpDir: () => '/tmp/uploads' }))
 vi.mock('@fastify/multipart', () => ({ default: vi.fn() }))
 
-const mockImageService = vi.hoisted(() => ({ createImage: vi.fn() }))
+const mockImageService = vi.hoisted(() => ({ createImage: vi.fn(), deleteImage: vi.fn() }))
 vi.mock('@/services/image.service', () => ({
   ImageService: { getInstance: () => mockImageService },
+  ImageServiceError: class ImageServiceError extends Error {
+    constructor(
+      public code: string,
+      message: string
+    ) {
+      super(message)
+    }
+  },
 }))
 
 import adminImageRoutes from '../../../api/routes/admin/image.route'
@@ -72,5 +83,39 @@ describe('POST /', () => {
     )
     expect(reply.statusCode).toBe(400)
     expect(reply.payload.message).toBe('IMAGE_TOO_LARGE')
+  })
+})
+
+describe('DELETE /:id', () => {
+  const imageId = 'cmimage00000000000001'
+  const remove = (id = imageId) => fastify.routes['DELETE /:id']({ params: { id } }, reply)
+
+  it('deletes the image on behalf of its owner', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({ ownerProfileId: profileId })
+    mockImageService.deleteImage.mockResolvedValue(undefined)
+
+    await remove()
+
+    expect(mockImageService.deleteImage).toHaveBeenCalledWith(imageId, profileId)
+    expect(reply.statusCode).toBe(200)
+  })
+
+  it('returns 404 for an unknown image', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue(null)
+    await remove()
+    expect(reply.statusCode).toBe(404)
+    expect(mockImageService.deleteImage).not.toHaveBeenCalled()
+  })
+
+  it('rejects an invalid id', async () => {
+    await remove('nope')
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('returns 500 for unexpected errors', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({ ownerProfileId: profileId })
+    mockImageService.deleteImage.mockRejectedValue(new Error('boom'))
+    await remove()
+    expect(reply.statusCode).toBe(500)
   })
 })

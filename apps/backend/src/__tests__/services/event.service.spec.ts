@@ -146,29 +146,32 @@ describe('EventService external imports', () => {
     expect(createArg.data).toMatchObject({ externalSource: null, externalId: null })
   })
 
-  it('lists live events of a source as flat rows', async () => {
+  it('lists all events of a source, including poster-deleted ones, as flat rows', async () => {
     const startsAt = new Date('2030-01-01T10:00:00Z')
-    mockPrisma.userContent.findMany = vi
-      .fn()
-      .mockResolvedValue([{ id: 'content-1', externalId: '97', event: { startsAt } }])
+    mockPrisma.userContent.findMany = vi.fn().mockResolvedValue([
+      { id: 'content-1', externalId: '97', isDeleted: false, event: { startsAt } },
+      { id: 'content-2', externalId: '98', isDeleted: true, event: { startsAt } },
+    ])
 
     const rows = await service.findByExternalSource('parasztsuli')
 
     expect(mockPrisma.userContent.findMany.mock.calls[0][0].where).toEqual({
       kind: 'event',
       externalSource: 'parasztsuli',
-      isDeleted: false,
     })
-    expect(rows).toEqual([{ id: 'content-1', externalId: '97', startsAt }])
+    expect(rows).toEqual([
+      { id: 'content-1', externalId: '97', startsAt, isDeleted: false },
+      { id: 'content-2', externalId: '98', startsAt, isDeleted: true },
+    ])
   })
 
-  it('adminSoftDelete ignores the poster', async () => {
+  it('adminSoftDelete ignores the poster and releases the external ref', async () => {
     mockPrisma.userContent.updateMany = vi.fn().mockResolvedValue({ count: 1 })
 
     await expect(service.adminSoftDelete('content-1')).resolves.toEqual({ id: 'content-1' })
     expect(mockPrisma.userContent.updateMany).toHaveBeenCalledWith({
       where: { id: 'content-1', kind: 'event', isDeleted: false },
-      data: { isDeleted: true },
+      data: { isDeleted: true, externalSource: null, externalId: null },
     })
   })
 

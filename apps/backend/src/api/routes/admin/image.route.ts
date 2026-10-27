@@ -4,15 +4,16 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { appConfig } from '@/lib/appconfig'
 import { uploadTmpDir } from '@/lib/media'
-import { ImageService } from '@/services/image.service'
+import { ImageService, ImageServiceError } from '@/services/image.service'
 import { sendError } from '../../helpers'
 
 const UploadQuerySchema = z.object({ profileId: z.string().cuid() })
+const ImageParamsSchema = z.object({ id: z.string().cuid() })
 
 /**
- * Admin image upload used by external feed importers: stores an image owned by
- * `profileId` without attaching it, so the returned id can be passed as
- * `imageIds` to POST /admin/events.
+ * Admin image endpoints used by external feed importers: upload an image owned
+ * by `profileId` without attaching it, so the returned id can be passed as
+ * `imageIds` to POST /admin/events, and delete it again if that call fails.
  */
 const adminImageRoutes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(multipart, {
@@ -58,6 +59,31 @@ const adminImageRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error storing admin image')
       return sendError(reply, 500, 'Failed to store image')
+    }
+  })
+
+  /**
+   * DELETE /:id
+   * Deletes an image and its files regardless of its owner.
+   * @returns {{ success }} 200, 404 when not found
+   */
+  fastify.delete('/:id', async (req, reply) => {
+    const params = ImageParamsSchema.safeParse(req.params)
+    if (!params.success) return sendError(reply, 400, 'Invalid image id')
+    const { id } = params.data
+
+    const image = await prisma.image.findUnique({ where: { id }, select: { ownerProfileId: true } })
+    if (!image) return sendError(reply, 404, 'Image not found')
+
+    try {
+      await imageService.deleteImage(id, image.ownerProfileId)
+      return reply.code(200).send({ success: true })
+    } catch (err) {
+      if (err instanceof ImageServiceError && err.code === 'NOT_FOUND') {
+        return sendError(reply, 404, 'Image not found')
+      }
+      fastify.log.error({ err }, 'Error deleting admin image')
+      return sendError(reply, 500, 'Failed to delete image')
     }
   })
 }
