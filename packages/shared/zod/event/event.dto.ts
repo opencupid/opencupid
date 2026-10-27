@@ -48,6 +48,31 @@ export const UpdateEventPayloadSchema = CreateEventPayloadSchema.omit({ imageIds
   })
 export type UpdateEventPayload = z.infer<typeof UpdateEventPayloadSchema>
 
+const EXTERNAL_SOURCE_MAX_LENGTH = 50
+const EXTERNAL_ID_MAX_LENGTH = 100
+
+/**
+ * Admin import: creates an event on behalf of `postedById`, keyed by the
+ * item's id at an external feed so repeated imports cannot duplicate it.
+ */
+export const AdminCreateEventPayloadSchema = CreateEventPayloadSchema.extend({
+  postedById: z.string().cuid(),
+  externalSource: z.string().min(1).max(EXTERNAL_SOURCE_MAX_LENGTH),
+  externalId: z.string().min(1).max(EXTERNAL_ID_MAX_LENGTH),
+})
+export type AdminCreateEventPayload = z.infer<typeof AdminCreateEventPayloadSchema>
+
+export const AdminExternalEventQuerySchema = z.object({
+  externalSource: z.string().min(1).max(EXTERNAL_SOURCE_MAX_LENGTH),
+})
+
+export const AdminExternalEventSchema = z.object({
+  id: z.string(),
+  externalId: z.string(),
+  startsAt: z.coerce.date(),
+})
+export type AdminExternalEvent = z.infer<typeof AdminExternalEventSchema>
+
 export const EventParamsSchema = z.object({ id: z.string().cuid() })
 
 export const EventQuerySchema = z.object(UserContentQueryShape)

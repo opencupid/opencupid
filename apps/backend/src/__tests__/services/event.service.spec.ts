@@ -125,3 +125,56 @@ describe('EventService tag wiring', () => {
     expect(mockPrisma.userContent.updateMany.mock.calls[0][0].data).not.toHaveProperty('tagIds')
   })
 })
+
+describe('EventService external imports', () => {
+  const baseData = {
+    content: 'x'.repeat(20),
+    startsAt: new Date('2030-01-01T10:00:00Z'),
+  }
+
+  it('stores the external ref on create', async () => {
+    await service.create('profile-1', baseData, { source: 'parasztsuli', id: '97' })
+
+    const createArg = mockPrisma.userContent.create.mock.calls[0][0]
+    expect(createArg.data).toMatchObject({ externalSource: 'parasztsuli', externalId: '97' })
+  })
+
+  it('stores null external ref for member-created events', async () => {
+    await service.create('profile-1', baseData)
+
+    const createArg = mockPrisma.userContent.create.mock.calls[0][0]
+    expect(createArg.data).toMatchObject({ externalSource: null, externalId: null })
+  })
+
+  it('lists live events of a source as flat rows', async () => {
+    const startsAt = new Date('2030-01-01T10:00:00Z')
+    mockPrisma.userContent.findMany = vi
+      .fn()
+      .mockResolvedValue([{ id: 'content-1', externalId: '97', event: { startsAt } }])
+
+    const rows = await service.findByExternalSource('parasztsuli')
+
+    expect(mockPrisma.userContent.findMany.mock.calls[0][0].where).toEqual({
+      kind: 'event',
+      externalSource: 'parasztsuli',
+      isDeleted: false,
+    })
+    expect(rows).toEqual([{ id: 'content-1', externalId: '97', startsAt }])
+  })
+
+  it('adminSoftDelete ignores the poster', async () => {
+    mockPrisma.userContent.updateMany = vi.fn().mockResolvedValue({ count: 1 })
+
+    await expect(service.adminSoftDelete('content-1')).resolves.toEqual({ id: 'content-1' })
+    expect(mockPrisma.userContent.updateMany).toHaveBeenCalledWith({
+      where: { id: 'content-1', kind: 'event', isDeleted: false },
+      data: { isDeleted: true },
+    })
+  })
+
+  it('adminSoftDelete returns null when nothing matched', async () => {
+    mockPrisma.userContent.updateMany = vi.fn().mockResolvedValue({ count: 0 })
+
+    await expect(service.adminSoftDelete('content-1')).resolves.toBeNull()
+  })
+})

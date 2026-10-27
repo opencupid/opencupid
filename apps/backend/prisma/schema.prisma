@@ -401,19 +401,23 @@ model PushSubscription {
 }
 
 model UserContent {
-  id         String      @id @default(cuid())
-  kind       ContentKind
-  postedById String
-  postedBy   Profile     @relation(fields: [postedById], references: [id], onDelete: Cascade)
-  content    String
-  isDeleted  Boolean     @default(false)
-  isVisible  Boolean     @default(true)
-  country    String?
-  cityName   String?
-  lat        Float?
-  lon        Float?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id             String      @id @default(cuid())
+  kind           ContentKind
+  postedById     String
+  postedBy       Profile     @relation(fields: [postedById], references: [id], onDelete: Cascade)
+  content        String
+  isDeleted      Boolean     @default(false)
+  isVisible      Boolean     @default(true)
+  country        String?
+  cityName       String?
+  lat            Float?
+  lon            Float?
+  /// Origin of content imported from an external feed (e.g. "parasztsuli"); null for member-created content.
+  externalSource String?
+  /// The item's id at `externalSource`.
+  externalId     String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   post      PostContent?
   event     EventContent?
@@ -421,6 +425,7 @@ model UserContent {
   images    UserContentImage[]
   tags      Tag[]              @relation("UserContentTags")
 
+  @@unique([externalSource, externalId])
   @@index([postedById])
   @@index([kind])
   @@index([createdAt])

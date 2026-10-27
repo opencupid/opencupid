@@ -23,6 +23,8 @@ import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { mapMessageToDTO } from '../mappers/messaging.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { ProfileTrustService } from '@/services/profileTrust.service'
+import adminEventRoutes from './admin/event.route'
+import adminImageRoutes from './admin/image.route'
 
 /**
  * Rows attributable to the system sender (ADMIN_PROFILE_ID) — welcome messages
@@ -51,6 +53,10 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(403).send({ success: false, message: 'Forbidden' })
     }
   })
+
+  // Child plugins inherit the admin-header hook above.
+  fastify.register(adminEventRoutes, { prefix: '/events' })
+  fastify.register(adminImageRoutes, { prefix: '/images' })
 
   /**
    * GET /stats/daily
