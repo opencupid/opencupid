@@ -15,7 +15,10 @@ import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
+  /** Show the toolbar, RSVP and attendee list. */
   showDetails: boolean
+  /** Clip the content to a short excerpt, as in grid tiles. */
+  truncateText?: boolean
 }>()
 
 defineEmits<{
@@ -71,7 +74,7 @@ const startsAtMonthAndDay = computed(() =>
 const GRID_TRUNCATE_LENGTH = 100
 const displayContent = computed(() => {
   const content = props.event.content
-  if (props.showDetails || content.length <= GRID_TRUNCATE_LENGTH) return content
+  if (!props.truncateText || content.length <= GRID_TRUNCATE_LENGTH) return content
   const truncated = content.substring(0, GRID_TRUNCATE_LENGTH)
   const lastSpace = truncated.lastIndexOf(' ')
   return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '…'
@@ -101,7 +104,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.event.tags))
           cols="12"
           md="8"
         >
-          <p class="lh-sm small mb-0 p-2">{{ displayContent }}</p>
+          <p class="lh-sm small mb-0 p-2 pre-line">{{ displayContent }}</p>
         </BCol>
         <BCol
           cols="12"

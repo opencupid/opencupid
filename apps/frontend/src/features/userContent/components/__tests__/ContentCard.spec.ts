@@ -9,10 +9,16 @@ vi.mock('@/features/posts/components/PostCard.vue', () => ({
   },
 }))
 vi.mock('@/features/events/components/EventCard.vue', () => ({
-  default: { props: ['event', 'showDetails'], template: '<div class="event-card" />' },
+  default: {
+    props: { event: Object, showDetails: Boolean, truncateText: Boolean },
+    template: '<div class="event-card" :data-truncate="truncateText" />',
+  },
 }))
 vi.mock('@/features/community/components/CommunityCard.vue', () => ({
-  default: { props: ['community', 'showDetails'], template: '<div class="community-card" />' },
+  default: {
+    props: { community: Object, showDetails: Boolean, truncateText: Boolean },
+    template: '<div class="community-card" :data-truncate="truncateText" />',
+  },
 }))
 
 import ContentCard from '../ContentCard.vue'
@@ -27,15 +33,15 @@ describe('ContentCard', () => {
     expect(card.attributes('data-show-details')).toBe('false')
   })
 
-  it('renders the card matching the item kind', () => {
+  it('renders every kind as a truncated grid tile', () => {
     const event = mount(ContentCard, {
       props: { item: { id: 'e1', kind: 'event' } as any, showDetails: false },
     })
-    expect(event.find('.event-card').exists()).toBe(true)
+    expect(event.get('.event-card').attributes('data-truncate')).toBe('true')
 
     const community = mount(ContentCard, {
       props: { item: { id: 'c1', kind: 'community' } as any, showDetails: false },
     })
-    expect(community.find('.community-card').exists()).toBe(true)
+    expect(community.get('.community-card').attributes('data-truncate')).toBe('true')
   })
 })
