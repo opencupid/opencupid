@@ -1,5 +1,11 @@
 # frontend
 
+## 0.75.1
+
+### Patch Changes
+
+- 6f7efd3: Open each site in its configured locale instead of the browser's language, and apply the account's saved language after login
+
 ## 0.75.0
 
 ### Minor Changes

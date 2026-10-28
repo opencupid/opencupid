@@ -1,5 +1,11 @@
 # backend
 
+## 0.75.1
+
+### Patch Changes
+
+- be58a5f: Exclude admin/welcome conversations from the New Conversations series in the admin dashboard drill-down
+
 ## 0.75.0
 
 ### Minor Changes
