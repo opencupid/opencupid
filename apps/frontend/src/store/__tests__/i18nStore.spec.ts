@@ -14,6 +14,7 @@ vi.mock('@/lib/i18n', () => ({
 import { useI18nStore } from '../i18nStore'
 import { useLocalStore } from '../localStore'
 import { useUserStore } from '../userStore'
+import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
 describe('useI18nStore', () => {
@@ -167,10 +168,21 @@ describe('useI18nStore', () => {
       expect(store.currentLanguage).toBe('hu')
     })
 
-    it('applies a user loaded before the store was created', () => {
-      useUserStore().user = user('hu')
+    // Bootstrap can load the user before App.vue mounts and creates the store.
+    // Emitting the device's language first would PATCH it over the account's.
+    it('applies a user loaded before the store was created without saving the device language', async () => {
+      localStorage.setItem('language', 'en')
+      await useLocalStore().initialize()
+      useAuthStore().userId = 'cmuser00000000000000000000'
+      const userStore = useUserStore()
+      userStore.user = user('hu')
+      const updateLanguage = vi.spyOn(userStore, 'updateLanguage')
 
-      expect(useI18nStore().currentLanguage).toBe('hu')
+      const store = useI18nStore()
+      await nextTick()
+
+      expect(store.currentLanguage).toBe('hu')
+      expect(updateLanguage).not.toHaveBeenCalled()
     })
 
     it('keeps the current language when the user is cleared on logout', async () => {

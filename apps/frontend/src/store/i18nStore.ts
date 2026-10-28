@@ -8,10 +8,17 @@ import { appLocales, isSupportedLocale, normalizeLocale } from '@shared/i18n/loc
 
 export const useI18nStore = defineStore('i18n', () => {
   const localStore = useLocalStore()
+  const userStore = useUserStore()
 
   const { locale } = useI18n()
 
-  const currentLanguage = ref(getInitialLanguage(localStore.getLanguage))
+  // The account's language outranks this device's: it is what the user chose
+  // and what the server writes their emails in. Read before the first
+  // emission below, which would otherwise PATCH the device's language over a
+  // user that bootstrap had already loaded.
+  const currentLanguage = ref(
+    getInitialLanguage(userStore.user?.language ?? localStore.getLanguage)
+  )
 
   // Sync changes vue-i18n
   watch(
@@ -27,15 +34,11 @@ export const useI18nStore = defineStore('i18n', () => {
     localStore.setLanguage(newLocale)
   })
 
-  // The account's language outranks this device's: it is what the user chose
-  // and what the server writes their emails in.
-  const userStore = useUserStore()
   watch(
     () => userStore.user?.language,
     (lang) => {
       if (lang) setLanguage(lang)
-    },
-    { immediate: true }
+    }
   )
 
   function getLanguage() {
