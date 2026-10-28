@@ -1,5 +1,11 @@
 # frontend
 
+## 0.76.1
+
+### Patch Changes
+
+- 3a1b701: Add an `rsvp-button` class to the event RSVP button so deployments can restyle or hide it via custom.css
+
 ## 0.76.0
 
 ### Minor Changes

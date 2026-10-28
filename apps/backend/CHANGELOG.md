@@ -1,5 +1,7 @@
 # backend
 
+## 0.76.1
+
 ## 0.76.0
 
 ### Minor Changes
