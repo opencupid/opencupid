@@ -468,8 +468,39 @@ export class ImageService {
       }
     })
 
-    // File cleanup, post-commit, best-effort.
-    const baseFile = path.join(getMediaRoot(), imageBasePath(image.storagePath))
+    await this.unlinkImageFiles(image.storagePath)
+  }
+
+  /**
+   * Delete an Image only if it is not in any gallery, regardless of owner.
+   * The row lock conflicts with the FK check of a concurrent attach, so an
+   * attach committing between the check and the delete is impossible: either
+   * the attach lands first and this refuses, or this lands first and the
+   * attach fails.
+   */
+  async deleteUnattachedImage(imageId: string): Promise<void> {
+    const image = await prisma.$transaction(async (tx) => {
+      const locked = await tx.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "Image" WHERE id = ${imageId} FOR UPDATE`
+      if (locked.length === 0) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+
+      const found = await tx.image.findUniqueOrThrow({
+        where: { id: imageId },
+        include: { profileGallery: true, userContentGallery: true, messageGallery: true },
+      })
+      if (found.profileGallery || found.userContentGallery || found.messageGallery) {
+        throw new ImageServiceError('ALREADY_ATTACHED', 'Image is attached')
+      }
+      await tx.image.delete({ where: { id: imageId } })
+      return found
+    })
+
+    await this.unlinkImageFiles(image.storagePath)
+  }
+
+  /** Post-commit, best-effort removal of an image's on-disk variants. */
+  private async unlinkImageFiles(storagePath: string): Promise<void> {
+    const baseFile = path.join(getMediaRoot(), imageBasePath(storagePath))
     const filesToDelete = [
       `${baseFile}-original.jpg`,
       ...variants.map((size) => `${baseFile}-${size.name}.webp`),

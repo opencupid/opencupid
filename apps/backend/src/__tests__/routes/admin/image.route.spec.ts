@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { MockFastify, MockReply } from '../../../test-utils/fastify'
 
-const mockPrisma = vi.hoisted(() => ({
-  profile: { findUnique: vi.fn() },
-  image: { findUnique: vi.fn() },
-}))
+const mockPrisma = vi.hoisted(() => ({ profile: { findUnique: vi.fn() } }))
 vi.mock('@/lib/prisma', () => ({ prisma: mockPrisma }))
 vi.mock('@/lib/appconfig', () => ({ appConfig: { IMAGE_MAX_SIZE: 1024 } }))
 vi.mock('@/lib/media', () => ({ uploadTmpDir: () => '/tmp/uploads' }))
 vi.mock('@fastify/multipart', () => ({ default: vi.fn() }))
 
-const mockImageService = vi.hoisted(() => ({ createImage: vi.fn(), deleteImage: vi.fn() }))
+const mockImageService = vi.hoisted(() => ({
+  createImage: vi.fn(),
+  deleteUnattachedImage: vi.fn(),
+}))
 vi.mock('@/services/image.service', () => ({
   ImageService: { getInstance: () => mockImageService },
   ImageServiceError: class ImageServiceError extends Error {
@@ -89,42 +89,38 @@ describe('POST /', () => {
 describe('DELETE /:id', () => {
   const imageId = 'cmimage00000000000001'
   const remove = (id = imageId) => fastify.routes['DELETE /:id']({ params: { id } }, reply)
+  const serviceError = async (code: string) => {
+    const { ImageServiceError } = await import('@/services/image.service')
+    return new (ImageServiceError as any)(code, code)
+  }
 
-  it('deletes the image on behalf of its owner', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue({ ownerProfileId: profileId })
-    mockImageService.deleteImage.mockResolvedValue(undefined)
-
+  it('deletes the unattached image', async () => {
+    mockImageService.deleteUnattachedImage.mockResolvedValue(undefined)
     await remove()
-
-    expect(mockImageService.deleteImage).toHaveBeenCalledWith(imageId, profileId)
+    expect(mockImageService.deleteUnattachedImage).toHaveBeenCalledWith(imageId)
     expect(reply.statusCode).toBe(200)
   })
 
-  it('refuses to delete an attached image', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue({
-      ownerProfileId: profileId,
-      userContentGallery: { imageId },
-    })
+  it('refuses an attached image', async () => {
+    mockImageService.deleteUnattachedImage.mockRejectedValue(await serviceError('ALREADY_ATTACHED'))
     await remove()
     expect(reply.statusCode).toBe(409)
-    expect(mockImageService.deleteImage).not.toHaveBeenCalled()
   })
 
   it('returns 404 for an unknown image', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue(null)
+    mockImageService.deleteUnattachedImage.mockRejectedValue(await serviceError('NOT_FOUND'))
     await remove()
     expect(reply.statusCode).toBe(404)
-    expect(mockImageService.deleteImage).not.toHaveBeenCalled()
   })
 
   it('rejects an invalid id', async () => {
     await remove('nope')
     expect(reply.statusCode).toBe(400)
+    expect(mockImageService.deleteUnattachedImage).not.toHaveBeenCalled()
   })
 
   it('returns 500 for unexpected errors', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue({ ownerProfileId: profileId })
-    mockImageService.deleteImage.mockRejectedValue(new Error('boom'))
+    mockImageService.deleteUnattachedImage.mockRejectedValue(new Error('boom'))
     await remove()
     expect(reply.statusCode).toBe(500)
   })

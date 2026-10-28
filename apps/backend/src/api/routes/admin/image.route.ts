@@ -72,28 +72,15 @@ const adminImageRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.delete('/:id', async (req, reply) => {
     const params = ImageParamsSchema.safeParse(req.params)
     if (!params.success) return sendError(reply, 400, 'Invalid image id')
-    const { id } = params.data
-
-    const image = await prisma.image.findUnique({
-      where: { id },
-      select: {
-        ownerProfileId: true,
-        profileGallery: { select: { imageId: true } },
-        userContentGallery: { select: { imageId: true } },
-        messageGallery: { select: { imageId: true } },
-      },
-    })
-    if (!image) return sendError(reply, 404, 'Image not found')
-    if (image.profileGallery || image.userContentGallery || image.messageGallery) {
-      return sendError(reply, 409, 'Image is attached')
-    }
-
     try {
-      await imageService.deleteImage(id, image.ownerProfileId)
+      await imageService.deleteUnattachedImage(params.data.id)
       return reply.code(200).send({ success: true })
     } catch (err) {
       if (err instanceof ImageServiceError && err.code === 'NOT_FOUND') {
         return sendError(reply, 404, 'Image not found')
+      }
+      if (err instanceof ImageServiceError && err.code === 'ALREADY_ATTACHED') {
+        return sendError(reply, 409, 'Image is attached')
       }
       fastify.log.error({ err }, 'Error deleting admin image')
       return sendError(reply, 500, 'Failed to delete image')
