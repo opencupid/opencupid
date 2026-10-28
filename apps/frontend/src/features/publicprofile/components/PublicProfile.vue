@@ -3,6 +3,7 @@ import { inject, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import ProfileInteractions from '@/features/interaction/components/ProfileInteractions.vue'
 import ProfileContent from '../components/ProfileContent.vue'
+import ProfileContentList from '../components/ProfileContentList.vue'
 import PublicProfileSecondaryNav from '../components/PublicProfileSecondaryNav.vue'
 
 const props = defineProps<{
@@ -33,6 +34,7 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
       </div>
       <div class="profile-content h-100 overflow-auto hide-scrollbar">
         <ProfileContent :profile="profile" />
+        <ProfileContentList :profile-id="profile.id" />
         <div class="pb-5 spacer" />
       </div>
     </div>

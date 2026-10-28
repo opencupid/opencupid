@@ -310,6 +310,38 @@ describe('useUserContentStore', () => {
     })
   })
 
+  describe('fetchProfileContent', () => {
+    it('returns the parsed items with their kind-specific fields', async () => {
+      const store = useUserContentStore()
+      const event = {
+        ...baseScalars,
+        id: CUID_1,
+        kind: 'event',
+        startsAt: '2026-12-01T18:00:00Z',
+        venue: null,
+        isOwn: false,
+        postedBy: profileSummary,
+      }
+      mockApi.get.mockResolvedValue({ data: { success: true, items: [event] } })
+
+      const result = await store.fetchProfileContent(CUID_1)
+
+      expect(mockApi.get).toHaveBeenCalledWith(`/content/profile/${CUID_1}`)
+      if (!result.success) throw new Error('expected success')
+      expect(result.data?.items[0]).toMatchObject({ kind: 'event', venue: null })
+      expect(store.myContent).toEqual([])
+    })
+
+    it('returns an error response when the request fails', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockRejectedValue(new Error('boom'))
+
+      const result = await store.fetchProfileContent(CUID_1)
+
+      expect(result.success).toBe(false)
+    })
+  })
+
   describe('fetchFeedInBounds', () => {
     it('populates feedItems on success', async () => {
       const store = useUserContentStore()

@@ -201,28 +201,49 @@ describe('GET /nearby', () => {
 })
 
 describe('GET /profile/:profileId', () => {
-  it('calls findByProfileId with includeInvisible=true when viewer is owner', async () => {
+  const profilePostRow = {
+    id: 'cuc00000000000000001',
+    kind: 'post',
+    content: 'post content',
+    createdAt: new Date('2026-05-13T10:00:00Z'),
+    postedById: 'pself',
+    postedBy: { id: 'pself', publicName: 'Self', profileImages: [] },
+    post: { type: 'OFFER' },
+    event: null,
+    community: null,
+    country: null,
+    cityName: null,
+    lat: null,
+    lon: null,
+    images: [],
+    tags: [],
+  }
+
+  it('returns the profile content as public items', async () => {
     const handler = fastify.routes['GET /profile/:profileId']
+    mockUserContentService.findByProfileId.mockResolvedValue([profilePostRow])
+    await handler(
+      { session: { profileId: 'viewer' }, params: { profileId: 'pself' }, query: {} } as any,
+      reply as any
+    )
+    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith('pself', {
+      limit: 20,
+      offset: 0,
+    })
+    expect(reply.payload).toMatchObject({
+      success: true,
+      items: [{ kind: 'post', type: 'OFFER', isOwn: false }],
+    })
+  })
+
+  it('flags the items as own when the viewer owns the profile', async () => {
+    const handler = fastify.routes['GET /profile/:profileId']
+    mockUserContentService.findByProfileId.mockResolvedValue([profilePostRow])
     await handler(
       { session: { profileId: 'pself' }, params: { profileId: 'pself' }, query: {} } as any,
       reply as any
     )
-    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith(
-      'pself',
-      expect.objectContaining({ includeInvisible: true })
-    )
-  })
-
-  it('calls findByProfileId with includeInvisible=false for stranger', async () => {
-    const handler = fastify.routes['GET /profile/:profileId']
-    await handler(
-      { session: { profileId: 'viewer' }, params: { profileId: 'other' }, query: {} } as any,
-      reply as any
-    )
-    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith(
-      'other',
-      expect.objectContaining({ includeInvisible: false })
-    )
+    expect(reply.payload.items[0].isOwn).toBe(true)
   })
 })
 

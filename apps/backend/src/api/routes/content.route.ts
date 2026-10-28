@@ -3,7 +3,11 @@ import { UserContentService } from '@/services/userContent.service'
 import { PostService } from '@/services/post.service'
 import { EventService } from '@/services/event.service'
 import { CommunityService } from '@/services/community.service'
-import { mapOwnerUserContent, mapUserContentMetadata } from '../mappers/userContent.mappers'
+import {
+  mapOwnerUserContent,
+  mapPublicUserContent,
+  mapUserContentMetadata,
+} from '../mappers/userContent.mappers'
 import { mapDbPostToOwner, mapDbPostToDetail } from '../mappers/post.mappers'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../mappers/event.mappers'
 import { mapDbCommunityToOwner, mapDbCommunityToDetail } from '../mappers/community.mappers'
@@ -60,11 +64,8 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
     const ctx = mapperContext(req)
     const { profileId } = req.params as { profileId: string }
     const q = UserContentQuerySchema.parse(req.query)
-    const rows = await svc.findByProfileId(profileId, {
-      ...q,
-      includeInvisible: req.session.profileId === profileId,
-    })
-    const items = rows.map((r) => mapUserContentMetadata(r, ctx))
+    const rows = await svc.findByProfileId(profileId, q)
+    const items = rows.map((r) => mapPublicUserContent(r, ctx))
     return reply.code(200).send({ success: true, items })
   })
 

@@ -18,7 +18,10 @@ import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
+  /** Show the poster header and the contact/copy/share toolbar. */
   showDetails: boolean
+  /** Clip the content to a short excerpt, as in grid tiles. */
+  truncateText?: boolean
 }>()
 
 const ownerProfile = inject<Ref<OwnerProfile | null>>('ownerProfile', ref(null))
@@ -35,7 +38,7 @@ const GRID_TRUNCATE_LENGTH = 100
 
 const displayContent = computed(() => {
   const content = props.post.content
-  if (props.showDetails || content.length <= GRID_TRUNCATE_LENGTH) return content
+  if (!props.truncateText || content.length <= GRID_TRUNCATE_LENGTH) return content
   const truncated = content.substring(0, GRID_TRUNCATE_LENGTH)
   const lastSpace = truncated.lastIndexOf(' ')
   return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '\u2026'
@@ -94,7 +97,12 @@ const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
           :images="post.images"
           class="content-card-carousel mb-2"
         />
-        <p class="post-content flex-grow-1 flex-shrink-1 p-2">{{ displayContent }}</p>
+        <p
+          class="post-content flex-grow-1 flex-shrink-1 p-2"
+          :class="{ 'post-content--truncated': truncateText }"
+        >
+          {{ displayContent }}
+        </p>
 
         <div class="post-meta d-flex align-items-center justify-content-start gap-2 p-2">
           <div
@@ -187,15 +195,15 @@ const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
 }
 
 .post-content {
-  max-height: 5rem;
-  overflow: hidden;
+  max-height: 40vh;
+  overflow-y: auto;
   font-family: 'Patrick Hand', cursive;
   /* font-size: 2rem; */
 }
 
-.details .post-content {
-  max-height: 40vh;
-  overflow-y: auto;
+.post-content--truncated {
+  max-height: 5rem;
+  overflow: hidden;
 }
 
 .post-date {

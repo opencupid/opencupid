@@ -40,7 +40,11 @@ import type {
   PublicCommunity,
   PublicCommunityDetail,
 } from '@zod/community/community.dto'
-import type { OwnerUserContent, UserContentMetadata } from '@zod/userContent/userContent.dto'
+import type {
+  OwnerUserContent,
+  PublicUserContent,
+  UserContentMetadata,
+} from '@zod/userContent/userContent.dto'
 
 export type GetProfileSummariesResponse = ApiSuccess<{ profiles: ProfileSummary[] }>
 
@@ -115,6 +119,7 @@ export type DeletePostResponse = ApiSuccess<{}>
 
 // Unified user-content responses
 export type MyContentResponse = ApiSuccess<{ items: OwnerUserContent[] }>
+export type ProfileContentResponse = ApiSuccess<{ items: PublicUserContent[] }>
 export type ContentBoundsResponse = ApiSuccess<{ items: UserContentMetadata[] }>
 
 // Event responses

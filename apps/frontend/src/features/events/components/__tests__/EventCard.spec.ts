@@ -78,4 +78,28 @@ describe('EventCard', () => {
     })
     expect(wrapper.get('.event-wrapper').attributes('data-tags')).toBe('')
   })
+
+  describe('truncateText', () => {
+    const longEvent = { ...baseEvent, content: 'First para.\n\n' + 'word '.repeat(60).trim() }
+
+    it('shows the full content without the toolbar by default', () => {
+      const wrapper = mount(EventCard, {
+        props: { event: longEvent, showDetails: false },
+        global: { stubs },
+      })
+      const body = wrapper.get('p.pre-line')
+      expect(body.element.textContent).toBe(longEvent.content)
+      expect(wrapper.find('.viewer-toolbar').exists()).toBe(false)
+    })
+
+    it('clips the content to an excerpt when truncateText is set', () => {
+      const wrapper = mount(EventCard, {
+        props: { event: longEvent, showDetails: false, truncateText: true },
+        global: { stubs },
+      })
+      const text = wrapper.get('p.pre-line').text()
+      expect(text.endsWith('\u2026')).toBe(true)
+      expect(text.length).toBeLessThan(longEvent.content.length)
+    })
+  })
 })

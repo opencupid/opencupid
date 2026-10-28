@@ -27,8 +27,8 @@ vi.mock('../../api/mappers/image.mappers', () => ({
   }),
 }))
 
-import { mapUserContentMetadata } from '../../api/mappers/userContent.mappers'
-import type { UserContentMetadataRow } from '@/services/userContent.service'
+import { mapPublicUserContent, mapUserContentMetadata } from '../../api/mappers/userContent.mappers'
+import type { HydratedContentRow, UserContentMetadataRow } from '@/services/userContent.service'
 
 /**
  * Mappers take a MapperContext rather than a bare viewer id — two adjacent
@@ -141,5 +141,57 @@ describe('mapUserContentMetadata tags', () => {
   it('returns an empty array for untagged content', () => {
     const dto = mapUserContentMetadata(baseRow, ctx('viewer', 'en'))
     expect(dto.tags).toEqual([])
+  })
+})
+
+describe('mapPublicUserContent', () => {
+  const hydratedRow = (overrides: Record<string, unknown>) =>
+    ({
+      ...baseRow,
+      post: null,
+      event: null,
+      community: null,
+      ...overrides,
+    }) as unknown as HydratedContentRow
+
+  it('maps a post row with its post type', () => {
+    const dto = mapPublicUserContent(
+      hydratedRow({ kind: 'post', post: { type: 'OFFER' } }),
+      ctx('viewer')
+    )
+    expect(dto).toMatchObject({ kind: 'post', type: 'OFFER', isOwn: false })
+  })
+
+  it('maps an event row with its start date and venue', () => {
+    const startsAt = new Date('2026-12-01T18:00:00Z')
+    const dto = mapPublicUserContent(
+      hydratedRow({ kind: 'event', event: { startsAt, venue: 'Hall' } }),
+      ctx('viewer')
+    )
+    expect(dto).toMatchObject({ kind: 'event', startsAt, venue: 'Hall' })
+  })
+
+  it('maps a community row with its community fields', () => {
+    const dto = mapPublicUserContent(
+      hydratedRow({
+        kind: 'community',
+        community: {
+          yearFounded: 2001,
+          description: 'desc',
+          contactUrl: null,
+          contactEmail: null,
+        },
+      }),
+      ctx('viewer')
+    )
+    expect(dto).toMatchObject({ kind: 'community', yearFounded: 2001, description: 'desc' })
+  })
+
+  it('flags the viewer own content', () => {
+    const dto = mapPublicUserContent(
+      hydratedRow({ kind: 'post', post: { type: 'OFFER' } }),
+      ctx('clprofile000000000001')
+    )
+    expect(dto.isOwn).toBe(true)
   })
 })

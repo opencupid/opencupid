@@ -40,7 +40,6 @@ const handleBack = () => {
       :post="post"
       :show-details="true"
       class="pt-2 pt-md-3 pt-lg-5"
-      :class="{ details: true }"
     />
   </div>
 </template>

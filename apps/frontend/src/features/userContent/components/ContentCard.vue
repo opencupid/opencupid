@@ -19,18 +19,21 @@ defineEmits<{
     v-if="item.kind === 'post'"
     :post="item"
     :show-details="showDetails"
+    truncate-text
     @click="$emit('click', item)"
   />
   <EventCard
     v-else-if="item.kind === 'event'"
     :event="item"
     :show-details="showDetails"
+    truncate-text
     @click="$emit('click', item)"
   />
   <CommunityCard
     v-else-if="item.kind === 'community'"
     :community="item"
     :show-details="showDetails"
+    truncate-text
     @click="$emit('click', item)"
   />
 </template>

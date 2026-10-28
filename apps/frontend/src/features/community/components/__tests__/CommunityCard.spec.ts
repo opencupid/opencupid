@@ -83,16 +83,30 @@ describe('CommunityCard', () => {
     expect(body.element.textContent).toContain('First para.\n\nSecond para.')
   })
 
-  it('truncates a long description in grid mode (showDetails false)', () => {
+  it('truncates a long description when truncateText is set', () => {
     const longDescription = 'word '.repeat(60).trim() // ~300 chars, well over the 100 cap
     const wrapper = mount(CommunityCard, {
-      props: { community: { ...baseCommunity, description: longDescription }, showDetails: false },
+      props: {
+        community: { ...baseCommunity, description: longDescription },
+        showDetails: false,
+        truncateText: true,
+      },
       global: { stubs },
     })
     const body = wrapper.find('p.small')
     expect(body.exists()).toBe(true)
     expect(body.text().endsWith('…')).toBe(true)
     expect(body.text().length).toBeLessThan(longDescription.length)
+  })
+
+  it('shows the full description without the toolbar by default', () => {
+    const longDescription = 'word '.repeat(60).trim()
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, description: longDescription }, showDetails: false },
+      global: { stubs },
+    })
+    expect(wrapper.find('p.small').text()).toBe(longDescription)
+    expect(wrapper.find('.viewer-toolbar').exists()).toBe(false)
   })
 
   it('renders no body paragraph when the description is null', () => {

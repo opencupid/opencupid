@@ -12,7 +12,10 @@ import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   community: PublicCommunity | OwnerCommunity
+  /** Show the copy/share toolbar. */
   showDetails: boolean
+  /** Clip the description to a short excerpt, as in grid tiles. */
+  truncateText?: boolean
 }>()
 
 defineEmits<{
@@ -29,12 +32,12 @@ const shareCommunityPayload = computed<SharePayload>(() => ({
 
 const communityLocation = computed(() => props.community.location ?? null)
 
-// The name (content) is the card title; the description is shown as the body
-// only in the detail view, truncated to keep grid cards compact.
+// The name (content) is the card title; the description is the body,
+// truncated on request to keep grid cards compact.
 const GRID_TRUNCATE_LENGTH = 100
 const displayDescription = computed(() => {
   const description = props.community.description ?? ''
-  if (props.showDetails || description.length <= GRID_TRUNCATE_LENGTH) return description
+  if (!props.truncateText || description.length <= GRID_TRUNCATE_LENGTH) return description
   const truncated = description.substring(0, GRID_TRUNCATE_LENGTH)
   const lastSpace = truncated.lastIndexOf(' ')
   return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '…'
