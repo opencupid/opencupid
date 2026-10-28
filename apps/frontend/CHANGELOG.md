@@ -1,5 +1,11 @@
 # frontend
 
+## 0.75.2
+
+### Patch Changes
+
+- 6389772: Render own profile in dating mode when dating is active on load
+
 ## 0.75.1
 
 ### Patch Changes
