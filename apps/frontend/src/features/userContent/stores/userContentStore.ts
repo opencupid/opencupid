@@ -1,8 +1,12 @@
+import { z } from 'zod'
 import { defineStore } from 'pinia'
 import { CanceledError } from 'axios'
 import { api, safeApiCall } from '@/lib/api'
-import { OwnerUserContentSchema } from '@zod/userContent/publicContent.dto'
-import type { OwnerUserContent } from '@zod/userContent/publicContent.dto'
+import {
+  OwnerUserContentSchema,
+  PublicUserContentDetailSchema,
+} from '@zod/userContent/publicContent.dto'
+import type { OwnerUserContent, PublicUserContentDetail } from '@zod/userContent/publicContent.dto'
 import {
   OwnerPostSchema,
   PublicPostDetailSchema,
@@ -32,6 +36,7 @@ import {
 import type {
   ContentBoundsResponse,
   MyContentResponse,
+  ProfileContentResponse,
   PublicPostDetailResponse,
   PublicEventDetailResponse,
   PublicCommunityDetailResponse,
@@ -56,12 +61,20 @@ import type { MapBounds } from '@/features/map/types/map.types'
 
 const OwnerUserContentArraySchema = OwnerUserContentSchema.array()
 const UserContentMetadataArraySchema = UserContentMetadataSchema.array()
+// Owner first: a detail schema would also accept owner items, stripping the
+// owner-only fields, while non-owner items fail the owner schema.
+const ProfileContentArraySchema = z
+  .union([OwnerUserContentSchema, PublicUserContentDetailSchema])
+  .array()
 
 type StoreMyContentResponse = StoreResponse<{ items: OwnerUserContent[] }>
 type StorePostResponse = StoreResponse<{ post: OwnerPost }>
 type StoreEventResponse = StoreResponse<{ event: OwnerEvent }>
 type StoreCommunityResponse = StoreResponse<{ community: OwnerCommunity }>
 type StoreFeedItemsResponse = StoreResponse<{ items: UserContentMetadata[] }>
+type StoreProfileContentResponse = StoreResponse<{
+  items: (PublicUserContentDetail | OwnerUserContent)[]
+}>
 
 let feedInBoundsAbortController: AbortController | null = null
 let publicPostAbortController: AbortController | null = null
@@ -422,6 +435,20 @@ export const useUserContentStore = defineStore('userContent', {
       } catch (error: any) {
         if (error instanceof CanceledError) return storeSuccess()
         return storeError(error, 'Failed to fetch community')
+      }
+    },
+
+    // ─── Profile-scoped public reads ──────────────────────────────────
+    /** All content posted by a profile, fully hydrated per kind. */
+    async fetchProfileContent(profileId: string): Promise<StoreProfileContentResponse> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<ProfileContentResponse>(`/content/profile/${profileId}`)
+        )
+        const items = ProfileContentArraySchema.parse(res.data.items)
+        return storeSuccess({ items })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch profile content')
       }
     },
 

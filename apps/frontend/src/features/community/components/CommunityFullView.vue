@@ -14,6 +14,8 @@ const router = useRouter()
 
 const props = defineProps<{
   community: PublicCommunityDetail | OwnerCommunity
+  /** Omit the close button, e.g. when stacked in a list inside another panel. */
+  hideClose?: boolean
 }>()
 
 // Hostname reads better than the raw URL; the schema guarantees it parses.
@@ -47,7 +49,7 @@ const handleBack = () => {
   <div class="w-100 h-100 d-flex flex-column">
     <div
       class="d-flex justify-content-end align-items-center w-100 flex-shrink-0"
-      v-if="isMdUp"
+      v-if="isMdUp && !hideClose"
     >
       <BButton
         variant="link-secondary"

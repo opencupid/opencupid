@@ -310,6 +310,51 @@ describe('useUserContentStore', () => {
     })
   })
 
+  describe('fetchProfileContent', () => {
+    it('returns hydrated detail items for another profile', async () => {
+      const store = useUserContentStore()
+      const detail = {
+        ...baseScalars,
+        id: CUID_1,
+        kind: 'event',
+        startsAt: '2026-12-01T18:00:00Z',
+        venue: null,
+        isOwn: false,
+        postedBy: { ...profileSummary, haveConversation: false, canMessage: true },
+      }
+      mockApi.get.mockResolvedValue({ data: { success: true, items: [detail] } })
+
+      const result = await store.fetchProfileContent(CUID_1)
+
+      expect(mockApi.get).toHaveBeenCalledWith(`/content/profile/${CUID_1}`)
+      if (!result.success) throw new Error('expected success')
+      expect(result.data?.items[0]).toMatchObject({ kind: 'event', venue: null })
+      expect(result.data?.items[0]?.postedBy).toMatchObject({ canMessage: true })
+      expect(store.myContent).toEqual([])
+    })
+
+    it('keeps owner-only fields for the viewer own content', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockResolvedValue({
+        data: { success: true, items: [makeOwnerPost(CUID_1, { isVisible: false })] },
+      })
+
+      const result = await store.fetchProfileContent(CUID_1)
+
+      if (!result.success) throw new Error('expected success')
+      expect(result.data?.items[0]).toMatchObject({ isOwn: true, isVisible: false })
+    })
+
+    it('returns an error response when the request fails', async () => {
+      const store = useUserContentStore()
+      mockApi.get.mockRejectedValue(new Error('boom'))
+
+      const result = await store.fetchProfileContent(CUID_1)
+
+      expect(result.success).toBe(false)
+    })
+  })
+
   describe('fetchFeedInBounds', () => {
     it('populates feedItems on success', async () => {
       const store = useUserContentStore()

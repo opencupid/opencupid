@@ -3,7 +3,11 @@ import { UserContentService } from '@/services/userContent.service'
 import { PostService } from '@/services/post.service'
 import { EventService } from '@/services/event.service'
 import { CommunityService } from '@/services/community.service'
-import { mapOwnerUserContent, mapUserContentMetadata } from '../mappers/userContent.mappers'
+import {
+  mapOwnerUserContent,
+  mapPublicUserContentDetail,
+  mapUserContentMetadata,
+} from '../mappers/userContent.mappers'
 import { mapDbPostToOwner, mapDbPostToDetail } from '../mappers/post.mappers'
 import { mapDbEventToOwner, mapDbEventToDetail } from '../mappers/event.mappers'
 import { mapDbCommunityToOwner, mapDbCommunityToDetail } from '../mappers/community.mappers'
@@ -60,11 +64,15 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
     const ctx = mapperContext(req)
     const { profileId } = req.params as { profileId: string }
     const q = UserContentQuerySchema.parse(req.query)
-    const rows = await svc.findByProfileId(profileId, {
+    const viewerProfileId = req.session.profileId
+    const isOwner = viewerProfileId === profileId
+    const rows = await svc.findByProfileId(profileId, viewerProfileId, {
       ...q,
-      includeInvisible: req.session.profileId === profileId,
+      includeInvisible: isOwner,
     })
-    const items = rows.map((r) => mapUserContentMetadata(r, ctx))
+    const items = rows.map((r) =>
+      isOwner ? mapOwnerUserContent(r, ctx) : mapPublicUserContentDetail(r, ctx)
+    )
     return reply.code(200).send({ success: true, items })
   })
 
