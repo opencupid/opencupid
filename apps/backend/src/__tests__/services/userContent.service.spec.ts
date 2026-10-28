@@ -39,3 +39,19 @@ describe('findInBounds', () => {
     })
   })
 })
+
+describe('findByProfileId', () => {
+  it('returns only visible, non-deleted content of the profile', async () => {
+    await service.findByProfileId('p1', 'viewer', { limit: 20, offset: 0 })
+
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where).toMatchObject({ postedById: 'p1', isDeleted: false, isVisible: true })
+  })
+
+  it('returns only visible content even when the viewer owns the profile', async () => {
+    await service.findByProfileId('p1', 'p1', { limit: 20, offset: 0 })
+
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where.isVisible).toBe(true)
+  })
+})

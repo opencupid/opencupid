@@ -12,8 +12,6 @@ const router = useRouter()
 
 defineProps<{
   event: PublicEventDetail | OwnerEvent
-  /** Omit the close button, e.g. when stacked in a list inside another panel. */
-  hideClose?: boolean
 }>()
 
 defineEmits<{
@@ -31,7 +29,7 @@ const handleBack = () => {
   <div class="w-100">
     <div
       class="d-flex justify-content-end align-items-center w-100"
-      v-if="isMdUp && !hideClose"
+      v-if="isMdUp"
     >
       <BButton
         variant="link-secondary"

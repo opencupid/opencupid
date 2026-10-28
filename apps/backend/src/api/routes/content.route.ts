@@ -66,10 +66,7 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
     const q = UserContentQuerySchema.parse(req.query)
     const viewerProfileId = req.session.profileId
     const isOwner = viewerProfileId === profileId
-    const rows = await svc.findByProfileId(profileId, viewerProfileId, {
-      ...q,
-      includeInvisible: isOwner,
-    })
+    const rows = await svc.findByProfileId(profileId, viewerProfileId, q)
     const items = rows.map((r) =>
       isOwner ? mapOwnerUserContent(r, ctx) : mapPublicUserContentDetail(r, ctx)
     )

@@ -6,22 +6,23 @@ vi.mock('@/features/userContent/stores/userContentStore', () => ({
   useUserContentStore: () => ({ fetchProfileContent }),
 }))
 
-vi.mock('@/features/posts/components/PostFullView.vue', () => ({
+vi.mock('@/features/posts/components/PostCard.vue', () => ({
   default: {
-    props: { post: Object, hideClose: Boolean },
-    template: '<div class="post-view" :data-id="post.id" :data-hide-close="hideClose" />',
+    props: { post: Object, showDetails: Boolean },
+    template: '<div class="post-view" :data-id="post.id" :data-show-details="showDetails" />',
   },
 }))
-vi.mock('@/features/events/components/EventFullView.vue', () => ({
+vi.mock('@/features/events/components/EventCard.vue', () => ({
   default: {
-    props: { event: Object, hideClose: Boolean },
-    template: '<div class="event-view" :data-id="event.id" :data-hide-close="hideClose" />',
+    props: { event: Object, showDetails: Boolean },
+    template: '<div class="event-view" :data-id="event.id" :data-show-details="showDetails" />',
   },
 }))
-vi.mock('@/features/community/components/CommunityFullView.vue', () => ({
+vi.mock('@/features/community/components/CommunityCard.vue', () => ({
   default: {
-    props: { community: Object, hideClose: Boolean },
-    template: '<div class="community-view" :data-id="community.id" :data-hide-close="hideClose" />',
+    props: { community: Object, showDetails: Boolean },
+    template:
+      '<div class="community-view" :data-id="community.id" :data-show-details="showDetails" />',
   },
 }))
 
@@ -52,7 +53,7 @@ describe('ProfileContentList', () => {
       ['event-view', 'c2'],
       ['community-view', 'c3'],
     ])
-    expect(wrapper.findAll('[data-hide-close="true"]')).toHaveLength(3)
+    expect(wrapper.findAll('[data-show-details="true"]')).toHaveLength(3)
   })
 
   it('renders nothing when the profile has no content', async () => {

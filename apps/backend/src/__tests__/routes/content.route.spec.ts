@@ -208,7 +208,7 @@ describe('GET /profile/:profileId', () => {
     createdAt: new Date('2026-05-13T10:00:00Z'),
     updatedAt: new Date('2026-05-13T10:00:00Z'),
     isDeleted: false,
-    isVisible: false,
+    isVisible: true,
     postedById: 'pself',
     postedBy: {
       id: 'pself',
@@ -228,38 +228,34 @@ describe('GET /profile/:profileId', () => {
     tags: [],
   }
 
-  it('includes invisible items and maps as owner content when viewer is owner', async () => {
+  it('maps as owner content when viewer is owner', async () => {
     const handler = fastify.routes['GET /profile/:profileId']
     mockUserContentService.findByProfileId.mockResolvedValue([profilePostRow])
     await handler(
       { session: { profileId: 'pself' }, params: { profileId: 'pself' }, query: {} } as any,
       reply as any
     )
-    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith(
-      'pself',
-      'pself',
-      expect.objectContaining({ includeInvisible: true })
-    )
+    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith('pself', 'pself', {
+      limit: 20,
+      offset: 0,
+    })
     expect(reply.payload).toMatchObject({
       success: true,
-      items: [{ kind: 'post', type: 'OFFER', isOwn: true, isVisible: false }],
+      items: [{ kind: 'post', type: 'OFFER', isOwn: true, isVisible: true }],
     })
   })
 
-  it('excludes invisible items and maps as detail content for stranger', async () => {
+  it('maps as detail content for stranger', async () => {
     const handler = fastify.routes['GET /profile/:profileId']
-    mockUserContentService.findByProfileId.mockResolvedValue([
-      { ...profilePostRow, isVisible: true },
-    ])
+    mockUserContentService.findByProfileId.mockResolvedValue([profilePostRow])
     await handler(
       { session: { profileId: 'viewer' }, params: { profileId: 'other' }, query: {} } as any,
       reply as any
     )
-    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith(
-      'other',
-      'viewer',
-      expect.objectContaining({ includeInvisible: false })
-    )
+    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith('other', 'viewer', {
+      limit: 20,
+      offset: 0,
+    })
     expect(reply.payload).toMatchObject({
       success: true,
       items: [{ kind: 'post', type: 'OFFER', isOwn: false, postedBy: { canMessage: true } }],

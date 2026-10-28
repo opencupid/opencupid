@@ -2,9 +2,9 @@
 import { ref, watch } from 'vue'
 import type { OwnerUserContent, PublicUserContentDetail } from '@zod/userContent/publicContent.dto'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
-import PostFullView from '@/features/posts/components/PostFullView.vue'
-import EventFullView from '@/features/events/components/EventFullView.vue'
-import CommunityFullView from '@/features/community/components/CommunityFullView.vue'
+import PostCard from '@/features/posts/components/PostCard.vue'
+import EventCard from '@/features/events/components/EventCard.vue'
+import CommunityCard from '@/features/community/components/CommunityCard.vue'
 
 const props = defineProps<{
   profileId: string
@@ -34,20 +34,20 @@ watch(
       v-for="item in items"
       :key="item.id"
     >
-      <PostFullView
+      <PostCard
         v-if="item.kind === 'post'"
         :post="item"
-        hide-close
+        :show-details="true"
       />
-      <EventFullView
+      <EventCard
         v-else-if="item.kind === 'event'"
         :event="item"
-        hide-close
+        :show-details="true"
       />
-      <CommunityFullView
+      <CommunityCard
         v-else-if="item.kind === 'community'"
         :community="item"
-        hide-close
+        :show-details="true"
       />
     </template>
   </div>

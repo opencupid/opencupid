@@ -11,8 +11,6 @@ const router = useRouter()
 
 const props = defineProps<{
   post: PublicPostWithProfile | OwnerPost
-  /** Omit the close button, e.g. when stacked in a list inside another panel. */
-  hideClose?: boolean
 }>()
 
 defineEmits<{
@@ -28,10 +26,7 @@ const handleBack = () => {
 
 <template>
   <div class="w-100">
-    <div
-      class="d-flex justify-content-end align-items-center w-100"
-      v-if="!hideClose"
-    >
+    <div class="d-flex justify-content-end align-items-center w-100">
       <BButton
         variant="link-secondary"
         :title="$t('profiles.back_button_title')"

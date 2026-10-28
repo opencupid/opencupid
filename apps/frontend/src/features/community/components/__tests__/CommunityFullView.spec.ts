@@ -58,14 +58,6 @@ describe('CommunityFullView', () => {
     expect(wrapper.find('.community-card-stub').text()).toBe('c-1')
   })
 
-  it('omits the close button when hideClose is set', () => {
-    const wrapper = mount(CommunityFullView, {
-      props: { community, hideClose: true },
-      global: globalConfig,
-    })
-    expect(wrapper.find('button').exists()).toBe(false)
-  })
-
   it('navigates back to Browse when no detailPanelClose provider', async () => {
     replaceMock.mockClear()
     const wrapper = mount(CommunityFullView, {

@@ -174,13 +174,13 @@ export class UserContentService {
   async findByProfileId(
     profileId: string,
     viewerProfileId: string,
-    opts: ListOptions
+    opts: Omit<ListOptions, 'includeInvisible'>
   ): Promise<ProfileContentRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
         isDeleted: false,
-        isVisible: opts.includeInvisible ? undefined : true,
+        isVisible: true,
         kind: opts.kind,
       },
       include: profileContentInclude(viewerProfileId),
