@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
-import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
+import { userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { TagService } from './tag.service'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
@@ -67,26 +67,6 @@ const ownerHydratedInclude = {
   ...userContentTagsInclude,
 } as const
 
-/**
- * Public counterpart of `ownerHydratedInclude`: every kind-specific content
- * row plus the poster's conversation context relative to the viewer, so
- * `GET /api/content/profile/:profileId` can return detail payloads.
- */
-const profileContentInclude = (viewerProfileId: string) =>
-  ({
-    post: true,
-    event: true,
-    community: true,
-    postedBy: {
-      include: {
-        profileImages: { include: { image: true } },
-        ...conversationContextInclude(viewerProfileId),
-      },
-    },
-    ...userContentImagesInclude,
-    ...userContentTagsInclude,
-  }) as const
-
 export type UserContentMetadataRow = Prisma.UserContentGetPayload<{
   include: typeof profileSummaryInclude
 }>
@@ -97,10 +77,6 @@ export type ContentSummaryRow = Prisma.UserContentGetPayload<{
 
 export type OwnerHydratedRow = Prisma.UserContentGetPayload<{
   include: typeof ownerHydratedInclude
-}>
-
-export type ProfileContentRow = Prisma.UserContentGetPayload<{
-  include: ReturnType<typeof profileContentInclude>
 }>
 
 export class UserContentService {
@@ -173,9 +149,8 @@ export class UserContentService {
 
   async findByProfileId(
     profileId: string,
-    viewerProfileId: string,
     opts: Omit<ListOptions, 'includeInvisible'>
-  ): Promise<ProfileContentRow[]> {
+  ): Promise<OwnerHydratedRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -183,7 +158,7 @@ export class UserContentService {
         isVisible: true,
         kind: opts.kind,
       },
-      include: profileContentInclude(viewerProfileId),
+      include: ownerHydratedInclude,
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,

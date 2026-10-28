@@ -5,7 +5,7 @@ import { EventService } from '@/services/event.service'
 import { CommunityService } from '@/services/community.service'
 import {
   mapOwnerUserContent,
-  mapPublicUserContentDetail,
+  mapPublicUserContent,
   mapUserContentMetadata,
 } from '../mappers/userContent.mappers'
 import { mapDbPostToOwner, mapDbPostToDetail } from '../mappers/post.mappers'
@@ -64,12 +64,8 @@ const contentRoutes: FastifyPluginAsync = async (fastify) => {
     const ctx = mapperContext(req)
     const { profileId } = req.params as { profileId: string }
     const q = UserContentQuerySchema.parse(req.query)
-    const viewerProfileId = req.session.profileId
-    const isOwner = viewerProfileId === profileId
-    const rows = await svc.findByProfileId(profileId, viewerProfileId, q)
-    const items = rows.map((r) =>
-      isOwner ? mapOwnerUserContent(r, ctx) : mapPublicUserContentDetail(r, ctx)
-    )
+    const rows = await svc.findByProfileId(profileId, q)
+    const items = rows.map((r) => mapPublicUserContent(r, ctx))
     return reply.code(200).send({ success: true, items })
   })
 

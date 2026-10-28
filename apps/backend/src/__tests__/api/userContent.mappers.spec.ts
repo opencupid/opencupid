@@ -27,11 +27,8 @@ vi.mock('../../api/mappers/image.mappers', () => ({
   }),
 }))
 
-import {
-  mapPublicUserContentDetail,
-  mapUserContentMetadata,
-} from '../../api/mappers/userContent.mappers'
-import type { ProfileContentRow, UserContentMetadataRow } from '@/services/userContent.service'
+import { mapPublicUserContent, mapUserContentMetadata } from '../../api/mappers/userContent.mappers'
+import type { OwnerHydratedRow, UserContentMetadataRow } from '@/services/userContent.service'
 
 /**
  * Mappers take a MapperContext rather than a bare viewer id — two adjacent
@@ -147,37 +144,36 @@ describe('mapUserContentMetadata tags', () => {
   })
 })
 
-describe('mapPublicUserContentDetail', () => {
-  const profileContentRow = (overrides: Record<string, unknown>) =>
+describe('mapPublicUserContent', () => {
+  const hydratedRow = (overrides: Record<string, unknown>) =>
     ({
       ...baseRow,
       post: null,
       event: null,
       community: null,
-      postedBy: { ...baseRow.postedBy, conversationAsA: [], conversationAsB: [] },
       ...overrides,
-    }) as unknown as ProfileContentRow
+    }) as unknown as OwnerHydratedRow
 
   it('maps a post row with its post type', () => {
-    const dto = mapPublicUserContentDetail(
-      profileContentRow({ kind: 'post', post: { type: 'OFFER' } }),
+    const dto = mapPublicUserContent(
+      hydratedRow({ kind: 'post', post: { type: 'OFFER' } }),
       ctx('viewer')
     )
-    expect(dto).toMatchObject({ kind: 'post', type: 'OFFER' })
+    expect(dto).toMatchObject({ kind: 'post', type: 'OFFER', isOwn: false })
   })
 
   it('maps an event row with its start date and venue', () => {
     const startsAt = new Date('2026-12-01T18:00:00Z')
-    const dto = mapPublicUserContentDetail(
-      profileContentRow({ kind: 'event', event: { startsAt, venue: 'Hall' } }),
+    const dto = mapPublicUserContent(
+      hydratedRow({ kind: 'event', event: { startsAt, venue: 'Hall' } }),
       ctx('viewer')
     )
     expect(dto).toMatchObject({ kind: 'event', startsAt, venue: 'Hall' })
   })
 
   it('maps a community row with its community fields', () => {
-    const dto = mapPublicUserContentDetail(
-      profileContentRow({
+    const dto = mapPublicUserContent(
+      hydratedRow({
         kind: 'community',
         community: {
           yearFounded: 2001,
@@ -191,12 +187,11 @@ describe('mapPublicUserContentDetail', () => {
     expect(dto).toMatchObject({ kind: 'community', yearFounded: 2001, description: 'desc' })
   })
 
-  it('attaches conversation context to postedBy', () => {
-    const dto = mapPublicUserContentDetail(
-      profileContentRow({ kind: 'post', post: { type: 'OFFER' } }),
-      ctx('viewer')
+  it('flags the viewer own content', () => {
+    const dto = mapPublicUserContent(
+      hydratedRow({ kind: 'post', post: { type: 'OFFER' } }),
+      ctx('clprofile000000000001')
     )
-    expect(dto.postedBy).toHaveProperty('canMessage')
-    expect(dto.postedBy).toHaveProperty('conversationId')
+    expect(dto.isOwn).toBe(true)
   })
 })

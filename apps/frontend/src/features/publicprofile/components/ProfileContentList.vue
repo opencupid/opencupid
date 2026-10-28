@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { OwnerUserContent, PublicUserContentDetail } from '@zod/userContent/publicContent.dto'
+import type { PublicUserContent } from '@zod/userContent/publicContent.dto'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import PostCard from '@/features/posts/components/PostCard.vue'
 import EventCard from '@/features/events/components/EventCard.vue'
@@ -11,7 +11,7 @@ const props = defineProps<{
 }>()
 
 const contentStore = useUserContentStore()
-const items = ref<(PublicUserContentDetail | OwnerUserContent)[]>([])
+const items = ref<PublicUserContent[]>([])
 
 watch(
   () => props.profileId,

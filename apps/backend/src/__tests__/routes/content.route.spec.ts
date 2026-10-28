@@ -206,17 +206,8 @@ describe('GET /profile/:profileId', () => {
     kind: 'post',
     content: 'post content',
     createdAt: new Date('2026-05-13T10:00:00Z'),
-    updatedAt: new Date('2026-05-13T10:00:00Z'),
-    isDeleted: false,
-    isVisible: true,
     postedById: 'pself',
-    postedBy: {
-      id: 'pself',
-      publicName: 'Self',
-      profileImages: [],
-      conversationAsA: [],
-      conversationAsB: [],
-    },
+    postedBy: { id: 'pself', publicName: 'Self', profileImages: [] },
     post: { type: 'OFFER' },
     event: null,
     community: null,
@@ -228,39 +219,31 @@ describe('GET /profile/:profileId', () => {
     tags: [],
   }
 
-  it('maps as owner content when viewer is owner', async () => {
+  it('returns the profile content as public items', async () => {
+    const handler = fastify.routes['GET /profile/:profileId']
+    mockUserContentService.findByProfileId.mockResolvedValue([profilePostRow])
+    await handler(
+      { session: { profileId: 'viewer' }, params: { profileId: 'pself' }, query: {} } as any,
+      reply as any
+    )
+    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith('pself', {
+      limit: 20,
+      offset: 0,
+    })
+    expect(reply.payload).toMatchObject({
+      success: true,
+      items: [{ kind: 'post', type: 'OFFER', isOwn: false }],
+    })
+  })
+
+  it('flags the items as own when the viewer owns the profile', async () => {
     const handler = fastify.routes['GET /profile/:profileId']
     mockUserContentService.findByProfileId.mockResolvedValue([profilePostRow])
     await handler(
       { session: { profileId: 'pself' }, params: { profileId: 'pself' }, query: {} } as any,
       reply as any
     )
-    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith('pself', 'pself', {
-      limit: 20,
-      offset: 0,
-    })
-    expect(reply.payload).toMatchObject({
-      success: true,
-      items: [{ kind: 'post', type: 'OFFER', isOwn: true, isVisible: true }],
-    })
-  })
-
-  it('maps as detail content for stranger', async () => {
-    const handler = fastify.routes['GET /profile/:profileId']
-    mockUserContentService.findByProfileId.mockResolvedValue([profilePostRow])
-    await handler(
-      { session: { profileId: 'viewer' }, params: { profileId: 'other' }, query: {} } as any,
-      reply as any
-    )
-    expect(mockUserContentService.findByProfileId).toHaveBeenCalledWith('other', 'viewer', {
-      limit: 20,
-      offset: 0,
-    })
-    expect(reply.payload).toMatchObject({
-      success: true,
-      items: [{ kind: 'post', type: 'OFFER', isOwn: false, postedBy: { canMessage: true } }],
-    })
-    expect(reply.payload.items[0]).not.toHaveProperty('isVisible')
+    expect(reply.payload.items[0].isOwn).toBe(true)
   })
 })
 

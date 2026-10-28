@@ -71,3 +71,33 @@ describe('PostCard data-tags', () => {
     expect(wrapper.get('.post-wrapper').attributes('data-tags')).toBe('')
   })
 })
+
+const longPost = { ...basePost, content: 'word '.repeat(60).trim() }
+
+const mountCard = (props: { showDetails: boolean; truncateText?: boolean }) =>
+  mount(PostCard, { props: { post: longPost, ...props }, global: { stubs } })
+
+describe('PostCard truncateText', () => {
+  it('shows the full content by default', () => {
+    const content = mountCard({ showDetails: false }).get('.post-content')
+    expect(content.text()).toBe(longPost.content)
+    expect(content.classes()).not.toContain('post-content--truncated')
+  })
+
+  it('clips the content to an excerpt when truncateText is set', () => {
+    const content = mountCard({ showDetails: false, truncateText: true }).get('.post-content')
+    expect(content.text().endsWith('…')).toBe(true)
+    expect(content.text().length).toBeLessThan(longPost.content.length)
+    expect(content.classes()).toContain('post-content--truncated')
+  })
+
+  it('does not tie the toolbar to truncation', () => {
+    const withoutToolbar = mountCard({ showDetails: false })
+    expect(withoutToolbar.find('.viewer-toolbar').exists()).toBe(false)
+    expect(withoutToolbar.get('.post-content').text()).toBe(longPost.content)
+
+    const withToolbar = mountCard({ showDetails: true, truncateText: true })
+    expect(withToolbar.find('.viewer-toolbar').exists()).toBe(true)
+    expect(withToolbar.get('.post-content').classes()).toContain('post-content--truncated')
+  })
+})
