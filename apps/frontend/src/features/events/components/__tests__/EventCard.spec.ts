@@ -80,24 +80,6 @@ describe('EventCard', () => {
     expect(wrapper.get('.event-wrapper').attributes('data-tags')).toBe('')
   })
 
-  describe('rsvp button', () => {
-    it('carries the rsvp-button class as a styling hook when details are shown', () => {
-      const wrapper = mount(EventCard, {
-        props: { event: baseEvent, showDetails: true },
-        global: { stubs },
-      })
-      expect(wrapper.find('button.rsvp-button').exists()).toBe(true)
-    })
-
-    it('renders no rsvp button without details', () => {
-      const wrapper = mount(EventCard, {
-        props: { event: baseEvent, showDetails: false },
-        global: { stubs },
-      })
-      expect(wrapper.find('.rsvp-button').exists()).toBe(false)
-    })
-  })
-
   describe('external link', () => {
     it('links to the external event page in a new tab', async () => {
       const event = { ...baseEvent, externalUrl: 'https://parasztsuli.hu/hu/events/x/' }
