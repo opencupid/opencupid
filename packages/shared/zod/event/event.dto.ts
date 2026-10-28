@@ -19,6 +19,7 @@ export const PublicEventSchema = UserContentMetadataSchema.extend({
   kind: EVENT_KIND,
   startsAt: z.coerce.date(),
   venue: z.string().nullable(),
+  externalUrl: z.string().nullable(),
 })
 export type PublicEvent = z.infer<typeof PublicEventSchema>
 
@@ -26,6 +27,7 @@ export const PublicEventDetailSchema = PublicUserContentDetailBaseSchema.extend(
   kind: EVENT_KIND,
   startsAt: z.coerce.date(),
   venue: z.string().nullable(),
+  externalUrl: z.string().nullable(),
 })
 export type PublicEventDetail = z.infer<typeof PublicEventDetailSchema>
 

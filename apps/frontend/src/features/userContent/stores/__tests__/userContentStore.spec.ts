@@ -60,6 +60,7 @@ function makeOwnerEvent(id: string, overrides: Record<string, unknown> = {}) {
     kind: 'event' as const,
     startsAt: '2026-06-01T18:00:00Z',
     venue: null,
+    externalUrl: null,
     postedBy: profileSummary,
     isDeleted: false,
     isVisible: true,
@@ -319,6 +320,7 @@ describe('useUserContentStore', () => {
         kind: 'event',
         startsAt: '2026-12-01T18:00:00Z',
         venue: null,
+        externalUrl: null,
         isOwn: false,
         postedBy: profileSummary,
       }

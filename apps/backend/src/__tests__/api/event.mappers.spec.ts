@@ -80,6 +80,7 @@ const baseDbEvent: any = {
     userContentId: 'cuevent00000000000001',
     startsAt: new Date('2027-06-01T18:00:00Z'),
     venue: null,
+    externalUrl: 'https://parasztsuli.hu/hu/events/x/',
   },
   images: baseImages,
   tags: [],
@@ -94,6 +95,7 @@ describe('mapDbEventToPublic', () => {
     expect(result.startsAt.toISOString()).toBe('2027-06-01T18:00:00.000Z')
     expect(result.isOwn).toBe(false)
     expect(result.location).toEqual({ country: 'AT', cityName: 'Vienna', lat: 48.2, lon: 16.3 })
+    expect(result.externalUrl).toBe('https://parasztsuli.hu/hu/events/x/')
   })
 
   it('isOwn=true when viewer is poster', () => {
@@ -109,6 +111,7 @@ describe('mapDbEventToOwner', () => {
     expect(result.isOwn).toBe(true)
     expect(result.startsAt.toISOString()).toBe('2027-06-01T18:00:00.000Z')
     expect(result.isVisible).toBe(true)
+    expect(result.externalUrl).toBe('https://parasztsuli.hu/hu/events/x/')
   })
 })
 
