@@ -105,6 +105,16 @@ const tagSlugs = computed(() => tagsDataAttr(props.event.tags))
           md="8"
         >
           <p class="lh-sm small mb-0 p-2 pre-line">{{ displayContent }}</p>
+          <a
+            v-if="event.externalUrl"
+            :href="event.externalUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="small d-inline-block px-2"
+            @click.stop
+          >
+            {{ t('events.labels.external_link') }}
+          </a>
         </BCol>
         <BCol
           cols="12"

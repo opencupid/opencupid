@@ -16,6 +16,14 @@ export const UserContentSchema = z.object({
   cityName: z.string().nullable(),
   lat: z.number().nullable(),
   lon: z.number().nullable(),
+  /**
+   * Origin of content imported from an external feed (e.g. "parasztsuli"); null for member-created content.
+   */
+  externalSource: z.string().nullable(),
+  /**
+   * The item's id at `externalSource`.
+   */
+  externalId: z.string().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })

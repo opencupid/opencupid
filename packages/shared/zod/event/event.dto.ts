@@ -19,6 +19,7 @@ export const PublicEventSchema = UserContentMetadataSchema.extend({
   kind: EVENT_KIND,
   startsAt: z.coerce.date(),
   venue: z.string().nullable(),
+  externalUrl: z.string().nullable(),
 })
 export type PublicEvent = z.infer<typeof PublicEventSchema>
 
@@ -26,6 +27,7 @@ export const PublicEventDetailSchema = PublicUserContentDetailBaseSchema.extend(
   kind: EVENT_KIND,
   startsAt: z.coerce.date(),
   venue: z.string().nullable(),
+  externalUrl: z.string().nullable(),
 })
 export type PublicEventDetail = z.infer<typeof PublicEventDetailSchema>
 
@@ -47,6 +49,35 @@ export const UpdateEventPayloadSchema = CreateEventPayloadSchema.omit({ imageIds
     isVisible: z.boolean().optional(),
   })
 export type UpdateEventPayload = z.infer<typeof UpdateEventPayloadSchema>
+
+const EXTERNAL_SOURCE_MAX_LENGTH = 50
+const EXTERNAL_ID_MAX_LENGTH = 100
+const EXTERNAL_URL_MAX_LENGTH = 2048
+
+/**
+ * Admin import: creates an event on behalf of `postedById`, keyed by the
+ * item's id at an external feed so repeated imports cannot duplicate it.
+ */
+export const AdminCreateEventPayloadSchema = CreateEventPayloadSchema.extend({
+  postedById: z.string().cuid(),
+  externalSource: z.string().min(1).max(EXTERNAL_SOURCE_MAX_LENGTH),
+  externalId: z.string().min(1).max(EXTERNAL_ID_MAX_LENGTH),
+  externalUrl: z.string().url().max(EXTERNAL_URL_MAX_LENGTH),
+})
+export type AdminCreateEventPayload = z.infer<typeof AdminCreateEventPayloadSchema>
+
+export const AdminExternalEventQuerySchema = z.object({
+  externalSource: z.string().min(1).max(EXTERNAL_SOURCE_MAX_LENGTH),
+})
+
+export const AdminExternalEventSchema = z.object({
+  id: z.string(),
+  externalId: z.string(),
+  startsAt: z.coerce.date(),
+  /** Deleted by its poster; importers must not recreate it. */
+  isDeleted: z.boolean(),
+})
+export type AdminExternalEvent = z.infer<typeof AdminExternalEventSchema>
 
 export const EventParamsSchema = z.object({ id: z.string().cuid() })
 

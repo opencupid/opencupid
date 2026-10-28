@@ -117,6 +117,7 @@
     },
     "labels": {
       "content": "Mi történik?",
+      "external_link": "Esemény linkje",
       "starts_at": "Mikor?",
       "venue": "Hol?",
       "visibility": "Mutasd ezt az eseményt"

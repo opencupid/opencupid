@@ -44,6 +44,9 @@ export type EventWithMetadataAndContext = Prisma.UserContentGetPayload<{
   include: ReturnType<typeof eventWithMetadataAndContextInclude>
 }>
 
+/** Identifies an event imported from an external feed. */
+export type ExternalRef = { source: string; id: string; url: string }
+
 export class EventService extends UserContentService {
   private static eventInstance: EventService
 
@@ -54,7 +57,11 @@ export class EventService extends UserContentService {
     return EventService.eventInstance
   }
 
-  async create(profileId: string, data: CreateEventPayload): Promise<EventWithMetadata> {
+  async create(
+    profileId: string,
+    data: CreateEventPayload,
+    external?: ExternalRef
+  ): Promise<EventWithMetadata> {
     const { imageIds, tagIds, ...contentData } = data
     return prisma.$transaction(
       async (tx) => {
@@ -63,9 +70,17 @@ export class EventService extends UserContentService {
           data: {
             ...this.baseCreateData(contentData),
             ...tagConnect,
+            externalSource: external?.source ?? null,
+            externalId: external?.id ?? null,
             kind: 'event',
             postedById: profileId,
-            event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
+            event: {
+              create: {
+                startsAt: data.startsAt,
+                venue: data.venue ?? null,
+                externalUrl: external?.url ?? null,
+              },
+            },
           },
           include: eventWithMetadataInclude,
         })
@@ -147,6 +162,42 @@ export class EventService extends UserContentService {
       take: opts.limit,
       skip: opts.offset,
     })
+  }
+
+  /**
+   * Events imported from `externalSource`, including ones their poster
+   * deleted (those keep their external ref so importers don't recreate them).
+   */
+  async findByExternalSource(externalSource: string) {
+    const rows = await prisma.userContent.findMany({
+      where: { kind: 'event', externalSource },
+      select: {
+        id: true,
+        externalId: true,
+        isDeleted: true,
+        event: { select: { startsAt: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+    return rows.map((r) => ({
+      id: r.id,
+      externalId: r.externalId!,
+      startsAt: r.event!.startsAt,
+      isDeleted: r.isDeleted,
+    }))
+  }
+
+  /**
+   * Soft-deletes an event regardless of its poster. Admin use only. Releases
+   * the external ref, so an item withdrawn and later republished at its
+   * source is imported again as a new event.
+   */
+  async adminSoftDelete(id: string): Promise<{ id: string } | null> {
+    const result = await prisma.userContent.updateMany({
+      where: { id, kind: 'event', isDeleted: false },
+      data: { isDeleted: true, externalSource: null, externalId: null },
+    })
+    return result.count === 1 ? { id } : null
   }
 
   private async assertEventVisibleTo(

@@ -125,3 +125,65 @@ describe('EventService tag wiring', () => {
     expect(mockPrisma.userContent.updateMany.mock.calls[0][0].data).not.toHaveProperty('tagIds')
   })
 })
+
+describe('EventService external imports', () => {
+  const baseData = {
+    content: 'x'.repeat(20),
+    startsAt: new Date('2030-01-01T10:00:00Z'),
+  }
+
+  it('stores the external ref on create', async () => {
+    await service.create('profile-1', baseData, {
+      source: 'parasztsuli',
+      id: '97',
+      url: 'https://parasztsuli.hu/hu/events/x/',
+    })
+
+    const createArg = mockPrisma.userContent.create.mock.calls[0][0]
+    expect(createArg.data).toMatchObject({ externalSource: 'parasztsuli', externalId: '97' })
+    expect(createArg.data.event.create.externalUrl).toBe('https://parasztsuli.hu/hu/events/x/')
+  })
+
+  it('stores null external ref for member-created events', async () => {
+    await service.create('profile-1', baseData)
+
+    const createArg = mockPrisma.userContent.create.mock.calls[0][0]
+    expect(createArg.data).toMatchObject({ externalSource: null, externalId: null })
+    expect(createArg.data.event.create.externalUrl).toBeNull()
+  })
+
+  it('lists all events of a source, including poster-deleted ones, as flat rows', async () => {
+    const startsAt = new Date('2030-01-01T10:00:00Z')
+    mockPrisma.userContent.findMany = vi.fn().mockResolvedValue([
+      { id: 'content-1', externalId: '97', isDeleted: false, event: { startsAt } },
+      { id: 'content-2', externalId: '98', isDeleted: true, event: { startsAt } },
+    ])
+
+    const rows = await service.findByExternalSource('parasztsuli')
+
+    expect(mockPrisma.userContent.findMany.mock.calls[0][0].where).toEqual({
+      kind: 'event',
+      externalSource: 'parasztsuli',
+    })
+    expect(rows).toEqual([
+      { id: 'content-1', externalId: '97', startsAt, isDeleted: false },
+      { id: 'content-2', externalId: '98', startsAt, isDeleted: true },
+    ])
+  })
+
+  it('adminSoftDelete ignores the poster and releases the external ref', async () => {
+    mockPrisma.userContent.updateMany = vi.fn().mockResolvedValue({ count: 1 })
+
+    await expect(service.adminSoftDelete('content-1')).resolves.toEqual({ id: 'content-1' })
+    expect(mockPrisma.userContent.updateMany).toHaveBeenCalledWith({
+      where: { id: 'content-1', kind: 'event', isDeleted: false },
+      data: { isDeleted: true, externalSource: null, externalId: null },
+    })
+  })
+
+  it('adminSoftDelete returns null when nothing matched', async () => {
+    mockPrisma.userContent.updateMany = vi.fn().mockResolvedValue({ count: 0 })
+
+    await expect(service.adminSoftDelete('content-1')).resolves.toBeNull()
+  })
+})

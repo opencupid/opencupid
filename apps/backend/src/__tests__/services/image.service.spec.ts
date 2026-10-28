@@ -269,6 +269,57 @@ describe('deleteImage', () => {
   })
 })
 
+describe('deleteUnattachedImage', () => {
+  const unattached = {
+    id: 'img-1',
+    ownerProfileId: 'profile-1',
+    storagePath: 'profile-1/abcd',
+    profileGallery: null,
+    userContentGallery: null,
+    messageGallery: null,
+  }
+
+  beforeEach(() => {
+    mockPrisma.$queryRaw = vi.fn().mockResolvedValue([{ id: 'img-1' }])
+    mockPrisma.image.findUniqueOrThrow = vi.fn().mockResolvedValue(unattached)
+  })
+
+  it('locks the row, then checks attachment and deletes inside the same transaction', async () => {
+    await service.deleteUnattachedImage('img-1')
+
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1)
+    const lockSql = mockPrisma.$queryRaw.mock.calls[0][0].join('?')
+    expect(lockSql).toMatch(/FOR UPDATE/)
+    const lockOrder = mockPrisma.$queryRaw.mock.invocationCallOrder[0]
+    expect(lockOrder).toBeLessThan(mockPrisma.image.findUniqueOrThrow.mock.invocationCallOrder[0])
+    expect(lockOrder).toBeLessThan(mockPrisma.image.delete.mock.invocationCallOrder[0])
+    expect(mockPrisma.image.delete).toHaveBeenCalledWith({ where: { id: 'img-1' } })
+    expect(mockUnlink).toHaveBeenCalled()
+  })
+
+  it('refuses an image an attach committed before the lock, without touching files', async () => {
+    mockPrisma.image.findUniqueOrThrow.mockResolvedValue({
+      ...unattached,
+      userContentGallery: { userContentId: 'content-1' },
+    })
+
+    await expect(service.deleteUnattachedImage('img-1')).rejects.toMatchObject({
+      code: 'ALREADY_ATTACHED',
+    })
+    expect(mockPrisma.image.delete).not.toHaveBeenCalled()
+    expect(mockUnlink).not.toHaveBeenCalled()
+  })
+
+  it('reports a missing image', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([])
+
+    await expect(service.deleteUnattachedImage('img-1')).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    })
+    expect(mockPrisma.image.delete).not.toHaveBeenCalled()
+  })
+})
+
 describe('updateImage', () => {
   it('patches altText for the owner', async () => {
     const svc = service

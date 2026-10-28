@@ -45,6 +45,7 @@ const baseEvent = {
   content: 'Community hike this weekend',
   startsAt: new Date('2026-10-15T18:00:00Z'),
   venue: null,
+  externalUrl: null,
   location: { country: 'HU', cityName: 'Budapest', lat: null, lon: null },
   postedBy: { id: 'p-1', publicName: 'Alice', profileImages: [] },
   isOwn: false,
@@ -77,6 +78,27 @@ describe('EventCard', () => {
       global: { stubs },
     })
     expect(wrapper.get('.event-wrapper').attributes('data-tags')).toBe('')
+  })
+
+  describe('external link', () => {
+    it('links to the external event page in a new tab', async () => {
+      const event = { ...baseEvent, externalUrl: 'https://parasztsuli.hu/hu/events/x/' }
+      const wrapper = mount(EventCard, { props: { event, showDetails: false }, global: { stubs } })
+      const link = wrapper.get('a[href="https://parasztsuli.hu/hu/events/x/"]')
+      expect(link.text()).toBe('events.labels.external_link')
+      expect(link.attributes('target')).toBe('_blank')
+      expect(link.attributes('rel')).toBe('noopener noreferrer')
+      await link.trigger('click')
+      expect(wrapper.emitted('click')).toBeUndefined()
+    })
+
+    it('renders no link for member-created events', () => {
+      const wrapper = mount(EventCard, {
+        props: { event: baseEvent, showDetails: false },
+        global: { stubs },
+      })
+      expect(wrapper.find('a').exists()).toBe(false)
+    })
   })
 
   describe('truncateText', () => {
