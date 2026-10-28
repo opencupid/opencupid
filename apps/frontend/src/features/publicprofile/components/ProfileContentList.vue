@@ -37,18 +37,17 @@ watch(
       <PostCard
         v-if="item.kind === 'post'"
         :post="item"
-        :show-details="true"
-        class="details"
+        :show-details="false"
       />
       <EventCard
         v-else-if="item.kind === 'event'"
         :event="item"
-        :show-details="true"
+        :show-details="false"
       />
       <CommunityCard
         v-else-if="item.kind === 'community'"
         :community="item"
-        :show-details="true"
+        :show-details="false"
       />
     </template>
   </div>

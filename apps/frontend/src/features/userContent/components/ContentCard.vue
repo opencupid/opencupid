@@ -19,6 +19,7 @@ defineEmits<{
     v-if="item.kind === 'post'"
     :post="item"
     :show-details="showDetails"
+    truncate-text
     @click="$emit('click', item)"
   />
   <EventCard

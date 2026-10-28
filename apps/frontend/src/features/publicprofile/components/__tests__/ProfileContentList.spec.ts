@@ -53,16 +53,8 @@ describe('ProfileContentList', () => {
       ['event-view', 'c2'],
       ['community-view', 'c3'],
     ])
-    expect(wrapper.findAll('[data-show-details="true"]')).toHaveLength(3)
-  })
-
-  // PostCard caps `.post-content` height unless its root carries `details`.
-  it('marks post cards as details so long content stays readable', async () => {
-    fetchProfileContent.mockResolvedValue({ success: true, data: { items } })
-    const wrapper = mount(ProfileContentList, { props: { profileId: 'p1' } })
-    await flushPromises()
-
-    expect(wrapper.find('.post-view').classes()).toContain('details')
+    // Cards render without toolbars; PostCard shows full text by default.
+    expect(wrapper.findAll('[data-show-details="true"]')).toHaveLength(0)
   })
 
   it('renders nothing when the profile has no content', async () => {
