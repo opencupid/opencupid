@@ -38,6 +38,7 @@ watch(
         v-if="item.kind === 'post'"
         :post="item"
         :show-details="true"
+        class="details"
       />
       <EventCard
         v-else-if="item.kind === 'event'"
