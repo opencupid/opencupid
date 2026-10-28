@@ -50,6 +50,7 @@ export type UpdateEventPayload = z.infer<typeof UpdateEventPayloadSchema>
 
 const EXTERNAL_SOURCE_MAX_LENGTH = 50
 const EXTERNAL_ID_MAX_LENGTH = 100
+const EXTERNAL_URL_MAX_LENGTH = 2048
 
 /**
  * Admin import: creates an event on behalf of `postedById`, keyed by the
@@ -59,6 +60,7 @@ export const AdminCreateEventPayloadSchema = CreateEventPayloadSchema.extend({
   postedById: z.string().cuid(),
   externalSource: z.string().min(1).max(EXTERNAL_SOURCE_MAX_LENGTH),
   externalId: z.string().min(1).max(EXTERNAL_ID_MAX_LENGTH),
+  externalUrl: z.string().url().max(EXTERNAL_URL_MAX_LENGTH),
 })
 export type AdminCreateEventPayload = z.infer<typeof AdminCreateEventPayloadSchema>
 

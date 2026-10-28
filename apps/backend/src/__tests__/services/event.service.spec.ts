@@ -133,10 +133,15 @@ describe('EventService external imports', () => {
   }
 
   it('stores the external ref on create', async () => {
-    await service.create('profile-1', baseData, { source: 'parasztsuli', id: '97' })
+    await service.create('profile-1', baseData, {
+      source: 'parasztsuli',
+      id: '97',
+      url: 'https://parasztsuli.hu/hu/events/x/',
+    })
 
     const createArg = mockPrisma.userContent.create.mock.calls[0][0]
     expect(createArg.data).toMatchObject({ externalSource: 'parasztsuli', externalId: '97' })
+    expect(createArg.data.event.create.externalUrl).toBe('https://parasztsuli.hu/hu/events/x/')
   })
 
   it('stores null external ref for member-created events', async () => {
@@ -144,6 +149,7 @@ describe('EventService external imports', () => {
 
     const createArg = mockPrisma.userContent.create.mock.calls[0][0]
     expect(createArg.data).toMatchObject({ externalSource: null, externalId: null })
+    expect(createArg.data.event.create.externalUrl).toBeNull()
   })
 
   it('lists all events of a source, including poster-deleted ones, as flat rows', async () => {

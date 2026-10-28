@@ -45,7 +45,7 @@ export type EventWithMetadataAndContext = Prisma.UserContentGetPayload<{
 }>
 
 /** Identifies an event imported from an external feed. */
-export type ExternalRef = { source: string; id: string }
+export type ExternalRef = { source: string; id: string; url: string }
 
 export class EventService extends UserContentService {
   private static eventInstance: EventService
@@ -74,7 +74,13 @@ export class EventService extends UserContentService {
             externalId: external?.id ?? null,
             kind: 'event',
             postedById: profileId,
-            event: { create: { startsAt: data.startsAt, venue: data.venue ?? null } },
+            event: {
+              create: {
+                startsAt: data.startsAt,
+                venue: data.venue ?? null,
+                externalUrl: external?.url ?? null,
+              },
+            },
           },
           include: eventWithMetadataInclude,
         })

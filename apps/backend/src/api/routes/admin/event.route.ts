@@ -48,11 +48,12 @@ const adminEventRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/', async (req, reply) => {
     const data = validateBody<AdminCreateEventPayload>(AdminCreateEventPayloadSchema, req, reply)
     if (!data) return
-    const { postedById, externalSource, externalId, ...payload } = data
+    const { postedById, externalSource, externalId, externalUrl, ...payload } = data
     try {
       const created = await svc.create(postedById, payload, {
         source: externalSource,
         id: externalId,
+        url: externalUrl,
       })
       cluster.evictAll()
       return reply.code(201).send({ success: true, id: created.id })

@@ -8,6 +8,10 @@ export const EventContentSchema = z.object({
   userContentId: z.string(),
   startsAt: z.coerce.date(),
   venue: z.string().nullable(),
+  /**
+   * The event's page at its external feed; null for member-created events.
+   */
+  externalUrl: z.string().nullable(),
 })
 
 export type EventContent = z.infer<typeof EventContentSchema>

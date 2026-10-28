@@ -47,6 +47,7 @@ const validBody = {
   postedById: profileId,
   externalSource: 'parasztsuli',
   externalId: '97',
+  externalUrl: 'https://parasztsuli.hu/hu/events/gyogynovenytura/',
   content: 'Gyógynövénytúra',
   startsAt: '2030-10-17T08:00:00Z',
   venue: 'Visnyeszéplak, Visnye, Somogy',
@@ -99,9 +100,14 @@ describe('POST /', () => {
     expect(reply.payload).toEqual({ success: true, id: eventId })
     const [poster, payload, external] = mockEventService.create.mock.calls[0]
     expect(poster).toBe(profileId)
-    expect(external).toEqual({ source: 'parasztsuli', id: '97' })
+    expect(external).toEqual({
+      source: 'parasztsuli',
+      id: '97',
+      url: 'https://parasztsuli.hu/hu/events/gyogynovenytura/',
+    })
     expect(payload).not.toHaveProperty('postedById')
     expect(payload).not.toHaveProperty('externalId')
+    expect(payload).not.toHaveProperty('externalUrl')
     expect(payload.startsAt).toEqual(new Date('2030-10-17T08:00:00Z'))
     expect(mockCluster.evictAll).toHaveBeenCalled()
   })
@@ -109,6 +115,12 @@ describe('POST /', () => {
   it('rejects a body without the external ref', async () => {
     const { externalId: _omit, ...body } = validBody
     await fastify.routes['POST /']({ body }, reply)
+    expect(reply.statusCode).toBe(400)
+    expect(mockEventService.create).not.toHaveBeenCalled()
+  })
+
+  it('rejects an externalUrl that is not a URL', async () => {
+    await fastify.routes['POST /']({ body: { ...validBody, externalUrl: 'not a url' } }, reply)
     expect(reply.statusCode).toBe(400)
     expect(mockEventService.create).not.toHaveBeenCalled()
   })

@@ -446,6 +446,8 @@ model EventContent {
   userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
   startsAt      DateTime
   venue         String?
+  /// The event's page at its external feed; null for member-created events.
+  externalUrl   String?
 
   attendees     EventAttendance[]
 
