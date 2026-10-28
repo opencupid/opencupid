@@ -3,18 +3,15 @@ import { useI18n } from 'vue-i18n'
 import { ref, watch } from 'vue'
 import { bus } from '@/lib/bus'
 import { useLocalStore } from '@/store/localStore'
-import { appLocales, isSupportedLocale, negotiateLocale } from '@shared/i18n/locales'
+import { useUserStore } from '@/store/userStore'
+import { appLocales, isSupportedLocale, normalizeLocale } from '@shared/i18n/locales'
 
 export const useI18nStore = defineStore('i18n', () => {
   const localStore = useLocalStore()
 
   const { locale } = useI18n()
 
-  // Ordered preferences, not `??`: a stored value can predate the supported
-  // set, so it has to lose to a usable locale rather than leave
-  // currentLanguage holding something setLanguage will reject.
-  const preferredLanguage = getPreferredLanguage(localStore.getLanguage)
-  const currentLanguage = ref(preferredLanguage)
+  const currentLanguage = ref(getInitialLanguage(localStore.getLanguage))
 
   // Sync changes vue-i18n
   watch(
@@ -29,6 +26,17 @@ export const useI18nStore = defineStore('i18n', () => {
   watch(locale, (newLocale) => {
     localStore.setLanguage(newLocale)
   })
+
+  // The account's language outranks this device's: it is what the user chose
+  // and what the server writes their emails in.
+  const userStore = useUserStore()
+  watch(
+    () => userStore.user?.language,
+    (lang) => {
+      if (lang) setLanguage(lang)
+    },
+    { immediate: true }
+  )
 
   function getLanguage() {
     return locale.value
@@ -63,7 +71,9 @@ export const useI18nStore = defineStore('i18n', () => {
   }
 })
 
-function getPreferredLanguage(stored: string | null): string {
-  const preferences = stored ? [stored, ...navigator.languages] : navigator.languages
-  return negotiateLocale(preferences, __APP_CONFIG__.FALLBACK_LOCALE)
+// The site's locale rather than the browser's: a Hungarian site visited from
+// an English-configured browser should still open in Hungarian. A stored value
+// can predate the supported set, so it is normalized rather than trusted.
+function getInitialLanguage(stored: string | null): string {
+  return normalizeLocale(stored ?? '', __APP_CONFIG__.FALLBACK_LOCALE)
 }

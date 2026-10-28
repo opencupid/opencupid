@@ -38,16 +38,3 @@ export function resolveFallbackLocale(configured: string): string {
 export function normalizeLocale(language: string, fallback: string): string {
   return matchLocale(language) ?? resolveFallbackLocale(fallback)
 }
-
-/**
- * The first supported locale among ordered language preferences, else
- * `fallback`. Suits `navigator.languages` and `Accept-Language`: a miss on the
- * most-preferred tag tries the next, so `['de-AT', 'de', 'en']` yields `en`.
- */
-export function negotiateLocale(languages: readonly string[], fallback: string): string {
-  for (const language of languages) {
-    const match = matchLocale(language)
-    if (match) return match
-  }
-  return resolveFallbackLocale(fallback)
-}

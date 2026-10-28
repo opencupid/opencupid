@@ -8,6 +8,7 @@ import { bus } from './bus'
 import { useInteractionStore } from '../features/interaction/stores/useInteractionStore'
 import { useMessageStore } from '../features/messaging/stores/messageStore'
 import { useOwnerProfileStore } from '../features/myprofile/stores/ownerProfileStore'
+import { useUserStore } from '../store/userStore'
 
 export const useBootstrap = defineStore('bootstrap', () => {
   // Singleton promise — subsequent calls to bootstrap() return the same promise
@@ -41,7 +42,7 @@ export const useBootstrap = defineStore('bootstrap', () => {
       const messagingStore = useMessageStore()
       const interactionStore = useInteractionStore()
 
-      await Promise.all([ownerProfileStore.fetchOwnerProfile()])
+      await Promise.all([ownerProfileStore.fetchOwnerProfile(), useUserStore().fetchUser()])
 
       isBootstrapped.value = true
 
