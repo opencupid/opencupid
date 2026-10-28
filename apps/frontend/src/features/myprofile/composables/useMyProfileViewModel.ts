@@ -102,7 +102,8 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     () => formData.isDatingActive,
     (active) => {
       viewState.currentScope = active ? 'dating' : 'social'
-    }
+    },
+    { immediate: true }
   )
 
   return {
