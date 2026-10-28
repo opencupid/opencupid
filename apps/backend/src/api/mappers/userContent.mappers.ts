@@ -1,4 +1,4 @@
-import type { OwnerHydratedRow, UserContentMetadataRow } from '@/services/userContent.service'
+import type { HydratedContentRow, UserContentMetadataRow } from '@/services/userContent.service'
 import { mapProfileSummary } from './profile.mappers'
 import { extractLocation } from './location.mappers'
 import { toPublicImage } from './image.mappers'
@@ -28,11 +28,11 @@ export function mapUserContentMetadata(
 }
 
 /**
- * Maps an owner-hydrated row (UserContent + all kind-specific content rows
+ * Maps a hydrated row (UserContent + all kind-specific content rows
  * + profile summary loaded eagerly) to the discriminated OwnerUserContent
  * union. Dispatches by `row.kind` and delegates to the per-kind owner mapper.
  */
-export function mapOwnerUserContent(row: OwnerHydratedRow, ctx: MapperContext): OwnerUserContent {
+export function mapOwnerUserContent(row: HydratedContentRow, ctx: MapperContext): OwnerUserContent {
   switch (row.kind) {
     case 'post':
       return mapDbPostToOwner(row, ctx)
@@ -44,7 +44,10 @@ export function mapOwnerUserContent(row: OwnerHydratedRow, ctx: MapperContext): 
 }
 
 /** Public counterpart of `mapOwnerUserContent`, for non-owner list reads. */
-export function mapPublicUserContent(row: OwnerHydratedRow, ctx: MapperContext): PublicUserContent {
+export function mapPublicUserContent(
+  row: HydratedContentRow,
+  ctx: MapperContext
+): PublicUserContent {
   switch (row.kind) {
     case 'post':
       return mapDbPostToPublic(row, ctx)

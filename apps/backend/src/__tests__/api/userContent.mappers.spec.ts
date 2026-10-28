@@ -28,7 +28,7 @@ vi.mock('../../api/mappers/image.mappers', () => ({
 }))
 
 import { mapPublicUserContent, mapUserContentMetadata } from '../../api/mappers/userContent.mappers'
-import type { OwnerHydratedRow, UserContentMetadataRow } from '@/services/userContent.service'
+import type { HydratedContentRow, UserContentMetadataRow } from '@/services/userContent.service'
 
 /**
  * Mappers take a MapperContext rather than a bare viewer id — two adjacent
@@ -152,7 +152,7 @@ describe('mapPublicUserContent', () => {
       event: null,
       community: null,
       ...overrides,
-    }) as unknown as OwnerHydratedRow
+    }) as unknown as HydratedContentRow
 
   it('maps a post row with its post type', () => {
     const dto = mapPublicUserContent(

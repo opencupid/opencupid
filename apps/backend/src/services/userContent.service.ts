@@ -58,7 +58,7 @@ const contentSummaryInclude = {
   ...userContentImagesInclude,
 } as const
 
-const ownerHydratedInclude = {
+const hydratedContentInclude = {
   post: true,
   event: true,
   community: true,
@@ -75,8 +75,8 @@ export type ContentSummaryRow = Prisma.UserContentGetPayload<{
   include: typeof contentSummaryInclude
 }>
 
-export type OwnerHydratedRow = Prisma.UserContentGetPayload<{
-  include: typeof ownerHydratedInclude
+export type HydratedContentRow = Prisma.UserContentGetPayload<{
+  include: typeof hydratedContentInclude
 }>
 
 export class UserContentService {
@@ -150,7 +150,7 @@ export class UserContentService {
   async findByProfileId(
     profileId: string,
     opts: Omit<ListOptions, 'includeInvisible'>
-  ): Promise<OwnerHydratedRow[]> {
+  ): Promise<HydratedContentRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
@@ -158,7 +158,7 @@ export class UserContentService {
         isVisible: true,
         kind: opts.kind,
       },
-      include: ownerHydratedInclude,
+      include: hydratedContentInclude,
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,
@@ -168,21 +168,21 @@ export class UserContentService {
   /**
    * Owner-scoped fully-hydrated lookup: eagerly joins every kind-specific
    * content row so callers receive the full discriminated payload in a single
-   * query. The set of joined kinds is governed by `ownerHydratedInclude` —
-   * every new content kind must be added there so `GET /api/content/me`
-   * keeps returning a complete unified list.
+   * query. The set of joined kinds is governed by `hydratedContentInclude` —
+   * every new content kind must be added there so `GET /api/content/me` and
+   * `GET /api/content/profile/:profileId` keep returning complete lists.
    */
   async findByProfileIdOwner(
     profileId: string,
     opts: Omit<ListOptions, 'includeInvisible'>
-  ): Promise<OwnerHydratedRow[]> {
+  ): Promise<HydratedContentRow[]> {
     return prisma.userContent.findMany({
       where: {
         postedById: profileId,
         isDeleted: false,
         kind: opts.kind,
       },
-      include: ownerHydratedInclude,
+      include: hydratedContentInclude,
       orderBy: { createdAt: 'desc' },
       take: opts.limit,
       skip: opts.offset,
