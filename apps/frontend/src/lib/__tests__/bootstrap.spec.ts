@@ -4,13 +4,19 @@ import Cookies from 'universal-cookie'
 import { SESSION_COOKIE } from '@shared/session'
 
 // --- hoisted mocks ---
-const { mockFetchOwnerProfile, mockConnectWebSocket, mockMessagingInit, mockInteractionInit } =
-  vi.hoisted(() => ({
-    mockFetchOwnerProfile: vi.fn().mockResolvedValue({ success: true }),
-    mockConnectWebSocket: vi.fn(),
-    mockMessagingInit: vi.fn(),
-    mockInteractionInit: vi.fn(),
-  }))
+const {
+  mockFetchOwnerProfile,
+  mockFetchUser,
+  mockConnectWebSocket,
+  mockMessagingInit,
+  mockInteractionInit,
+} = vi.hoisted(() => ({
+  mockFetchOwnerProfile: vi.fn().mockResolvedValue({ success: true }),
+  mockFetchUser: vi.fn().mockResolvedValue({ success: true }),
+  mockConnectWebSocket: vi.fn(),
+  mockMessagingInit: vi.fn(),
+  mockInteractionInit: vi.fn(),
+}))
 
 vi.mock('@/lib/websocket', () => ({ connectWebSocket: mockConnectWebSocket }))
 
@@ -20,6 +26,10 @@ vi.mock('@/features/browse/stores/findProfileStore', () => ({
 
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => ({ fetchOwnerProfile: mockFetchOwnerProfile }),
+}))
+
+vi.mock('@/store/userStore', () => ({
+  useUserStore: () => ({ fetchUser: mockFetchUser }),
 }))
 
 vi.mock('@/features/messaging/stores/messageStore', () => ({
@@ -47,6 +57,7 @@ describe('useBootstrap', () => {
       await useBootstrap().bootstrap()
 
       expect(mockFetchOwnerProfile).not.toHaveBeenCalled()
+      expect(mockFetchUser).not.toHaveBeenCalled()
       expect(mockConnectWebSocket).not.toHaveBeenCalled()
     })
   })
@@ -58,6 +69,16 @@ describe('useBootstrap', () => {
       await useBootstrap().bootstrap()
 
       expect(mockFetchOwnerProfile).toHaveBeenCalledOnce()
+    })
+
+    // The account's language is applied from the loaded user, so it has to
+    // be fetched on every session, not only when Settings opens.
+    it('fetches the user when session cookie exists', async () => {
+      new Cookies().set(SESSION_COOKIE, 'some.jwt.token', { path: '/', sameSite: 'strict' })
+
+      await useBootstrap().bootstrap()
+
+      expect(mockFetchUser).toHaveBeenCalledOnce()
     })
 
     it('connects websocket and initializes services after profile fetch', async () => {

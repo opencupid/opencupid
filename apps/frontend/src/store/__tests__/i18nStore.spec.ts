@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 // The store calls useI18n() at setup, which needs a Tolgee provider that only
 // exists inside a mounted component.
@@ -13,6 +13,8 @@ vi.mock('@/lib/i18n', () => ({
 
 import { useI18nStore } from '../i18nStore'
 import { useLocalStore } from '../localStore'
+import { useUserStore } from '../userStore'
+import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 
 describe('useI18nStore', () => {
@@ -74,9 +76,8 @@ describe('useI18nStore', () => {
     })
   })
 
-  // The store computes its initial locale at setup time from
-  // navigator.languages and __APP_CONFIG__, so each case needs a fresh Pinia
-  // to re-run that.
+  // The store computes its initial locale at setup time from __APP_CONFIG__,
+  // so each case needs a fresh Pinia to re-run that.
   describe('initial language', () => {
     const setBrowserLanguages = (...values: string[]) => {
       Object.defineProperty(navigator, 'languages', { value: values, configurable: true })
@@ -88,7 +89,18 @@ describe('useI18nStore', () => {
       }
     }
 
-    it('uses the configured fallback when the browser language is unsupported', () => {
+    afterEach(() => setConfiguredFallback('en'))
+
+    // An English-configured browser on a Hungarian site used to get English.
+    it("uses the site's locale over a supported browser language", () => {
+      setBrowserLanguages('en-US', 'en', 'hu')
+      setConfiguredFallback('hu')
+      setActivePinia(createPinia())
+
+      expect(useI18nStore().currentLanguage).toBe('hu')
+    })
+
+    it("uses the site's locale when the browser language is unsupported", () => {
       setBrowserLanguages('de-DE')
       setConfiguredFallback('hu')
       setActivePinia(createPinia())
@@ -96,56 +108,22 @@ describe('useI18nStore', () => {
       expect(useI18nStore().currentLanguage).toBe('hu')
     })
 
-    it('prefers a supported browser language over the fallback', () => {
-      setBrowserLanguages('en-GB')
-      setConfiguredFallback('hu')
-      setActivePinia(createPinia())
-
-      expect(useI18nStore().currentLanguage).toBe('en')
-    })
-
     // envsubst writes an unset var as '' and nothing validates it in the
     // browser, so an unusable fallback must not become the active locale.
     it.each(['', 'de', '${FALLBACK_LOCALE}'])(
       'degrades the unusable fallback %o to a translated locale',
       (fallback) => {
-        setBrowserLanguages('de-DE')
+        setBrowserLanguages('hu-HU')
         setConfiguredFallback(fallback)
         setActivePinia(createPinia())
 
         expect(useI18nStore().currentLanguage).toBe('en')
       }
     )
-
-    // #995: only the first entry was consulted before, so this visitor got
-    // the fallback instead of the English they also asked for.
-    it('walks past unsupported preferences to a supported one', () => {
-      setBrowserLanguages('de-AT', 'de', 'en')
-      setConfiguredFallback('hu')
-      setActivePinia(createPinia())
-
-      expect(useI18nStore().currentLanguage).toBe('en')
-    })
-
-    it('takes the most preferred supported language', () => {
-      setBrowserLanguages('hu-HU', 'en')
-      setConfiguredFallback('en')
-      setActivePinia(createPinia())
-
-      expect(useI18nStore().currentLanguage).toBe('hu')
-    })
-
-    it('falls back when no preference is supported', () => {
-      setBrowserLanguages('de-AT', 'fr')
-      setConfiguredFallback('hu')
-      setActivePinia(createPinia())
-
-      expect(useI18nStore().currentLanguage).toBe('hu')
-    })
   })
 
   // localStorage is user-editable and can hold a value written before the
-  // supported set changed, so it is a preference rather than an override.
+  // supported set changed, so it is normalized rather than trusted.
   describe('persisted language', () => {
     const setStoredLanguage = async (value: string) => {
       localStorage.setItem('language', value)
@@ -153,29 +131,69 @@ describe('useI18nStore', () => {
       await useLocalStore().initialize()
     }
 
-    it('prefers a supported stored language over the browser list', async () => {
-      Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
+    it("prefers a supported stored language over the site's locale", async () => {
       await setStoredLanguage('hu')
 
       expect(useI18nStore().currentLanguage).toBe('hu')
     })
 
     it('narrows a region-tagged stored language to its supported base', async () => {
-      Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
       await setStoredLanguage('hu-HU')
 
       expect(useI18nStore().currentLanguage).toBe('hu')
     })
 
     it.each(['de', 'constructor', ''])(
-      'recovers from the unsupported stored value %o',
+      "falls back to the site's locale from the unsupported stored value %o",
       async (stored) => {
-        Object.defineProperty(navigator, 'languages', { value: ['en'], configurable: true })
         vi.spyOn(console, 'error').mockImplementation(() => {})
         await setStoredLanguage(stored)
 
         expect(useI18nStore().currentLanguage).toBe('en')
       }
     )
+  })
+
+  describe("account's language", () => {
+    const user = (language: string) => ({ language }) as any
+
+    it('applies the language of the loaded user over the stored one', async () => {
+      localStorage.setItem('language', 'en')
+      await useLocalStore().initialize()
+      const store = useI18nStore()
+
+      useUserStore().user = user('hu')
+      await nextTick()
+
+      expect(store.currentLanguage).toBe('hu')
+    })
+
+    // Bootstrap can load the user before App.vue mounts and creates the store.
+    // Emitting the device's language first would PATCH it over the account's.
+    it('applies a user loaded before the store was created without saving the device language', async () => {
+      localStorage.setItem('language', 'en')
+      await useLocalStore().initialize()
+      useAuthStore().userId = 'cmuser00000000000000000000'
+      const userStore = useUserStore()
+      userStore.user = user('hu')
+      const updateLanguage = vi.spyOn(userStore, 'updateLanguage')
+
+      const store = useI18nStore()
+      await nextTick()
+
+      expect(store.currentLanguage).toBe('hu')
+      expect(updateLanguage).not.toHaveBeenCalled()
+    })
+
+    it('keeps the current language when the user is cleared on logout', async () => {
+      const store = useI18nStore()
+      useUserStore().user = user('hu')
+      await nextTick()
+
+      useUserStore().user = null
+      await nextTick()
+
+      expect(store.currentLanguage).toBe('hu')
+    })
   })
 })
