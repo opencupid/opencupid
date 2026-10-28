@@ -157,6 +157,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.event.tags))
             size="sm"
             :title="isGoing ? t('events.actions.attending') : t('events.actions.attend')"
             :aria-label="isGoing ? t('events.actions.attending') : t('events.actions.attend')"
+            class="rsvp-button"
           >
             <IconChecklist class="svg-icon" />
           </BButton>
