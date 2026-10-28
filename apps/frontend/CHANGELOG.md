@@ -1,5 +1,16 @@
 # frontend
 
+## 0.76.0
+
+### Minor Changes
+
+- 57a5a81: Admin API for importing events from external feeds: list/create/delete events keyed by external source and id, and upload images on behalf of a profile and discard unattached ones. Imported events keep a link to their external page, shown on the event card
+- 73c2fca: Show a profile's posts, events and communities stacked below the public profile
+
+### Patch Changes
+
+- d0f1870: Let tall events scroll in the desktop detail panel instead of being clipped
+
 ## 0.75.2
 
 ### Patch Changes
