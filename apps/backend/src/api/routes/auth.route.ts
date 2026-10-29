@@ -69,7 +69,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         // disabled for now.
         // if (isNewUser && user.email) {
         //   await notifierService.notifyUser('' + user.id, 'welcome', {
-        //     link: `${appConfig.FRONTEND_URL}/me`,
+        //     path: '/me',
         //   })
         // }
 
@@ -251,21 +251,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       // Stamp __o authoritatively so the frontend inline redirect and the
-      // sidecar route the user to their home brand. The magic-link URL in the
-      // email is stamped with the origin domain so the link itself lands on
-      // the right brand.
+      // sidecar route the user to their home brand. The magic-link email is
+      // branded by the notifier from the user's originDomain.
       // TODO this code can be retired once the migration window for moving
       // existing users to new brand domains expires.
       setOriginCookie(reply, user.originDomain)
-      const linkBase =
-        user.originDomain &&
-        user.originDomain !== appConfig.DOMAIN &&
-        appConfig.NODE_ENV !== 'development'
-          ? `https://${user.originDomain}`
-          : appConfig.FRONTEND_URL
 
       await notifierService.notifyUser(user.id, 'login_link', {
-        link: `${linkBase}/magic-link?token=${token}`,
+        path: `/magic-link?token=${token}`,
       })
 
       const response: SendMagicLinkResponse = {

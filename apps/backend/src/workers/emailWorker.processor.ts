@@ -1,13 +1,12 @@
 import type { EmailPayload } from '@/services/email/types'
 
 type EmailSender = {
-  sendEmail: (payload: EmailPayload, from: string) => Promise<unknown>
+  sendEmail: (payload: EmailPayload) => Promise<unknown>
 }
 
 export async function processEmailJob(
   payload: EmailPayload,
-  emailSender: EmailSender,
-  from: string
+  emailSender: EmailSender
 ): Promise<void> {
-  await emailSender.sendEmail(payload, from)
+  await emailSender.sendEmail(payload)
 }

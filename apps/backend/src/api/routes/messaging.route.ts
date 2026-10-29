@@ -237,7 +237,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       senderId: senderProfileId,
       sender: messageDTO.sender.publicName,
       message: await buildEmailBody(),
-      link: `${appConfig.FRONTEND_URL}/inbox`,
+      path: '/inbox',
     })
   }
 

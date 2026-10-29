@@ -20,13 +20,13 @@ export class EmailService {
     })
   }
 
-  async sendEmail(payload: EmailPayload, from: string) {
+  async sendEmail(payload: EmailPayload) {
     const html = await renderEmail(EmailTemplate, payload)
 
     const mailOptions = {
-      from,
+      from: payload.brand.emailFrom,
       to: payload.to,
-      replyTo: appConfig.EMAIL_REPLY_TO,
+      replyTo: payload.brand.emailReplyTo,
       subject: payload.subject,
       text: renderEmailText(payload.templateProps),
       html,

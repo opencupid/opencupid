@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import type { User } from '@prisma/client'
 import i18next from 'i18next'
-import { currentBrand, type Brand } from '@/lib/brand'
+import { brandFor, type Brand } from '@/lib/brand'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
 import { hashEmail, signUnsubscribeToken } from './email/unsubscribeToken'
@@ -27,14 +27,19 @@ const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
 
 type NotifiableUser = User & { profile?: { publicName: string } | null }
 
+/**
+ * `path` is the call-to-action target relative to the recipient's brand
+ * frontend (e.g. '/inbox'); the notifier resolves the brand, so callers never
+ * build absolute URLs.
+ */
 interface NotificationParams {
-  login_link: { link: string }
-  welcome: { link: string }
+  login_link: { path: string }
+  welcome: { path: string }
   /** senderId is used by constructDispatchKey to scope dedup per sender→recipient pair. */
-  new_message: { senderId: string; sender: string; message: string; link: string }
-  new_like: { link: string }
-  new_match: { name: string; link: string }
-  onboarding_reminder: { link: string }
+  new_message: { senderId: string; sender: string; message: string; path: string }
+  new_like: { path: string }
+  new_match: { name: string; path: string }
+  onboarding_reminder: { path: string }
 }
 
 export class NotifierService {
@@ -124,7 +129,7 @@ export class NotifierService {
     args: NotificationParams[T],
     user: NotifiableUser
   ): EmailPayload {
-    const brand = currentBrand()
+    const brand = brandFor(user.originDomain)
     const { siteName } = brand
     const t = i18next.getFixedT(user.language)
 
@@ -142,7 +147,7 @@ export class NotifierService {
         publicName: user.profile?.publicName || '',
         contentBody: t(`emails.${emailType}.contentBody`, { siteName, ...args, ...user }),
         callToActionLabel: t(`emails.${emailType}.callToActionLabel`),
-        callToActionUrl: args.link,
+        callToActionUrl: `${brand.frontendUrl}${args.path}`,
         fallbackHint: t(`emails.fallback_hint`),
         footer: t(`emails.${emailType}.footer`, { defaultValue: '' }),
         unsubscribeUrl: unsubscribe?.pageUrl,

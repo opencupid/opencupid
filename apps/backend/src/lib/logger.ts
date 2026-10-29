@@ -1,5 +1,7 @@
 import pino from 'pino'
-import { appConfig } from '@/lib/appconfig'
+// Relative, not '@/': the frontend type-checks lib/brand.ts → logger via
+// EmailTemplate.vue, and the backend '@/' alias doesn't resolve there.
+import { appConfig } from './appconfig'
 
 // Shared pino logger for non-Fastify contexts (workers, queue producers).
 // In dev pretty-prints; in production emits JSON. Fastify instances pass this
