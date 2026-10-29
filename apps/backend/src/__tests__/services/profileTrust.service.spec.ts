@@ -103,7 +103,7 @@ describe('ProfileTrustService', () => {
     })
 
     it('writes flag when threshold reached and not already flagged', async () => {
-      conversationCount.mockResolvedValue(3)
+      conversationCount.mockResolvedValue(5)
       mockedFindFirst.mockResolvedValue(null) // hasTrustFlag returns false
 
       await svc.reconcileSpamBurst('profile-1')
@@ -112,7 +112,7 @@ describe('ProfileTrustService', () => {
         data: expect.objectContaining({
           profileId: 'profile-1',
           reason: 'SPAM_BURST',
-          evidence: '3',
+          evidence: '5',
           flaggedBy: 'heuristic:spam_burst',
         }),
       })
@@ -120,8 +120,17 @@ describe('ProfileTrustService', () => {
       expect(conversationUpdateMany).not.toHaveBeenCalled()
     })
 
+    it('does not flag a first-day sender who opens four conversations (#1549)', async () => {
+      conversationCount.mockResolvedValue(4)
+      mockedFindFirst.mockResolvedValue(null)
+
+      await svc.reconcileSpamBurst('profile-1')
+
+      expect(profileTrustFlagCreate).not.toHaveBeenCalled()
+    })
+
     it('is a no-op when at threshold and already flagged (idempotent)', async () => {
-      conversationCount.mockResolvedValue(3)
+      conversationCount.mockResolvedValue(5)
       mockedFindFirst.mockResolvedValue({ id: 'flag-1' } as any) // already flagged
 
       await svc.reconcileSpamBurst('profile-1')
@@ -203,12 +212,14 @@ describe('ProfileTrustService', () => {
         [1, false],
         [2, false],
         [3, false],
+        [4, false],
         [5, false],
         [50, false],
         [0, true],
         [1, true],
         [2, true],
         [3, true],
+        [4, true],
         [5, true],
         [50, true],
       ] as const) {
