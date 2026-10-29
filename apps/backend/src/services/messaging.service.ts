@@ -525,7 +525,8 @@ export class MessageService {
 
   /**
    * Best-effort PENDING → INITIATED promotion plus the missing participant row, atomic
-   * with the caller's tx. count===0 is a silent no-op: the row was already promoted by
+   * with the caller's tx. Returns whether this call performed the transition.
+   * count===0 is a silent no-op (returns false): the row was already promoted by
    * a peer, transitioned to a terminal/blocked state (recipient blocked, admin
    * moderation, etc.), or never existed — in every case the caller's intent is already
    * satisfied or the row should not be revived, so skipping the participant insert is
@@ -540,20 +541,21 @@ export class MessageService {
     tx: Prisma.TransactionClient,
     conversationId: string,
     missingParticipantId: string
-  ): Promise<void> {
+  ): Promise<boolean> {
     const { count } = await tx.conversation.updateMany({
       where: { id: conversationId, status: 'PENDING' },
       data: { status: 'INITIATED', updatedAt: new Date() },
     })
 
     if (count === 0) {
-      return
+      return false
     }
 
     await tx.conversationParticipant.createMany({
       data: [{ conversationId, profileId: missingParticipantId }],
       skipDuplicates: true,
     })
+    return true
   }
 
   async acceptConversationOnReply(tx: Prisma.TransactionClient, convoId: string): Promise<void> {
@@ -613,38 +615,4 @@ export function canSendMessageInConversation(
 /** Welcome messages are stored as plain text; markdown rendering happens on the frontend. */
 export function simpleMarkdownToHtml(input: string): string {
   return input
-}
-
-// Clean message content for email/notification display
-// Strips markdown syntax, collapses whitespace, and truncates
-export function cleanMessageForNotification(content: string, maxLength: number = 100): string {
-  let cleaned = content
-    .replace(/\*\*(.+?)\*\*/g, '$1') // **bold**
-    .replace(/\*(.+?)\*/g, '$1') // *italic*
-    .replace(/__(.+?)__/g, '$1') // __bold__
-    .replace(/_(.+?)_/g, '$1') // _italic_
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url)
-
-  // Loop tag stripping to handle nested fragments like <scr<script>ipt>
-  let prev = ''
-  while (prev !== cleaned) {
-    prev = cleaned
-    cleaned = cleaned.replace(/<[^>]*>/g, '')
-  }
-
-  cleaned = cleaned.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()
-
-  // Truncate at maxLength chars, breaking at word boundary
-  if (cleaned.length > maxLength) {
-    cleaned = cleaned.substring(0, maxLength)
-    // Find last space to break at word boundary
-    const lastSpace = cleaned.lastIndexOf(' ')
-    if (lastSpace > maxLength * 0.8) {
-      // Only break at word if we're close enough
-      cleaned = cleaned.substring(0, lastSpace)
-    }
-    cleaned += '...'
-  }
-
-  return cleaned
 }

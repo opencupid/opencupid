@@ -11,6 +11,7 @@ const mockPrisma = vi.hoisted(() => {
     },
     profile: {
       count: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue({ id: 'releasable' }),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       groupBy: vi.fn(),
@@ -67,6 +68,11 @@ const mockAppConfig = vi.hoisted(() => ({
 
 vi.mock('@/lib/appconfig', () => ({
   appConfig: mockAppConfig,
+}))
+
+// ProfileTrustService emails released conversations; keep email out of route tests.
+vi.mock('@/services/notifier.service', () => ({
+  notifierService: { notifyProfile: vi.fn(), notifyUser: vi.fn() },
 }))
 
 const mockTranslateText = vi.hoisted(() => vi.fn())

@@ -86,7 +86,8 @@
     "new_message": {
       "callToActionLabel": "Read message",
       "contentBody": "Hey there, you have a new message from {sender}: {message}",
-      "subject": "You have a new message"
+      "subject": "You have a new message",
+      "voice_message": "Sent a voice message"
     },
     "onboarding_reminder": {
       "callToActionLabel": "Complete my profile",

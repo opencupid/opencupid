@@ -474,7 +474,7 @@ describe('MessageService.promoteConversation', () => {
       conversation: { updateMany },
       conversationParticipant: { createMany },
     }
-    await service.promoteConversation(tx, 'c1', 'bob')
+    await expect(service.promoteConversation(tx, 'c1', 'bob')).resolves.toBe(true)
 
     // Status update is guarded by `status: 'PENDING'` so a concurrently DISCARDED
     // or BLOCKED row cannot be revived.
@@ -489,7 +489,7 @@ describe('MessageService.promoteConversation', () => {
     })
   })
 
-  it('is a silent no-op when count===0 (peer-promoted, DISCARDED, BLOCKED, or absent)', async () => {
+  it('is a silent no-op returning false when count===0 (peer-promoted, DISCARDED, BLOCKED, or absent)', async () => {
     // The status filter on PENDING absorbs every concurrent transition without
     // a probe: peer-promoter, recipient → BLOCKED, an admin/moderation DISCARD,
     // or a row that no longer exists all collapse to count===0 → return without
@@ -503,7 +503,7 @@ describe('MessageService.promoteConversation', () => {
       conversationParticipant: { createMany },
     }
 
-    await expect(service.promoteConversation(tx, 'c1', 'bob')).resolves.toBeUndefined()
+    await expect(service.promoteConversation(tx, 'c1', 'bob')).resolves.toBe(false)
     expect(findUnique).not.toHaveBeenCalled()
     expect(createMany).not.toHaveBeenCalled()
   })

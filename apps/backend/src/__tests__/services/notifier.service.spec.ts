@@ -185,7 +185,7 @@ describe('NotifierService', () => {
     await service.notifyProfile('recipient-profile', 'new_message', {
       senderId: 'sender-profile',
       sender: 'Alice',
-      message: 'Hey there',
+      preview: { content: 'Hey there', messageType: 'text/plain' },
       path: '/inbox',
     })
 
@@ -193,6 +193,46 @@ describe('NotifierService', () => {
       expect.objectContaining({ to: 'recipient@example.com' }),
       'new_message-sender-profile-user-recipient'
     )
+  })
+
+  describe('new_message preview', () => {
+    const recipient = {
+      id: 'recipient-profile',
+      user: {
+        id: 'user-recipient',
+        email: 'recipient@example.com',
+        originDomain: 'frontend.test',
+        language: 'hu',
+        emailNotificationsOptIn: true,
+        profile: { publicName: 'Bob' },
+      },
+    }
+
+    async function contentVarsFor(preview: { content: string; messageType: string }) {
+      const t = vi.fn((key: string) => `${key}-translated`)
+      mockGetFixedT.mockReturnValue(t)
+      mockPrisma.profile.findUnique.mockResolvedValue(recipient)
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyProfile('recipient-profile', 'new_message', {
+        senderId: 'sender-profile',
+        sender: 'Alice',
+        preview,
+        path: '/inbox',
+      })
+      const call = t.mock.calls.find(([key]) => key === 'emails.new_message.contentBody') as any
+      return call[1]
+    }
+
+    it('renders text messages cleaned of markdown', async () => {
+      const vars = await contentVarsFor({ content: '**Hi** _there_', messageType: 'text/plain' })
+      expect(vars).toMatchObject({ sender: 'Alice', message: 'Hi there' })
+    })
+
+    it("renders voice messages as a localized label in the recipient's language", async () => {
+      const vars = await contentVarsFor({ content: '', messageType: 'audio/voice' })
+      expect(mockGetFixedT).toHaveBeenCalledWith('hu')
+      expect(vars.message).toBe('emails.new_message.voice_message-translated')
+    })
   })
 
   it('notifyUser: dispatches welcome email payload for resolved user', async () => {

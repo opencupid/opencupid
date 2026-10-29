@@ -88,6 +88,9 @@ describe('processProfileTrustJob', () => {
           where: {
             trustFlags: { none: { clearedAt: null } },
             Conversation: { some: { status: 'PENDING' } },
+            isBlocked: false,
+            isActive: true,
+            user: { isBlocked: false, isActive: true },
           },
         })
       )
@@ -115,6 +118,9 @@ describe('processProfileTrustJob', () => {
         where: {
           trustFlags: { none: { clearedAt: null } },
           Conversation: { some: { status: 'PENDING' } },
+          isBlocked: false,
+          isActive: true,
+          user: { isBlocked: false, isActive: true },
         },
         select: { id: true },
       })

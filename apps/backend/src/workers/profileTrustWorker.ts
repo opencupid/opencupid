@@ -1,7 +1,11 @@
 import type { Job } from 'bullmq'
 import { logger } from '@/lib/logger'
 import { prisma } from '@/lib/prisma'
-import { ProfileTrustService, TRUST_WINDOW_MS } from '@/services/profileTrust.service'
+import {
+  ProfileTrustService,
+  TRUST_WINDOW_MS,
+  releasableSenderWhere,
+} from '@/services/profileTrust.service'
 import { type ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
 // PROFILE_UNVETTED soft-quarantine length. Shares TRUST_WINDOW_MS with SPAM_BURST
@@ -49,8 +53,9 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
       }
     }
 
-    // Phase 2 — sweep: promote PENDING for any profile with zero active flags
-    // and at least one initiator-side PENDING. The SQL anti-join encapsulates
+    // Phase 2 — sweep: promote PENDING for any releasable (not blocked or
+    // deactivated) profile with zero active flags and at least one
+    // initiator-side PENDING. The SQL anti-join encapsulates
     // the convergence invariant; promotePendingsIfClear's own stillFlagged
     // re-check inside its serializable tx absorbs a flag landing between this
     // findMany and the per-profile tx start.
@@ -58,6 +63,7 @@ export async function processProfileTrustJob(job: Job<ProfileTrustJobData>): Pro
       where: {
         trustFlags: { none: { clearedAt: null } },
         Conversation: { some: { status: 'PENDING' } },
+        ...releasableSenderWhere,
       },
       select: { id: true },
     })
