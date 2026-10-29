@@ -1,5 +1,16 @@
 # backend
 
+## 0.77.0
+
+### Minor Changes
+
+- 10f07eb: Brand outbound email by the recipient's originDomain instead of the sending process: site name, links, unsubscribe URLs and From/Reply-To come from a new BRANDS registry (#1550)
+
+### Patch Changes
+
+- bd0556c: Email the recipient when a held (PENDING) conversation is released by the trust sweep or an admin flag clear, and restore the missing voice-message email preview (#1545)
+- 0d4ff01: Raise the SPAM_BURST threshold from 3 to 5 new conversations per 24h, a stopgap against false positives on normal first-day messaging (#1549)
+
 ## 0.76.1
 
 ## 0.76.0
