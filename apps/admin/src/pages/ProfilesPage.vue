@@ -2,7 +2,12 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useApi, apiRequest } from '../composables/useApi'
-import { flagProfile, clearTrustFlag } from '../composables/useTrustFlags'
+import {
+  flagProfile,
+  clearTrustFlag,
+  flagOrigin,
+  flagOriginBadgeClass,
+} from '../composables/useTrustFlags'
 import { appLocales } from '@shared/i18n/locales'
 
 interface AdminProfile {
@@ -429,8 +434,13 @@ async function viewProfileById(id: string) {
 }
 
 const activeFlags = computed(() => selectedProfileDetail.value?.trustFlags ?? [])
+// System and heuristic flags clear themselves; an admin flag is the only hold
+// automation never lifts, so it can be added whatever else is active.
+const hasAdminFlag = computed(() =>
+  activeFlags.value.some((f) => flagOrigin(f.flaggedBy) === 'admin')
+)
 
-// Quarantine flow (from no-flag → write admin flag)
+// Admin flag flow (write an admin:manual flag with a note)
 const quarantineOpen = ref(false)
 const quarantineNote = ref('')
 const quarantineSubmitting = ref(false)
@@ -463,12 +473,16 @@ async function submitQuarantine() {
       selectedProfileDetail.value = {
         ...selectedProfileDetail.value,
         hasActiveTrustFlag: true,
-        trustFlags: [...selectedProfileDetail.value.trustFlags, res.flag],
+        // The endpoint returns the existing admin flag when one is already active.
+        trustFlags: [
+          ...selectedProfileDetail.value.trustFlags.filter((f) => f.id !== res.flag.id),
+          res.flag,
+        ],
       }
     }
     quarantineOpen.value = false
   } catch (err) {
-    quarantineError.value = err instanceof Error ? err.message : 'failed to quarantine'
+    quarantineError.value = err instanceof Error ? err.message : 'failed to add admin flag'
   } finally {
     quarantineSubmitting.value = false
   }
@@ -1141,7 +1155,10 @@ onUnmounted(() => {
                     >
                       <div class="flex-grow-1">
                         <div>
-                          <strong>{{ f.reason }}</strong>
+                          <span :class="flagOriginBadgeClass[flagOrigin(f.flaggedBy)]">{{
+                            flagOrigin(f.flaggedBy)
+                          }}</span>
+                          <strong class="ms-2">{{ f.reason }}</strong>
                           <code class="ms-2 small">{{ f.flaggedBy }}</code>
                         </div>
                         <div class="small text-muted">
@@ -1306,7 +1323,7 @@ onUnmounted(() => {
                   v-model="quarantineNote"
                   class="form-control mb-2"
                   rows="3"
-                  placeholder="Reason for manual quarantine (1–1000 chars)"
+                  placeholder="Reason for the admin hold (1–1000 chars)"
                   :disabled="quarantineSubmitting"
                   @keydown.enter.stop
                 ></textarea>
@@ -1323,17 +1340,17 @@ onUnmounted(() => {
                     :disabled="quarantineSubmitting || quarantineNote.trim().length === 0"
                     @click="submitQuarantine"
                   >
-                    {{ quarantineSubmitting ? 'Submitting...' : 'Confirm quarantine' }}
+                    {{ quarantineSubmitting ? 'Submitting...' : 'Confirm admin flag' }}
                   </button>
                 </div>
               </div>
               <template v-else>
                 <button
-                  v-if="activeFlags.length === 0 && !detailLoading"
+                  v-if="!hasAdminFlag && !detailLoading && !detailError"
                   class="btn btn-warning me-auto"
                   @click="openQuarantineForm"
                 >
-                  Quarantine
+                  Add admin flag
                 </button>
                 <button
                   class="btn btn-secondary"

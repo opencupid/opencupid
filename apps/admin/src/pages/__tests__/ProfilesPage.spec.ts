@@ -20,7 +20,8 @@ vi.mock('../../composables/useApi', () => ({
 
 const flagProfileMock = vi.fn()
 const clearTrustFlagMock = vi.fn()
-vi.mock('../../composables/useTrustFlags', () => ({
+vi.mock('../../composables/useTrustFlags', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../composables/useTrustFlags')>()),
   flagProfile: (...args: unknown[]) => flagProfileMock(...args),
   clearTrustFlag: (...args: unknown[]) => clearTrustFlagMock(...args),
 }))
@@ -160,7 +161,7 @@ describe('ProfilesPage', () => {
     expect(wrapper.text()).toContain('admin:manual')
   })
 
-  it('quarantine flow: posts note and updates row to flagged', async () => {
+  it('admin flag flow: posts note and updates row to flagged', async () => {
     flagProfileMock.mockResolvedValue({
       success: true,
       flag: {
@@ -180,12 +181,12 @@ describe('ProfilesPage', () => {
 
     await wrapper
       .findAll('button')
-      .filter((b) => b.text() === 'Quarantine')[0]
+      .filter((b) => b.text() === 'Add admin flag')[0]
       .trigger('click')
     await wrapper.find('textarea').setValue('sketchy')
     await wrapper
       .findAll('button')
-      .filter((b) => b.text().includes('Confirm quarantine'))[0]
+      .filter((b) => b.text().includes('Confirm admin flag'))[0]
       .trigger('click')
     await flushPromises()
 
@@ -268,9 +269,127 @@ describe('ProfilesPage', () => {
     // System flag now also has a Clear button (per relaxed policy)
     const clearButtons = wrapper.findAll('button').filter((b) => b.text() === 'Clear')
     expect(clearButtons.length).toBeGreaterThanOrEqual(1)
-    // Quarantine button still hidden because the profile already has an active flag
-    const quarantineButtons = wrapper.findAll('button').filter((b) => b.text() === 'Quarantine')
-    expect(quarantineButtons).toHaveLength(0)
+    // A system flag clears itself, so an admin hold can still be added on top (#1547)
+    const addButtons = wrapper.findAll('button').filter((b) => b.text() === 'Add admin flag')
+    expect(addButtons).toHaveLength(1)
+  })
+
+  it('hides "Add admin flag" when an admin flag is already active', async () => {
+    apiRequestMock.mockResolvedValue({
+      success: true,
+      profile: {
+        ...baseProfile,
+        hasActiveTrustFlag: true,
+        trustFlags: [
+          {
+            id: 'fAdmin',
+            reason: 'PROFILE_UNVETTED',
+            flaggedAt: '2026-04-25T10:00:00Z',
+            flaggedBy: 'admin:manual',
+            evidence: 'manual hold',
+          },
+        ],
+      },
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Add admin flag')).toHaveLength(0)
+  })
+
+  it('adds an admin flag alongside an active SPAM_BURST flag (#1547)', async () => {
+    apiRequestMock.mockResolvedValue({
+      success: true,
+      profile: {
+        ...baseProfile,
+        hasActiveTrustFlag: true,
+        trustFlags: [
+          {
+            id: 'fBurst',
+            reason: 'SPAM_BURST',
+            flaggedAt: '2026-04-25T10:00:00Z',
+            flaggedBy: 'heuristic:spam_burst',
+            evidence: '7',
+          },
+        ],
+      },
+    })
+    flagProfileMock.mockResolvedValue({
+      success: true,
+      flag: {
+        id: 'fNew',
+        profileId: 'p1',
+        reason: 'PROFILE_UNVETTED',
+        flaggedAt: '2026-04-25T11:00:00Z',
+        flaggedBy: 'admin:manual',
+        evidence: 'mass templated openers',
+      },
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Add admin flag')[0]
+      .trigger('click')
+    await wrapper.find('textarea').setValue('mass templated openers')
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text().includes('Confirm admin flag'))[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(flagProfileMock).toHaveBeenCalledWith('p1', 'mass templated openers')
+    expect(wrapper.text()).toContain('heuristic:spam_burst')
+    expect(wrapper.text()).toContain('mass templated openers')
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Add admin flag')).toHaveLength(0)
+  })
+
+  it('labels each active flag with its origin', async () => {
+    apiRequestMock.mockResolvedValue({
+      success: true,
+      profile: {
+        ...baseProfile,
+        hasActiveTrustFlag: true,
+        trustFlags: [
+          {
+            id: 'fSys',
+            reason: 'PROFILE_UNVETTED',
+            flaggedAt: '2026-04-25T10:00:00Z',
+            flaggedBy: 'system:profile_create',
+            evidence: '',
+          },
+          {
+            id: 'fBurst',
+            reason: 'SPAM_BURST',
+            flaggedAt: '2026-04-25T10:00:00Z',
+            flaggedBy: 'heuristic:spam_burst',
+            evidence: '5',
+          },
+          {
+            id: 'fAdmin',
+            reason: 'PROFILE_UNVETTED',
+            flaggedAt: '2026-04-25T10:00:00Z',
+            flaggedBy: 'admin:manual',
+            evidence: 'hold',
+          },
+        ],
+      },
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    const badges = wrapper.findAll('.badge').map((b) => b.text())
+    expect(badges).toEqual(expect.arrayContaining(['system', 'heuristic', 'admin']))
   })
 
   it('auto-opens detail modal when ?profileId= is present', async () => {
@@ -539,20 +658,20 @@ describe('ProfilesPage', () => {
     })
   })
 
-  it('quarantine controls are hidden on the User tab', async () => {
+  it('admin flag controls are hidden on the User tab', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()
     await wrapper.find('tbody tr').trigger('click')
     await flushPromises()
 
-    expect(wrapper.findAll('button').filter((b) => b.text() === 'Quarantine')).toHaveLength(1)
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Add admin flag')).toHaveLength(1)
 
     await wrapper
       .findAll('.nav-tabs .nav-link')
       .filter((t) => t.text() === 'User')[0]
       .trigger('click')
 
-    expect(wrapper.findAll('button').filter((b) => b.text() === 'Quarantine')).toHaveLength(0)
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Add admin flag')).toHaveLength(0)
     expect(wrapper.findAll('button').filter((b) => b.text() === 'Save')).toHaveLength(1)
   })
 })

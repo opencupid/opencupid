@@ -6,7 +6,8 @@ vi.mock('vue-router', () => ({
   useRouter: () => ({ push: mockRouterPush }),
 }))
 
-vi.mock('../../composables/useTrustFlags', () => ({
+vi.mock('../../composables/useTrustFlags', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../composables/useTrustFlags')>()),
   listTrustFlags: vi.fn(),
   clearTrustFlag: vi.fn(),
   flagProfile: vi.fn(),
