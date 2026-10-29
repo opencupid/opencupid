@@ -6,7 +6,7 @@ import { MessageService } from '@/services/messaging.service'
 // Tunable threshold — number of active INITIATED+PENDING conversations (sender = profile)
 // within the burst window that trips the SPAM_BURST flag. Module-local by design;
 // promote to appConfig only if runtime tuning becomes routine.
-export const SPAM_BURST_THRESHOLD = 3
+export const SPAM_BURST_THRESHOLD = 5
 
 // Shared trust-quarantine window. Both the PROFILE_UNVETTED soft-quarantine
 // (new-account vetting) and the SPAM_BURST burst-count predicate use this
