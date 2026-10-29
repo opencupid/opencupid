@@ -323,7 +323,7 @@ describe('POST /send-magic-link', () => {
       'fallback.example'
     )
     expect(notifier.notifyUser).toHaveBeenCalledWith('user3', 'login_link', {
-      link: 'http://test/magic-link?token=abc123',
+      path: '/magic-link?token=abc123',
     })
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -353,7 +353,7 @@ describe('POST /send-magic-link', () => {
     await handler(req as any, reply as any)
     expect(mockUserService.generateLoginToken).toHaveBeenCalled()
     expect(notifier.notifyUser).toHaveBeenCalledWith('user4', 'login_link', {
-      link: 'http://test/magic-link?token=abc123',
+      path: '/magic-link?token=abc123',
     })
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -361,9 +361,10 @@ describe('POST /send-magic-link', () => {
     expect(reply.payload.user.email).toBe('existing@example.com')
   })
 
-  it('sets __o cookie and stamps magic-link with origin domain for cross-brand login', async () => {
-    // The cross-brand branch is gated on NODE_ENV !== 'development' in the
-    // route. Flip it for the duration of this test so the branch executes.
+  // The magic-link email itself is branded by the notifier from originDomain;
+  // the route only passes the path.
+  it('sets __o cookie for cross-brand login and passes a brand-neutral magic-link path', async () => {
+    // setOriginCookie is a no-op in development; flip NODE_ENV so it runs.
     const origNodeEnv = appConfig.NODE_ENV
     appConfig.NODE_ENV = 'production'
     try {
@@ -395,7 +396,7 @@ describe('POST /send-magic-link', () => {
         maxAge: 60 * 60 * 24 * 365 * 10,
       })
       expect(notifier.notifyUser).toHaveBeenCalledWith('user5', 'login_link', {
-        link: 'https://other.example/magic-link?token=abc123',
+        path: '/magic-link?token=abc123',
       })
     } finally {
       appConfig.NODE_ENV = origNodeEnv
@@ -429,7 +430,7 @@ describe('POST /send-magic-link', () => {
     await handler(req as any, reply as any)
     expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
     expect(notifier.notifyUser).toHaveBeenCalledWith('user6', 'login_link', {
-      link: 'http://test/magic-link?token=abc123',
+      path: '/magic-link?token=abc123',
     })
   })
 
@@ -460,7 +461,7 @@ describe('POST /send-magic-link', () => {
     await handler(req as any, reply as any)
     expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
     expect(notifier.notifyUser).toHaveBeenCalledWith('user7', 'login_link', {
-      link: 'http://test/magic-link?token=abc123',
+      path: '/magic-link?token=abc123',
     })
   })
 
@@ -486,7 +487,7 @@ describe('POST /send-magic-link', () => {
     await handler(req as any, reply as any)
     expect(reply.cookies.find((c: any) => c.name === '__o')).toBeUndefined()
     expect(notifier.notifyUser).toHaveBeenCalledWith('user8', 'login_link', {
-      link: 'http://test/magic-link?token=abc123',
+      path: '/magic-link?token=abc123',
     })
   })
 })

@@ -1,6 +1,5 @@
 import { Worker, type Job } from 'bullmq'
 import Sentry from '@/lib/sentry'
-import { appConfig } from '@/lib/appconfig'
 import { bullConnection } from '@/lib/redis'
 import { logger } from '@/lib/logger'
 import { emailService } from '@/services/email/emailSender.service'
@@ -21,7 +20,7 @@ export function registerWorkers(): Worker[] {
     new Worker<EmailPayload>(
       'emails',
       async (job: Job<EmailPayload>) => {
-        await processEmailJob(job.data, emailService, appConfig.EMAIL_FROM)
+        await processEmailJob(job.data, emailService)
       },
       { connection }
     ),

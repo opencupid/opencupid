@@ -4,4 +4,5 @@ export const brandStub: Brand = {
   siteName: 'TestSite',
   frontendUrl: 'https://example.com',
   domain: 'example.com',
+  emailFrom: 'TestSite <hello@example.com>',
 }

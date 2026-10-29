@@ -20,7 +20,6 @@ vi.mock('@/lib/appconfig', () => ({
     SMTP_PORT: 587,
     SMTP_USER: 'user',
     SMTP_PASS: 'pass',
-    EMAIL_REPLY_TO: 'support@example.com',
   },
 }))
 
@@ -41,7 +40,7 @@ const payload: EmailPayload = {
 }
 
 describe('EmailService.sendEmail', () => {
-  let emailService: { sendEmail: (p: EmailPayload, from: string) => Promise<unknown> }
+  let emailService: { sendEmail: (p: EmailPayload) => Promise<unknown> }
 
   beforeEach(async () => {
     vi.clearAllMocks()
@@ -55,7 +54,7 @@ describe('EmailService.sendEmail', () => {
   // URL once per occurrence in the HTML. Sending multipart/alternative keeps
   // that body ours.
   it('sends both a text and an HTML part', async () => {
-    await emailService.sendEmail(payload, 'Komatérkép <hello@example.com>')
+    await emailService.sendEmail(payload)
 
     expect(mockSendMail).toHaveBeenCalledTimes(1)
     const options = mockSendMail.mock.calls[0][0]
@@ -65,21 +64,17 @@ describe('EmailService.sendEmail', () => {
   })
 
   it('repeats the CTA URL only once in the text part', async () => {
-    await emailService.sendEmail(payload, 'Komatérkép <hello@example.com>')
+    await emailService.sendEmail(payload)
 
     const { text } = mockSendMail.mock.calls[0][0]
     expect(text.split(payload.templateProps.callToActionUrl).length - 1).toBe(1)
   })
 
-  it('passes through recipient, subject, from and headers', async () => {
-    await emailService.sendEmail(
-      { ...payload, headers: { 'List-Unsubscribe': '<https://x>' } },
-      'Komatérkép <hello@example.com>'
-    )
+  it('passes through recipient, subject and headers', async () => {
+    await emailService.sendEmail({ ...payload, headers: { 'List-Unsubscribe': '<https://x>' } })
 
     expect(mockSendMail).toHaveBeenCalledWith(
       expect.objectContaining({
-        from: 'Komatérkép <hello@example.com>',
         to: 'alice@example.com',
         subject: 'Belépő link',
         headers: { 'List-Unsubscribe': '<https://x>' },
@@ -87,28 +82,29 @@ describe('EmailService.sendEmail', () => {
     )
   })
 
-  it('sets Reply-To from EMAIL_REPLY_TO config', async () => {
-    await emailService.sendEmail(payload, 'Komatérkép <hello@example.com>')
+  it('sends from the payload brand sender and Reply-To', async () => {
+    await emailService.sendEmail({
+      ...payload,
+      brand: {
+        ...brandStub,
+        emailFrom: 'Komatérkép <hello@example.com>',
+        emailReplyTo: 'support@example.com',
+      },
+    })
 
     expect(mockSendMail).toHaveBeenCalledWith(
-      expect.objectContaining({ replyTo: 'support@example.com' })
+      expect.objectContaining({
+        from: 'Komatérkép <hello@example.com>',
+        replyTo: 'support@example.com',
+      })
     )
   })
 
-  it('leaves Reply-To undefined when EMAIL_REPLY_TO is not configured', async () => {
-    vi.doMock('@/lib/appconfig', () => ({
-      appConfig: {
-        SMTP_HOST: 'smtp.test',
-        SMTP_PORT: 587,
-        SMTP_USER: 'user',
-        SMTP_PASS: 'pass',
-      },
-    }))
-    vi.resetModules()
-    const mod = await import('../../services/email/emailSender.service')
+  it('leaves Reply-To undefined when the brand has none', async () => {
+    await emailService.sendEmail(payload)
 
-    await mod.emailService.sendEmail(payload, 'Komatérkép <hello@example.com>')
-
-    expect(mockSendMail).toHaveBeenCalledWith(expect.objectContaining({ replyTo: undefined }))
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ from: brandStub.emailFrom, replyTo: undefined })
+    )
   })
 })

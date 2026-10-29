@@ -80,10 +80,10 @@ describe('sendOnboardingReminders', () => {
     expect(count).toBe(2)
     expect(mockNotifyUser).toHaveBeenCalledTimes(2)
     expect(mockNotifyUser).toHaveBeenCalledWith('user-1', 'onboarding_reminder', {
-      link: 'https://frontend.test/onboarding',
+      path: '/onboarding',
     })
     expect(mockNotifyUser).toHaveBeenCalledWith('user-2', 'onboarding_reminder', {
-      link: 'https://frontend.test/onboarding',
+      path: '/onboarding',
     })
   })
 

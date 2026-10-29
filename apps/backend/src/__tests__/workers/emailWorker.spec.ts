@@ -4,7 +4,7 @@ import type { EmailPayload } from '../../services/email/types'
 import { brandStub } from '../../test-utils/brand'
 
 describe('processEmailJob', () => {
-  it('passes EmailPayload through to sender with from address', async () => {
+  it('passes EmailPayload through to sender', async () => {
     const payload: EmailPayload = {
       to: 'user@example.com',
       subject: 'Welcome',
@@ -25,8 +25,8 @@ describe('processEmailJob', () => {
       sendEmail: vi.fn().mockResolvedValue(undefined),
     }
 
-    await processEmailJob(payload, sender, 'noreply@example.org')
+    await processEmailJob(payload, sender)
 
-    expect(sender.sendEmail).toHaveBeenCalledWith(payload, 'noreply@example.org')
+    expect(sender.sendEmail).toHaveBeenCalledWith(payload)
   })
 })

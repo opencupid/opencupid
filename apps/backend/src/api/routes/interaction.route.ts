@@ -14,7 +14,6 @@ import { ProfileMatchService } from '@/services/profileMatch.service'
 import { mapInteractionContext } from '@/api/mappers/interaction.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { notifierService } from '@/services/notifier.service'
-import { appConfig } from '@/lib/appconfig'
 
 // Route params for ID lookups
 const TargetLookupParamsSchema = z.object({
@@ -139,11 +138,11 @@ const interactionRoutes: FastifyPluginAsync = async (fastify) => {
           if (likeResult.isMatch) {
             await notifierService.notifyProfile(targetId, 'new_match', {
               name: likeResult.from.profile.publicName,
-              link: `${appConfig.FRONTEND_URL}/inbox`,
+              path: '/inbox',
             })
           } else {
             await notifierService.notifyProfile(targetId, 'new_like', {
-              link: `${appConfig.FRONTEND_URL}/browse`,
+              path: '/browse',
             })
           }
         }

@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
 import { notifierService } from './notifier.service'
-import { appConfig } from '@/lib/appconfig'
 
 /**
  * Find users who registered within the given time window
@@ -30,14 +29,12 @@ export async function sendOnboardingReminders(
     },
   })
 
-  const onboardingUrl = `${appConfig.FRONTEND_URL}/onboarding`
-
   // TODO: select email/language/profile fields in findMany and call notifyResolvedUser
   // directly to avoid N+1 queries (notifyUser re-fetches each user individually)
   for (let i = 0; i < users.length; i++) {
     const user = users[i]
     await notifierService.notifyUser(user.id, 'onboarding_reminder', {
-      link: onboardingUrl,
+      path: '/onboarding',
     })
     await onProgress?.(i + 1, users.length, user.id)
     // Stagger sends with a random 10-15s delay to avoid hitting SMTP rate limits
