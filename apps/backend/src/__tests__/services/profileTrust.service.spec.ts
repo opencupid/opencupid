@@ -10,11 +10,26 @@ vi.mock('../../lib/prisma', () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    message: { findFirst: vi.fn() },
   },
 }))
 
-const { promoteConversationMock } = vi.hoisted(() => ({
+const { promoteConversationMock, notifyProfileMock, loggerErrorMock } = vi.hoisted(() => ({
   promoteConversationMock: vi.fn(),
+  notifyProfileMock: vi.fn(),
+  loggerErrorMock: vi.fn(),
+}))
+
+vi.mock('@/services/notifier.service', () => ({
+  notifierService: { notifyProfile: notifyProfileMock },
+}))
+
+vi.mock('@/lib/logger', () => ({
+  logger: { error: loggerErrorMock, warn: vi.fn(), info: vi.fn() },
+}))
+
+vi.mock('@/lib/appconfig', () => ({
+  appConfig: { ADMIN_PROFILE_ID: 'system-profile' },
 }))
 
 vi.mock('@/services/messaging.service', () => ({
@@ -582,6 +597,141 @@ describe('ProfileTrustService', () => {
         }),
       })
       expect(flagCreate).toHaveBeenCalled()
+    })
+  })
+
+  describe('release emails', () => {
+    const transactionFn = vi.fn()
+    const txFlagFindFirst = vi.fn()
+    const txFlagFindUnique = vi.fn()
+    const txFlagUpdateMany = vi.fn()
+    const txConversationFindMany = vi.fn()
+    const messageFindFirst = vi.mocked(prisma.message.findFirst)
+    const textMessage = {
+      content: 'hello',
+      messageType: 'text/plain',
+      sender: { publicName: 'Alice' },
+    }
+
+    beforeEach(() => {
+      ;(prisma as any).$transaction = transactionFn
+      transactionFn.mockImplementation(async (cb: any) =>
+        cb({
+          profileTrustFlag: {
+            findFirst: txFlagFindFirst,
+            findUnique: txFlagFindUnique,
+            updateMany: txFlagUpdateMany,
+          },
+          conversation: { findMany: txConversationFindMany },
+        })
+      )
+      txFlagFindFirst.mockResolvedValue(null)
+      messageFindFirst.mockResolvedValue(textMessage as any)
+      notifyProfileMock.mockResolvedValue(undefined)
+    })
+
+    it('sweep: emails each released conversation after the transaction commits', async () => {
+      txConversationFindMany.mockResolvedValue([
+        { id: 'c1', profileAId: 'sender', profileBId: 'bob' },
+        { id: 'c2', profileAId: 'carol', profileBId: 'sender' },
+      ])
+      promoteConversationMock.mockResolvedValue(true)
+      let committed = false
+      transactionFn.mockImplementationOnce(async (cb: any) => {
+        const out = await cb({
+          profileTrustFlag: { findFirst: txFlagFindFirst },
+          conversation: { findMany: txConversationFindMany },
+        })
+        expect(notifyProfileMock).not.toHaveBeenCalled()
+        committed = true
+        return out
+      })
+
+      await svc.promotePendingsIfClear('sender')
+
+      expect(committed).toBe(true)
+      expect(messageFindFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { conversationId: 'c1', senderId: 'sender' },
+          orderBy: { createdAt: 'desc' },
+        })
+      )
+      expect(notifyProfileMock).toHaveBeenCalledTimes(2)
+      expect(notifyProfileMock).toHaveBeenCalledWith('bob', 'new_message', {
+        senderId: 'sender',
+        sender: 'Alice',
+        preview: { content: 'hello', messageType: 'text/plain' },
+        path: '/inbox',
+      })
+      expect(notifyProfileMock).toHaveBeenCalledWith('carol', 'new_message', expect.anything())
+    })
+
+    it('sweep: does not email conversations this call did not release (race losers)', async () => {
+      txConversationFindMany.mockResolvedValue([
+        { id: 'c1', profileAId: 'sender', profileBId: 'bob' },
+        { id: 'c2', profileAId: 'sender', profileBId: 'carol' },
+      ])
+      promoteConversationMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+
+      await svc.promotePendingsIfClear('sender')
+
+      expect(notifyProfileMock).toHaveBeenCalledTimes(1)
+      expect(notifyProfileMock).toHaveBeenCalledWith('carol', 'new_message', expect.anything())
+    })
+
+    it('sweep: sends nothing while the sender is still flagged', async () => {
+      txFlagFindFirst.mockResolvedValue({ id: 'flag' })
+
+      await svc.promotePendingsIfClear('sender')
+
+      expect(notifyProfileMock).not.toHaveBeenCalled()
+    })
+
+    it('skips a release whose recipient is the system sender', async () => {
+      txConversationFindMany.mockResolvedValue([
+        { id: 'c1', profileAId: 'sender', profileBId: 'system-profile' },
+      ])
+      promoteConversationMock.mockResolvedValue(true)
+
+      await svc.promotePendingsIfClear('sender')
+
+      expect(notifyProfileMock).not.toHaveBeenCalled()
+    })
+
+    it('logs a failed email and still emails the remaining conversations', async () => {
+      txConversationFindMany.mockResolvedValue([
+        { id: 'c1', profileAId: 'sender', profileBId: 'bob' },
+        { id: 'c2', profileAId: 'sender', profileBId: 'carol' },
+      ])
+      promoteConversationMock.mockResolvedValue(true)
+      notifyProfileMock.mockRejectedValueOnce(new Error('redis down'))
+
+      await expect(svc.promotePendingsIfClear('sender')).resolves.toBeUndefined()
+
+      expect(notifyProfileMock).toHaveBeenCalledTimes(2)
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        expect.objectContaining({ conversationId: 'c1', recipientId: 'bob' }),
+        expect.any(String)
+      )
+    })
+
+    it('admin clearFlag: emails released conversations and still returns "cleared"', async () => {
+      txFlagFindUnique.mockResolvedValue({ id: 'f1', profileId: 'sender', clearedAt: null })
+      txFlagUpdateMany.mockResolvedValue({ count: 1 })
+      txConversationFindMany.mockResolvedValue([
+        { id: 'c1', profileAId: 'sender', profileBId: 'bob' },
+      ])
+      promoteConversationMock.mockResolvedValue(true)
+
+      expect(await svc.clearFlag('f1', 'admin:manual')).toBe('cleared')
+      expect(notifyProfileMock).toHaveBeenCalledWith('bob', 'new_message', expect.anything())
+    })
+
+    it('admin clearFlag: sends nothing when the flag was already cleared', async () => {
+      txFlagFindUnique.mockResolvedValue({ id: 'f1', profileId: 'sender', clearedAt: new Date() })
+
+      expect(await svc.clearFlag('f1', 'admin:manual')).toBe('already_cleared')
+      expect(notifyProfileMock).not.toHaveBeenCalled()
     })
   })
 })

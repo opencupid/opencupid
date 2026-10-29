@@ -5,7 +5,6 @@ import {
   MessageService,
   MessagingError,
   MessagingErrorCodes,
-  cleanMessageForNotification,
   type MessagingErrorCode,
 } from '@/services/messaging.service'
 import { computeSendOutcome, type SendOutcome } from '@/services/messaging.stateMachine'
@@ -36,7 +35,6 @@ import { InteractionService } from '@/services/interaction.service'
 import { notifierService } from '@/services/notifier.service'
 import { ProfileTrustService } from '@/services/profileTrust.service'
 import { appConfig } from '@/lib/appconfig'
-import i18next from 'i18next'
 import { MEDIA_SUBDIR } from '@/lib/media'
 import path from 'path'
 import { promises as fsPromises } from 'fs'
@@ -205,20 +203,14 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   /*
    * Fans out a newly-written message to the recipient: WebSocket broadcast
    * first, and only if that misses do we fall back to webpush + email. The
-   * email body is built by the caller so /message can do sync markdown
-   * cleaning and /voice can do the async language lookup + i18n.
-   *
-   * The findUnique + i18n work in the voice callback only runs when the WS
-   * broadcast misses, preserving the "recipient online → no email lookup"
-   * optimization from the original code.
+   * notifier renders the email preview in the recipient's language.
    */
   async function fireNewMessageNotifications(args: {
     senderProfileId: string
     recipientProfileId: string
     messageDTO: MessageDTO
-    buildEmailBody: () => Promise<string>
   }): Promise<void> {
-    const { senderProfileId, recipientProfileId, messageDTO, buildEmailBody } = args
+    const { senderProfileId, recipientProfileId, messageDTO } = args
 
     const isWsBroadcasted = broadcastToProfile(fastify, recipientProfileId, {
       type: 'ws:new_message',
@@ -236,7 +228,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     await notifierService.notifyProfile(recipientProfileId, 'new_message', {
       senderId: senderProfileId,
       sender: messageDTO.sender.publicName,
-      message: await buildEmailBody(),
+      preview: { content: messageDTO.content, messageType: messageDTO.messageType },
       path: '/inbox',
     })
   }
@@ -434,7 +426,6 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             senderProfileId,
             recipientProfileId: profileId,
             messageDTO,
-            buildEmailBody: async () => cleanMessageForNotification(messageDTO.content, 100),
           })
         }
       } catch (error) {
@@ -579,18 +570,6 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
               senderProfileId,
               recipientProfileId: payload.data.profileId,
               messageDTO,
-              buildEmailBody: async () => {
-                const recipientProfile = await fastify.prisma.profile.findUnique({
-                  where: { id: payload.data.profileId },
-                  select: { user: { select: { language: true } } },
-                })
-                // null, not a hardcoded 'en': i18next then applies the
-                // configured fallbackLng rather than pinning this to English.
-                return i18next.getFixedT(
-                  recipientProfile?.user?.language ?? null,
-                  'translation'
-                )('notifications.voice_message_sent')
-              },
             })
           }
         } catch (error) {

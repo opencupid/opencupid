@@ -5,6 +5,7 @@ import { brandFor, type Brand } from '@/lib/brand'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
 import { hashEmail, signUnsubscribeToken } from './email/unsubscribeToken'
+import { cleanMessageForNotification } from '@/utils/notificationText'
 
 type NotificationType =
   | 'login_link'
@@ -35,8 +36,16 @@ type NotifiableUser = User & { profile?: { publicName: string } | null }
 interface NotificationParams {
   login_link: { path: string }
   welcome: { path: string }
-  /** senderId is used by constructDispatchKey to scope dedup per sender→recipient pair. */
-  new_message: { senderId: string; sender: string; message: string; path: string }
+  /**
+   * senderId is used by constructDispatchKey to scope dedup per sender→recipient pair.
+   * preview is the raw message; the notifier renders it in the recipient's language.
+   */
+  new_message: {
+    senderId: string
+    sender: string
+    preview: { content: string; messageType: string }
+    path: string
+  }
   new_like: { path: string }
   new_match: { name: string; path: string }
   onboarding_reminder: { path: string }
@@ -135,6 +144,12 @@ export class NotifierService {
 
     const suppressible = SUPPRESSIBLE_TYPES.has(emailType)
     const unsubscribe = suppressible ? this.buildUnsubscribe(brand, user, t) : undefined
+    const contentVars: Record<string, unknown> = {
+      siteName,
+      ...args,
+      ...this.derivedContentVars(emailType, args, t),
+      ...user,
+    }
 
     // emailType maps 1:1 to the i18n key under `emails.*` (e.g. emails.new_message.subject).
     return {
@@ -145,7 +160,7 @@ export class NotifierService {
       templateProps: {
         siteName,
         publicName: user.profile?.publicName || '',
-        contentBody: t(`emails.${emailType}.contentBody`, { siteName, ...args, ...user }),
+        contentBody: t(`emails.${emailType}.contentBody`, contentVars),
         callToActionLabel: t(`emails.${emailType}.callToActionLabel`),
         callToActionUrl: `${brand.frontendUrl}${args.path}`,
         fallbackHint: t(`emails.fallback_hint`),
@@ -159,6 +174,22 @@ export class NotifierService {
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
           }
         : undefined,
+    }
+  }
+
+  /** Interpolation values derived from args rather than passed through verbatim. */
+  private derivedContentVars<T extends NotificationType>(
+    emailType: T,
+    args: NotificationParams[T],
+    t: ReturnType<typeof i18next.getFixedT>
+  ): Record<string, string> {
+    if (emailType !== 'new_message') return {}
+    const { preview } = args as NotificationParams['new_message']
+    return {
+      message:
+        preview.messageType === 'audio/voice'
+          ? t('emails.new_message.voice_message')
+          : cleanMessageForNotification(preview.content, 100),
     }
   }
 

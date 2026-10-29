@@ -49,7 +49,6 @@ vi.mock('../../services/messaging.service', () => {
   }
   return {
     MessageService: { getInstance: () => mockMessageService },
-    cleanMessageForNotification: vi.fn((msg: string) => msg),
     canSendMessageInConversation: vi.fn(() => true),
     MessagingError,
     MessagingErrorCodes,

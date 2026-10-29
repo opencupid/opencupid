@@ -2,6 +2,9 @@ import type { TrustReasonType } from '@zod/generated/inputTypeSchemas/TrustReaso
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { MessageService } from '@/services/messaging.service'
+import { notifierService } from '@/services/notifier.service'
+import { appConfig } from '@/lib/appconfig'
+import { logger } from '@/lib/logger'
 
 // Tunable threshold — number of active INITIATED+PENDING conversations (sender = profile)
 // within the burst window that trips the SPAM_BURST flag. Module-local by design;
@@ -28,6 +31,9 @@ export const SPAM_BURST_WINDOW_MS = TRUST_WINDOW_MS
  * 409 for already_cleared, 200 for cleared).
  */
 export type ClearFlagResult = 'cleared' | 'not_found' | 'already_cleared'
+
+/** A held conversation that promotePendingsInTx moved PENDING → INITIATED. */
+type ReleasedConversation = { conversationId: string; recipientId: string }
 
 export class ProfileTrustService {
   private static instance: ProfileTrustService | null = null
@@ -78,11 +84,11 @@ export class ProfileTrustService {
    * Returns a result code; the caller maps it to its protocol-specific response.
    */
   async clearFlag(flagId: string, clearedBy: string): Promise<ClearFlagResult> {
-    return await prisma.$transaction(
+    const outcome = await prisma.$transaction(
       async (tx) => {
         const flag = await tx.profileTrustFlag.findUnique({ where: { id: flagId } })
-        if (!flag) return 'not_found' as ClearFlagResult
-        if (flag.clearedAt) return 'already_cleared' as ClearFlagResult
+        if (!flag) return { result: 'not_found' as ClearFlagResult }
+        if (flag.clearedAt) return { result: 'already_cleared' as ClearFlagResult }
 
         // Conditional write: only the call that actually transitions clearedAt
         // null→now wins. A concurrent clearer's update affects 0 rows and we
@@ -91,13 +97,15 @@ export class ProfileTrustService {
           where: { id: flagId, clearedAt: null },
           data: { clearedAt: new Date(), clearedBy },
         })
-        if (result.count === 0) return 'already_cleared' as ClearFlagResult
+        if (result.count === 0) return { result: 'already_cleared' as ClearFlagResult }
 
-        await this.promotePendingsInTx(tx, flag.profileId)
-        return 'cleared' as ClearFlagResult
+        const released = await this.promotePendingsInTx(tx, flag.profileId)
+        return { result: 'cleared' as ClearFlagResult, senderId: flag.profileId, released }
       },
       { isolationLevel: 'Serializable' }
     )
+    if (outcome.released) await this.notifyReleased(outcome.senderId, outcome.released)
+    return outcome.result
   }
 
   /**
@@ -219,12 +227,11 @@ export class ProfileTrustService {
    * `promotePendingsInTx` short-circuits if a flag landed in the meantime.
    */
   async promotePendingsIfClear(profileId: string): Promise<void> {
-    await prisma.$transaction(
-      async (tx) => {
-        await this.promotePendingsInTx(tx, profileId)
-      },
+    const released = await prisma.$transaction(
+      async (tx) => this.promotePendingsInTx(tx, profileId),
       { isolationLevel: 'Serializable' }
     )
+    await this.notifyReleased(profileId, released)
   }
 
   /**
@@ -235,28 +242,62 @@ export class ProfileTrustService {
    *
    * Callers must run this inside a serializable transaction — both the
    * stillFlagged check and the row promotions need consistent isolation to
-   * avoid a partial release across a concurrent flag write.
+   * avoid a partial release across a concurrent flag write. Returns the
+   * conversations this call actually released, for post-commit notification.
    */
   private async promotePendingsInTx(
     tx: Prisma.TransactionClient,
     profileId: string
-  ): Promise<void> {
+  ): Promise<ReleasedConversation[]> {
     const stillFlagged = await tx.profileTrustFlag.findFirst({
       where: { profileId, clearedAt: null },
       select: { id: true },
     })
-    if (stillFlagged) return
+    if (stillFlagged) return []
 
     const pendings = await tx.conversation.findMany({
       where: { initiatorProfileId: profileId, status: 'PENDING' },
       select: { id: true, profileAId: true, profileBId: true },
     })
-    if (pendings.length === 0) return
 
     const messageService = MessageService.getInstance()
+    const released: ReleasedConversation[] = []
     for (const convo of pendings) {
       const recipientId = convo.profileAId === profileId ? convo.profileBId : convo.profileAId
-      await messageService.promoteConversation(tx, convo.id, recipientId)
+      if (await messageService.promoteConversation(tx, convo.id, recipientId)) {
+        released.push({ conversationId: convo.id, recipientId })
+      }
+    }
+    return released
+  }
+
+  /**
+   * Sends the new-message email that was deferred when these conversations were
+   * held. Runs after the release tx commits (a 40001 retry must not email twice);
+   * the rows are already INITIATED and won't be revisited, so one failure is
+   * logged and must not stop the rest.
+   */
+  private async notifyReleased(senderId: string, released: ReleasedConversation[]) {
+    for (const { conversationId, recipientId } of released) {
+      // A quarantined user's reply to the system sender is held the same way;
+      // releasing it must not email the admin account.
+      if (recipientId === appConfig.ADMIN_PROFILE_ID) continue
+      try {
+        const message = await prisma.message.findFirst({
+          where: { conversationId, senderId },
+          orderBy: { createdAt: 'desc' },
+          select: { content: true, messageType: true, sender: { select: { publicName: true } } },
+        })
+        if (!message) continue
+        await notifierService.notifyProfile(recipientId, 'new_message', {
+          senderId,
+          sender: message.sender.publicName,
+          preview: { content: message.content, messageType: message.messageType },
+          path: '/inbox',
+        })
+      } catch (err) {
+        logger.error({ err, conversationId, recipientId }, 'released-conversation email failed')
+      }
     }
   }
 }

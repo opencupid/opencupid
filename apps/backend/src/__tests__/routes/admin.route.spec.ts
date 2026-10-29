@@ -69,6 +69,11 @@ vi.mock('@/lib/appconfig', () => ({
   appConfig: mockAppConfig,
 }))
 
+// ProfileTrustService emails released conversations; keep email out of route tests.
+vi.mock('@/services/notifier.service', () => ({
+  notifierService: { notifyProfile: vi.fn(), notifyUser: vi.fn() },
+}))
+
 const mockTranslateText = vi.hoisted(() => vi.fn())
 
 vi.mock('deepl-node', () => {

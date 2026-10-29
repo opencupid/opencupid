@@ -89,7 +89,8 @@
       "callToActionLabel": "Üzenet megnyitása",
       "contentBody": "Szia, {sender} üzenetet küldött neked: {message}",
       "footer": " ",
-      "subject": "Új üzeneted érkezett"
+      "subject": "Új üzeneted érkezett",
+      "voice_message": "Hangüzenetet küldött"
     },
     "onboarding_reminder": {
       "callToActionLabel": "Befejezem a profilomat",
