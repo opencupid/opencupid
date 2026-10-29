@@ -2,6 +2,24 @@ import { apiRequest } from './useApi'
 
 export type TrustReason = 'PROFILE_UNVETTED' | 'SPAM_BURST'
 
+export type FlagOrigin = 'admin' | 'heuristic' | 'system'
+
+/**
+ * Who wrote a flag, from its flaggedBy prefix (`admin:`, `heuristic:`, `system:`).
+ * Only admin flags are never cleared by automation.
+ */
+export function flagOrigin(flaggedBy: string): FlagOrigin {
+  if (flaggedBy.startsWith('admin:')) return 'admin'
+  if (flaggedBy.startsWith('heuristic:')) return 'heuristic'
+  return 'system'
+}
+
+export const flagOriginBadgeClass: Record<FlagOrigin, string> = {
+  admin: 'badge bg-danger',
+  heuristic: 'badge bg-warning text-dark',
+  system: 'badge bg-secondary',
+}
+
 /**
  * Bare flag record as the backend writes it (no joined profile).
  * Returned by POST /admin/profiles/:id/flag.

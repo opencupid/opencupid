@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import {
   listTrustFlags,
   clearTrustFlag,
+  flagOrigin,
+  flagOriginBadgeClass,
   type TrustFlagRow,
   type TrustReason,
 } from '../composables/useTrustFlags'
@@ -56,11 +58,9 @@ async function loadMore() {
   await fetchFlags(false)
 }
 
-const reasonBadgeClass = computed(() => (f: TrustFlagRow) => {
-  if (f.flaggedBy.startsWith('admin:')) return 'badge bg-danger'
-  if (f.flaggedBy.startsWith('heuristic:')) return 'badge bg-warning text-dark'
-  return 'badge bg-secondary'
-})
+const reasonBadgeClass = computed(
+  () => (f: TrustFlagRow) => flagOriginBadgeClass[flagOrigin(f.flaggedBy)]
+)
 
 const evidenceSummary = computed(() => (f: TrustFlagRow) => {
   if (!f.evidence) return '—'
