@@ -14,11 +14,14 @@ vi.mock('../../lib/prisma', () => ({
   },
 }))
 
-const { promoteConversationMock, notifyProfileMock, loggerErrorMock } = vi.hoisted(() => ({
-  promoteConversationMock: vi.fn(),
-  notifyProfileMock: vi.fn(),
-  loggerErrorMock: vi.fn(),
-}))
+const { promoteConversationMock, notifyProfileMock, loggerErrorMock, txProfileFindFirst } =
+  vi.hoisted(() => ({
+    promoteConversationMock: vi.fn(),
+    notifyProfileMock: vi.fn(),
+    loggerErrorMock: vi.fn(),
+    // Sender-eligibility lookup inside promotePendingsInTx; releasable by default.
+    txProfileFindFirst: vi.fn(),
+  }))
 
 vi.mock('@/services/notifier.service', () => ({
   notifierService: { notifyProfile: notifyProfileMock },
@@ -50,6 +53,7 @@ beforeEach(() => {
   // Reset the singleton so each test sees a fresh service instance.
   ;(ProfileTrustService as any).instance = null
   svc = ProfileTrustService.getInstance()
+  txProfileFindFirst.mockResolvedValue({ id: 'releasable' })
 })
 
 describe('ProfileTrustService', () => {
@@ -258,6 +262,7 @@ describe('ProfileTrustService', () => {
         return cb({
           profileTrustFlag: { findFirst: txFlagFindFirst },
           conversation: { findMany: txConversationFindMany },
+          profile: { findFirst: txProfileFindFirst },
         })
       })
       txFlagFindFirst.mockReset()
@@ -403,6 +408,7 @@ describe('ProfileTrustService', () => {
             findFirst: txFlagFindFirst,
           },
           conversation: { findMany: txConversationFindMany },
+          profile: { findFirst: txProfileFindFirst },
         })
       })
       txFlagFindUnique.mockReset()
@@ -623,6 +629,7 @@ describe('ProfileTrustService', () => {
             updateMany: txFlagUpdateMany,
           },
           conversation: { findMany: txConversationFindMany },
+          profile: { findFirst: txProfileFindFirst },
         })
       )
       txFlagFindFirst.mockResolvedValue(null)
@@ -641,6 +648,7 @@ describe('ProfileTrustService', () => {
         const out = await cb({
           profileTrustFlag: { findFirst: txFlagFindFirst },
           conversation: { findMany: txConversationFindMany },
+          profile: { findFirst: txProfileFindFirst },
         })
         expect(notifyProfileMock).not.toHaveBeenCalled()
         committed = true
@@ -713,6 +721,37 @@ describe('ProfileTrustService', () => {
         expect.objectContaining({ conversationId: 'c1', recipientId: 'bob' }),
         expect.any(String)
       )
+    })
+
+    it('sweep: releases and emails nothing for a blocked or deactivated sender', async () => {
+      txProfileFindFirst.mockResolvedValue(null)
+      txConversationFindMany.mockResolvedValue([
+        { id: 'c1', profileAId: 'sender', profileBId: 'bob' },
+      ])
+
+      await svc.promotePendingsIfClear('sender')
+
+      expect(txProfileFindFirst).toHaveBeenCalledWith({
+        where: {
+          id: 'sender',
+          isBlocked: false,
+          isActive: true,
+          user: { isBlocked: false, isActive: true },
+        },
+        select: { id: true },
+      })
+      expect(promoteConversationMock).not.toHaveBeenCalled()
+      expect(notifyProfileMock).not.toHaveBeenCalled()
+    })
+
+    it("admin clearFlag: clears the flag but keeps a blocked sender's messages held", async () => {
+      txFlagFindUnique.mockResolvedValue({ id: 'f1', profileId: 'sender', clearedAt: null })
+      txFlagUpdateMany.mockResolvedValue({ count: 1 })
+      txProfileFindFirst.mockResolvedValue(null)
+
+      expect(await svc.clearFlag('f1', 'admin:manual')).toBe('cleared')
+      expect(promoteConversationMock).not.toHaveBeenCalled()
+      expect(notifyProfileMock).not.toHaveBeenCalled()
     })
 
     it('admin clearFlag: emails released conversations and still returns "cleared"', async () => {

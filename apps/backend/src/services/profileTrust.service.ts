@@ -32,6 +32,17 @@ export const SPAM_BURST_WINDOW_MS = TRUST_WINDOW_MS
  */
 export type ClearFlagResult = 'cleared' | 'not_found' | 'already_cleared'
 
+/**
+ * Senders whose held messages may be released. Blocking or deactivating an
+ * account doesn't touch its trust flags, so without this an admin-blocked
+ * spammer's messages would be delivered (and emailed) once the flags age out.
+ */
+export const releasableSenderWhere = {
+  isBlocked: false,
+  isActive: true,
+  user: { isBlocked: false, isActive: true },
+} satisfies Prisma.ProfileWhereInput
+
 /** A held conversation that promotePendingsInTx moved PENDING → INITIATED. */
 type ReleasedConversation = { conversationId: string; recipientId: string }
 
@@ -236,7 +247,7 @@ export class ProfileTrustService {
 
   /**
    * In-tx release helper. Idempotent: if any flag is still active for the
-   * profile, returns without promoting. Per-row update is conditional on
+   * profile, or the sender is blocked/deactivated, returns without promoting. Per-row update is conditional on
    * `status: 'PENDING'`, so concurrent recipient replies (`accept_and_promote_pending`)
    * that flipped the row to ACCEPTED leave it untouched.
    *
@@ -254,6 +265,12 @@ export class ProfileTrustService {
       select: { id: true },
     })
     if (stillFlagged) return []
+
+    const releasable = await tx.profile.findFirst({
+      where: { id: profileId, ...releasableSenderWhere },
+      select: { id: true },
+    })
+    if (!releasable) return []
 
     const pendings = await tx.conversation.findMany({
       where: { initiatorProfileId: profileId, status: 'PENDING' },

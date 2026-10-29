@@ -11,6 +11,7 @@ const mockPrisma = vi.hoisted(() => {
     },
     profile: {
       count: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue({ id: 'releasable' }),
       findMany: vi.fn(),
       findUnique: vi.fn(),
       groupBy: vi.fn(),
