@@ -10,6 +10,8 @@ import {
 } from '../composables/useTrustFlags'
 import { appLocales } from '@shared/i18n/locales'
 
+const frontendUrl = __APP_CONFIG__.FRONTEND_URL
+
 interface AdminProfile {
   id: string
   publicName: string
@@ -1091,8 +1093,16 @@ onUnmounted(() => {
               <template v-if="detailTab === 'profile' && selectedProfile">
                 <dl class="row mb-0">
                   <dt class="col-sm-4">ID</dt>
-                  <dd class="col-sm-8">
+                  <dd class="col-sm-8 d-flex align-items-center gap-2">
                     <code>{{ selectedProfile.id }}</code>
+                    <a
+                      :href="`${frontendUrl}/profile/${selectedProfile.id}`"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="btn btn-sm btn-outline-primary"
+                      data-testid="view-public-profile"
+                      >Profile</a
+                    >
                   </dd>
                   <dt class="col-sm-4">Name</dt>
                   <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>

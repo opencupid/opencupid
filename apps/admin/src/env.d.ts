@@ -2,6 +2,7 @@
 
 declare const __APP_CONFIG__: {
   API_BASE_URL: string
+  FRONTEND_URL: string
 }
 
 declare const __APP_VERSION__: string
