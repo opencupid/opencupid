@@ -261,7 +261,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
           </fieldset>
         </div>
 
-        <div class="wizard-actions w-100 text-center mt-2 mt-md-4">
+        <div class="flex-shrink-0 w-100 text-center mt-2 mt-md-4">
           <BButton
             @click="handleNext"
             :disabled="!current.state"
@@ -314,9 +314,6 @@ const siteName = __APP_CONFIG__.SITE_NAME
   &::-webkit-scrollbar {
     display: none;
   }
-}
-.wizard-actions {
-  flex-shrink: 0;
 }
 p.wizard-step-subtitle {
   margin-bottom: 0.5rem;
