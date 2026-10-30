@@ -14,7 +14,10 @@ export default defineConfig(
     },
     define: {
       __APP_VERSION__: JSON.stringify('0.0.0-test'),
-      __APP_CONFIG__: JSON.stringify({ API_BASE_URL: '' }),
+      __APP_CONFIG__: JSON.stringify({
+        API_BASE_URL: '',
+        FRONTEND_URL: 'https://app.example.org',
+      }),
     },
     test: {
       environment: 'jsdom',

@@ -134,6 +134,18 @@ describe('ProfilesPage', () => {
     expect(wrapper.text()).toContain('No active trust flags')
   })
 
+  it('Profile button links to the public profile in a new window', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    const link = wrapper.find('[data-testid="view-public-profile"]')
+    expect(link.attributes('href')).toBe('https://app.example.org/profile/p1')
+    expect(link.attributes('target')).toBe('_blank')
+    expect(link.attributes('rel')).toContain('noopener')
+  })
+
   it('shows admin flag note when present', async () => {
     apiRequestMock.mockResolvedValue({
       success: true,

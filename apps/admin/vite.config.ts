@@ -11,6 +11,7 @@ import { loadProjectEnv, server, devCertPlugin } from '../../packages/shared/vit
 function runtimeConfigPlugin(env: Record<string, string | undefined>): Plugin {
   const configJs = `window.__APP_CONFIG__ = ${JSON.stringify({
     API_BASE_URL: env.API_BASE_URL ?? '/api',
+    FRONTEND_URL: env.FRONTEND_URL,
   })};`
 
   return {
