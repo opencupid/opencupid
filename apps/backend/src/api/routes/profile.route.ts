@@ -442,7 +442,9 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ error: 'Cannot block yourself.' })
       }
       await profileService.blockProfile(profileId, id)
+      // Blocking hides each side from the other, so both cached map indexes are stale.
       clusterService.evict(profileId)
+      clusterService.evict(id)
       return reply.code(204).send()
     } catch (error) {
       fastify.log.error(error)
@@ -462,6 +464,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = IdLookupParamsSchema.parse(req.params)
       await profileService.unblockProfile(profileId, id)
       clusterService.evict(profileId)
+      clusterService.evict(id)
       return reply.code(204).send()
     } catch (error) {
       fastify.log.error(error)
