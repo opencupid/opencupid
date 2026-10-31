@@ -314,6 +314,10 @@ const siteName = __APP_CONFIG__.SITE_NAME
   &::-webkit-scrollbar {
     display: none;
   }
+  // Open dropdown menus are absolutely positioned and would be clipped by the scroll container.
+  &:has(.multiselect--active) {
+    overflow: visible;
+  }
 }
 p.wizard-step-subtitle {
   margin-bottom: 0.5rem;
