@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import type { PublicCommunityDetail } from '@zod/community/community.dto'
+import type { OwnerCommunity, PublicCommunityDetail } from '@zod/community/community.dto'
 import IconCommunity from '@/assets/icons/interface/community.svg'
 import UserContentMapPopup from '@/features/userContent/components/UserContentMapPopup.vue'
 
-defineProps<{ item: PublicCommunityDetail }>()
+defineProps<{ item: PublicCommunityDetail | OwnerCommunity }>()
 
 const { t } = useI18n()
 </script>
