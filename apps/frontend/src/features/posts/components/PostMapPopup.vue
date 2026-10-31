@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { PublicPostDetail } from '@zod/post/post.dto'
+import type { OwnerPost, PublicPostDetail } from '@zod/post/post.dto'
 import UserContentMapPopup from '@/features/userContent/components/UserContentMapPopup.vue'
 
-defineProps<{ item: PublicPostDetail }>()
+defineProps<{ item: PublicPostDetail | OwnerPost }>()
 </script>
 
 <template>
