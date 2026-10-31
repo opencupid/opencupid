@@ -39,6 +39,8 @@ const emit = defineEmits<{
   'place:select': [place: GeocodingResult]
   select: [item: BrowseListItem]
   locate: [item: BrowseListItem]
+  /** The hovered card's item, or null when the pointer leaves it. */
+  hover: [item: BrowseListItem | null]
   'tag:add': [tag: PublicTag]
   'tag:remove': [tag: PublicTag]
   'load-more': []
@@ -209,6 +211,7 @@ const shareOpen = ref(false)
                 :item="item"
                 @select="emit('select', item)"
                 @locate="emit('locate', item)"
+                @hover="emit('hover', $event ? item : null)"
               />
             </template>
             <div

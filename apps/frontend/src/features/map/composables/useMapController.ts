@@ -40,6 +40,10 @@ export interface MapProps {
   highlightedLocation?: [number, number] | null
   /** Area to fit the map to, e.g. a place picked in the grid's location field. */
   focusBounds?: MapBounds | null
+  /** Marker to emphasise, e.g. while its grid card is hovered. */
+  emphasizedPoiId?: string | null
+  /** Marker to pulse once; pass a new object each time to pulse again. */
+  pulsePoi?: { id: string } | null
   fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
 }
 
@@ -399,6 +403,10 @@ export function useMapController(
 
     for (const m of removed) oms.removeMarker(m)
     for (const m of added) oms.addMarker(m)
+    if (added.length) {
+      markerElement(props.emphasizedPoiId)?.classList.add(EMPHASIS_CLASS)
+      applyPendingPulse()
+    }
 
     if (pendingItemsCallback) {
       const cb = pendingItemsCallback
@@ -459,6 +467,52 @@ export function useMapController(
     )
   }
 
+  // ── Marker emphasis and pulse (browse grid ↔ map) ─────────────────────
+  // Applied as classes on the marker element, so the immutable-per-id
+  // markers are never re-created. A marker inside a cluster has no element
+  // and is left alone.
+
+  const EMPHASIS_CLASS = 'poi-emphasized'
+  const PULSE_CLASS = 'poi-pulse'
+  const PULSE_MS = 3000
+
+  function markerElement(id: string | null | undefined): HTMLElement | undefined {
+    if (!id || phase !== 'ready') return undefined
+    return pois.get(id)?.getElement() ?? undefined
+  }
+
+  function setEmphasis(id: string | null | undefined, prev: string | null | undefined): void {
+    markerElement(prev)?.classList.remove(EMPHASIS_CLASS)
+    markerElement(id)?.classList.add(EMPHASIS_CLASS)
+  }
+
+  // A pulse requested before its marker exists (e.g. while the map is still
+  // flying there) is applied on the next marker update, if still recent.
+  let pendingPulse: { id: string; until: number } | null = null
+
+  function pulse(id: string): void {
+    const el = markerElement(id)
+    if (!el) {
+      pendingPulse = { id, until: Date.now() + PULSE_MS }
+      return
+    }
+    pendingPulse = null
+    el.classList.remove(PULSE_CLASS)
+    // Restart the CSS animation when the same marker is pulsed again.
+    void el.offsetWidth
+    el.classList.add(PULSE_CLASS)
+    setTimeout(() => el.classList.remove(PULSE_CLASS), PULSE_MS)
+  }
+
+  function applyPendingPulse(): void {
+    if (!pendingPulse) return
+    if (Date.now() > pendingPulse.until) {
+      pendingPulse = null
+      return
+    }
+    if (markerElement(pendingPulse.id)) pulse(pendingPulse.id)
+  }
+
   // ── Helper ────────────────────────────────────────────────────────────
 
   function markerConfigFromProps(): MarkerConfig {
@@ -496,6 +550,18 @@ export function useMapController(
     () => props.highlightedLocation,
     (point) => {
       if (point) showHighlight(point)
+    }
+  )
+
+  watch(
+    () => props.emphasizedPoiId,
+    (id, prev) => setEmphasis(id, prev)
+  )
+
+  watch(
+    () => props.pulsePoi,
+    (target) => {
+      if (target) pulse(target.id)
     }
   )
 

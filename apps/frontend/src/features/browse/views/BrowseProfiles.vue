@@ -273,9 +273,24 @@ function onGridSelect(item: BrowseListItem) {
   router.push(detailRoute(type, id, true))
 }
 
+// Hovering a grid card emphasises its pin; only where the map is visible
+// next to the grid.
+const hoveredGridItemId = ref<string | null>(null)
+const emphasizedPoiId = computed(() => (isMdUp.value ? hoveredGridItemId.value : null))
+function onGridHover(item: BrowseListItem | null) {
+  hoveredGridItemId.value = item ? browseItemTarget(item).id : null
+}
+// The panel unmounts on close without a mouseleave.
+watch(isGridOpen, (open) => {
+  if (!open) hoveredGridItemId.value = null
+})
+
+const pulsePoi = ref<{ id: string } | null>(null)
+
 function onGridLocate(item: BrowseListItem) {
-  const { point } = browseItemTarget(item)
+  const { id, point } = browseItemTarget(item)
   if (point) highlightedLocation.value = [point.lat, point.lon]
+  pulsePoi.value = { id }
   // On phones the grid covers the map: close it to show the item.
   if (!isMdUp.value) closeGrid()
 }
@@ -407,6 +422,8 @@ onMounted(async () => {
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"
           :focus-bounds="focusBounds"
+          :emphasized-poi-id="emphasizedPoiId"
+          :pulse-poi="pulsePoi"
           :popup-resolver="popupResolver"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
@@ -448,6 +465,7 @@ onMounted(async () => {
       @place:select="onGridPlaceSelect"
       @select="onGridSelect"
       @locate="onGridLocate"
+      @hover="onGridHover"
       @tag:add="onGridTagToggle"
       @tag:remove="onGridTagToggle"
       @load-more="gridStore.loadMore()"
