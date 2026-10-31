@@ -1,13 +1,11 @@
-import { regex } from 'regex'
-
 export type PublicNameValidationError =
   | 'too_short'
   | 'contains_whitespace'
   | 'invalid_characters'
   | null
 
-const hasWhitespaceRegex = regex`\p{White_Space}`
-const publicNameAllowedCharactersRegex = regex`^[\p{Letter}\p{Mark}]+$`
+const hasWhitespaceRegex = /\p{White_Space}/u
+const publicNameAllowedCharactersRegex = /^[\p{Letter}\p{Mark}]+$/u
 
 export const validatePublicName = (publicName: string): PublicNameValidationError => {
   const value = publicName.trim()

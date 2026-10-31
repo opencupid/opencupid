@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { isPublicNameValid, validatePublicName } from '../publicNameValidation'
 
 describe('publicNameValidation', () => {
-  it.each(['José', 'Élodie', 'Łukasz', '太郎太郎', 'たろうた'])(
+  it.each(['José', 'Élodie', 'Łukasz', '太郎太郎', 'たろうた', 'Jose\u0301'])(
     'accepts multilingual names: %s',
     (publicName) => {
       expect(validatePublicName(publicName)).toBeNull()
