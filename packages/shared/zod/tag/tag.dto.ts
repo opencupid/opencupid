@@ -1,6 +1,7 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
 import { TagSchema } from '../generated'
+import { MAX_BROWSE_TAGS } from '../../maps'
 
 /**
  * Upper bound on tags attachable to a single UserContent row. Profiles are
@@ -62,7 +63,26 @@ export const PopularTagsQuerySchema = z.object({
 })
 export type PopularTagsQuery = z.infer<typeof PopularTagsQuerySchema>
 
+/**
+ * Comma-separated tag ids from a query string → deduped string[], at most
+ * MAX_BROWSE_TAGS (the browse filter limit). An absent value parses to [].
+ */
+export const BrowseTagIdsSchema = z
+  .string()
+  .default('')
+  .transform((raw) => [
+    ...new Set(
+      raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    ),
+  ])
+  .pipe(z.array(z.string().cuid()).max(MAX_BROWSE_TAGS))
+
 // Route schemas
+export const TagsByIdsQuerySchema = z.object({ ids: BrowseTagIdsSchema })
+
 export const SearchQuerySchema = z.object({
   q: z.string().min(1),
 })
