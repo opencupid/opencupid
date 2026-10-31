@@ -1,5 +1,7 @@
 # @opencupid/admin
 
+## 0.78.1
+
 ## 0.78.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # frontend
 
+## 0.78.1
+
+### Patch Changes
+
+- 1f35d50: Fix onboarding and profile form crashing on iOS Safari < 16.4 by replacing the `regex` package with native Unicode regex literals in public name validation
+
 ## 0.78.0
 
 ### Patch Changes
