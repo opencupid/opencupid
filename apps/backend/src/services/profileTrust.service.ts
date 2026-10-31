@@ -185,12 +185,31 @@ export class ProfileTrustService {
    *
    * The windowed count is the policy lever: old unanswered intros are
    * unresponsiveness, not burst spam, and shouldn't keep a profile flagged forever.
+   * An admin clear of SPAM_BURST moves the window start up to the clear time:
+   * the admin has judged the conversations before it, so only sends after it
+   * can trip the flag again (#1546).
    * System-driven clears (this branch, and the unvetted-window cron) do NOT
    * inline-promote — releasing held messages is the sweeper's job, not the
    * route's hot path. Admin-initiated clearFlag does inline-promote.
    */
   async reconcileSpamBurst(profileId: string): Promise<void> {
-    const since = new Date(Date.now() - SPAM_BURST_WINDOW_MS)
+    // Read flag state before the admin-clear lookup. An admin clear committing
+    // between the two is then either seen as still-flagged (no create) or
+    // already visible to the lookup (window starts at the clear) — never both
+    // missed, which would recreate the flag from the reviewed burst.
+    const alreadyFlagged = await this.hasTrustFlag(profileId, 'SPAM_BURST')
+    const windowStart = new Date(Date.now() - SPAM_BURST_WINDOW_MS)
+    const adminClear = await prisma.profileTrustFlag.findFirst({
+      where: {
+        profileId,
+        reason: 'SPAM_BURST',
+        clearedBy: { startsWith: 'admin:' },
+        clearedAt: { gt: windowStart },
+      },
+      orderBy: { clearedAt: 'desc' },
+      select: { clearedAt: true },
+    })
+    const since = adminClear?.clearedAt ?? windowStart
     const count = await prisma.conversation.count({
       where: {
         initiatorProfileId: profileId,
@@ -198,7 +217,6 @@ export class ProfileTrustService {
         createdAt: { gte: since },
       },
     })
-    const alreadyFlagged = await this.hasTrustFlag(profileId, 'SPAM_BURST')
 
     if (count >= SPAM_BURST_THRESHOLD) {
       if (!alreadyFlagged) {
