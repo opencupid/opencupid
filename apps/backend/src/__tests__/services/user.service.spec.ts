@@ -2,6 +2,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { UserService } from '../../services/user.service'
 import { createMockPrisma } from '../../test-utils/prisma'
 
+vi.mock('fs', () => ({
+  default: { promises: { rm: vi.fn().mockResolvedValue(undefined) } },
+}))
+vi.mock('../../lib/media', () => ({
+  getMediaRoot: () => '/tmp/media',
+  MEDIA_SUBDIR: { IMAGES: 'images', VOICE: 'voice' },
+}))
+
 let mockPrisma: any = {}
 vi.mock('../../lib/prisma', () => ({
   get prisma() {
@@ -88,7 +96,7 @@ describe('UserService.setLoginToken', () => {
     expect(res.user).toBe(user)
     expect(res.isNewUser).toBe(false)
     expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
-      where: { id: 'u1', isBlocked: false },
+      where: { id: 'u1', isBlocked: false, isActive: true },
       data: { loginToken: '123', loginTokenExp: expect.any(Date) },
     })
   })
@@ -103,7 +111,7 @@ describe('UserService.setLoginToken', () => {
     await service.setLoginToken({ email: 'blocked@example.com' }, 'tok', 'en', 'test.local')
     expect(mockPrisma.user.updateMany).toHaveBeenCalledTimes(1)
     const call = mockPrisma.user.updateMany.mock.calls[0][0]
-    expect(call.where).toEqual({ id: 'u-blocked', isBlocked: false })
+    expect(call.where).toEqual({ id: 'u-blocked', isBlocked: false, isActive: true })
   })
 
   it('creates new user when missing', async () => {
@@ -154,6 +162,54 @@ describe('UserService.setLoginToken', () => {
         language: 'en',
         originDomain: 'test.local',
       },
+    })
+  })
+})
+
+describe('UserService.deleteAccount', () => {
+  it('archives conversations by pair fields before deleting profile', async () => {
+    const profileId = 'prof1'
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: profileId })
+    mockPrisma.likedProfile.deleteMany.mockResolvedValue({})
+    mockPrisma.hiddenProfile.deleteMany.mockResolvedValue({})
+    mockPrisma.conversation.updateMany.mockResolvedValue({})
+    mockPrisma.profile.delete.mockResolvedValue({})
+    mockPrisma.user.delete.mockResolvedValue({})
+
+    await service.deleteAccount('user1')
+
+    // Pair fields, not participant rows — PENDING conversations where this
+    // profile is the recipient have no participant row for it.
+    expect(mockPrisma.conversation.updateMany).toHaveBeenCalledWith({
+      where: { OR: [{ profileAId: profileId }, { profileBId: profileId }] },
+      data: { status: 'ARCHIVED' },
+    })
+    expect(mockPrisma.conversation.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      mockPrisma.profile.delete.mock.invocationCallOrder[0]
+    )
+    expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user1' } })
+  })
+
+  it('still deletes user when profile does not exist', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue(null)
+    mockPrisma.user.delete.mockResolvedValue({})
+
+    await service.deleteAccount('user1')
+
+    expect(mockPrisma.profile.delete).not.toHaveBeenCalled()
+    expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user1' } })
+  })
+})
+
+describe('UserService.deactivate', () => {
+  it('marks the user inactive and voids any pending login token', async () => {
+    mockPrisma.user.update.mockResolvedValue({})
+
+    await service.deactivate('user1')
+
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user1' },
+      data: { isActive: false, loginToken: null, loginTokenExp: null },
     })
   })
 })

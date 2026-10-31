@@ -19,6 +19,7 @@ import LanguageSelectorDropdown from '@/features/shared/ui/LanguageSelectorDropd
 import OptInCheckboxes from './OptInCheckboxes.vue'
 import VersionInfo from './VersionInfo.vue'
 import PwaInstallButton from '@/features/app/components/PwaInstallButton.vue'
+import CloseAccountDialog from './CloseAccountDialog.vue'
 
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
@@ -27,6 +28,9 @@ const userStore = useUserStore()
 usePwaInstall()
 
 const isLoading = ref(true)
+const showCloseAccountDialog = ref(false)
+const isClosingAccount = ref(false)
+
 const optInModel = computed<ProfileOptInSettings>({
   get() {
     return ownerProfileStore.optInSettings
@@ -48,6 +52,16 @@ onMounted(async () => {
 
 function handleLogout() {
   authStore.logout()
+}
+
+async function handleCloseAccount(confirmInput: string) {
+  isClosingAccount.value = true
+  const result = await userStore.deleteAccount(confirmInput)
+  isClosingAccount.value = false
+  showCloseAccountDialog.value = false
+  if (result.success) {
+    authStore.logout()
+  }
 }
 </script>
 
@@ -84,8 +98,28 @@ function handleLogout() {
         {{ $t('authentication.logout') }}
       </BButton>
     </fieldset>
+
+    <hr class="mb-md-4" />
+
+    <fieldset>
+      <BButton
+        variant="outline-danger"
+        size="sm"
+        @click="showCloseAccountDialog = true"
+      >
+        {{ $t('settings.close_account_button') }}
+      </BButton>
+    </fieldset>
+
     <div class="mt-auto pt-3 position-absolute bottom-0 start-0 w-100 pb-2">
       <VersionInfo />
     </div>
+
+    <CloseAccountDialog
+      v-model="showCloseAccountDialog"
+      :user-identifier="userStore.user?.email ?? userStore.user?.phonenumber ?? null"
+      :loading="isClosingAccount"
+      @confirm="handleCloseAccount"
+    />
   </div>
 </template>
