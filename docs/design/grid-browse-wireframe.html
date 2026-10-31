@@ -1,0 +1,515 @@
+<title>Grid Browse Wireframe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Kalam:wght@400;700&display=swap">
+<style>
+/* Layout: a working wireframe on a drafting sheet — device frame left, decisions + try-it notes right (stacked on narrow screens). */
+:root {
+  --paper: #f4f5f8; --sheet: #ffffff; --ink: #1e2430; --muted: #6b7385; --line: #c9ced8;
+  --fill: #eceff4; --note: #2f63c9; --note-bg: #e6eeff; --hl: #d9512f; --map: #eef1ec; --river: #d3e1ef;
+  --ui: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --hand: 'Kalam', 'Comic Sans MS', 'Chalkboard SE', cursive;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #13161c; --sheet: #1b1f27; --ink: #e5e8ee; --muted: #98a0b1; --line: #3a414e;
+  --fill: #252a34; --note: #86aaff; --note-bg: #1e2940; --hl: #ff7d5e; --map: #1b211d; --river: #1e2b39; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #13161c; --sheet: #1b1f27; --ink: #e5e8ee; --muted: #98a0b1; --line: #3a414e;
+  --fill: #252a34; --note: #86aaff; --note-bg: #1e2940; --hl: #ff7d5e; --map: #1b211d; --river: #1e2b39; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--ui); font-size: 14px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--note); outline-offset: 2px; }
+.muted { color: var(--muted); }
+
+.page { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
+.intro h1 { font-size: 26px; margin: 0; text-wrap: balance; }
+.intro p { margin: 4px 0 0; color: var(--muted); max-width: 65ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.seg { display: inline-flex; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; }
+.seg button { background: var(--sheet); border: 0; padding: 7px 14px; font-weight: 700; }
+.seg button + button { border-left: 1.5px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--sheet); }
+.scen { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.scen span { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 4px; }
+.scen button { background: transparent; border: 1.5px dashed var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.scen button:hover { border-color: var(--ink); }
+
+.workspace { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+#stage { min-width: 0; max-width: 100%; }
+.scrollx { overflow-x: auto; max-width: 100%; padding-bottom: 6px; }
+.device { width: max-content; display: grid; gap: 8px; }
+.urlbar { display: flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); background: var(--sheet); border-radius: 8px; padding: 4px 8px 4px 4px; }
+.urlbar button { border: 0; background: var(--fill); border-radius: 6px; width: 30px; height: 26px; }
+.urlbar code { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.urlbar code b { color: var(--ink); font-weight: 600; }
+
+.frame { position: relative; overflow: hidden; background: var(--sheet); border: 2px solid var(--ink); }
+.phone { width: 360px; height: 690px; border-radius: 30px; }
+.desk { width: 1060px; height: 620px; border-radius: 10px; }
+
+/* map */
+.map { position: absolute; inset: 0; overflow: hidden; background-color: var(--map); cursor: grab; touch-action: none;
+  background-image: repeating-linear-gradient(0deg, transparent 0 46px, var(--line) 46px 47px), repeating-linear-gradient(90deg, transparent 0 62px, var(--line) 62px 63px); }
+.map.dragging { cursor: grabbing; }
+.pins { position: absolute; inset: 0; }
+.river { position: absolute; left: -30%; width: 160%; top: 34%; height: 42px; background: var(--river); transform: rotate(-16deg); border-block: 1.5px solid var(--line); }
+.town { position: absolute; left: 50%; top: 56%; transform: translateX(-50%); font-weight: 700; letter-spacing: .3em; color: var(--muted); opacity: .6; font-size: 13px; pointer-events: none; white-space: nowrap; }
+.pin { position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--sheet); font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0; transition: transform .15s; }
+.pin.p-post { border-radius: 5px; } .pin.p-event { border-style: dashed; } .pin.p-community { border-width: 3px; }
+.pin.hover, .pin.hl { background: var(--hl); color: #fff; border-color: var(--hl); transform: scale(1.35); z-index: 2; }
+.pin.pulse::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--hl); animation: ring 1s ease-out 3; }
+@keyframes ring { from { transform: scale(1); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
+.pill { position: absolute; top: 14px; left: 14px; right: 58px; height: 42px; border-radius: 21px; background: var(--sheet); border: 1.5px solid var(--ink); display: flex; align-items: center; gap: 6px; padding: 0 12px; overflow: hidden; z-index: 1; white-space: nowrap; }
+.desk .pill { right: auto; width: 360px; }
+.pchip { background: var(--fill); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.layers { position: absolute; top: 14px; right: 14px; display: grid; gap: 0; border: 1.5px solid var(--ink); border-radius: 8px; overflow: hidden; background: var(--sheet); z-index: 1; }
+.desk.has-grid .layers { right: 420px; }
+.layers button { width: 34px; height: 30px; border: 0; background: transparent; font-weight: 700; font-size: 12px; color: var(--muted); }
+.layers button + button { border-top: 1px solid var(--line); }
+.layers button.on { color: var(--ink); background: var(--fill); }
+.chip { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 1; background: var(--ink); color: var(--sheet); border: 0; border-radius: 999px; padding: 10px 18px; font-weight: 700; box-shadow: 0 4px 14px rgb(0 0 0 / .18); white-space: nowrap; }
+.hand { font-family: var(--hand); color: var(--note); }
+
+/* grid panel */
+.gpanel { position: absolute; inset: 0; background: var(--sheet); display: flex; flex-direction: column; z-index: 5; }
+.desk .gpanel { left: auto; width: 400px; border-left: 2px solid var(--ink); }
+.summary { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1.5px solid var(--line); min-height: 52px; }
+.summary .x { border: 0; background: var(--fill); border-radius: 50%; width: 32px; height: 32px; flex: none; }
+.stitle { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stitle b { font-size: 16px; }
+.s-compact, .gpanel.collapsed .s-full { display: none; }
+.gpanel.collapsed .s-compact { display: inline; }
+.expand { display: none; border: 1.5px solid var(--line); background: var(--sheet); border-radius: 8px; padding: 2px 10px; flex: none; }
+.gpanel.collapsed .expand { display: block; }
+.gbody { flex: 1; overflow-y: auto; position: relative; }
+.fields { padding: 12px; display: grid; gap: 10px; border-bottom: 1.5px dashed var(--line); }
+.fields-drop { position: absolute; top: 52px; left: 0; right: 0; z-index: 4; background: var(--sheet); border-bottom: 2px solid var(--ink); box-shadow: 0 8px 18px rgb(0 0 0 / .14); }
+.frow { display: flex; gap: 8px; align-items: flex-start; }
+.ficon { width: 22px; flex: none; color: var(--muted); padding-top: 6px; display: grid; place-items: center; }
+.locwrap { position: relative; flex: 1; min-width: 0; }
+.locwrap input { width: 100%; border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 30px 6px 10px; font: inherit; background: var(--sheet); color: var(--ink); }
+.locwrap .pen { position: absolute; right: 10px; top: 6px; color: var(--muted); pointer-events: none; }
+.sugg { position: absolute; left: 0; right: 0; top: calc(100% + 4px); list-style: none; margin: 0; padding: 4px; background: var(--sheet); border: 1.5px solid var(--ink); border-radius: 8px; z-index: 6; box-shadow: 0 6px 16px rgb(0 0 0 / .15); }
+.sugg button { width: 100%; text-align: left; border: 0; background: transparent; padding: 6px 8px; border-radius: 6px; }
+.sugg button:hover { background: var(--fill); }
+.sugg small { color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; position: relative; flex: 1; min-width: 0; }
+.tchip { border: 1.5px solid var(--ink); background: var(--sheet); border-radius: 999px; padding: 3px 10px; font-size: 13px; }
+.tchip.add { border-style: dashed; color: var(--muted); }
+.tagmenu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 6; display: flex; flex-wrap: wrap; gap: 6px; width: 240px; padding: 8px; background: var(--sheet); border: 1.5px solid var(--ink); border-radius: 8px; box-shadow: 0 6px 16px rgb(0 0 0 / .15); }
+.tagmenu .tchip { border-color: var(--line); }
+.types { flex-wrap: wrap; gap: 6px; padding-left: 30px; }
+.ychip { border: 1.5px solid var(--line); background: transparent; border-radius: 6px; padding: 3px 9px; font-size: 13px; color: var(--muted); }
+.ychip.on { border-color: var(--ink); background: var(--fill); color: var(--ink); font-weight: 700; }
+.rmeta { padding: 10px 12px 0; font-size: 12px; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; padding: 10px 12px 16px; }
+.card { cursor: pointer; min-width: 0; }
+.ph { position: relative; aspect-ratio: 4 / 5; max-width: 100%; border: 1.5px solid var(--line); border-radius: 8px; overflow: hidden; background-color: var(--fill); }
+.ph-profile, .dimg { background-image: linear-gradient(to top right, transparent calc(50% - 1px), var(--line) 50%, transparent calc(50% + 1px)), linear-gradient(to bottom right, transparent calc(50% - 1px), var(--line) 50%, transparent calc(50% + 1px)); }
+.ph-post, .ph-event, .ph-community { background: var(--sheet); padding: 34px 10px 10px; display: flex; flex-direction: column; gap: 6px; }
+.ph p { margin: 0; font-size: 13px; line-height: 1.35; }
+.ph .date { align-self: flex-start; border: 1.5px solid var(--ink); border-radius: 6px; padding: 2px 8px; font-weight: 700; font-size: 13px; }
+.ph .grp { display: flex; gap: 0; margin-top: 8px; }
+.ph .grp i { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--fill); margin-right: -8px; }
+.badge { position: absolute; top: 6px; left: 6px; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; background: var(--sheet); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+.pinbtn { position: absolute; top: 5px; right: 5px; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--sheet); display: grid; place-items: center; padding: 0; }
+.pinbtn:hover { background: var(--hl); border-color: var(--hl); color: #fff; }
+.meta { display: flex; justify-content: space-between; gap: 6px; margin-top: 6px; font-size: 13px; }
+.meta b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.meta span { color: var(--muted); flex: none; font-variant-numeric: tabular-nums; }
+.mtags { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skel .ph { border-color: transparent; background: linear-gradient(90deg, var(--fill) 0%, var(--line) 50%, var(--fill) 100%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+.skel .bar { height: 10px; border-radius: 4px; background: var(--fill); margin-top: 8px; width: 70%; }
+.skel .bar.s { width: 40%; margin-top: 5px; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.empty { text-align: center; padding: 48px 24px; display: grid; gap: 6px; justify-items: center; }
+.empty .art { width: 72px; height: 72px; border-radius: 50%; border: 2px dashed var(--line); margin-bottom: 8px; }
+.empty h4 { margin: 0; font-size: 17px; }
+.empty p { margin: 0; color: var(--muted); }
+.btn { margin-top: 10px; border: 1.5px solid var(--ink); background: var(--ink); color: var(--sheet); border-radius: 8px; padding: 8px 16px; font-weight: 700; }
+.endnote { text-align: center; font-size: 12px; color: var(--muted); padding: 0 0 20px; }
+
+/* drawer */
+.drawer { position: absolute; inset: 0; z-index: 8; background: var(--sheet); display: flex; flex-direction: column; }
+.desk .drawer { right: auto; width: 330px; border-right: 2px solid var(--ink); z-index: 6; }
+.drawer header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1.5px solid var(--line); }
+.drawer header button { border: 0; background: var(--fill); border-radius: 50%; width: 32px; height: 32px; }
+.dbody { padding: 14px; overflow-y: auto; display: grid; gap: 10px; align-content: start; }
+.dimg { aspect-ratio: 4 / 3; border: 1.5px solid var(--line); border-radius: 8px; background-color: var(--fill); }
+.dbody h3 { margin: 0; font-size: 20px; }
+.lines i { display: block; height: 9px; background: var(--fill); border-radius: 4px; margin-bottom: 8px; }
+.toast { position: absolute; left: 50%; bottom: 78px; transform: translateX(-50%); z-index: 9; background: var(--note-bg); color: var(--note); border: 1.5px solid var(--note); border-radius: 10px; padding: 6px 12px; font-family: var(--hand); font-size: 15px; white-space: nowrap; pointer-events: none; }
+.desk .toast { bottom: 24px; }
+
+/* notes */
+.notes { flex: 1 1 300px; min-width: 0; max-width: 460px; display: grid; gap: 18px; }
+.notes h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 6px; }
+.notes ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.notes li::marker { color: var(--muted); }
+.notes .try li { font-family: var(--hand); color: var(--note); font-size: 16px; line-height: 1.3; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend .pin { position: static; margin: 0; width: 20px; height: 20px; font-size: 10px; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { *, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="page">
+  <header class="intro">
+    <h1>Grid Browse Wireframe</h1>
+    <p>A clickable low-fi prototype of the grid overlay on the browse map. Every control works on sample data from towns around Szentendre.</p>
+  </header>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Device">
+      <button type="button" data-dev="mobile" aria-pressed="true">Mobile</button>
+      <button type="button" data-dev="desktop" aria-pressed="false">Desktop</button>
+    </div>
+    <div class="scen">
+      <span>Jump to</span>
+      <button type="button" data-scn="map">Map</button>
+      <button type="button" data-scn="grid">Grid</button>
+      <button type="button" data-scn="scrolled">Scrolled</button>
+      <button type="button" data-scn="detail">Detail open</button>
+      <button type="button" data-scn="loading">Loading</button>
+      <button type="button" data-scn="empty">Empty area</button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <div id="stage"></div>
+    <aside class="notes">
+      <section class="try">
+        <h2>Try it</h2>
+        <ul>
+          <li>Drag the map sideways to move to the next town. The grid follows (Pomáz is empty).</li>
+          <li>Type "bud" in the grid's location field.</li>
+          <li>Remove a tag, or switch a type chip on the grid or on the map's layer buttons.</li>
+          <li>Scroll the grid: the fields fold into the summary, and more cards load.</li>
+          <li>Use the pin button on a card, and the ← in the address bar.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Decisions</h2>
+        <ul>
+          <li>The grid mirrors the map area. The header names it ("Szentendre &amp; around"); picking a place fits the map to that place.</li>
+          <li>Mobile: full-screen overlay. Desktop: grid panel on the right, live map in the middle, detail drawer on the left.</li>
+          <li>One mixed grid. The type chips are the same setting as the map layers.</li>
+          <li>"⊞ N nearby" chip is always on the map: "…" while loading, "List view" at zero.</li>
+          <li>The grid has its own route, with tags and area in the query string. Back closes the drawer first, then the grid.</li>
+          <li>Cards are the existing map popup cards in a fluid 4:5 layout, 2 per row, nearest first, each with a pin button.</li>
+          <li>Fields fold into the pinned summary when scrolling; ⌄ reopens them.</li>
+          <li>Infinite scroll with skeleton cards (pages of 24 planned; 8 then 6 here).</li>
+          <li>Empty area: a short message and the invite button.</li>
+          <li>Desktop: hovering a card highlights its pin; the pin button pans the map without reloading; any other pan reloads the grid 400 ms after the map stops.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Map legend</h2>
+        <div class="legend">
+          <span><i class="pin">P</i>Person</span>
+          <span><i class="pin p-post">T</i>Post</span>
+          <span><i class="pin p-event">E</i>Event</span>
+          <span><i class="pin p-community">C</i>Community</span>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+const TAGS = ['hiking', 'vegan', 'music', 'boardgames', 'yoga', 'gardening', 'climbing'];
+const NAMES = ['Anna', 'Bence', 'Csilla', 'Dávid', 'Eszter', 'Gábor', 'Hanna', 'Imre', 'Júlia', 'Kata', 'Levente', 'Márta', 'Noémi', 'Olivér', 'Petra', 'Réka', 'Sándor', 'Tamás', 'Vera', 'Zoltán'];
+const POSTS = ['Anyone up for a Pilis hike on Sunday?', 'Swapping tomato seedlings, come by the garden', 'Looking for a climbing partner, beginner level', 'Vegan potluck at my place next week', 'Board game night, we need two more players', 'Starting a Danube-side running group'];
+const EVENTS = ['Sunrise hike to Dobogókő', 'Open-air yoga by the Danube', 'Seed swap market', 'Folk music jam'];
+const DATES = ['Sat 4 Nov', 'Sun 5 Nov', 'Wed 8 Nov', 'Fri 10 Nov'];
+const COMMS = ['Pilis Hikers', 'Danube Bend Vegans', 'Board Gamers', 'Riverside Gardeners'];
+const TYPES = ['profile', 'post', 'event', 'community'];
+const TL = { profile: 'People', post: 'Posts', event: 'Events', community: 'Communities' };
+const T1 = { profile: 'Person', post: 'Post', event: 'Event', community: 'Community' };
+const TK = { profile: 'P', post: 'T', event: 'E', community: 'C' };
+const PIN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+const TAG_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>';
+const SEARCH_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>';
+
+function rng(seed) { return () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+function pick(r, arr) { return arr[Math.floor(r() * arr.length)]; }
+function gen(seed, n, prefix) {
+  const r = rng(seed), out = [];
+  for (let i = 0; i < n; i++) {
+    const roll = r();
+    const type = roll < .55 ? 'profile' : roll < .74 ? 'post' : roll < .9 ? 'event' : 'community';
+    const tags = TAGS.filter(() => r() < .28);
+    if (!tags.length) tags.push(pick(r, TAGS));
+    const name = type === 'event' ? pick(r, EVENTS) : type === 'community' ? pick(r, COMMS) : pick(r, NAMES);
+    out.push({ id: prefix + i, type, name, tags, km: +(0.2 + r() * 9).toFixed(1), x: 8 + r() * 84, y: 14 + r() * 74,
+      text: type === 'post' ? pick(r, POSTS) : '', date: type === 'event' ? pick(r, DATES) : '' });
+  }
+  return out;
+}
+const AREAS = {
+  budapest: { label: 'Budapest', bbox: '18.93,47.35,19.33,47.61', items: gen(31, 44, 'bp') },
+  pomaz: { label: 'Pomáz', bbox: '19.00,47.63,19.06,47.66', items: [] },
+  szentendre: { label: 'Szentendre', bbox: '19.03,47.64,19.11,47.69', items: gen(7, 28, 'sz') },
+  visegrad: { label: 'Visegrád', bbox: '18.93,47.77,19.00,47.81', items: gen(19, 12, 'vi') },
+};
+const ORDER = ['budapest', 'pomaz', 'szentendre', 'visegrad'];
+
+const S = { device: 'mobile', view: 'map', drawer: null, area: 'szentendre', tags: ['hiking', 'vegan'],
+  types: { profile: true, post: true, event: true, community: false }, shown: 8, loading: false, more: false,
+  hl: null, pulse: null, centerOn: null, off: { x: 0, y: 0 }, fieldsOpen: false, fieldsAt: 0, tagMenu: null, toast: null };
+let loadTimer, panTimer, toastTimer, pulseTimer;
+const stage = document.getElementById('stage');
+
+const find = id => { for (const k in AREAS) { const f = AREAS[k].items.find(i => i.id === id); if (f) return f; } };
+const area = () => AREAS[S.area];
+function visible() {
+  return area().items.filter(i => S.types[i.type] && (!S.tags.length || i.tags.some(t => S.tags.includes(t)))).sort((a, b) => a.km - b.km);
+}
+
+function url() {
+  let p = S.view === 'grid' ? '/browse/grid' : (S.drawer ? '' : '/browse');
+  if (S.drawer) { const it = find(S.drawer); p += `/${it.type}/${it.id}`; }
+  let q = '';
+  if (S.view === 'grid') {
+    const parts = [];
+    if (S.tags.length) parts.push('tags=' + S.tags.join(','));
+    parts.push('bbox=' + area().bbox);
+    q = '?' + parts.join('&');
+  }
+  return `<b>${p}</b>${q}`;
+}
+
+function urlbar() {
+  return `<div class="urlbar"><button type="button" data-act="back" aria-label="Back">←</button><code>${url()}</code></div>`;
+}
+
+function pin(it) {
+  return `<button type="button" class="pin p-${it.type}${S.hl === it.id ? ' hl' : ''}${S.pulse === it.id ? ' pulse' : ''}" data-act="open" data-id="${it.id}" style="left:${it.x}%;top:${it.y}%" aria-label="${T1[it.type]}: ${it.name}">${TK[it.type]}</button>`;
+}
+
+function chip() {
+  const n = visible().length;
+  const label = S.loading ? '⊞ …' : n ? `⊞ ${n} nearby` : '⊞ List view';
+  return `<button type="button" class="chip" data-act="grid">${label}</button>`;
+}
+
+function mapScreen() {
+  const showChip = !(S.device === 'desktop' && S.view === 'grid');
+  return `<div class="map" aria-label="Map"><div class="pins"><div class="river"></div><span class="town">${area().label.toUpperCase()}</span>${visible().map(pin).join('')}</div></div>
+    <div class="pill">${SEARCH_SVG}${S.tags.length ? S.tags.map(t => `<span class="pchip">#${t}</span>`).join('') : '<span class="muted">Search people, places, tags</span>'}</div>
+    <div class="layers" role="group" aria-label="Map layers">${TYPES.map(t => `<button type="button" class="${S.types[t] ? 'on' : ''}" data-act="type" data-type="${t}" title="${TL[t]}" aria-pressed="${S.types[t]}">${TK[t]}</button>`).join('')}</div>
+    ${showChip ? chip() : ''}`;
+}
+
+function fields(p) {
+  const avail = TAGS.filter(t => !S.tags.includes(t));
+  return `<div class="frow"><label class="ficon" for="${p}-loc">${PIN_SVG}</label>
+      <div class="locwrap"><input id="${p}-loc" data-loc value="${area().label}" autocomplete="off" aria-label="Location"><span class="pen">✎</span>
+        <ul class="sugg" hidden>${ORDER.map(k => `<li><button type="button" data-act="place" data-key="${k}">${AREAS[k].label} <small>Hungary</small></button></li>`).join('')}</ul></div></div>
+    <div class="frow"><span class="ficon">${TAG_SVG}</span><div class="chips">
+      ${S.tags.map(t => `<button type="button" class="tchip" data-act="untag" data-tag="${t}" aria-label="Remove ${t}">#${t} ✕</button>`).join('')}
+      <button type="button" class="tchip add" data-act="tagmenu" data-p="${p}" aria-label="Add tag">+ tag</button>
+      ${S.tagMenu === p ? `<div class="tagmenu">${avail.map(t => `<button type="button" class="tchip" data-act="addtag" data-tag="${t}">#${t}</button>`).join('')}</div>` : ''}
+    </div></div>
+    <div class="frow types">${TYPES.map(t => `<button type="button" class="ychip${S.types[t] ? ' on' : ''}" data-act="type" data-type="${t}" aria-pressed="${S.types[t]}">${S.types[t] ? '✓ ' : ''}${TL[t]}</button>`).join('')}</div>`;
+}
+
+function card(it) {
+  let inner = '';
+  if (it.type === 'post') inner = `<p>“${it.text}”</p>`;
+  if (it.type === 'event') inner = `<span class="date">${it.date}</span><p>${it.name}</p>`;
+  if (it.type === 'community') inner = `<div class="grp"><i></i><i></i><i></i></div><p>${it.tags.length + 11} members</p>`;
+  const title = it.type === 'post' ? it.name : it.name;
+  return `<article class="card" data-act="open" data-id="${it.id}" tabindex="0">
+    <div class="ph ph-${it.type}"><span class="badge">${T1[it.type]}</span>
+      <button type="button" class="pinbtn" data-act="pin" data-id="${it.id}" aria-label="Show ${it.name} on map">${PIN_SVG}</button>${inner}</div>
+    <div class="meta"><b>${title}</b><span>${it.km} km</span></div>
+    <div class="mtags">${it.tags.slice(0, 3).map(t => '#' + t).join(' ')}</div></article>`;
+}
+const skel = () => '<div class="skel" aria-hidden="true"><div class="ph"></div><div class="bar"></div><div class="bar s"></div></div>';
+
+function gridPanel() {
+  const vis = visible(), n = vis.length;
+  let body;
+  if (S.loading) body = `<div class="cards">${Array(6).fill(0).map(skel).join('')}</div>`;
+  else if (!n) body = `<div class="empty"><div class="art"></div><h4>No one here yet</h4><p>Try changing filters</p><button type="button" class="btn">Invite a friend</button></div>`;
+  else body = `<div class="rmeta">${n} nearby · nearest first</div><div class="cards">${vis.slice(0, S.shown).map(card).join('')}${S.more ? Array(4).fill(0).map(skel).join('') : ''}</div>
+    ${S.shown >= n ? '<div class="endnote">That’s everything in this area</div>' : ''}`;
+  const tagCount = S.tags.length ? ` · ${S.tags.length} tag${S.tags.length > 1 ? 's' : ''}` : '';
+  return `<section class="gpanel" aria-label="Grid view">
+    <header class="summary"><button type="button" class="x" data-act="closegrid" aria-label="Close grid">✕</button>
+      <div class="stitle"><span class="s-full"><b>${area().label} &amp; around</b><span class="muted">${tagCount}</span></span>
+        <span class="s-compact"><b>${area().label}</b> <span class="muted">${S.tags.map(t => '#' + t).join(' ')}</span></span></div>
+      <button type="button" class="expand" data-act="fields" aria-expanded="${S.fieldsOpen}" aria-label="Show filters">${S.fieldsOpen ? '⌃' : '⌄'}</button></header>
+    <div class="gbody"><div class="fields">${fields('a')}</div>${body}</div>
+    ${S.fieldsOpen ? `<div class="fields fields-drop">${fields('b')}</div>` : ''}
+  </section>`;
+}
+
+function drawer() {
+  const it = find(S.drawer);
+  return `<aside class="drawer" aria-label="Detail"><header><button type="button" data-act="closedrawer" aria-label="Close detail">✕</button><b>${T1[it.type]}</b></header>
+    <div class="dbody"><div class="dimg"></div><h3>${it.name}</h3><div class="muted">${it.km} km · ${it.tags.map(t => '#' + t).join(' ')}</div>
+    <div class="lines"><i style="width:92%"></i><i style="width:80%"></i><i style="width:86%"></i><i style="width:55%"></i></div>
+    <p class="hand">The existing detail drawer, unchanged. Closing it goes back to ${S.view === 'grid' ? 'the grid, scroll position kept' : 'the map'}.</p></div></aside>`;
+}
+
+function render(opts = {}) {
+  const g = stage.querySelector('.gbody');
+  const st = g ? g.scrollTop : 0;
+  const frameCls = `frame ${S.device === 'mobile' ? 'phone' : 'desk'}${S.view === 'grid' ? ' has-grid' : ''}`;
+  const inner = S.device === 'mobile'
+    ? `${mapScreen()}${S.view === 'grid' ? gridPanel() : ''}${S.drawer ? drawer() : ''}`
+    : `${mapScreen()}${S.drawer ? drawer() : ''}${S.view === 'grid' ? gridPanel() : ''}`;
+  stage.innerHTML = `<div class="scrollx"><div class="device">${urlbar()}<div class="${frameCls}">${inner}${S.toast ? `<div class="toast">${S.toast}</div>` : ''}</div></div></div>`;
+  document.querySelectorAll('[data-dev]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dev === S.device)));
+  const map = stage.querySelector('.map');
+  if (S.centerOn) {
+    const it = find(S.centerOn), w = map.clientWidth, h = map.clientHeight;
+    const left = S.device === 'desktop' && S.drawer ? 330 : 0;
+    const right = S.device === 'desktop' && S.view === 'grid' ? w - 400 : w;
+    S.off = { x: (left + right) / 2 - it.x / 100 * w, y: h / 2 - it.y / 100 * h };
+    S.centerOn = null;
+  }
+  applyOffset();
+  const ng = stage.querySelector('.gbody');
+  if (ng) { ng.scrollTop = opts.reset ? 0 : (opts.scrollTo ?? st); onGridScroll(ng); }
+}
+function applyOffset(dx = 0, dy = 0) {
+  const map = stage.querySelector('.map'); if (!map) return;
+  const x = S.off.x + dx, y = S.off.y + dy;
+  map.querySelector('.pins').style.transform = `translate(${x}px, ${y}px)`;
+  map.style.backgroundPosition = `${x}px ${y}px`;
+}
+
+function showToast(text) {
+  S.toast = text; clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { S.toast = null; stage.querySelector('.toast')?.remove(); }, 2400);
+}
+function reload() {
+  S.shown = 8; S.loading = true; S.more = false; S.tagMenu = null;
+  render({ reset: true });
+  clearTimeout(loadTimer);
+  loadTimer = setTimeout(() => { S.loading = false; render({ reset: true }); }, 650);
+}
+function setArea(key, how) {
+  S.area = key; S.hl = S.pulse = null; S.off = { x: 0, y: 0 };
+  showToast(how === 'fit' ? `Map fitted to ${AREAS[key].label}` : `Map moved, grid now shows ${AREAS[key].label} & around`);
+  reload();
+}
+function onGridScroll(g) {
+  const panel = g.closest('.gpanel'), f = g.querySelector('.fields');
+  const collapsed = g.scrollTop > (f ? f.offsetHeight - 8 : 60);
+  panel.classList.toggle('collapsed', collapsed);
+  if (S.fieldsOpen && (!collapsed || Math.abs(g.scrollTop - S.fieldsAt) > 40)) {
+    S.fieldsOpen = false; panel.querySelector('.fields-drop')?.remove();
+    const ex = panel.querySelector('.expand'); if (ex) { ex.textContent = '⌄'; ex.setAttribute('aria-expanded', 'false'); }
+  }
+  if (!S.loading && !S.more && S.shown < visible().length && g.scrollTop + g.clientHeight > g.scrollHeight - 80) {
+    S.more = true; render();
+    setTimeout(() => { S.more = false; S.shown += 6; render(); }, 650);
+  }
+}
+
+function act(el) {
+  const a = el.dataset.act, id = el.dataset.id;
+  if (a === 'grid') { S.view = 'grid'; S.shown = 8; S.fieldsOpen = false; render({ reset: true }); }
+  else if (a === 'closegrid') { S.view = 'map'; S.fieldsOpen = false; S.tagMenu = null; render(); }
+  else if (a === 'open') { S.drawer = id; render(); }
+  else if (a === 'closedrawer') { S.drawer = null; render(); }
+  else if (a === 'back') { if (S.drawer) { S.drawer = null; render(); } else if (S.view === 'grid') { S.view = 'map'; S.fieldsOpen = false; render(); } else showToast('Back would leave /browse'); render(); }
+  else if (a === 'pin') {
+    const it = find(id);
+    S.hl = id; S.pulse = id; S.centerOn = id;
+    if (S.device === 'mobile') { S.view = 'map'; S.drawer = null; showToast(`${it.name} on the map`); }
+    else showToast('Map panned to the item, grid unchanged');
+    clearTimeout(pulseTimer);
+    pulseTimer = setTimeout(() => { S.pulse = null; stage.querySelectorAll('.pin.pulse').forEach(p => p.classList.remove('pulse')); }, 3200);
+    render();
+  }
+  else if (a === 'untag') { S.tags = S.tags.filter(t => t !== el.dataset.tag); reload(); }
+  else if (a === 'tagmenu') { S.tagMenu = S.tagMenu === el.dataset.p ? null : el.dataset.p; render(); }
+  else if (a === 'addtag') { S.tags = [...S.tags, el.dataset.tag]; reload(); }
+  else if (a === 'type') { S.types[el.dataset.type] = !S.types[el.dataset.type]; reload(); }
+  else if (a === 'fields') { const g = stage.querySelector('.gbody'); S.fieldsOpen = !S.fieldsOpen; S.fieldsAt = g ? g.scrollTop : 0; render(); }
+  else if (a === 'place') { document.activeElement?.blur(); setArea(el.dataset.key, 'fit'); }
+}
+
+stage.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (el && stage.contains(el)) act(el);
+});
+stage.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.classList?.contains('card')) act(e.target);
+  if (e.key === 'Escape') { if (S.drawer) { S.drawer = null; render(); } else if (S.view === 'grid') { S.view = 'map'; render(); } }
+});
+stage.addEventListener('scroll', e => { if (e.target.classList?.contains('gbody')) onGridScroll(e.target); }, true);
+stage.addEventListener('mouseover', e => {
+  if (S.device !== 'desktop') return;
+  stage.querySelectorAll('.pin.hover').forEach(p => p.classList.remove('hover'));
+  const c = e.target.closest('.card');
+  if (c) stage.querySelector(`.pin[data-id="${c.dataset.id}"]`)?.classList.add('hover');
+});
+
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+stage.addEventListener('focusin', e => {
+  if (!e.target.matches('[data-loc]')) return;
+  e.target.select();
+  const ul = e.target.parentElement.querySelector('.sugg');
+  ul.hidden = false; ul.querySelectorAll('li').forEach(li => { li.hidden = false; });
+});
+stage.addEventListener('input', e => {
+  if (!e.target.matches('[data-loc]')) return;
+  const q = norm(e.target.value);
+  const ul = e.target.parentElement.querySelector('.sugg');
+  let any = false;
+  ul.querySelectorAll('li').forEach(li => { const show = norm(li.textContent).includes(q); li.hidden = !show; any = any || show; });
+  ul.hidden = !any;
+});
+stage.addEventListener('focusout', e => {
+  if (!e.target.matches('[data-loc]')) return;
+  const ul = e.target.parentElement.querySelector('.sugg');
+  setTimeout(() => { if (ul.isConnected) ul.hidden = true; }, 180);
+});
+
+stage.addEventListener('pointerdown', e => {
+  const map = e.target.closest('.map');
+  if (!map || e.target.closest('.pin')) return;
+  const sx = e.clientX, sy = e.clientY;
+  map.setPointerCapture(e.pointerId); map.classList.add('dragging'); clearTimeout(panTimer);
+  const move = ev => applyOffset(ev.clientX - sx, ev.clientY - sy);
+  const up = ev => {
+    map.removeEventListener('pointermove', move); map.removeEventListener('pointerup', up); map.removeEventListener('pointercancel', up);
+    map.classList.remove('dragging');
+    const dx = ev.clientX - sx, dy = ev.clientY - sy;
+    S.off.x += dx; S.off.y += dy;
+    if (Math.abs(dx) > 60) {
+      panTimer = setTimeout(() => {
+        const i = ORDER.indexOf(S.area);
+        setArea(ORDER[(i + (dx < 0 ? 1 : -1) + ORDER.length) % ORDER.length], 'pan');
+      }, 400);
+    }
+  };
+  map.addEventListener('pointermove', move); map.addEventListener('pointerup', up); map.addEventListener('pointercancel', up);
+});
+
+document.querySelectorAll('[data-dev]').forEach(b => b.addEventListener('click', () => { S.device = b.dataset.dev; S.off = { x: 0, y: 0 }; render({ reset: true }); }));
+document.querySelectorAll('[data-scn]').forEach(b => b.addEventListener('click', () => {
+  const s = b.dataset.scn;
+  clearTimeout(loadTimer); S.loading = false; S.more = false; S.fieldsOpen = false; S.tagMenu = null; S.hl = S.pulse = null;
+  if (s !== 'empty' && S.area === 'pomaz') { S.area = 'szentendre'; S.off = { x: 0, y: 0 }; }
+  if (s === 'map') { S.view = 'map'; S.drawer = null; render(); }
+  if (s === 'grid') { S.view = 'grid'; S.drawer = null; S.shown = 8; render({ reset: true }); }
+  if (s === 'scrolled') { S.view = 'grid'; S.drawer = null; S.shown = 8; render({ scrollTo: 330 }); }
+  if (s === 'detail') { S.view = 'grid'; S.shown = 8; S.drawer = visible()[0]?.id ?? null; render({ reset: true }); }
+  if (s === 'loading') { S.view = 'grid'; S.drawer = null; S.shown = 8; S.loading = true; render({ reset: true }); loadTimer = setTimeout(() => { S.loading = false; render({ reset: true }); }, 1800); }
+  if (s === 'empty') { S.view = 'grid'; S.drawer = null; S.area = 'pomaz'; S.off = { x: 0, y: 0 }; render({ reset: true }); }
+}));
+
+render();
+</script>
