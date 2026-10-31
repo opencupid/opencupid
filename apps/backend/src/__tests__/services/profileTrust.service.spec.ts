@@ -221,6 +221,50 @@ describe('ProfileTrustService', () => {
       }
     })
 
+    it('only looks up admin clears of SPAM_BURST inside the window', async () => {
+      conversationCount.mockResolvedValue(0)
+      mockedFindFirst.mockResolvedValue(null)
+      await svc.reconcileSpamBurst('profile-1')
+      expect(mockedFindFirst).toHaveBeenCalledWith({
+        where: {
+          profileId: 'profile-1',
+          reason: 'SPAM_BURST',
+          clearedBy: { startsWith: 'admin:' },
+          clearedAt: { gt: expect.any(Date) },
+        },
+        orderBy: { clearedAt: 'desc' },
+        select: { clearedAt: true },
+      })
+    })
+
+    it('counts only conversations created after a recent admin clear (#1546)', async () => {
+      const adminClearedAt = new Date(Date.now() - 15 * 60 * 1000)
+      // 1st findFirst: admin-clear lookup; 2nd: hasTrustFlag (flag was cleared → none active)
+      mockedFindFirst.mockResolvedValueOnce({ clearedAt: adminClearedAt } as any)
+      mockedFindFirst.mockResolvedValueOnce(null)
+      // The burst that the admin reviewed is before the clear, so nothing counts after it.
+      conversationCount.mockResolvedValue(0)
+
+      await svc.reconcileSpamBurst('profile-1')
+
+      const call = conversationCount.mock.calls[0][0] as any
+      expect(call.where.createdAt.gte).toEqual(adminClearedAt)
+      expect(profileTrustFlagCreate).not.toHaveBeenCalled()
+    })
+
+    it('re-flags when a new burst follows an admin clear', async () => {
+      const adminClearedAt = new Date(Date.now() - 60 * 60 * 1000)
+      mockedFindFirst.mockResolvedValueOnce({ clearedAt: adminClearedAt } as any)
+      mockedFindFirst.mockResolvedValueOnce(null)
+      conversationCount.mockResolvedValue(5)
+
+      await svc.reconcileSpamBurst('profile-1')
+
+      expect(profileTrustFlagCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({ reason: 'SPAM_BURST', flaggedBy: 'heuristic:spam_burst' }),
+      })
+    })
+
     it('regression: never writes any conversation-row change on any code path', async () => {
       // Guards against accidental reintroduction of row-touching enforcement. Under
       // the flag-and-gate policy, reconcileSpamBurst maintains the SPAM_BURST flag
