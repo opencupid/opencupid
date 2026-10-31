@@ -4,6 +4,15 @@ import { MAX_BROWSE_TAGS, type UserContentKind } from '@shared/maps'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@/assets/icons/e-commerce/tag.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('@/assets/icons/interface/pin.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('../BrowseGridLocationField.vue', () => ({
+  default: {
+    name: 'BrowseGridLocationField',
+    props: ['areaName'],
+    emits: ['place:select'],
+    template: '<div class="location-field-stub" />',
+  },
+}))
 vi.mock('../SelectableTagList.vue', () => ({
   default: {
     name: 'SelectableTagList',
@@ -27,6 +36,7 @@ function mountFilters(
 ) {
   return mount(BrowseGridFilters, {
     props: {
+      areaName: 'Szentendre',
       selectedTags: [tag('hiking')],
       availableTags: [tag('hiking'), tag('vegan'), tag('music')],
       kinds: ['profile', 'post'] as UserContentKind[],
@@ -37,6 +47,16 @@ function mountFilters(
 }
 
 describe('BrowseGridFilters', () => {
+  it('shows the location field with the area name and forwards picked places', async () => {
+    const wrapper = mountFilters()
+    const field = wrapper.findComponent({ name: 'BrowseGridLocationField' })
+    expect(field.props('areaName')).toBe('Szentendre')
+
+    const place = { name: 'Budapest', country: 'HU', lat: 47.5, lon: 19.04 }
+    await field.vm.$emit('place:select', place)
+    expect(wrapper.emitted('place:select')).toEqual([[place]])
+  })
+
   it('lists the selected tags as removable and forwards removals', async () => {
     const wrapper = mountFilters()
     const list = wrapper.findAllComponents({ name: 'SelectableTagList' })[0]!

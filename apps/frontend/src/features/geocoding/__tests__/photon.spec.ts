@@ -6,7 +6,7 @@ vi.mock('@/lib/api', () => ({
   axios: { get: (...args: unknown[]) => mockGet(...args) },
 }))
 
-import { searchPhoton } from '../providers/photon'
+import { searchPhoton, reversePhoton } from '../providers/photon'
 
 const multiCityFeatures = [
   {
@@ -185,5 +185,99 @@ describe('searchPhoton', () => {
     const results = await searchPhoton('city', 'en')
 
     expect(results).toEqual([])
+  })
+})
+
+describe('searchPhoton extent', () => {
+  beforeEach(() => {
+    mockGet.mockReset()
+  })
+
+  it('maps the Photon extent to bounds', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [19.04, 47.5] },
+            properties: {
+              name: 'Budapest',
+              countrycode: 'HU',
+              extent: [18.93, 47.61, 19.33, 47.35],
+            },
+          },
+        ],
+      },
+    })
+
+    const [result] = await searchPhoton('Budapest', 'en')
+
+    expect(result!.bounds).toEqual({ west: 18.93, north: 47.61, east: 19.33, south: 47.35 })
+  })
+})
+
+describe('reversePhoton', () => {
+  const szentendre = {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [19.076, 47.668] },
+    properties: {
+      name: 'Szentendre',
+      countrycode: 'HU',
+      extent: [18.975, 47.729, 19.091, 47.626],
+    },
+  }
+
+  beforeEach(() => {
+    mockGet.mockReset()
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = ''
+  })
+
+  afterEach(() => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = ''
+  })
+
+  it('looks up the nearest settlement around the point', async () => {
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: [szentendre] } })
+    const signal = new AbortController().signal
+
+    const result = await reversePhoton({ lat: 47.669, lon: 19.075 }, 'de', signal)
+
+    const [url, config] = mockGet.mock.calls[0]!
+    expect(url).toBe('https://photon.komoot.io/reverse')
+    const params: URLSearchParams = config.params
+    expect(params.get('lat')).toBe('47.669')
+    expect(params.get('lon')).toBe('19.075')
+    expect(params.get('lang')).toBe('de')
+    expect(params.get('radius')).toBe('15')
+    expect(params.get('limit')).toBe('1')
+    expect(params.getAll('osm_tag')).toEqual([
+      'place:city',
+      'place:town',
+      'place:village',
+      'place:hamlet',
+    ])
+    expect(params.getAll('layer')).toEqual(['city', 'locality'])
+    expect(config.signal).toBe(signal)
+    expect(result).toEqual({
+      name: 'Szentendre',
+      country: 'HU',
+      lat: 47.668,
+      lon: 19.076,
+      bounds: { west: 18.975, north: 47.729, east: 19.091, south: 47.626 },
+    })
+  })
+
+  it('returns null when nothing is found', async () => {
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: [] } })
+
+    await expect(reversePhoton({ lat: 0, lon: 0 }, 'en')).resolves.toBeNull()
+  })
+
+  it('returns null when the match is outside the allowed countries', async () => {
+    ;(globalThis as any).__APP_CONFIG__.GEOCODING_ALLOWED_COUNTRIES = 'DE,AT'
+    mockGet.mockResolvedValue({ data: { type: 'FeatureCollection', features: [szentendre] } })
+
+    await expect(reversePhoton({ lat: 47.669, lon: 19.075 }, 'en')).resolves.toBeNull()
   })
 })

@@ -8,6 +8,7 @@ import type { BrowseListItem } from '@zod/browse/browseList.dto'
 
 import BrowseGridCard from './BrowseGridCard.vue'
 import BrowseGridFilters from './BrowseGridFilters.vue'
+import type { GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
 import { browseItemTarget } from '../utils/browseListItem'
 import ShareSheet, { type SharePayload } from '@/features/app/components/ShareSheet.vue'
 import IconCross from '@/assets/icons/interface/cross.svg'
@@ -19,6 +20,8 @@ import IconChevronUp from '@/assets/icons/arrows/chevrons-up.svg'
  * screen on mobile, a right-hand panel from md up (styled by the parent).
  */
 const props = defineProps<{
+  /** Name of the settlement at the map centre, when known. */
+  areaName: string | null
   items: BrowseListItem[]
   total: number
   hasMore: boolean
@@ -33,6 +36,7 @@ const kinds = defineModel<UserContentKind[]>('kinds', { required: true })
 
 const emit = defineEmits<{
   close: []
+  'place:select': [place: GeocodingResult]
   select: [item: BrowseListItem]
   locate: [item: BrowseListItem]
   'tag:add': [tag: PublicTag]
@@ -84,6 +88,11 @@ watch(
   }
 )
 
+const title = computed(() =>
+  props.areaName
+    ? t('profiles.browse.grid.title_named', { place: props.areaName })
+    : t('profiles.browse.grid.title')
+)
 const tagSummary = computed(() => props.selectedTags.map((tag) => `#${tag.name}`).join(' '))
 const isEmpty = computed(() => !props.isLoading && props.items.length === 0)
 const shareOpen = ref(false)
@@ -93,7 +102,7 @@ const shareOpen = ref(false)
   <section
     class="browse-grid-panel d-flex flex-column bg-body"
     :class="{ collapsed: isCollapsed }"
-    :aria-label="t('profiles.browse.grid.title')"
+    :aria-label="title"
   >
     <header class="grid-summary d-flex align-items-center gap-2 px-2 py-2 border-bottom">
       <BButton
@@ -105,7 +114,7 @@ const shareOpen = ref(false)
         <IconCross class="svg-icon" />
       </BButton>
       <div class="flex-grow-1 text-truncate">
-        <span class="fw-bold">{{ t('profiles.browse.grid.title') }}</span>
+        <span class="fw-bold">{{ title }}</span>
         <span
           v-if="tagSummary"
           class="text-muted small ms-1"
@@ -139,8 +148,10 @@ const shareOpen = ref(false)
       >
         <BrowseGridFilters
           v-model:kinds="kinds"
+          :area-name="areaName"
           :selected-tags="selectedTags"
           :available-tags="availableTags"
+          @place:select="emit('place:select', $event)"
           @tag:add="emit('tag:add', $event)"
           @tag:remove="emit('tag:remove', $event)"
         />
@@ -157,8 +168,10 @@ const shareOpen = ref(false)
         >
           <BrowseGridFilters
             v-model:kinds="kinds"
+            :area-name="areaName"
             :selected-tags="selectedTags"
             :available-tags="availableTags"
+            @place:select="emit('place:select', $event)"
             @tag:add="emit('tag:add', $event)"
             @tag:remove="emit('tag:remove', $event)"
           />
