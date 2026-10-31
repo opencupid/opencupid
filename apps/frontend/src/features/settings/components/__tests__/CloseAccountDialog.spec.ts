@@ -86,4 +86,20 @@ describe('CloseAccountDialog', () => {
     const okBtn = wrapper.find('[data-testid="ok-btn"]')
     expect((okBtn.element as HTMLButtonElement).disabled).toBe(false)
   })
+
+  it('ignores Enter while a deletion is in progress', async () => {
+    const wrapper = mountDialog({ userIdentifier: 'user@example.com', loading: true })
+    const input = wrapper.find('input#close-account-confirm')
+    await input.setValue('user@example.com')
+    await input.trigger('keydown.enter')
+    expect(wrapper.emitted('confirm')).toBeFalsy()
+  })
+
+  it('submits on Enter when not loading', async () => {
+    const wrapper = mountDialog({ userIdentifier: 'user@example.com' })
+    const input = wrapper.find('input#close-account-confirm')
+    await input.setValue('user@example.com')
+    await input.trigger('keydown.enter')
+    expect(wrapper.emitted('confirm')).toEqual([['user@example.com']])
+  })
 })

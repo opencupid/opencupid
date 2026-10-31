@@ -74,10 +74,10 @@ export class UserService {
 
     if (userExists) {
       const isNewUser = userExists.isRegistrationConfirmed === false
-      // Skip issuing a new login token for blocked users. updateMany (vs update)
-      // treats a no-match filter as a no-op instead of throwing P2025.
+      // Skip issuing a new login token for blocked or deactivated users. updateMany
+      // (vs update) treats a no-match filter as a no-op instead of throwing P2025.
       await prisma.user.updateMany({
-        where: { id: userExists.id, isBlocked: false },
+        where: { id: userExists.id, isBlocked: false, isActive: true },
         data: {
           loginToken: otp,
           loginTokenExp: tokenExpiration,
@@ -164,21 +164,16 @@ export class UserService {
           where: { OR: [{ fromId: profileId }, { toId: profileId }] },
         })
 
-        // Archive all conversations this profile participated in so they are
-        // hidden from the surviving participant's inbox. The conversation rows
-        // survive (profileAId/profileBId become NULL via SetNull cascade) so
-        // the surviving participant's ConversationParticipant is preserved and
+        // Archive every conversation this profile is part of so it is hidden from
+        // the surviving partner's inbox. Match on the pair fields, not participant
+        // rows: PENDING conversations only have the sender's participant row.
+        // The rows survive (profileAId/profileBId/initiatorProfileId become NULL via
+        // SetNull) so the partner's ConversationParticipant is preserved and
         // markConversationRead no longer produces a P2025 error.
-        const participantRows = await tx.conversationParticipant.findMany({
-          where: { profileId },
-          select: { conversationId: true },
+        await tx.conversation.updateMany({
+          where: { OR: [{ profileAId: profileId }, { profileBId: profileId }] },
+          data: { status: 'ARCHIVED' },
         })
-        if (participantRows.length > 0) {
-          await tx.conversation.updateMany({
-            where: { id: { in: participantRows.map((r) => r.conversationId) } },
-            data: { status: 'ARCHIVED' },
-          })
-        }
 
         // Delete Profile — cascades: LocalizedProfileField, Image/ProfileImage,
         // ConversationParticipant (profileId FK), Message (senderId FK).
@@ -193,13 +188,30 @@ export class UserService {
 
     if (!deletedProfileId) return
 
-    // Delete the profile's image directory from disk (outside transaction — best-effort cleanup).
-    // Image rows cascade with the Profile (ownerProfileId); files live under images/<profileId>.
-    const profileImageDir = path.join(getMediaRoot(), MEDIA_SUBDIR.IMAGES, deletedProfileId)
-    try {
-      await fs.promises.rm(profileImageDir, { recursive: true, force: true })
-    } catch {
-      // Ignore — directory may not exist
+    // Delete the profile's media from disk (outside transaction — best-effort cleanup).
+    // Image and voice-attachment rows cascade with the Profile; their files live
+    // under images/<profileId> and voice/<profileId>.
+    for (const subdir of [MEDIA_SUBDIR.IMAGES, MEDIA_SUBDIR.VOICE]) {
+      try {
+        await fs.promises.rm(path.join(getMediaRoot(), subdir, deletedProfileId), {
+          recursive: true,
+          force: true,
+        })
+      } catch {
+        // Ignore — directory may not exist
+      }
     }
+  }
+
+  /**
+   * First step of account closure: mark the user inactive and void any pending
+   * login token, so the account can no longer sign in even if the subsequent
+   * hard delete fails.
+   */
+  async deactivate(userId: string): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isActive: false, loginToken: null, loginTokenExp: null },
+    })
   }
 }
