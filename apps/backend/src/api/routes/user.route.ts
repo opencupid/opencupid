@@ -92,21 +92,30 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
       const user = await userService.getUserById(req.user.userId)
       if (!user) return sendUnauthorizedError(reply)
       const identifier = user.email ?? user.phonenumber ?? null
-      if (
-        !identifier ||
-        body.confirmIdentifier.trim().toLowerCase() !== identifier.toLowerCase()
-      ) {
+      if (!identifier || body.confirmIdentifier.trim().toLowerCase() !== identifier.toLowerCase()) {
         return sendError(reply, 400, 'Confirmation identifier does not match')
       }
 
+      // Deactivate first: from here on the account cannot sign in again, so a
+      // failed hard delete leaves it closed rather than half-deleted and usable.
+      try {
+        await userService.deactivate(req.user.userId)
+      } catch (error) {
+        fastify.log.error({ err: error }, 'Error deactivating account')
+        return sendError(reply, 500, 'Failed to close account')
+      }
       try {
         await userService.deleteAccount(req.user.userId)
       } catch (error) {
-        fastify.log.error({ err: error }, 'Error deleting account')
-        return sendError(reply, 500, 'Failed to delete account')
+        // Not surfaced to the user: the account is already deactivated.
+        // Logged for administrator follow-up to finish the deletion.
+        fastify.log.error(
+          { err: error, userId: req.user.userId },
+          'Account deletion failed after deactivation — needs admin follow-up'
+        )
       }
-      // Post-delete session cleanup is best-effort: the account is already gone,
-      // so cleanup failures must not surface as 500 (which would block the
+      // Session cleanup is best-effort: the account is already closed, so
+      // cleanup failures must not surface as 500 (which would block the
       // frontend from running its logout/redirect path).
       try {
         await refreshTokenService.deleteAllForUser(req.user.userId)

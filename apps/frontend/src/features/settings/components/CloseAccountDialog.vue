@@ -21,7 +21,7 @@ const isConfirmed = computed(
 )
 
 function emitConfirm() {
-  if (!isConfirmed.value) return
+  if (props.loading || !isConfirmed.value) return
   emit('confirm', confirmInput.value.trim())
 }
 

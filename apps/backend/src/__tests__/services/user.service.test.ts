@@ -8,10 +8,7 @@ const { mockTx, mockPrisma, mockUnlink, mockRm } = vi.hoisted(() => {
     },
     likedProfile: { deleteMany: vi.fn() },
     hiddenProfile: { deleteMany: vi.fn() },
-    conversationParticipant: {
-      findMany: vi.fn().mockResolvedValue([{ conversationId: 'c1' }]),
-    },
-    conversation: { updateMany: vi.fn(), deleteMany: vi.fn() },
+    conversation: { updateMany: vi.fn() },
     user: { delete: vi.fn() },
   }
 
@@ -29,7 +26,7 @@ vi.mock('../../lib/prisma', () => ({ prisma: mockPrisma }))
 
 vi.mock('../../lib/media', () => ({
   getMediaRoot: vi.fn(() => '/media'),
-  MEDIA_SUBDIR: { IMAGES: 'images' },
+  MEDIA_SUBDIR: { IMAGES: 'images', VOICE: 'voice' },
 }))
 
 vi.mock('fs', () => ({
@@ -67,7 +64,7 @@ describe('UserService.deleteAccount', () => {
       where: { OR: [{ fromId: profileId }, { toId: profileId }] },
     })
     expect(mockTx.conversation.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: ['c1'] } },
+      where: { OR: [{ profileAId: profileId }, { profileBId: profileId }] },
       data: { status: 'ARCHIVED' },
     })
     expect(mockTx.profile.delete).toHaveBeenCalledWith({ where: { id: profileId } })
@@ -86,12 +83,16 @@ describe('UserService.deleteAccount', () => {
     expect(mockTx.user.delete).toHaveBeenCalledWith({ where: { id: userId } })
   })
 
-  it('removes the profile image directory after deletion', async () => {
+  it('removes the profile image and voice directories after deletion', async () => {
     mockTx.profile.findUnique.mockResolvedValue({ id: 'profile-123' })
 
     await service.deleteAccount('user-123')
 
     expect(mockRm).toHaveBeenCalledWith('/media/images/profile-123', {
+      recursive: true,
+      force: true,
+    })
+    expect(mockRm).toHaveBeenCalledWith('/media/voice/profile-123', {
       recursive: true,
       force: true,
     })

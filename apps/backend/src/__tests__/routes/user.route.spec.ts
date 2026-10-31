@@ -31,6 +31,7 @@ beforeEach(async () => {
   reply = new MockReply()
   mockUserService = {
     getUserById: vi.fn(),
+    deactivate: vi.fn(),
     deleteAccount: vi.fn(),
   }
   mockRefreshTokenService = {
@@ -132,6 +133,10 @@ describe('DELETE /me', () => {
       deleteSession,
     }
     await handler(req as any, reply as any)
+    expect(mockUserService.deactivate).toHaveBeenCalledWith('u1')
+    expect(mockUserService.deactivate.mock.invocationCallOrder[0]).toBeLessThan(
+      mockUserService.deleteAccount.mock.invocationCallOrder[0]
+    )
     expect(mockUserService.deleteAccount).toHaveBeenCalledWith('u1')
     expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('u1')
     expect(deleteSession).toHaveBeenCalled()
@@ -174,6 +179,7 @@ describe('DELETE /me', () => {
     const req = { user: { userId: 'u1' }, body: {}, deleteSession: vi.fn() }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(400)
+    expect(mockUserService.deactivate).not.toHaveBeenCalled()
     expect(mockUserService.deleteAccount).not.toHaveBeenCalled()
   })
 
@@ -187,6 +193,7 @@ describe('DELETE /me', () => {
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(400)
+    expect(mockUserService.deactivate).not.toHaveBeenCalled()
     expect(mockUserService.deleteAccount).not.toHaveBeenCalled()
   })
 
@@ -200,13 +207,14 @@ describe('DELETE /me', () => {
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
+    expect(mockUserService.deactivate).not.toHaveBeenCalled()
     expect(mockUserService.deleteAccount).not.toHaveBeenCalled()
   })
 
-  it('returns 500 if deleteAccount throws', async () => {
+  it('returns 500 and skips deletion if deactivation throws', async () => {
     const handler = fastify.routes['DELETE /me']
     mockUserService.getUserById.mockResolvedValue({ email: 'a@b.com', phonenumber: null })
-    mockUserService.deleteAccount.mockRejectedValue(new Error('db error'))
+    mockUserService.deactivate.mockRejectedValue(new Error('db error'))
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: 'a@b.com' },
@@ -214,6 +222,30 @@ describe('DELETE /me', () => {
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(500)
+    expect(mockUserService.deleteAccount).not.toHaveBeenCalled()
+  })
+
+  it('logs out and returns 200 when deletion fails after deactivation', async () => {
+    const handler = fastify.routes['DELETE /me']
+    mockUserService.getUserById.mockResolvedValue({ email: 'a@b.com', phonenumber: null })
+    mockUserService.deactivate.mockResolvedValue(undefined)
+    mockUserService.deleteAccount.mockRejectedValue(new Error('db error'))
+    mockRefreshTokenService.deleteAllForUser.mockResolvedValue(undefined)
+    const deleteSession = vi.fn().mockResolvedValue(undefined)
+    const logError = vi.spyOn(fastify.log, 'error')
+    const req = {
+      user: { userId: 'u1' },
+      body: { confirmIdentifier: 'a@b.com' },
+      deleteSession,
+    }
+    await handler(req as any, reply as any)
+    expect(logError).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u1' }),
+      expect.stringContaining('admin follow-up')
+    )
+    expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('u1')
+    expect(deleteSession).toHaveBeenCalled()
+    expect(reply.statusCode).toBe(200)
   })
 
   it('still returns 200 when post-delete cleanup throws', async () => {
