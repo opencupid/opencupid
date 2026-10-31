@@ -364,6 +364,8 @@
         "end_of_list": "That's everything in this area",
         "invite_friend": "Invite a friend",
         "loading": "Loading nearby items",
+        "location_label": "Map area location",
+        "location_placeholder": "Search a town or village",
         "open_button": "{count} nearby",
         "open_button_empty": "List view",
         "results_count": "{count} nearby · nearest first",
@@ -371,6 +373,7 @@
         "show_on_map": "Show on map",
         "tags_label": "Filter by tags",
         "title": "This map area",
+        "title_named": "{place} & around",
         "types_label": "Content types"
       },
       "invite_button": "Invite",

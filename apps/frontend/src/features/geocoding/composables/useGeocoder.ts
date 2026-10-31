@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import * as Sentry from '@sentry/vue'
 
-import { searchPhoton } from '../providers/photon'
+import { searchPhoton, reversePhoton } from '../providers/photon'
 // import { searchNominatim } from '../providers/nominatim'
 import { toGeoPoint, type LocationDTO } from '@zod/dto/location.dto'
 import type { GeocodingResult } from '../types'
@@ -10,6 +10,8 @@ export type { GeocodingResult }
 
 // Provider seam — swap here to change geocoding backend app-wide.
 const providerSearch = searchPhoton
+/** Nearest settlement to a point, from the same provider as `search`. */
+export const reverseGeocode = reversePhoton
 
 export function useGeocoder() {
   let abortController: AbortController | null = null

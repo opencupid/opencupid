@@ -22,6 +22,9 @@ import { useBrowseGridStore } from '@/features/browse/stores/browseGridStore'
 import { countFeaturesInBounds } from '@/features/browse/utils/boundsUtils'
 import { browseItemTarget } from '@/features/browse/utils/browseListItem'
 import { isMdUp } from '@/lib/responsive'
+import { useAreaName } from '@/features/geocoding/composables/useAreaName'
+import type { GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
+import type { MapBounds } from '@/features/map/types/map.types'
 
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
 import MapLayerControl from '@/features/map/components/MapLayerControl.vue'
@@ -281,6 +284,18 @@ function onGridTagToggle(tag: PublicTag) {
   searchStore.toggleTag(tag)
 }
 
+// Header name of the map area ("Szentendre & around"), looked up only while
+// the grid is open.
+const { name: gridAreaName } = useAreaName(lastMapBounds, isGridOpen)
+
+// Picking a place fits the map to it. The map then reports its new bounds,
+// which reloads the grid and renames the area through the watchers above.
+const focusBounds = ref<MapBounds | null>(null)
+function onGridPlaceSelect(place: GeocodingResult) {
+  if (place.bounds) focusBounds.value = { ...place.bounds }
+  else highlightedLocation.value = [place.lat, place.lon]
+}
+
 // NearbyFeatures lives outside the map, so picking an item there must move the
 // map for context. Map-marker clicks (handleMarkerSelect) and SearchBar's
 // post:select don't need this — the marker click is already on-screen, and
@@ -391,6 +406,7 @@ onMounted(async () => {
           :icon-resolver="iconResolver"
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"
+          :focus-bounds="focusBounds"
           :popup-resolver="popupResolver"
           :fetch-popup-data="fetchPopupData"
           class="h-100"
@@ -419,6 +435,7 @@ onMounted(async () => {
       v-if="isGridOpen"
       v-model:kinds="selectedLayers"
       class="browse-grid-overlay"
+      :area-name="gridAreaName"
       :items="gridStore.items"
       :total="gridStore.total"
       :has-more="gridStore.hasMore"
@@ -428,6 +445,7 @@ onMounted(async () => {
       :available-tags="availableTags"
       :share-payload="shareInvitePayload"
       @close="closeGrid"
+      @place:select="onGridPlaceSelect"
       @select="onGridSelect"
       @locate="onGridLocate"
       @tag:add="onGridTagToggle"

@@ -368,6 +368,8 @@
         "end_of_list": "Ennyi van ezen a területen",
         "invite_friend": "Hívj meg egy barátot",
         "loading": "Közeli elemek betöltése",
+        "location_label": "Térképterület helye",
+        "location_placeholder": "Keress települést",
         "open_button": "{count} a közelben",
         "open_button_empty": "Lista nézet",
         "results_count": "{count} a közelben · a legközelebbiek elöl",
@@ -375,6 +377,7 @@
         "show_on_map": "Megjelenítés a térképen",
         "tags_label": "Szűrés címkék szerint",
         "title": "Ez a térképterület",
+        "title_named": "{place} és környéke",
         "types_label": "Tartalomtípusok"
       },
       "invite_button": "Megosztás",

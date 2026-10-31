@@ -18,6 +18,7 @@ vi.mock('@/features/map/components/OsmPoiMap.vue', () => ({
       'iconResolver',
       'initialCenter',
       'highlightedLocation',
+      'focusBounds',
       'popupResolver',
       'fetchPopupData',
     ],
@@ -210,6 +211,15 @@ const gridStoreMock = {
   load: vi.fn(),
   loadMore: vi.fn(),
 }
+const mockAreaName = ref<string | null>(null)
+const mockUseAreaName = vi.fn()
+vi.mock('@/features/geocoding/composables/useAreaName', () => ({
+  useAreaName: (...args: unknown[]) => {
+    mockUseAreaName(...args)
+    return { name: mockAreaName }
+  },
+}))
+
 vi.mock('@/features/browse/stores/browseGridStore', () => ({
   useBrowseGridStore: () => gridStoreMock,
 }))
@@ -226,6 +236,7 @@ vi.mock('../../components/BrowseGridPanel.vue', () => ({
     name: 'BrowseGridPanel',
     template: '<div class="grid-panel-stub" />',
     props: [
+      'areaName',
       'items',
       'total',
       'hasMore',
@@ -236,7 +247,16 @@ vi.mock('../../components/BrowseGridPanel.vue', () => ({
       'sharePayload',
       'kinds',
     ],
-    emits: ['close', 'select', 'locate', 'tag:add', 'tag:remove', 'load-more', 'update:kinds'],
+    emits: [
+      'close',
+      'place:select',
+      'select',
+      'locate',
+      'tag:add',
+      'tag:remove',
+      'load-more',
+      'update:kinds',
+    ],
   },
 }))
 
@@ -264,6 +284,7 @@ describe('BrowseProfiles view', () => {
     mockRouteName.value = 'Browse'
     mockDetail.value = null
     mockGridOpen.value = false
+    mockAreaName.value = null
     mockIsMdUp.value = false
     gridStoreMock.load.mockClear()
     mockToggleTag.mockClear()
@@ -574,6 +595,50 @@ describe('BrowseProfiles view', () => {
       await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('close')
 
       expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
+    })
+
+    it('names the area from the map bounds while the grid is open', async () => {
+      mockGridOpen.value = true
+      mockAreaName.value = 'Szentendre'
+      const wrapper = mountComponent()
+
+      expect(wrapper.findComponent({ name: 'BrowseGridPanel' }).props('areaName')).toBe(
+        'Szentendre'
+      )
+      const [boundsRef, enabledRef] = mockUseAreaName.mock.calls.at(-1)! as any[]
+      expect(enabledRef.value).toBe(true)
+      expect(boundsRef.value).toBeNull()
+    })
+
+    it('fits the map to a picked place that has an extent', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      const bounds = { south: 47.35, north: 47.61, west: 18.93, east: 19.33 }
+      await wrapper
+        .findComponent({ name: 'BrowseGridPanel' })
+        .vm.$emit('place:select', {
+          name: 'Budapest',
+          country: 'HU',
+          lat: 47.5,
+          lon: 19.04,
+          bounds,
+        })
+      await nextTick()
+
+      expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('focusBounds')).toEqual(bounds)
+    })
+
+    it('flies to a picked place without an extent', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      await wrapper
+        .findComponent({ name: 'BrowseGridPanel' })
+        .vm.$emit('place:select', { name: 'Pomáz', country: 'HU', lat: 47.64, lon: 19.02 })
+      await nextTick()
+
+      const map = wrapper.findComponent({ name: 'OsmPoiMap' })
+      expect(map.props('highlightedLocation')).toEqual([47.64, 19.02])
+      expect(map.props('focusBounds')).toBeNull()
     })
 
     it('toggles tags in the shared search filter', async () => {

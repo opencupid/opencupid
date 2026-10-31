@@ -5,6 +5,7 @@ const mockCaptureMessage = vi.hoisted(() => vi.fn())
 
 vi.mock('../../providers/photon', () => ({
   searchPhoton: mockProviderSearch,
+  reversePhoton: vi.fn(),
 }))
 
 vi.mock('@sentry/vue', () => ({
