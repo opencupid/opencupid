@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.78.0
+
+### Minor Changes
+
+- ebbb0e7: Add a Profile button to the admin profile detail modal that opens the public profile on the public site in a new window
+
 ## 0.77.0
 
 ### Minor Changes

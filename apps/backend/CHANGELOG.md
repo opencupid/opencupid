@@ -1,5 +1,11 @@
 # backend
 
+## 0.78.0
+
+### Patch Changes
+
+- 0fbeff5: Admin clear of a SPAM_BURST flag is no longer reversed by the next heuristic reconcile; only sends after the clear count toward a new burst (#1546)
+
 ## 0.77.0
 
 ### Minor Changes

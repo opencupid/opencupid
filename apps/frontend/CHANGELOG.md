@@ -1,5 +1,13 @@
 # frontend
 
+## 0.78.0
+
+### Patch Changes
+
+- 64899da: Fix onboarding wizard clipping the Next button when many interests are selected on small screens
+- 32a89b4: Fix location and language dropdowns being clipped in the onboarding wizard
+- ed1f7df: Fix crash in ViewAsDropdown when the owner profile has not loaded yet (GlitchTip #112)
+
 ## 0.77.0
 
 ## 0.76.1
