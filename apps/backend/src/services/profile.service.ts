@@ -71,6 +71,21 @@ export class ProfileService {
     })
   }
 
+  // Batch version of getProfilePublicById for the browse list. Profiles that
+  // blocked the viewer are dropped here, matching the 404 on the single fetch.
+  async getProfilesPublicByIds(profileIds: string[], myProfileId: string) {
+    if (profileIds.length === 0) return []
+    const rows = await prisma.profile.findMany({
+      where: { id: { in: profileIds } },
+      include: {
+        ...tagsInclude(),
+        ...profileImageInclude(),
+        ...blockedContextInclude(myProfileId),
+      },
+    })
+    return rows.filter((p) => p.blockedProfiles.length === 0)
+  }
+
   // Interaction-context source fetch — only the viewer-relative relations
   // needed by mapInteractionContext. No tags/images/localized.
   async getInteractionContextSourceById(

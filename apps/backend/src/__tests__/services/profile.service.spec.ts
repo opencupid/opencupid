@@ -333,3 +333,26 @@ describe('ProfileService.updateScopes', () => {
     await expect(service.updateScopes('u1', { isDatingActive: true })).rejects.toThrow()
   })
 })
+
+describe('ProfileService.getProfilesPublicByIds', () => {
+  it('loads the profiles and drops those that blocked the viewer', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([
+      { id: 'p1', blockedProfiles: [] },
+      { id: 'p2', blockedProfiles: [{ id: 'viewer-1' }] },
+    ])
+
+    const rows = await service.getProfilesPublicByIds(['p1', 'p2'], 'viewer-1')
+
+    expect(rows.map((r: { id: string }) => r.id)).toEqual(['p1'])
+    const args = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(args.where).toEqual({ id: { in: ['p1', 'p2'] } })
+    expect(args.include.blockedProfiles).toBeDefined()
+    expect(args.include.tags).toBeDefined()
+    expect(args.include.profileImages).toBeDefined()
+  })
+
+  it('skips the query when there are no ids', async () => {
+    await expect(service.getProfilesPublicByIds([], 'viewer-1')).resolves.toEqual([])
+    expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
+  })
+})

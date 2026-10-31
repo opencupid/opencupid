@@ -22,3 +22,19 @@ export const MAX_BROWSE_TAGS = 5
  */
 export const USER_CONTENT_KINDS = ['profile', 'post', 'event', 'community'] as const
 export type UserContentKind = (typeof USER_CONTENT_KINDS)[number]
+
+const EARTH_RADIUS_KM = 6371
+
+/** Great-circle distance in kilometres between two `{ lat, lon }` points (haversine). */
+export function haversineKm(
+  a: { lat: number; lon: number },
+  b: { lat: number; lon: number }
+): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const dLat = toRad(b.lat - a.lat)
+  const dLon = toRad(b.lon - a.lon)
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h))
+}
