@@ -78,6 +78,7 @@ vi.mock('leaflet', () => {
     setView: vi.fn().mockReturnThis(),
     flyTo: vi.fn().mockReturnThis(),
     fitBounds: vi.fn().mockReturnThis(),
+    flyToBounds: vi.fn().mockReturnThis(),
 
     getZoom: vi.fn(() => 10),
     getSize: vi.fn(() => ({ x: 1000, y: 800 })),
@@ -504,6 +505,43 @@ describe('OsmPoiMap', () => {
     ])
 
     vi.useRealTimers()
+  })
+
+  describe('focusBounds', () => {
+    const bounds = { south: 47.35, north: 47.61, west: 18.93, east: 19.33 }
+
+    it('flies to fit the bounds', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+      const mapInstance = (L.map as any).mock.results[0].value
+
+      await wrapper.setProps({ focusBounds: bounds })
+      await flushPromises()
+
+      expect(mapInstance.flyToBounds).toHaveBeenCalledWith(
+        [
+          [47.35, 18.93],
+          [47.61, 19.33],
+        ],
+        { duration: 1 }
+      )
+    })
+
+    it('defers while the container has no size and replays on resize', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+      const mapInstance = (L.map as any).mock.results[0].value
+      mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
+
+      await wrapper.setProps({ focusBounds: bounds })
+      await nextTick()
+      expect(mapInstance.flyToBounds).not.toHaveBeenCalled()
+
+      mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
+      resizeObserverCallbacks[resizeObserverCallbacks.length - 1]!()
+
+      expect(mapInstance.flyToBounds).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('highlightedLocation', () => {

@@ -10,6 +10,7 @@ import type {
   BoundsWithZoom,
   MarkerConfig,
   IconRenderer,
+  MapBounds,
 } from '../types/map.types'
 import {
   isValidLatLng,
@@ -27,6 +28,7 @@ type MapPhase = 'uninitialized' | 'loading' | 'ready' | 'suspended'
 
 interface DeferredWork {
   highlight?: [number, number]
+  focusBounds?: MapBounds
 }
 
 export interface MapProps {
@@ -36,6 +38,8 @@ export interface MapProps {
   popupResolver?: (poi: MapPoi) => Component
   initialCenter: [number, number]
   highlightedLocation?: [number, number] | null
+  /** Area to fit the map to, e.g. a place picked in the grid's location field. */
+  focusBounds?: MapBounds | null
   fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
 }
 
@@ -241,6 +245,11 @@ export function useMapController(
       deferred.highlight = undefined
       showHighlight(point)
     }
+    if (deferred.focusBounds) {
+      const bounds = deferred.focusBounds
+      deferred.focusBounds = undefined
+      showFocusBounds(bounds)
+    }
   }
 
   // ── Bounds emission ───────────────────────────────────────────────────
@@ -435,6 +444,21 @@ export function useMapController(
     map.flyTo(point, SEARCH_FOCUS_ZOOM, { duration: 1 })
   }
 
+  function showFocusBounds(bounds: MapBounds): void {
+    const size = phase === 'ready' ? map.getSize() : null
+    if (!size || size.x === 0 || size.y === 0) {
+      deferred.focusBounds = bounds
+      return
+    }
+    map.flyToBounds(
+      [
+        [bounds.south, bounds.west],
+        [bounds.north, bounds.east],
+      ],
+      { duration: 1 }
+    )
+  }
+
   // ── Helper ────────────────────────────────────────────────────────────
 
   function markerConfigFromProps(): MarkerConfig {
@@ -472,6 +496,13 @@ export function useMapController(
     () => props.highlightedLocation,
     (point) => {
       if (point) showHighlight(point)
+    }
+  )
+
+  watch(
+    () => props.focusBounds,
+    (bounds) => {
+      if (bounds) showFocusBounds(bounds)
     }
   )
 
