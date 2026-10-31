@@ -175,3 +175,28 @@ describe('CommunityService tag wiring', () => {
     expect(mockPrisma.userContent.updateMany.mock.calls[0][0].data).not.toHaveProperty('tagIds')
   })
 })
+
+describe('CommunityService.findManyByIdsHydrated', () => {
+  it('fetches the ids with the same visibility rules as findByIdHydrated', async () => {
+    mockPrisma.userContent.findMany = vi.fn().mockResolvedValue([{ id: 'c1' }])
+
+    const rows = await service.findManyByIdsHydrated(['c1', 'c2'], 'viewer-1')
+
+    expect(rows).toEqual([{ id: 'c1' }])
+    const args = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(args.where).toEqual({
+      id: { in: ['c1', 'c2'] },
+      kind: 'community',
+      isDeleted: false,
+      OR: [{ postedById: 'viewer-1' }, { isVisible: true }],
+    })
+    expect(args.include.tags).toBeDefined()
+  })
+
+  it('skips the query when there are no ids', async () => {
+    mockPrisma.userContent.findMany = vi.fn()
+
+    await expect(service.findManyByIdsHydrated([], 'viewer-1')).resolves.toEqual([])
+    expect(mockPrisma.userContent.findMany).not.toHaveBeenCalled()
+  })
+})
