@@ -145,6 +145,26 @@ export class EventService extends UserContentService {
     })
   }
 
+  /**
+   * Batch version of `findByIdHydrated`, with the same visibility rules.
+   * Returns rows in no particular order; missing or hidden ids are skipped.
+   */
+  async findManyByIdsHydrated(
+    ids: string[],
+    viewerProfileId: string
+  ): Promise<EventWithMetadataAndContext[]> {
+    if (ids.length === 0) return []
+    return prisma.userContent.findMany({
+      where: {
+        id: { in: ids },
+        kind: 'event',
+        isDeleted: false,
+        OR: [{ postedById: viewerProfileId }, { isVisible: true }],
+      },
+      include: eventWithMetadataAndContextInclude(viewerProfileId),
+    })
+  }
+
   async findByProfileIdHydrated(
     profileId: string,
     viewerProfileId: string,

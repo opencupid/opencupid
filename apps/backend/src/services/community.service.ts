@@ -127,6 +127,26 @@ export class CommunityService extends UserContentService {
     })
   }
 
+  /**
+   * Batch version of `findByIdHydrated`, with the same visibility rules.
+   * Returns rows in no particular order; missing or hidden ids are skipped.
+   */
+  async findManyByIdsHydrated(
+    ids: string[],
+    viewerProfileId: string
+  ): Promise<CommunityWithMetadataAndContext[]> {
+    if (ids.length === 0) return []
+    return prisma.userContent.findMany({
+      where: {
+        id: { in: ids },
+        kind: 'community',
+        isDeleted: false,
+        OR: [{ postedById: viewerProfileId }, { isVisible: true }],
+      },
+      include: communityWithMetadataAndContextInclude(viewerProfileId),
+    })
+  }
+
   async findByProfileIdHydrated(
     profileId: string,
     viewerProfileId: string,
