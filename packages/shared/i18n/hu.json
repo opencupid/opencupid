@@ -230,7 +230,7 @@
     "message_sent_success": "Az üzeneted megérkezett a postafiókjába.",
     "my_conversations": "Beszélgetéseim",
     "my_turn": "Én jövök",
-    "no_messages_cta": "Komakereső",
+    "no_messages_cta": "A térképhez",
     "no_messages_placeholder": "Itt találod majd a beszélgetéseidet.",
     "page_title": "Üzenetek",
     "send_message_button": "Küldés",
@@ -268,8 +268,7 @@
     "age_title": "Ekkor születtem:",
     "back_button": "Vissza",
     "confirmation": {
-      "browse_button": "Komakereső",
-      "browse_hint": "Ki van még itt?",
+      "browse_button": "Tovább a térképhez",
       "title": "Kész!"
     },
     "dating_intro_hint": "Ezt csak olyanok fogják olvasni, akik szintén párt (is) keresnek.  Ha inkább későbbre hagynád ezt, hagyd üresen.",
@@ -291,7 +290,7 @@
     "photos_title": "Képeim",
     "relationship_title": "Családi helyzetem",
     "social_intro_hint": "Mit érdemes rólam tudni? Kit, mit keresek? (Később is bármikor kitöltheted.)",
-    "social_intro_placeholder": "Rovid bemutatkozo",
+    "social_intro_placeholder": "Rövid bemutatkozó",
     "social_intro_subtitle": "Mesélj egy kicsit magadról. ",
     "social_intro_title": "Pár szóban magamról",
     "welcome_subtitle": "Adj meg néhány infót magadról.",
@@ -361,7 +360,7 @@
         "search_placeholder": "Keresés"
       },
       "invite_button": "Megosztás",
-      "no_results_cta_title": "Ez a közösség még növekszik. Hívd meg pár barátodat a környékről?"
+      "no_results_cta_title": "A környékeden még nem találtunk komákat. Hívd meg pár barátodat?"
     },
     "forms": {
       "age_range": "Korosztály",

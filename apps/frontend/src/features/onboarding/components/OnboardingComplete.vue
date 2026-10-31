@@ -33,9 +33,6 @@ const emit = defineEmits<{
     <div class="d-flex flex-column gap-3 flex-grow-1 w-100">
       <!-- Browse CTA -->
       <div class="d-flex flex-column align-items-center align-items-md-start gap-2">
-        <div class="text-center text-md-start">
-          {{ t('onboarding.confirmation.browse_hint') }}
-        </div>
         <BButton
           @click="emit('browse')"
           variant="success"
