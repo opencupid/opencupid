@@ -14,6 +14,8 @@ const props = defineProps<{ item: BrowseListItem }>()
 const emit = defineEmits<{
   select: []
   locate: []
+  /** Pointer entered (true) or left (false) the card. */
+  hover: [active: boolean]
 }>()
 
 const { t, locale } = useI18n()
@@ -34,6 +36,8 @@ const distance = computed(() =>
     tabindex="0"
     @click="emit('select')"
     @keydown.enter="emit('select')"
+    @mouseenter="emit('hover', true)"
+    @mouseleave="emit('hover', false)"
   >
     <div class="card-frame position-relative overflow-hidden rounded">
       <ProfileMapCard

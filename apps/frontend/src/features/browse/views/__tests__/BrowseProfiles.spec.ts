@@ -19,6 +19,8 @@ vi.mock('@/features/map/components/OsmPoiMap.vue', () => ({
       'initialCenter',
       'highlightedLocation',
       'focusBounds',
+      'emphasizedPoiId',
+      'pulsePoi',
       'popupResolver',
       'fetchPopupData',
     ],
@@ -252,6 +254,7 @@ vi.mock('../../components/BrowseGridPanel.vue', () => ({
       'place:select',
       'select',
       'locate',
+      'hover',
       'tag:add',
       'tag:remove',
       'load-more',
@@ -614,15 +617,13 @@ describe('BrowseProfiles view', () => {
       mockGridOpen.value = true
       const wrapper = mountComponent()
       const bounds = { south: 47.35, north: 47.61, west: 18.93, east: 19.33 }
-      await wrapper
-        .findComponent({ name: 'BrowseGridPanel' })
-        .vm.$emit('place:select', {
-          name: 'Budapest',
-          country: 'HU',
-          lat: 47.5,
-          lon: 19.04,
-          bounds,
-        })
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('place:select', {
+        name: 'Budapest',
+        country: 'HU',
+        lat: 47.5,
+        lon: 19.04,
+        bounds,
+      })
       await nextTick()
 
       expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('focusBounds')).toEqual(bounds)
@@ -639,6 +640,50 @@ describe('BrowseProfiles view', () => {
       const map = wrapper.findComponent({ name: 'OsmPoiMap' })
       expect(map.props('highlightedLocation')).toEqual([47.64, 19.02])
       expect(map.props('focusBounds')).toBeNull()
+    })
+
+    it('on desktop, hovering a card emphasises its pin until the pointer leaves', async () => {
+      mockGridOpen.value = true
+      mockIsMdUp.value = true
+      const wrapper = mountComponent()
+      const panel = wrapper.findComponent({ name: 'BrowseGridPanel' })
+      const map = () => wrapper.findComponent({ name: 'OsmPoiMap' })
+
+      await panel.vm.$emit('hover', profileItem)
+      expect(map().props('emphasizedPoiId')).toBe('p1')
+
+      await panel.vm.$emit('hover', null)
+      expect(map().props('emphasizedPoiId')).toBeNull()
+    })
+
+    it('on phones, card hover does not emphasise pins', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('hover', profileItem)
+
+      expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('emphasizedPoiId')).toBeNull()
+    })
+
+    it('clears the emphasis when the grid closes', async () => {
+      mockGridOpen.value = true
+      mockIsMdUp.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('hover', profileItem)
+
+      mockGridOpen.value = false
+      await nextTick()
+
+      expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('emphasizedPoiId')).toBeNull()
+    })
+
+    it('"show on map" pulses the item\'s pin', async () => {
+      mockGridOpen.value = true
+      mockIsMdUp.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('locate', profileItem)
+      await nextTick()
+
+      expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('pulsePoi')).toEqual({ id: 'p1' })
     })
 
     it('toggles tags in the shared search filter', async () => {
