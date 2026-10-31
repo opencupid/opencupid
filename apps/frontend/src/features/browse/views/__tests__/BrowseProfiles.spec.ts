@@ -89,12 +89,13 @@ vi.mock('@/features/map/components/MapLayerControl.vue', () => ({
 }))
 
 const mockToggleTag = vi.fn()
+const mockSetTags = vi.fn()
 vi.mock('@/features/browse/stores/searchStore', () => ({
   useSearchStore: () => ({
     selectedTags: ref([]),
     selectedTagIds: ref<string[]>([]),
     toggleTag: mockToggleTag,
-    setTags: vi.fn(),
+    setTags: mockSetTags,
     clearTags: vi.fn(),
     reset: vi.fn(),
   }),
@@ -220,6 +221,11 @@ vi.mock('@/features/geocoding/composables/useAreaName', () => ({
     mockUseAreaName(...args)
     return { name: mockAreaName }
   },
+}))
+
+const mockUseGridUrlSync = vi.fn()
+vi.mock('../../composables/useGridUrlSync', () => ({
+  useGridUrlSync: (opts: unknown) => mockUseGridUrlSync(opts),
 }))
 
 vi.mock('@/features/browse/stores/browseGridStore', () => ({
@@ -684,6 +690,20 @@ describe('BrowseProfiles view', () => {
       await nextTick()
 
       expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('pulsePoi')).toEqual({ id: 'p1' })
+    })
+
+    it('syncs the grid URL with the map bounds and shared tags', async () => {
+      const wrapper = mountComponent()
+      const opts = mockUseGridUrlSync.mock.calls.at(-1)![0]
+      const tag = { id: 't1', name: 'hiking', slug: 'hiking' }
+
+      opts.setTags([tag])
+      expect(mockSetTags).toHaveBeenCalledWith([tag])
+
+      const bounds = { south: 47.35, north: 47.61, west: 18.93, east: 19.33 }
+      opts.fitBounds(bounds)
+      await nextTick()
+      expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('focusBounds')).toEqual(bounds)
     })
 
     it('toggles tags in the shared search filter', async () => {

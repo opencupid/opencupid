@@ -161,3 +161,26 @@ describe('TagService.resolveAttachableTagIdsTx', () => {
     ).rejects.toThrow(/tag-deleted/)
   })
 })
+
+describe('TagService.findManyByIds', () => {
+  it('loads visible tags with translations', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([{ id: 't1' }])
+
+    const rows = await service.findManyByIds(['t1', 't2'])
+
+    expect(rows).toEqual([{ id: 't1' }])
+    const args = mockPrisma.tag.findMany.mock.calls[0][0]
+    expect(args.where).toEqual({
+      id: { in: ['t1', 't2'] },
+      isDeleted: false,
+      isApproved: true,
+      isHidden: false,
+    })
+    expect(args.include.translations).toBeDefined()
+  })
+
+  it('skips the query for no ids', async () => {
+    await expect(service.findManyByIds([])).resolves.toEqual([])
+    expect(mockPrisma.tag.findMany).not.toHaveBeenCalled()
+  })
+})

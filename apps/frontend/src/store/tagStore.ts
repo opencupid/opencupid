@@ -72,6 +72,21 @@ export const useTagsStore = defineStore('tags', {
     },
 
     /**
+     * Tags by id, e.g. to restore the browse tag filter from a shared link.
+     * Unknown or hidden ids are left out.
+     */
+    async fetchByIds(ids: string[]): Promise<TagStoreListResponse<PublicTag>> {
+      try {
+        const res = await api.get<TagsResponse>('/tags/by-ids', {
+          params: { ids: ids.join(',') },
+        })
+        return storeSuccess({ result: res.data.tags })
+      } catch (error: any) {
+        return storeError(error, 'Failed to fetch tags')
+      }
+    },
+
+    /**
      * Search tags for autocomplete
      */
     async search(q: string): Promise<TagStoreListResponse<PublicTag>> {
