@@ -89,6 +89,13 @@ const routes: Array<RouteRecordRaw> = [
       browseRoute('events/:eventId', 'PublicEvent'),
       browseRoute('communities/:communityId', 'PublicCommunity'),
 
+      // Browse grid overlay (mirrors the map area) and the details opened from it
+      browseRoute('browse/grid', 'BrowseGrid'),
+      browseRoute('browse/grid/profile/:profileId', 'GridProfile'),
+      browseRoute('browse/grid/posts/:postId', 'GridPost'),
+      browseRoute('browse/grid/events/:eventId', 'GridEvent'),
+      browseRoute('browse/grid/communities/:communityId', 'GridCommunity'),
+
       // My profile area (drives drawer → ProfilePanel sub-views)
       browseRoute('me', 'Me'),
       browseRoute('me/posts', 'MePosts'),

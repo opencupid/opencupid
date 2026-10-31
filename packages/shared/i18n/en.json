@@ -355,6 +355,24 @@
         "locate_button_title": "Set to my location",
         "search_placeholder": "Search"
       },
+      "grid": {
+        "add_tag": "+ tag",
+        "close": "Close grid",
+        "distance_km": "{distance} km",
+        "empty_hint": "Try changing filters",
+        "empty_title": "No one here yet",
+        "end_of_list": "That's everything in this area",
+        "invite_friend": "Invite a friend",
+        "loading": "Loading nearby items",
+        "open_button": "{count} nearby",
+        "open_button_empty": "List view",
+        "results_count": "{count} nearby · nearest first",
+        "show_filters": "Show filters",
+        "show_on_map": "Show on map",
+        "tags_label": "Filter by tags",
+        "title": "This map area",
+        "types_label": "Content types"
+      },
       "invite_button": "Invite",
       "no_results_cta_title": "It's a bit lonely here. Invite a friend?"
     },

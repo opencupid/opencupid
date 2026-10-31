@@ -85,10 +85,12 @@ vi.mock('@/features/map/components/MapLayerControl.vue', () => ({
   default: { name: 'MapLayerControl', template: '<div class="map-layer-control-stub" />' },
 }))
 
+const mockToggleTag = vi.fn()
 vi.mock('@/features/browse/stores/searchStore', () => ({
   useSearchStore: () => ({
+    selectedTags: ref([]),
     selectedTagIds: ref<string[]>([]),
-    toggleTag: vi.fn(),
+    toggleTag: mockToggleTag,
     setTags: vi.fn(),
     clearTags: vi.fn(),
     reset: vi.fn(),
@@ -139,10 +141,16 @@ vi.mock('@/assets/icons/interface/target-2.svg', () => ({
 
 const mockPush = vi.fn()
 const mockReplace = vi.fn()
+const mockBack = vi.fn()
 const mockRouteName = ref('Browse')
 
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: mockPush, back: vi.fn(), replace: mockReplace }),
+  useRouter: () => ({
+    push: mockPush,
+    back: mockBack,
+    replace: mockReplace,
+    resolve: () => ({ fullPath: '/browse' }),
+  }),
   useRoute: () => ({
     get name() {
       return mockRouteName.value
@@ -176,9 +184,60 @@ vi.mock('@/assets/icons/interface/user.svg', () => ({
 }))
 
 const mockDetail = ref<{ type: 'profile' | 'post'; id: string } | null>(null)
+const mockGridOpen = ref(false)
 
-vi.mock('@/features/shared/composables/useDetailRouteState', () => ({
-  useDetailRouteState: () => ({ detail: computed(() => mockDetail.value) }),
+vi.mock('@/features/shared/composables/useDetailRouteState', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/shared/composables/useDetailRouteState')>()),
+  useDetailRouteState: () => ({
+    detail: computed(() => mockDetail.value),
+    isGridOpen: computed(() => mockGridOpen.value),
+  }),
+}))
+
+const mockIsMdUp = ref(false)
+vi.mock('@/lib/responsive', () => ({
+  get isMdUp() {
+    return mockIsMdUp
+  },
+}))
+
+const gridStoreMock = {
+  items: [],
+  total: 0,
+  hasMore: false,
+  isLoading: false,
+  isLoadingMore: false,
+  load: vi.fn(),
+  loadMore: vi.fn(),
+}
+vi.mock('@/features/browse/stores/browseGridStore', () => ({
+  useBrowseGridStore: () => gridStoreMock,
+}))
+vi.mock('../../components/BrowseGridChip.vue', () => ({
+  default: {
+    name: 'BrowseGridChip',
+    template: '<button class="grid-chip-stub" @click="$emit(\'open\')" />',
+    props: ['count', 'loading'],
+    emits: ['open'],
+  },
+}))
+vi.mock('../../components/BrowseGridPanel.vue', () => ({
+  default: {
+    name: 'BrowseGridPanel',
+    template: '<div class="grid-panel-stub" />',
+    props: [
+      'items',
+      'total',
+      'hasMore',
+      'isLoading',
+      'isLoadingMore',
+      'selectedTags',
+      'availableTags',
+      'sharePayload',
+      'kinds',
+    ],
+    emits: ['close', 'select', 'locate', 'tag:add', 'tag:remove', 'load-more', 'update:kinds'],
+  },
 }))
 
 const BButton = { template: '<button><slot /></button>' }
@@ -204,6 +263,11 @@ describe('BrowseProfiles view', () => {
     }
     mockRouteName.value = 'Browse'
     mockDetail.value = null
+    mockGridOpen.value = false
+    mockIsMdUp.value = false
+    gridStoreMock.load.mockClear()
+    mockToggleTag.mockClear()
+    mockBack.mockClear()
     mockFeedItems.value = []
     toastInfo.mockClear()
     mockPush.mockClear()
@@ -373,5 +437,152 @@ describe('BrowseProfiles view', () => {
     await nextTick()
     const map = wrapper.findComponent({ name: 'OsmPoiMap' })
     expect(map.props('highlightedLocation')).toEqual([51.5, -0.1])
+  })
+  describe('browse grid', () => {
+    const bounds = { south: 47, north: 48, west: 18.5, east: 19.5 }
+    const profileItem = {
+      kind: 'profile',
+      distanceKm: 1.2,
+      profile: { id: 'p1', location: { country: 'HU', lat: 47.6, lon: 19.1 } },
+    }
+
+    it('shows the grid button with the number of map items in view', async () => {
+      const store = useFindProfileStore()
+      store.lastMapBounds = bounds
+      store.clusterFeatures = [
+        { type: 'cluster', id: 1, lat: 47.5, lon: 19, count: 4, expansionZoom: 9 },
+        {
+          type: 'point',
+          kind: 'profile',
+          id: 'x',
+          lat: 47.2,
+          lon: 19,
+          publicName: 'X',
+          image: null,
+          highlighted: false,
+        },
+        {
+          type: 'point',
+          kind: 'profile',
+          id: 'y',
+          lat: 46,
+          lon: 19,
+          publicName: 'Y',
+          image: null,
+          highlighted: false,
+        },
+      ] as any
+      const wrapper = mountComponent()
+      await nextTick()
+
+      expect(wrapper.findComponent({ name: 'BrowseGridChip' }).props('count')).toBe(5)
+    })
+
+    it('opens the grid route from the grid button', async () => {
+      const wrapper = mountComponent()
+      await wrapper.find('.grid-chip-stub').trigger('click')
+
+      expect(mockPush).toHaveBeenCalledWith({ name: 'BrowseGrid' })
+    })
+
+    it('shows the grid panel instead of the button and nearby strip on the grid route', () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+
+      expect(wrapper.find('.grid-panel-stub').exists()).toBe(true)
+      expect(wrapper.find('.grid-chip-stub').exists()).toBe(false)
+      expect(wrapper.find('.nearby-features-stub').exists()).toBe(false)
+    })
+
+    it('loads the grid for the current map bounds and filters while open', async () => {
+      mockGridOpen.value = true
+      useFindProfileStore().lastMapBounds = bounds
+      mountComponent()
+      await nextTick()
+
+      expect(gridStoreMock.load).toHaveBeenCalledWith({
+        bounds,
+        tagIds: [],
+        kinds: ['profile', 'post', 'event', 'community'],
+      })
+    })
+
+    it('does not load the grid while it is closed', async () => {
+      useFindProfileStore().lastMapBounds = bounds
+      mountComponent()
+      await nextTick()
+
+      expect(gridStoreMock.load).not.toHaveBeenCalled()
+    })
+
+    it('opens a selected grid item as a detail over the grid', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('select', profileItem)
+
+      expect(mockPush).toHaveBeenCalledWith({ name: 'GridProfile', params: { profileId: 'p1' } })
+    })
+
+    it('opens map selections over the grid while the grid is open', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'SearchBar' }).vm.$emit('profile:select', { id: 'p9' })
+
+      expect(mockPush).toHaveBeenCalledWith({ name: 'GridProfile', params: { profileId: 'p9' } })
+    })
+
+    it('on phones, "show on map" centres the item and closes the grid', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('locate', profileItem)
+      await nextTick()
+
+      expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('highlightedLocation')).toEqual([
+        47.6, 19.1,
+      ])
+      expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
+    })
+
+    it('on desktop, "show on map" centres the item and keeps the grid open', async () => {
+      mockGridOpen.value = true
+      mockIsMdUp.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('locate', profileItem)
+      await nextTick()
+
+      expect(wrapper.findComponent({ name: 'OsmPoiMap' }).props('highlightedLocation')).toEqual([
+        47.6, 19.1,
+      ])
+      expect(mockReplace).not.toHaveBeenCalled()
+      expect(mockBack).not.toHaveBeenCalled()
+    })
+
+    it('steps back to the map when the grid was opened from it', async () => {
+      mockGridOpen.value = true
+      window.history.replaceState({ back: '/browse' }, '')
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('close')
+
+      expect(mockBack).toHaveBeenCalled()
+      expect(mockReplace).not.toHaveBeenCalled()
+      window.history.replaceState(null, '')
+    })
+
+    it('replaces a deep-linked grid with the map on close', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('close')
+
+      expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
+    })
+
+    it('toggles tags in the shared search filter', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      const tag = { id: 't1', name: 'hiking', slug: 'hiking' }
+      await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('tag:remove', tag)
+
+      expect(mockToggleTag).toHaveBeenCalledWith(tag)
+    })
   })
 })

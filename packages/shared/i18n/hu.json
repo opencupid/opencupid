@@ -359,6 +359,24 @@
         "locate_button_title": "Keress körülöttem",
         "search_placeholder": "Keresés"
       },
+      "grid": {
+        "add_tag": "+ címke",
+        "close": "Rács bezárása",
+        "distance_km": "{distance} km",
+        "empty_hint": "Próbálj más szűrőket",
+        "empty_title": "Itt még nincs senki",
+        "end_of_list": "Ennyi van ezen a területen",
+        "invite_friend": "Hívj meg egy barátot",
+        "loading": "Közeli elemek betöltése",
+        "open_button": "{count} a közelben",
+        "open_button_empty": "Lista nézet",
+        "results_count": "{count} a közelben · a legközelebbiek elöl",
+        "show_filters": "Szűrők megjelenítése",
+        "show_on_map": "Megjelenítés a térképen",
+        "tags_label": "Szűrés címkék szerint",
+        "title": "Ez a térképterület",
+        "types_label": "Tartalomtípusok"
+      },
       "invite_button": "Megosztás",
       "no_results_cta_title": "A környékeden még nem találtunk komákat. Hívd meg pár barátodat?"
     },

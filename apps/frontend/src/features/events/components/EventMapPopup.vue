@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { PublicEventDetail } from '@zod/event/event.dto'
+import type { OwnerEvent, PublicEventDetail } from '@zod/event/event.dto'
 import UserContentMapPopup from '@/features/userContent/components/UserContentMapPopup.vue'
 
-const props = defineProps<{ item: PublicEventDetail }>()
+const props = defineProps<{ item: PublicEventDetail | OwnerEvent }>()
 
 const { locale } = useI18n()
 
