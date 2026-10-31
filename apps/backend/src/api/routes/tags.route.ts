@@ -4,6 +4,7 @@ import {
   CreateTagPayloadSchema,
   CreateTagPayload,
   PopularTagsQuerySchema,
+  TagsByIdsQuerySchema,
 } from '@zod/tag/tag.dto'
 import { FastifyPluginAsync } from 'fastify'
 import { sendError, addDebounceHeaders, rateLimitConfig } from '../helpers'
@@ -63,6 +64,34 @@ const tagsRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error(err)
       return sendError(reply, 500, 'Failed to search tags')
+    }
+  })
+
+  /**
+   * GET /by-ids
+   * Returns the tags for the given ids, translated to the session locale, e.g.
+   * to restore the browse tag filter from a shared link. Unknown, hidden or
+   * deleted ids are left out.
+   * @query {string} ids - Comma-separated tag ids (at most MAX_BROWSE_TAGS)
+   * @returns {TagsResponse}
+   */
+  fastify.get('/by-ids', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const parsed = TagsByIdsQuerySchema.safeParse(req.query)
+    if (!parsed.success) {
+      return sendError(reply, 400, 'Missing or invalid query parameters')
+    }
+    const locale = req.session.lang
+
+    try {
+      const tags = await tagService.findManyByIds(parsed.data.ids)
+      const response: TagsResponse = {
+        success: true,
+        tags: tags.map((tag) => DbTagToPublicTagTransform(tag, locale)),
+      }
+      return reply.code(200).send(response)
+    } catch (err) {
+      fastify.log.error(err)
+      return sendError(reply, 500, 'Failed to fetch tags')
     }
   })
 

@@ -23,6 +23,7 @@ import { countFeaturesInBounds } from '@/features/browse/utils/boundsUtils'
 import { browseItemTarget } from '@/features/browse/utils/browseListItem'
 import { isMdUp } from '@/lib/responsive'
 import { useAreaName } from '@/features/geocoding/composables/useAreaName'
+import { useGridUrlSync } from '../composables/useGridUrlSync'
 import type { GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
 import type { MapBounds } from '@/features/map/types/map.types'
 
@@ -310,6 +311,16 @@ function onGridPlaceSelect(place: GeocodingResult) {
   if (place.bounds) focusBounds.value = { ...place.bounds }
   else highlightedLocation.value = [place.lat, place.lon]
 }
+
+// Tags and map area live in the grid URL, so a grid link can be shared.
+useGridUrlSync({
+  bounds: lastMapBounds,
+  selectedTags,
+  setTags: (tags) => searchStore.setTags(tags),
+  fitBounds: (bounds) => {
+    focusBounds.value = { ...bounds }
+  },
+})
 
 // NearbyFeatures lives outside the map, so picking an item there must move the
 // map for context. Map-marker clicks (handleMarkerSelect) and SearchBar's

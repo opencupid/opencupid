@@ -13,7 +13,8 @@ import { EventService } from '@/services/event.service'
 import { CommunityService } from '@/services/community.service'
 import { GetProfilesResponse } from '@zod/apiResponse.dto'
 
-import { MAP_MAX_ZOOM, MAX_BROWSE_TAGS } from '@shared/maps'
+import { MAP_MAX_ZOOM } from '@shared/maps'
+import { BrowseTagIdsSchema } from '@zod/tag/tag.dto'
 import { mapTagsTranslated } from '../mappers/tag.mappers'
 import { mapProfileToPublic } from '../mappers/profile.mappers'
 import { mapDbPostToDetail, mapDbPostToOwner } from '../mappers/post.mappers'
@@ -27,28 +28,14 @@ import {
   type BrowseListResponse,
 } from '@zod/browse/browseList.dto'
 
-/** Zod schema: optional comma-separated tag IDs → deduped string[]. */
-const TagIdsSchema = z
-  .string()
-  .default('')
-  .transform((raw) => [
-    ...new Set(
-      raw
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-    ),
-  ])
-  .pipe(z.array(z.string().cuid()).max(MAX_BROWSE_TAGS))
-
 const ClusterQuerySchema = BoundsQuerySchema.extend({
   zoom: z.coerce.number().int().min(0).max(MAP_MAX_ZOOM),
-  tagIds: TagIdsSchema,
+  tagIds: BrowseTagIdsSchema,
   kinds: KindsSchema,
 })
 
 const ListQuerySchema = BoundsQuerySchema.extend({
-  tagIds: TagIdsSchema,
+  tagIds: BrowseTagIdsSchema,
   kinds: KindsSchema,
   limit: z.coerce
     .number()
@@ -61,7 +48,7 @@ const ListQuerySchema = BoundsQuerySchema.extend({
 
 const LeavesQuerySchema = z.object({
   clusterId: z.coerce.number().int(),
-  tagIds: TagIdsSchema,
+  tagIds: BrowseTagIdsSchema,
   kinds: KindsSchema,
 })
 

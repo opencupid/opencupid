@@ -42,6 +42,18 @@ export class TagService {
   }
 
   /**
+   * Tags by id, with their translations. Same visibility as `search`: hidden,
+   * unapproved and deleted tags are left out. Order is not guaranteed.
+   */
+  public async findManyByIds(ids: string[]): Promise<TagWithTranslations[]> {
+    if (ids.length === 0) return []
+    return prisma.tag.findMany({
+      where: { id: { in: ids }, isDeleted: false, isApproved: true, isHidden: false },
+      include: tagTranslationsInclude(),
+    })
+  }
+
+  /**
    * Find tags whose session-locale translation contains the given substring
    * (case-insensitive).
    * @param term       Search term.
