@@ -239,9 +239,9 @@ describe('ProfileTrustService', () => {
 
     it('counts only conversations created after a recent admin clear (#1546)', async () => {
       const adminClearedAt = new Date(Date.now() - 15 * 60 * 1000)
-      // 1st findFirst: admin-clear lookup; 2nd: hasTrustFlag (flag was cleared → none active)
-      mockedFindFirst.mockResolvedValueOnce({ clearedAt: adminClearedAt } as any)
+      // 1st findFirst: hasTrustFlag (flag was cleared → none active); 2nd: admin-clear lookup
       mockedFindFirst.mockResolvedValueOnce(null)
+      mockedFindFirst.mockResolvedValueOnce({ clearedAt: adminClearedAt } as any)
       // The burst that the admin reviewed is before the clear, so nothing counts after it.
       conversationCount.mockResolvedValue(0)
 
@@ -254,8 +254,8 @@ describe('ProfileTrustService', () => {
 
     it('re-flags when a new burst follows an admin clear', async () => {
       const adminClearedAt = new Date(Date.now() - 60 * 60 * 1000)
-      mockedFindFirst.mockResolvedValueOnce({ clearedAt: adminClearedAt } as any)
       mockedFindFirst.mockResolvedValueOnce(null)
+      mockedFindFirst.mockResolvedValueOnce({ clearedAt: adminClearedAt } as any)
       conversationCount.mockResolvedValue(5)
 
       await svc.reconcileSpamBurst('profile-1')
@@ -263,6 +263,31 @@ describe('ProfileTrustService', () => {
       expect(profileTrustFlagCreate).toHaveBeenCalledWith({
         data: expect.objectContaining({ reason: 'SPAM_BURST', flaggedBy: 'heuristic:spam_burst' }),
       })
+    })
+
+    it('does not re-flag when an admin clear commits between the flag reads', async () => {
+      // Simulates the admin clear landing right after the first flag read.
+      const adminClearedAt = new Date(Date.now() - 1000)
+      let cleared = false
+      mockedFindFirst.mockImplementation((async (args: any) => {
+        const isActiveFlagRead = args.where.clearedAt === null
+        const result = isActiveFlagRead
+          ? cleared
+            ? null
+            : { id: 'flag-1' }
+          : cleared
+            ? { clearedAt: adminClearedAt }
+            : null
+        cleared = true
+        return result
+      }) as any)
+      // The reviewed burst is before the clear: 5 in the full window, 0 after the clear.
+      conversationCount.mockImplementation((async (args: any) =>
+        args.where.createdAt.gte === adminClearedAt ? 0 : 5) as any)
+
+      await svc.reconcileSpamBurst('profile-1')
+
+      expect(profileTrustFlagCreate).not.toHaveBeenCalled()
     })
 
     it('regression: never writes any conversation-row change on any code path', async () => {

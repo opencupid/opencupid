@@ -193,6 +193,11 @@ export class ProfileTrustService {
    * route's hot path. Admin-initiated clearFlag does inline-promote.
    */
   async reconcileSpamBurst(profileId: string): Promise<void> {
+    // Read flag state before the admin-clear lookup. An admin clear committing
+    // between the two is then either seen as still-flagged (no create) or
+    // already visible to the lookup (window starts at the clear) — never both
+    // missed, which would recreate the flag from the reviewed burst.
+    const alreadyFlagged = await this.hasTrustFlag(profileId, 'SPAM_BURST')
     const windowStart = new Date(Date.now() - SPAM_BURST_WINDOW_MS)
     const adminClear = await prisma.profileTrustFlag.findFirst({
       where: {
@@ -212,7 +217,6 @@ export class ProfileTrustService {
         createdAt: { gte: since },
       },
     })
-    const alreadyFlagged = await this.hasTrustFlag(profileId, 'SPAM_BURST')
 
     if (count >= SPAM_BURST_THRESHOLD) {
       if (!alreadyFlagged) {
