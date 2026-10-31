@@ -147,7 +147,7 @@ export class UserService {
   }
 
   async deleteAccount(userId: string): Promise<void> {
-    await prisma.$transaction(async (tx) => {
+    const deletedProfileId = await prisma.$transaction(async (tx) => {
       const profile = await tx.profile.findUnique({
         where: { userId },
         select: { id: true },
@@ -180,24 +180,24 @@ export class UserService {
           })
         }
 
-        // Delete Profile — cascades: LocalizedProfileField, ProfileImage (profileId FK),
+        // Delete Profile — cascades: LocalizedProfileField, Image/ProfileImage,
         // ConversationParticipant (profileId FK), Message (senderId FK).
         // profileAId/profileBId/initiatorProfileId on Conversation are set to NULL (SetNull).
         await tx.profile.delete({ where: { id: profileId } })
       }
 
-      // TODO: ProfileImage has redundant userId (RESTRICT) + profileId (CASCADE) FKs — consolidate to Profile-only. (#1193)
-      // Profile deletion cascades profileId-linked images, but unattached images (profileId=NULL) survive.
-      await tx.profileImage.deleteMany({ where: { userId, profileId: null } })
-
       // Delete User — cascades: ConnectionRequest, PushSubscription
       await tx.user.delete({ where: { id: userId } })
+      return profile?.id ?? null
     })
 
-    // Delete user image directory from disk (outside transaction — best-effort cleanup)
-    const userImageDir = path.join(getMediaRoot(), MEDIA_SUBDIR.IMAGES, userId)
+    if (!deletedProfileId) return
+
+    // Delete the profile's image directory from disk (outside transaction — best-effort cleanup).
+    // Image rows cascade with the Profile (ownerProfileId); files live under images/<profileId>.
+    const profileImageDir = path.join(getMediaRoot(), MEDIA_SUBDIR.IMAGES, deletedProfileId)
     try {
-      await fs.promises.rm(userImageDir, { recursive: true, force: true })
+      await fs.promises.rm(profileImageDir, { recursive: true, force: true })
     } catch {
       // Ignore — directory may not exist
     }

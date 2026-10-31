@@ -8,12 +8,10 @@ const { mockTx, mockPrisma, mockUnlink, mockRm } = vi.hoisted(() => {
     },
     likedProfile: { deleteMany: vi.fn() },
     hiddenProfile: { deleteMany: vi.fn() },
-    socialMatchFilter: { deleteMany: vi.fn() },
     conversationParticipant: {
       findMany: vi.fn().mockResolvedValue([{ conversationId: 'c1' }]),
     },
     conversation: { updateMany: vi.fn(), deleteMany: vi.fn() },
-    profileImage: { deleteMany: vi.fn() },
     user: { delete: vi.fn() },
   }
 
@@ -88,15 +86,22 @@ describe('UserService.deleteAccount', () => {
     expect(mockTx.user.delete).toHaveBeenCalledWith({ where: { id: userId } })
   })
 
-  it('removes the user image directory after deletion', async () => {
-    const userId = 'user-123'
-    mockTx.profile.findUnique.mockResolvedValue(null)
+  it('removes the profile image directory after deletion', async () => {
+    mockTx.profile.findUnique.mockResolvedValue({ id: 'profile-123' })
 
-    await service.deleteAccount(userId)
+    await service.deleteAccount('user-123')
 
-    expect(mockRm).toHaveBeenCalledWith('/media/images/user-123', {
+    expect(mockRm).toHaveBeenCalledWith('/media/images/profile-123', {
       recursive: true,
       force: true,
     })
+  })
+
+  it('skips disk cleanup when the user has no profile', async () => {
+    mockTx.profile.findUnique.mockResolvedValue(null)
+
+    await service.deleteAccount('user-no-profile')
+
+    expect(mockRm).not.toHaveBeenCalled()
   })
 })
