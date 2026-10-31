@@ -106,6 +106,48 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
   border-color: #3a86ff;
 }
 
+/* Marker emphasised from the browse grid (card hover) */
+:deep(.leaflet-marker-icon.poi-emphasized) {
+  z-index: 10000 !important;
+}
+
+:deep(.leaflet-marker-icon.poi-emphasized img) {
+  transform: scale(1.3);
+  border-color: var(--bs-primary);
+}
+
+/* "Show on map" from the browse grid: a ring that pulses three times */
+:deep(.leaflet-marker-icon.poi-pulse) {
+  z-index: 10000 !important;
+}
+
+:deep(.leaflet-marker-icon.poi-pulse)::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 3px solid var(--bs-primary);
+  pointer-events: none;
+  animation: poi-pulse-ring 1s ease-out 3;
+}
+
+@keyframes poi-pulse-ring {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :deep(.leaflet-marker-icon.poi-pulse)::after {
+    animation: none;
+  }
+}
+
 :deep(.item-popup-highlighted .leaflet-popup-content-wrapper) {
   /* TODO remove hardcoded color - replace with semantic value */
   box-shadow: 0 3px 13px rgba(217, 83, 79, 0.9);

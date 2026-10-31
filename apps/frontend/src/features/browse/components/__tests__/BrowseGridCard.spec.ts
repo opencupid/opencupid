@@ -57,6 +57,13 @@ describe('BrowseGridCard', () => {
     expect(wrapper.emitted('select')).toHaveLength(2)
   })
 
+  it('emits hover when the pointer enters and leaves', async () => {
+    const wrapper = mount(BrowseGridCard, { props: { item: item('post') } })
+    await wrapper.trigger('mouseenter')
+    await wrapper.trigger('mouseleave')
+    expect(wrapper.emitted('hover')).toEqual([[true], [false]])
+  })
+
   it('emits locate, not select, from the show-on-map button', async () => {
     const wrapper = mount(BrowseGridCard, { props: { item: item('event') } })
     await wrapper.find('.locate-button').trigger('click')
