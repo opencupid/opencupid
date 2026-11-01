@@ -30,8 +30,11 @@ const syncWithCache = () => {
   loaded.value = instant.value
 }
 
+// Reset whenever the <img> source can change: a new image, another variant,
+// or a variant URL updated in place. Watching the inputs rather than the
+// resolved URL keeps ImageTag the only place that picks the variant.
 watch(
-  () => props.image,
+  () => [props.image, props.variant, props.image.variants.map((v) => v.url).join('|')],
   () => nextTick(syncWithCache),
   { immediate: true }
 )
