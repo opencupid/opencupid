@@ -20,14 +20,18 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)
 
 const { canSeePhotosOf } = useProfilePhotoAccess()
-const photosHidden = computed(() => !canSeePhotosOf(props.profile))
+// The carousel has no height without images, which would collapse the photo
+// area (and the edit button positioned over it) when the gallery is empty.
+const showPlaceholder = computed(
+  () => !canSeePhotosOf(props.profile) || props.profile.profileImages.length === 0
+)
 </script>
 
 <template>
   <div class="position-relative">
     <div class="overflow-hidden carousel-wrapper">
       <div
-        v-if="photosHidden"
+        v-if="showPlaceholder"
         class="ratio ratio-4x3"
       >
         <HiddenProfilePhoto

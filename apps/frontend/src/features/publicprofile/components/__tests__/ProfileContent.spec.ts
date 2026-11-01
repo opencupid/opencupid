@@ -74,4 +74,10 @@ describe('ProfileContent photo gating', () => {
     expect(wrapper.find('.carousel-stub').exists()).toBe(false)
     expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
   })
+
+  it('keeps the photo area for a profile without photos even when photos are visible', () => {
+    const own = mountWith(true, makeProfile('me', 0))
+    expect(own.find('.carousel-stub').exists()).toBe(false)
+    expect(own.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
+  })
 })
