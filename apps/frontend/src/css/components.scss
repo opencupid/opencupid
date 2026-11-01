@@ -20,12 +20,12 @@ main {
   display: block !important;
 }
 
-.form-control~.invalid-feedback,
-.is-valid~.invalid-feedback {
+.form-control ~ .invalid-feedback,
+.is-valid ~ .invalid-feedback {
   visibility: hidden;
 }
 
-.is-invalid~.invalid-feedback {
+.is-invalid ~ .invalid-feedback {
   visibility: visible;
 }
 
@@ -273,7 +273,8 @@ main {
   width: 2rem;
   height: 2rem;
 
-  img {
+  img,
+  .profile-image {
     border-radius: 50% !important;
   }
 }

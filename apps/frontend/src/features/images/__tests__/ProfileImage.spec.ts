@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -12,7 +12,9 @@ import ProfileImage from '../components/ProfileImage.vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const ImageTag = {
+  name: 'ImageTag',
   props: ['image', 'className', 'variant'],
+  emits: ['load'],
   template: '<div class="image-tag">{{ image.variants[0].url }}</div>',
 }
 
@@ -122,23 +124,56 @@ describe('ProfileImage', () => {
     expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
   })
 
-  it('shows the blurhash behind the photo while it loads', () => {
-    const profile = {
-      id: 'other',
-      profileImages: [{ blurhash: 'L0', variants: [{ size: 'original', url: '/one.jpg' }] }],
-    }
+  const withBlurhash = {
+    id: 'other',
+    profileImages: [{ blurhash: 'L0', variants: [{ size: 'original', url: '/one.jpg' }] }],
+  }
+
+  it('shows the blurhash behind a transparent photo until it loads, then fades it in', async () => {
     const wrapper = mount(ProfileImage, {
-      props: { profile },
+      props: { profile: withBlurhash },
       global: { stubs: { ImageTag } },
     })
-    expect(wrapper.find('.image-tag').attributes('style')).toContain('data:blur/L0')
+    await flushPromises()
+    const root = wrapper.find('.profile-image')
+    const img = wrapper.find('.image-tag')
+    expect(root.attributes('style')).toContain('data:blur/L0')
+    expect(img.classes()).not.toContain('loaded')
+
+    wrapper.findComponent({ name: 'ImageTag' }).vm.$emit('load')
+    await flushPromises()
+
+    expect(img.classes()).toContain('loaded')
+    expect(img.classes()).not.toContain('instant')
+    // kept so the fade-in blends from the blurhash
+    expect(root.attributes('style')).toContain('data:blur/L0')
+    expect(wrapper.emitted('load')).toHaveLength(1)
   })
 
-  it('sets no background when the photo has no blurhash', () => {
+  it('shows an already-cached photo at once, without the fade', async () => {
+    const CachedImageTag = {
+      ...ImageTag,
+      mounted(this: any) {
+        Object.defineProperty(this.$el, 'complete', { value: true })
+        Object.defineProperty(this.$el, 'naturalWidth', { value: 100 })
+      },
+    }
+    const wrapper = mount(ProfileImage, {
+      props: { profile: withBlurhash },
+      global: { stubs: { ImageTag: CachedImageTag } },
+    })
+    await flushPromises()
+    const img = wrapper.find('.image-tag')
+    expect(img.classes()).toContain('loaded')
+    expect(img.classes()).toContain('instant')
+  })
+
+  it('sets no background when the photo has no blurhash', async () => {
     const wrapper = mount(ProfileImage, {
       props: { profile: makeProfile('/one.jpg') },
       global: { stubs: { ImageTag } },
     })
-    expect(wrapper.find('.image-tag').attributes('style')).toBeUndefined()
+    await flushPromises()
+    expect(wrapper.find('.profile-image').attributes('style')).toBeUndefined()
   })
 })

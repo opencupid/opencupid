@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch, type ComponentPublicInstance } from 'vue'
 
 import ImageTag from './ImageTag.vue'
 import HiddenProfilePhoto from './HiddenProfilePhoto.vue'
@@ -24,14 +24,31 @@ const image = computed(() => props.profile.profileImages[0])
 const { canSeePhotosOf } = useProfilePhotoAccess()
 const isHidden = computed(() => !canSeePhotosOf(props.profile))
 
-// Show the blurhash behind the photo while it loads (same technique as the
-// map pins and ImageCarousel); the loaded image paints over it.
-const blurhashStyle = computed(() =>
+// The photo stays transparent until it has loaded, with its blurhash showing
+// on the wrapper behind it; it then fades in. An image already in the browser
+// cache (complete on mount) is shown at once, without the fade.
+const imgTag = ref<ComponentPublicInstance | null>(null)
+const loaded = ref(false)
+const instant = ref(false)
+
+const syncWithCache = () => {
+  const el = imgTag.value?.$el as HTMLImageElement | undefined
+  instant.value = !!el?.complete && el.naturalWidth > 0
+  loaded.value = instant.value
+}
+
+watch(image, () => nextTick(syncWithCache), { immediate: true })
+
+const handleLoad = () => {
+  loaded.value = true
+  emit('load')
+}
+
+// Kept after load so the fade-in blends from the blurhash. The wrapper is
+// rounded like the photo (see .profile-thumbnail), so it can't peek out.
+const wrapperStyle = computed(() =>
   image.value?.blurhash
-    ? {
-        backgroundImage: `url(${blurhashToDataUrl(image.value.blurhash)})`,
-        backgroundSize: 'cover',
-      }
+    ? { backgroundImage: `url(${blurhashToDataUrl(image.value.blurhash)})` }
     : undefined
 )
 </script>
@@ -43,12 +60,38 @@ const blurhashStyle = computed(() =>
     className="img-fluid rounded"
     @load="emit('load')"
   />
-  <ImageTag
+  <div
     v-else-if="image"
-    :image="image"
-    className="img-fluid rounded"
-    :variant="props.variant"
-    :style="blurhashStyle"
-    @load="emit('load')"
-  />
+    class="profile-image rounded"
+    :style="wrapperStyle"
+  >
+    <ImageTag
+      ref="imgTag"
+      :image="image"
+      className="img-fluid rounded"
+      :class="['profile-image-photo', { loaded, instant }]"
+      :variant="props.variant"
+      @load="handleLoad"
+    />
+  </div>
 </template>
+
+<style scoped>
+.profile-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+}
+.profile-image-photo {
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+.profile-image-photo.loaded {
+  opacity: 1;
+}
+.profile-image-photo.instant {
+  transition: none;
+}
+</style>
