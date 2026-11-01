@@ -599,6 +599,23 @@ describe('OsmPoiMap', () => {
       expect(markerInstance.setIcon).not.toHaveBeenCalled()
       expect((L.marker as any).mock.calls.length).toBe(1)
     })
+
+    it('re-renders existing POI icons when the iconResolver changes', async () => {
+      // The resolver can depend on viewer state (e.g. photo access), so a new
+      // resolver must reach markers already on the map without recreating them.
+      const wrapper = await mountMap({ items: [items[0], items[1]] })
+      await flushPromises()
+      // setIcon is one spy shared by every mock marker (see markerProto).
+      const setIcon = (L.marker as any).mock.results[0].value.setIcon
+
+      const HiddenIcon = () => '<div class="hidden-avatar"></div>'
+      await wrapper.setProps({ iconResolver: () => HiddenIcon })
+      await flushPromises()
+
+      expect(setIcon).toHaveBeenCalledTimes(2)
+      for (const [icon] of setIcon.mock.calls) expect(icon.html).toContain('hidden-avatar')
+      expect((L.marker as any).mock.calls.length).toBe(2)
+    })
   })
 
   describe('updateClusterMarkers', () => {

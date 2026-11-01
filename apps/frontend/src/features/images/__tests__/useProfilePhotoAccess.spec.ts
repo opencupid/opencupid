@@ -27,4 +27,13 @@ describe('useProfilePhotoAccess', () => {
   it('denies when the owner profile is not loaded', () => {
     expect(useProfilePhotoAccess().canSeePhotosOf({ id: 'other' })).toBe(false)
   })
+
+  it('exposes a reactive canSeeOthersPhotos that follows hasFace', () => {
+    const store = useOwnerProfileStore()
+    store.profile = { id: 'me', hasFace: false } as any
+    const { canSeeOthersPhotos } = useProfilePhotoAccess()
+    expect(canSeeOthersPhotos.value).toBe(false)
+    store.profile!.hasFace = true
+    expect(canSeeOthersPhotos.value).toBe(true)
+  })
 })

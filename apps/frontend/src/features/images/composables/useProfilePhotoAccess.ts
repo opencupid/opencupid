@@ -1,3 +1,4 @@
+import { computed } from 'vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 /**
@@ -5,15 +6,17 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
  * see other profiles' photos; they get a placeholder instead. Their own photos
  * are always visible to them.
  *
- * Reactive: call `canSeePhotosOf` inside a computed or template.
+ * Reactive: call `canSeePhotosOf` inside a computed or template, or depend on
+ * `canSeeOthersPhotos` when the access check runs outside a reactive context
+ * (e.g. a function handed to a non-Vue renderer).
  */
 export function useProfilePhotoAccess() {
   const ownerProfileStore = useOwnerProfileStore()
 
-  const canSeePhotosOf = (profile: { id: string }): boolean => {
-    const viewer = ownerProfileStore.profile
-    return viewer?.hasFace === true || viewer?.id === profile.id
-  }
+  const canSeeOthersPhotos = computed(() => ownerProfileStore.profile?.hasFace === true)
 
-  return { canSeePhotosOf }
+  const canSeePhotosOf = (profile: { id: string }): boolean =>
+    canSeeOthersPhotos.value || ownerProfileStore.profile?.id === profile.id
+
+  return { canSeeOthersPhotos, canSeePhotosOf }
 }

@@ -99,12 +99,17 @@ function onLocationSet(point: GeoPoint) {
 // Per-kind dispatch for marker icons and popup components. The discriminator
 // is `poi.kind` from the cluster service's PointFeature; profiles fall through
 // the default branch.
-const { canSeePhotosOf } = useProfilePhotoAccess()
-const iconResolver = computed(() => (poi: MapPoi) => {
-  if (poi.kind === 'post') return renderPostMapIconHtml
-  if (poi.kind === 'event') return renderEventMapIconHtml
-  if (poi.kind === 'community') return renderCommunityMapIconHtml
-  return canSeePhotosOf(poi) ? renderProfileMarkerHtml : renderHiddenProfileMarkerHtml
+const { canSeeOthersPhotos, canSeePhotosOf } = useProfilePhotoAccess()
+// Reading canSeeOthersPhotos here makes the resolver change identity when the
+// viewer's hasFace flips, which tells the map to re-render existing markers.
+const iconResolver = computed(() => {
+  void canSeeOthersPhotos.value
+  return (poi: MapPoi) => {
+    if (poi.kind === 'post') return renderPostMapIconHtml
+    if (poi.kind === 'event') return renderEventMapIconHtml
+    if (poi.kind === 'community') return renderCommunityMapIconHtml
+    return canSeePhotosOf(poi) ? renderProfileMarkerHtml : renderHiddenProfileMarkerHtml
+  }
 })
 
 const popupResolver = computed(() => (poi: MapPoi) => {
