@@ -3,11 +3,12 @@ import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('../image/ImageTag.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('@/features/images/components/BlurhashCanvas.vue', () => ({
-  default: { template: '<canvas class="blurhash-stub" />', props: ['blurhash'] },
-}))
-vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
-  blurhashToDataUrl: (hash: string) => `data:image/png;base64,mock-${hash}`,
+vi.mock('@/features/images/components/BlurhashImage.vue', () => ({
+  default: {
+    name: 'BlurhashImage',
+    template: '<div class="blurhash-image-stub" />',
+    props: ['image', 'variant', 'imgClass'],
+  },
 }))
 vi.mock('vue3-carousel', () => ({
   Carousel: {
@@ -74,43 +75,15 @@ describe('ImageCarousel', () => {
     expect(vm.inlineSlide).toBe(0)
   })
 
-  it('sets background-image on fullscreen slide when blurhash is present', () => {
-    const wrapper = mountCarousel(makeImages(2, true))
-    const modalSlides = wrapper.findAll('.modal-stub .slide')
-    expect(modalSlides.length).toBeGreaterThan(0)
-    const slideDiv = modalSlides[0]!.find('div[style]')
-    expect(slideDiv.exists()).toBe(true)
-    expect(slideDiv.attributes('style')).toContain('background-image')
-    expect(slideDiv.attributes('style')).toContain('data:image/png')
-  })
-
-  it('does not set background-image when blurhash is null', () => {
-    const wrapper = mountCarousel(makeImages(2, false))
-    const modalSlides = wrapper.findAll('.modal-stub .slide')
-    expect(modalSlides.length).toBeGreaterThan(0)
-    const innerDivs = modalSlides[0]!.findAll('div')
-    const hasBackgroundImage = innerDivs.some((d) =>
-      d.attributes('style')?.includes('background-image')
-    )
-    expect(hasBackgroundImage).toBe(false)
-  })
-
-  it('shows blurhash overlay before image loads', () => {
-    const wrapper = mountCarousel(makeImages(2, true))
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
-  })
-
-  it('hides blurhash overlay after current image loads', async () => {
-    const wrapper = mountCarousel(makeImages(2, true))
-    const vm = wrapper.vm as any
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
-    vm.handleImageLoad(0)
-    await wrapper.vm.$nextTick()
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
-  })
-
-  it('does not show blurhash overlay when hash is null', () => {
-    const wrapper = mountCarousel(makeImages(2, false))
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
+  it('renders inline and fullscreen slides through BlurhashImage', () => {
+    const images = makeImages(2, true)
+    const wrapper = mountCarousel(images)
+    const all = wrapper.findAllComponents({ name: 'BlurhashImage' })
+    const inline = all.filter((c) => c.props('variant') === 'profile')
+    const full = all.filter((c) => c.props('variant') === 'full')
+    expect(inline).toHaveLength(2)
+    expect(full).toHaveLength(2)
+    expect(inline[0]!.props('image')).toEqual(images[0])
+    expect(full[1]!.props('image')).toEqual(images[1])
   })
 })

@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/features/images/components/ProfileImage.vue', () => ({
   default: {
@@ -8,12 +8,6 @@ vi.mock('@/features/images/components/ProfileImage.vue', () => ({
     template: '<div class="profile-image-stub" />',
     props: ['profile', 'variant', 'className'],
     emits: ['load'],
-  },
-}))
-vi.mock('@/features/images/components/BlurhashCanvas.vue', () => ({
-  default: {
-    template: '<canvas class="blurhash-stub" />',
-    props: ['blurhash'],
   },
 }))
 vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({
@@ -27,14 +21,7 @@ vi.mock('@/features/shared/profiledisplay/LocationLabel.vue', () => ({
   },
 }))
 
-import { createPinia, setActivePinia } from 'pinia'
 import ProfileCardComponent from '../ProfileCardComponent.vue'
-import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
-
-// Access the module-level loadedUrls set so we can seed / clear it between tests
-const getLoadedUrls = (): Set<string> => {
-  return (ProfileCardComponent as any).__test_loadedUrls
-}
 
 const makeProfile = (blurhash: string | null = null, location: any = null) => ({
   id: '1',
@@ -79,59 +66,11 @@ const mountCard = (
   })
 
 describe('ProfileCardComponent', () => {
-  beforeEach(() => {
-    getLoadedUrls()?.clear()
-    setActivePinia(createPinia())
-    useOwnerProfileStore().profile = { id: 'viewer-1', hasFace: true } as any
-  })
-
-  it('shows blurhash placeholder when hash is present', () => {
+  it('renders the profile photo via ProfileImage (card variant)', () => {
     const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
-  })
-
-  it('does not render blurhash when the viewer may not see photos', () => {
-    useOwnerProfileStore().profile = { id: 'viewer-1', hasFace: false } as any
-    const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
-  })
-
-  it('does not render blurhash when hash is null', () => {
-    const wrapper = mountCard(null)
-    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
-  })
-
-  it('image starts hidden and fades in after load', async () => {
-    const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
-
-    expect(profileImage.classes()).toContain('card-image')
-    expect(profileImage.classes()).not.toContain('card-image-loaded')
-
-    await profileImage.vm.$emit('load')
-    await wrapper.vm.$nextTick()
-
-    expect(profileImage.classes()).toContain('card-image-loaded')
-  })
-
-  it('skips fade transition when image URL is already cached', () => {
-    getLoadedUrls().add('/img0')
-
-    const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
-
-    expect(profileImage.classes()).toContain('card-image-loaded')
-    expect(profileImage.classes()).toContain('card-image-cached')
-  })
-
-  it('populates the cache after image loads', async () => {
-    const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
-
-    const profileImage = wrapper.findComponent({ name: 'ProfileImage' })
-    await profileImage.vm.$emit('load')
-    await wrapper.vm.$nextTick()
-
-    expect(getLoadedUrls().has('/img0')).toBe(true)
+    const img = wrapper.findComponent({ name: 'ProfileImage' })
+    expect(img.exists()).toBe(true)
+    expect(img.props('variant')).toBe('card')
   })
 
   it('emits click with profile id on card click', async () => {

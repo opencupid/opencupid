@@ -22,7 +22,6 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
     <div class="ratio ratio-1x1">
       <ProfileImage
         :profile="item"
-        className=""
         variant="card"
       />
     </div>

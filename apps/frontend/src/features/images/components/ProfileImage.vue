@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import ImageTag from './ImageTag.vue'
+import BlurhashImage from './BlurhashImage.vue'
 import HiddenProfilePhoto from './HiddenProfilePhoto.vue'
 import { type ImageVariant } from '@zod/image/image.dto'
 import { type VariantName } from './types'
@@ -22,6 +22,11 @@ const image = computed(() => props.profile.profileImages[0])
 
 const { canSeePhotosOf } = useProfilePhotoAccess()
 const isHidden = computed(() => !canSeePhotosOf(props.profile))
+
+// The photo's wrapper carries .profile-image and is rounded like the photo
+// (see .profile-thumbnail), so the blurhash behind it can't peek out around
+// rounded corners. Keep the template free of comments: they would turn the
+// root into a fragment and stop attrs (e.g. classes) falling through.
 </script>
 
 <template>
@@ -31,11 +36,12 @@ const isHidden = computed(() => !canSeePhotosOf(props.profile))
     className="img-fluid rounded"
     @load="emit('load')"
   />
-  <ImageTag
+  <BlurhashImage
     v-else-if="image"
+    class="profile-image rounded"
     :image="image"
-    className="img-fluid rounded"
     :variant="props.variant"
+    imgClass="img-fluid rounded"
     @load="emit('load')"
   />
 </template>

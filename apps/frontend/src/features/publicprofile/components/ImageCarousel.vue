@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { shallowRef, reactive, computed, watch } from 'vue'
+import { shallowRef, computed, watch } from 'vue'
 
 import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel'
 import 'vue3-carousel/dist/carousel.css'
@@ -8,9 +8,7 @@ import type { OwnerImage, PublicImage } from '@zod/image/image.dto'
 import IconCross from '@/assets/icons/interface/cross.svg'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import ChevronRightIcon from '@/assets/icons/arrows/arrow-single-right.svg'
-import ImageTag from '@/features/images/components/ImageTag.vue'
-import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
-import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
+import BlurhashImage from '@/features/images/components/BlurhashImage.vue'
 
 const props = defineProps<{
   images: ReadonlyArray<OwnerImage | PublicImage>
@@ -18,12 +16,6 @@ const props = defineProps<{
 
 const showFullscreen = shallowRef(false)
 const inlineSlide = shallowRef(0)
-
-const loadedImages = reactive<Record<number, boolean>>({})
-
-const handleImageLoad = (position: number) => {
-  loadedImages[position] = true
-}
 
 const handleImageClick = () => {
   showFullscreen.value = true
@@ -38,29 +30,18 @@ const carouselProps = {
   mouseWheel: false,
 } as const
 
-const currentImage = computed(() => props.images[inlineSlide.value])
-const showBlurhash = computed(
-  () => currentImage.value?.blurhash && !loadedImages[currentImage.value.position]
-)
-
 const shouldShowNavButtons = computed(() => props.images.length > 1)
 
 watch(
   () => props.images,
   () => {
     inlineSlide.value = 0
-    Object.keys(loadedImages).forEach((key) => delete loadedImages[Number(key)])
   }
 )
 </script>
 
 <template>
   <div class="image-carousel h-100">
-    <BlurhashCanvas
-      v-if="showBlurhash"
-      :blurhash="currentImage!.blurhash!"
-      class="blurhash-overlay"
-    />
     <Carousel
       v-model="inlineSlide"
       v-show="!showFullscreen"
@@ -73,11 +54,10 @@ watch(
         @click="handleImageClick"
       >
         <div class="ratio ratio-4x3">
-          <ImageTag
+          <BlurhashImage
             :image="img"
-            className="fitted-image"
             variant="profile"
-            @load="handleImageLoad(img.position)"
+            imgClass="fitted-image"
           />
         </div>
       </Slide>
@@ -123,24 +103,11 @@ watch(
           class="bg-black"
           @click="showFullscreen = false"
         >
-          <div
-            class="w-100 h-100 d-flex justify-content-center align-items-center overflow-hidden"
-            :style="
-              img.blurhash
-                ? {
-                    backgroundImage: `url(${blurhashToDataUrl(img.blurhash)})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }
-                : undefined
-            "
-          >
-            <ImageTag
-              :image="img"
-              className="fitted-image"
-              variant="full"
-            />
-          </div>
+          <BlurhashImage
+            :image="img"
+            variant="full"
+            imgClass="fitted-image"
+          />
         </Slide>
 
         <template #addons>
@@ -270,12 +237,5 @@ watch(
   to {
     opacity: 1;
   }
-}
-
-.blurhash-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
 }
 </style>
