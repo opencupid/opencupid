@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
@@ -46,7 +46,23 @@ const { onboardingWizardSteps } = useWizardSteps(formData.value, datingPrefs.val
 const { current, index, stepNames, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
   useStepper(onboardingWizardSteps)
 
+const tagStore = useTagsStore()
+const appStore = useAppStore()
+const profileImageStore = useProfileImageStore()
+
+// Continuing past the photos step without a photo needs an explicit confirmation.
+const noPhotoWarningShown = ref(false)
+const showNoPhotoWarning = computed(
+  () => noPhotoWarningShown.value && isCurrent('photos') && profileImageStore.images.length === 0
+)
+
 const handleNext = () => {
+  if (isCurrent('photos') && profileImageStore.images.length === 0 && !noPhotoWarningShown.value) {
+    noPhotoWarningShown.value = true
+    return
+  }
+  noPhotoWarningShown.value = false
+
   if (current.value.flags === 'stage_one_end') {
     if (!formData.value.isDatingActive) {
       goTo('confirm')
@@ -70,10 +86,6 @@ const handleSubmit = () => {
     handleNext()
   }
 }
-
-const tagStore = useTagsStore()
-const appStore = useAppStore()
-const profileImageStore = useProfileImageStore()
 
 const handleLocationSelected = async (location: { country: string }) => {
   await tagStore.fetchPopularTags({
@@ -218,6 +230,35 @@ const siteName = __APP_CONFIG__.SITE_NAME
               :store="profileImageStore"
               :minImages="1"
             />
+            <div
+              v-if="showNoPhotoWarning"
+              class="alert alert-warning mt-3 text-center"
+              role="alert"
+              data-testid="no-photo-warning"
+            >
+              <p class="mb-2">
+                <!-- Without a photo you will not be able to see others' photos. -->
+                {{ t('onboarding.photos_missing_warning') }}
+              </p>
+              <div class="d-flex flex-wrap justify-content-center gap-2">
+                <BButton
+                  variant="primary"
+                  pill
+                  data-testid="no-photo-add"
+                  @click="noPhotoWarningShown = false"
+                >
+                  {{ t('onboarding.photos_missing_add') }}
+                </BButton>
+                <BButton
+                  variant="outline-secondary"
+                  pill
+                  data-testid="no-photo-continue"
+                  @click="handleNext"
+                >
+                  {{ t('onboarding.photos_missing_continue') }}
+                </BButton>
+              </div>
+            </div>
           </fieldset>
 
           <fieldset v-else-if="isCurrent('dating_mode')">
@@ -265,7 +306,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
           <BButton
             @click="handleNext"
             :disabled="!current.state"
-            v-if="!isLast"
+            v-if="!isLast && !showNoPhotoWarning"
             variant="primary"
             size="lg"
             class="px-md-5"

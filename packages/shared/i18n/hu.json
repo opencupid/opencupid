@@ -287,6 +287,9 @@
     "languages_title": "Nyelvek",
     "location_hint": "Kezdd el beírni a városod vagy falvad nevét, majd válaszd ki a listából.",
     "location_title": "Hol laksz?",
+    "photos_missing_add": "Fénykép hozzáadása",
+    "photos_missing_continue": "Folytatás fénykép nélkül",
+    "photos_missing_warning": "Fénykép nélkül nem fogod látni mások fényképeit.",
     "photos_title": "Képeim",
     "relationship_title": "Családi helyzetem",
     "social_intro_hint": "Mit érdemes rólam tudni? Kit, mit keresek? (Később is bármikor kitöltheted.)",
@@ -424,6 +427,7 @@
       "try_another": "Válassz másik képet"
     },
     "more_options_button_title": "További lehetőségek",
+    "photo_hidden": "Tölts fel magadról egy fényképet, hogy lásd mások fényképeit",
     "profile_not_found": "Nincs ilyen profil",
     "pronouns_edit_label": "névmások"
   },

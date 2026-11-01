@@ -2,6 +2,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { api } from '@/lib/api'
 import { useProfileImageStore } from '../stores/profileImageStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -45,6 +46,19 @@ describe('useProfileImageStore', () => {
     expect((api.post as any).mock.calls[0][1]).toBeInstanceOf(FormData)
     expect((api.post as any).mock.calls[1]).toEqual(['/image/me/attach', { imageId: CREATED.id }])
     expect(store.images).toHaveLength(1)
+  })
+
+  it('upload() refreshes the owner profile hasFace flag', async () => {
+    ;(api.post as any)
+      .mockResolvedValueOnce({ data: { success: true, image: CREATED } })
+      .mockResolvedValueOnce({ data: { success: true, images: [CREATED] } })
+    const ownerStore = useOwnerProfileStore()
+    const refresh = vi.spyOn(ownerStore, 'refreshHasFace').mockResolvedValue({ success: true })
+
+    const store = useProfileImageStore()
+    await store.upload(new File(['x'], 'x.jpg', { type: 'image/jpeg' }), 'cap')
+
+    expect(refresh).toHaveBeenCalledOnce()
   })
 
   it('upload() compensates with DELETE /image/:id when attach fails', async () => {

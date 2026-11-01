@@ -99,6 +99,21 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
       }
     },
 
+    /**
+     * Re-read the server-derived `hasFace` flag after the profile gallery changed.
+     * Patches only that field so in-progress edits on `profile` are kept.
+     */
+    async refreshHasFace(): Promise<StoreVoidSuccess | StoreError> {
+      try {
+        const res = await safeApiCall(() => api.get<GetMyProfileResponse>('/profiles/me'))
+        const fetched = OwnerProfileSchema.parse(res.data.profile)
+        if (this.profile) this.profile.hasFace = fetched.hasFace
+        return storeSuccess()
+      } catch (error: any) {
+        return storeError(error, 'Failed to refresh profile')
+      }
+    },
+
     // Create the current user's profile (onboarding)
     async createOwnerProfile(
       profileData: CreateProfileForm

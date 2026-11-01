@@ -4,6 +4,8 @@ import { computed, inject, type Ref } from 'vue'
 import { type OwnerProfile, type PublicProfile } from '@zod/profile/profile.dto'
 
 import ImageCarousel from './ImageCarousel.vue'
+import HiddenProfilePhoto from '@/features/images/components/HiddenProfilePhoto.vue'
+import { useProfilePhotoAccess } from '@/features/images/composables/useProfilePhotoAccess'
 import GenderPronounLabel from '@/features/shared/profiledisplay/GenderPronounLabel.vue'
 import RelationshipTags from '@/features/shared/profiledisplay/RelationshipTags.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
@@ -16,12 +18,26 @@ const props = defineProps<{
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)
+
+const { canSeePhotosOf } = useProfilePhotoAccess()
+const photosHidden = computed(
+  () => props.profile.profileImages.length > 0 && !canSeePhotosOf(props.profile)
+)
 </script>
 
 <template>
   <div class="position-relative">
     <div class="overflow-hidden carousel-wrapper">
-      <ImageCarousel :images="profile.profileImages" />
+      <div
+        v-if="photosHidden"
+        class="ratio ratio-4x3"
+      >
+        <HiddenProfilePhoto />
+      </div>
+      <ImageCarousel
+        v-else
+        :images="profile.profileImages"
+      />
     </div>
 
     <div class="icons">

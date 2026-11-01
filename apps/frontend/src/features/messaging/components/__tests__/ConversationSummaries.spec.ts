@@ -1,6 +1,11 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+
+beforeEach(() => {
+  setActivePinia(createPinia())
+})
 import ConversationSummaries from '../ConversationSummaries.vue'
 import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 

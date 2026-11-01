@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 
 beforeEach(() => {
+  setActivePinia(createPinia())
   ;(window as any).__APP_I18N__ = {
     global: { t: (k: string) => k },
   }
