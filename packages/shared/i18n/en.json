@@ -283,6 +283,12 @@
     "languages_title": "I speak...",
     "location_hint": "Start typing your city or village, and select from the list.",
     "location_title": "I'm from...",
+    "photos_missing_add": "Add a photo",
+    "photos_missing_continue": "Continue without a photo",
+    "photos_missing_warning": "Without a photo you will not be able to see others' photos.",
+    "photos_no_face_add": "Change photos",
+    "photos_no_face_continue": "Continue anyway",
+    "photos_no_face_warning": "We couldn't find a face in your first photo. Without a photo of your face in first place you will not be able to see others' photos. Add one and drag it to the front.",
     "photos_title": "I look like...",
     "relationship_title": "I am...",
     "social_intro_hint": "Leave this empty if you want to fill this in later.",
@@ -420,6 +426,8 @@
       "try_another": "Choose a different photo"
     },
     "more_options_button_title": "More options",
+    "photo_hidden": "Add a photo of yourself to see photos of others",
+    "photo_hidden_no_face": "You're not seeing this photo because your profile has no photo showing your face.",
     "profile_not_found": "Profile not found",
     "pronouns_edit_label": "pronouns"
   },

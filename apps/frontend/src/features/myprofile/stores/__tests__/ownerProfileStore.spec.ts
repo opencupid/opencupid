@@ -78,3 +78,63 @@ describe('ownerProfileStore opt-in settings', () => {
     })
   })
 })
+
+describe('ownerProfileStore.refreshHasFace', () => {
+  const ownerProfilePayload = (hasFace: boolean) => ({
+    id: 'ckabcdefghijklmnopqrstuvw',
+    publicName: 'Me',
+    languages: ['en'],
+    isDatingActive: false,
+    isSocialActive: true,
+    isActive: true,
+    isOnboarded: true,
+    isCallable: true,
+    hasKids: null,
+    relationship: null,
+    gender: null,
+    birthday: null,
+    pronouns: null,
+    hasFace,
+    introSocialLocalized: {},
+    introDatingLocalized: {},
+    profileImages: [],
+    tags: [],
+    location: { country: 'HU', cityName: 'Budapest', lat: 47.5, lon: 19.04 },
+  })
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    get.mockReset()
+  })
+
+  it('patches only hasFace on the loaded profile', async () => {
+    const store = useOwnerProfileStore()
+    const profile = { ...ownerProfilePayload(false), publicName: 'Unsaved edit' } as any
+    store.profile = profile
+    get.mockResolvedValue({ data: { profile: ownerProfilePayload(true) } })
+
+    const res = await store.refreshHasFace()
+
+    expect(res.success).toBe(true)
+    expect(get).toHaveBeenCalledWith('/profiles/me')
+    expect(store.profile?.hasFace).toBe(true)
+    expect(store.profile?.publicName).toBe('Unsaved edit')
+  })
+
+  it('ignores a refresh response that resolves after a newer one', async () => {
+    const store = useOwnerProfileStore()
+    store.profile = ownerProfilePayload(false) as any
+
+    let resolveOld!: (v: unknown) => void
+    get
+      .mockImplementationOnce(() => new Promise((r) => (resolveOld = r)))
+      .mockResolvedValueOnce({ data: { profile: ownerProfilePayload(true) } })
+
+    const older = store.refreshHasFace()
+    await store.refreshHasFace()
+    resolveOld({ data: { profile: ownerProfilePayload(false) } })
+    await older
+
+    expect(store.profile?.hasFace).toBe(true)
+  })
+})

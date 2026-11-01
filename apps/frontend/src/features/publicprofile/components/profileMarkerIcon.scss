@@ -12,6 +12,10 @@
   background-size: cover;
 }
 
+.poi-avatar-hidden {
+  background-color: var(--bs-secondary-bg);
+}
+
 .poi-avatar.highlighted {
   box-shadow: 0 0 6px 3px rgba(217, 83, 79, 0.7);
   filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));

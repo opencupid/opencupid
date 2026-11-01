@@ -63,8 +63,13 @@ vi.mock('../../components/NearbyFeatures.vue', () => ({
     emits: ['item:select'],
   },
 }))
+const { renderProfileMarkerHtml, renderHiddenProfileMarkerHtml } = vi.hoisted(() => ({
+  renderProfileMarkerHtml: () => '<div class="photo" />',
+  renderHiddenProfileMarkerHtml: () => '<div class="hidden-photo" />',
+}))
 vi.mock('@/features/publicprofile/components/profileMarkerIcon', () => ({
-  renderProfileMarkerHtml: () => '<div />',
+  renderProfileMarkerHtml,
+  renderHiddenProfileMarkerHtml,
 }))
 vi.mock('@/features/posts/components/postMapIcon', () => ({
   renderPostMapIconHtml: () => '<div />',
@@ -163,10 +168,11 @@ vi.mock('@/features/app/composables/useNotificationState', () => ({
     hasMatchNotifications: ref(false),
   }),
 }))
+const ownerProfileState = vi.hoisted(() => ({
+  profile: { id: 'me', publicName: 'Test', profileImages: [], hasFace: true },
+}))
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
-  useOwnerProfileStore: () => ({
-    profile: { publicName: 'Test', profileImages: [] },
-  }),
+  useOwnerProfileStore: () => ownerProfileState,
 }))
 vi.mock('@/assets/icons/interface/message.svg', () => ({
   default: { template: '<svg class="icon-message" />' },
@@ -249,6 +255,20 @@ describe('BrowseProfiles view', () => {
   it('renders map view with OsmPoiMap', () => {
     const wrapper = mountComponent()
     expect(wrapper.find('.osm-poi-map').exists()).toBe(true)
+  })
+
+  it('uses the photo marker for profiles when the viewer has a face photo', () => {
+    ownerProfileState.profile.hasFace = true
+    const resolve = mountComponent().findComponent({ name: 'OsmPoiMap' }).props('iconResolver')
+    expect(resolve({ kind: 'profile', id: 'other' })).toBe(renderProfileMarkerHtml)
+  })
+
+  it('uses the hidden-photo marker for other profiles when the viewer has no face photo', () => {
+    ownerProfileState.profile.hasFace = false
+    const resolve = mountComponent().findComponent({ name: 'OsmPoiMap' }).props('iconResolver')
+    expect(resolve({ kind: 'profile', id: 'other' })).toBe(renderHiddenProfileMarkerHtml)
+    expect(resolve({ kind: 'profile', id: 'me' })).toBe(renderProfileMarkerHtml)
+    ownerProfileState.profile.hasFace = true
   })
 
   it('renders SearchBar', () => {

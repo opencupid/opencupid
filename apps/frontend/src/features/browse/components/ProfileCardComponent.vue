@@ -8,6 +8,7 @@ import { computed, inject, ref, type Ref } from 'vue'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import BlurhashCanvas from '@/features/images/components/BlurhashCanvas.vue'
+import { useProfilePhotoAccess } from '@/features/images/composables/useProfilePhotoAccess'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 
@@ -29,7 +30,10 @@ const handleImageLoad = () => {
   if (primaryUrl) loadedUrls.add(primaryUrl)
 }
 
-const primaryBlurhash = ref(props.profile.profileImages?.[0]?.blurhash ?? null)
+const { canSeePhotosOf } = useProfilePhotoAccess()
+const primaryBlurhash = computed(() =>
+  canSeePhotosOf(props.profile) ? (props.profile.profileImages?.[0]?.blurhash ?? null) : null
+)
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)

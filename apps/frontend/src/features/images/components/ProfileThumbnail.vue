@@ -5,6 +5,7 @@ import ProfileImage from './ProfileImage.vue'
 // Props & Emits
 defineProps<{
   profile: {
+    id: string
     profileImages: { variants: ImageVariant[] }[]
   }
 }>()

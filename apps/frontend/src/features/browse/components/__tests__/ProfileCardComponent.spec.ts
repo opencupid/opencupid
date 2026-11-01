@@ -27,7 +27,9 @@ vi.mock('@/features/shared/profiledisplay/LocationLabel.vue', () => ({
   },
 }))
 
+import { createPinia, setActivePinia } from 'pinia'
 import ProfileCardComponent from '../ProfileCardComponent.vue'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 // Access the module-level loadedUrls set so we can seed / clear it between tests
 const getLoadedUrls = (): Set<string> => {
@@ -79,11 +81,19 @@ const mountCard = (
 describe('ProfileCardComponent', () => {
   beforeEach(() => {
     getLoadedUrls()?.clear()
+    setActivePinia(createPinia())
+    useOwnerProfileStore().profile = { id: 'viewer-1', hasFace: true } as any
   })
 
   it('shows blurhash placeholder when hash is present', () => {
     const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
     expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
+  })
+
+  it('does not render blurhash when the viewer may not see photos', () => {
+    useOwnerProfileStore().profile = { id: 'viewer-1', hasFace: false } as any
+    const wrapper = mountCard('LEHV6nWB2yk8pyo0adR*.7kCMdnj')
+    expect(wrapper.find('.blurhash-stub').exists()).toBe(false)
   })
 
   it('does not render blurhash when hash is null', () => {

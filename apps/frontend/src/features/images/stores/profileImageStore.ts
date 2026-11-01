@@ -11,6 +11,11 @@ import {
 import { storeSuccess, storeError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
 import type { GalleryStoreResponse } from './galleryStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+
+// Profile.hasFace is derived server-side from the top gallery image, so any
+// gallery change may flip it.
+const refreshHasFace = () => useOwnerProfileStore().refreshHasFace()
 
 export const useProfileImageStore = defineStore('profileImage', {
   state: () => ({
@@ -37,6 +42,7 @@ export const useProfileImageStore = defineStore('profileImage', {
         )
         const { images } = ImageApiResponseSchema.parse(attachData)
         this.images = images
+        await refreshHasFace()
         return storeSuccess()
       } catch (err: unknown) {
         if (createdId) {
@@ -60,6 +66,7 @@ export const useProfileImageStore = defineStore('profileImage', {
         const { data } = await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
         const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
+        await refreshHasFace()
         return storeSuccess()
       } catch (err) {
         return storeError(err, 'Failed to delete image')
@@ -76,6 +83,7 @@ export const useProfileImageStore = defineStore('profileImage', {
         )
         const { images } = ImageApiResponseSchema.parse(data)
         this.images = images
+        await refreshHasFace()
         return storeSuccess()
       } catch (err) {
         this.images = []

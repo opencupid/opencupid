@@ -1,4 +1,3 @@
-import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
 import { type EditProfileForm, EditProfileFormSchema } from '@zod/profile/profile.form'
 import { type DatingPreferencesFormType } from '@zod/match/filters.form'
 import { isDatingPreferencesValid } from '@zod/match/filters.form'
@@ -15,8 +14,6 @@ export const useWizardSteps = (
   formData: EditProfileForm,
   datingPrefs?: DatingPreferencesFormType
 ) => {
-  const imageStore = useProfileImageStore()
-
   const socialSteps = {
     publicname: {
       state: computed(() => isPublicNameValid(formData.publicName)),
@@ -41,7 +38,8 @@ export const useWizardSteps = (
       flags: '',
     },
     photos: {
-      state: computed(() => imageStore.images.length >= 1),
+      // Optional: OnboardWizard warns before continuing without a photo.
+      state: () => true,
       flags: '',
     },
     dating_mode: {

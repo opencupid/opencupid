@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { type EditProfileForm } from '@zod/profile/profile.form'
@@ -9,7 +9,9 @@ import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue
 import TagExplorer from '@/features/shared/components/TagExplorer.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
+import PhotoFaceWarning from '@/features/images/components/PhotoFaceWarning.vue'
 import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import DatingSteps from '../components/DatingSteps.vue'
 import LocationSelectorComponent from '@/features/shared/profileform/LocationSelector.vue'
 import BackButton from '../components/BackButton.vue'
@@ -46,7 +48,27 @@ const { onboardingWizardSteps } = useWizardSteps(formData.value, datingPrefs.val
 const { current, index, stepNames, isLast, isFirst, goToNext, goToPrevious, goTo, isCurrent } =
   useStepper(onboardingWizardSteps)
 
+const tagStore = useTagsStore()
+const appStore = useAppStore()
+const profileImageStore = useProfileImageStore()
+
+// Without a face photo the user can't see others' photos (see useProfilePhotoAccess),
+// so continuing past the photos step without one needs an explicit confirmation.
+const ownerProfileStore = useOwnerProfileStore()
+const hasFace = computed(() => ownerProfileStore.profile?.hasFace === true)
+const hasPhoto = computed(() => profileImageStore.images.length > 0)
+const noFaceWarningShown = ref(false)
+const showNoFaceWarning = computed(
+  () => noFaceWarningShown.value && isCurrent('photos') && !hasFace.value
+)
+
 const handleNext = () => {
+  if (isCurrent('photos') && !hasFace.value && !noFaceWarningShown.value) {
+    noFaceWarningShown.value = true
+    return
+  }
+  noFaceWarningShown.value = false
+
   if (current.value.flags === 'stage_one_end') {
     if (!formData.value.isDatingActive) {
       goTo('confirm')
@@ -70,10 +92,6 @@ const handleSubmit = () => {
     handleNext()
   }
 }
-
-const tagStore = useTagsStore()
-const appStore = useAppStore()
-const profileImageStore = useProfileImageStore()
 
 const handleLocationSelected = async (location: { country: string }) => {
   await tagStore.fetchPopularTags({
@@ -216,8 +234,37 @@ const siteName = __APP_CONFIG__.SITE_NAME
             </legend>
             <ImageEditor
               :store="profileImageStore"
-              :minImages="1"
+              :minImages="0"
             />
+            <PhotoFaceWarning
+              v-if="showNoFaceWarning"
+              :has-photo="hasPhoto"
+            >
+              <template #actions>
+                <BButton
+                  variant="primary"
+                  pill
+                  @click="noFaceWarningShown = false"
+                >
+                  {{
+                    hasPhoto
+                      ? t('onboarding.photos_no_face_add')
+                      : t('onboarding.photos_missing_add')
+                  }}
+                </BButton>
+                <BButton
+                  variant="outline-secondary"
+                  pill
+                  @click="handleNext"
+                >
+                  {{
+                    hasPhoto
+                      ? t('onboarding.photos_no_face_continue')
+                      : t('onboarding.photos_missing_continue')
+                  }}
+                </BButton>
+              </template>
+            </PhotoFaceWarning>
           </fieldset>
 
           <fieldset v-else-if="isCurrent('dating_mode')">
@@ -265,7 +312,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
           <BButton
             @click="handleNext"
             :disabled="!current.state"
-            v-if="!isLast"
+            v-if="!isLast && !showNoFaceWarning"
             variant="primary"
             size="lg"
             class="px-md-5"

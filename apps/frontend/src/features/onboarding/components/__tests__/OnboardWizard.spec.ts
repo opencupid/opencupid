@@ -13,6 +13,7 @@ vi.mock('@vueuse/core', async (importOriginal) => {
 vi.stubGlobal('__APP_CONFIG__', { SITE_NAME: 'TestSite' })
 vi.mock('@/assets/icons/interface/sun.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/logout.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/images/app/cupid.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/images/app/curved-arrow.svg', () => ({ default: { template: '<div />' } }))
 
 // Mock d3-cloud — jsdom has no canvas, so we simulate the layout synchronously
@@ -61,6 +62,8 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import OnboardWizard from '../OnboardWizard.vue'
 import { useTagsStore } from '@/store/tagStore'
+import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const mockTags = [
   { id: 't1', name: 'Hiking', slug: 'hiking', count: 10 },
@@ -80,6 +83,7 @@ const stubComponents = {
   LogoutButton: { template: '<div />' },
   IconSun: { template: '<div />' },
   IconLogout: { template: '<div />' },
+  BFormCheckbox: { template: '<label><slot /></label>' },
   BForm: { template: '<form><slot /></form>' },
   BButton: {
     template: '<button @click="$attrs.onClick?.()"><slot /></button>',
@@ -207,5 +211,97 @@ describe('OnboardWizard TagCloud integration', () => {
 
     expect(formData.tags).toHaveLength(1)
     expect(formData.tags[0].id).toBe('t1')
+  })
+})
+
+describe('OnboardWizard photos step', () => {
+  type Wrapper = ReturnType<typeof mountWizard>['wrapper']
+  const findButton = (wrapper: Wrapper, label: string) =>
+    wrapper.findAll('button').find((b) => b.text() === label)
+  const clickButton = async (wrapper: Wrapper, label: string) => {
+    const button = findButton(wrapper, label)
+    if (!button) throw new Error(`Button ${label} not found`)
+    await button.trigger('click')
+    await flushPromises()
+  }
+  const clickNext = (wrapper: Wrapper) => clickButton(wrapper, 'onboarding.wizard.next')
+
+  // publicname → location → interests → languages → introSocial → photos
+  const goToPhotos = async (wrapper: Wrapper) => {
+    for (let i = 0; i < 5; i++) await clickNext(wrapper)
+  }
+
+  it('warns before continuing without a photo, and lets the user go back to adding one', async () => {
+    const { wrapper } = mountWizard({ location: { country: 'DE' } })
+    await goToPhotos(wrapper)
+
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
+    await clickNext(wrapper)
+
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('onboarding.photos_title')
+    expect(findButton(wrapper, 'onboarding.wizard.next')).toBeUndefined()
+
+    await clickButton(wrapper, 'onboarding.photos_missing_add')
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('onboarding.photos_title')
+  })
+
+  it('continues past the photos step when the user confirms', async () => {
+    const { wrapper } = mountWizard({ location: { country: 'DE' } })
+    await goToPhotos(wrapper)
+    await clickNext(wrapper)
+
+    await clickButton(wrapper, 'onboarding.photos_missing_continue')
+
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('onboarding.dating_mode_switch')
+  })
+
+  const setViewer = (hasFace: boolean, images: number) => {
+    useOwnerProfileStore().profile = { id: 'me', hasFace } as any
+    useProfileImageStore().images = Array.from(
+      { length: images },
+      (_, i) => ({ id: `img${i}`, position: i, variants: [] }) as any
+    )
+  }
+
+  it('warns when the uploaded photo has no detected face', async () => {
+    setViewer(false, 1)
+
+    const { wrapper } = mountWizard({ location: { country: 'DE' } })
+    await goToPhotos(wrapper)
+    await clickNext(wrapper)
+
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('onboarding.photos_no_face_warning')
+    expect(wrapper.text()).not.toContain('onboarding.photos_missing_warning')
+
+    await clickButton(wrapper, 'onboarding.photos_no_face_continue')
+    expect(wrapper.text()).toContain('onboarding.dating_mode_switch')
+  })
+
+  it('hides the warning once a face photo is added', async () => {
+    setViewer(false, 0)
+
+    const { wrapper } = mountWizard({ location: { country: 'DE' } })
+    await goToPhotos(wrapper)
+    await clickNext(wrapper)
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(true)
+
+    setViewer(true, 1)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
+  })
+
+  it('does not warn when the profile has a face photo', async () => {
+    setViewer(true, 1)
+
+    const { wrapper } = mountWizard({ location: { country: 'DE' } })
+    await goToPhotos(wrapper)
+    await clickNext(wrapper)
+
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('onboarding.dating_mode_switch')
   })
 })

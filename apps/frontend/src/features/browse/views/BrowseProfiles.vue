@@ -22,7 +22,11 @@ import SearchBar from '../components/SearchBar.vue'
 import ProfileMapCard from '../components/ProfileMapCard.vue'
 import PublicProfileView from '@/features/publicprofile/components/PublicProfileView.vue'
 
-import { renderProfileMarkerHtml } from '@/features/publicprofile/components/profileMarkerIcon'
+import {
+  renderProfileMarkerHtml,
+  renderHiddenProfileMarkerHtml,
+} from '@/features/publicprofile/components/profileMarkerIcon'
+import { useProfilePhotoAccess } from '@/features/images/composables/useProfilePhotoAccess'
 import { renderPostMapIconHtml } from '@/features/posts/components/postMapIcon'
 import { renderEventMapIconHtml } from '@/features/events/components/eventMapIcon'
 import { renderCommunityMapIconHtml } from '@/features/community/components/communityMapIcon'
@@ -95,11 +99,17 @@ function onLocationSet(point: GeoPoint) {
 // Per-kind dispatch for marker icons and popup components. The discriminator
 // is `poi.kind` from the cluster service's PointFeature; profiles fall through
 // the default branch.
-const iconResolver = computed(() => (poi: MapPoi) => {
-  if (poi.kind === 'post') return renderPostMapIconHtml
-  if (poi.kind === 'event') return renderEventMapIconHtml
-  if (poi.kind === 'community') return renderCommunityMapIconHtml
-  return renderProfileMarkerHtml
+const { canSeeOthersPhotos, canSeePhotosOf } = useProfilePhotoAccess()
+// Reading canSeeOthersPhotos here makes the resolver change identity when the
+// viewer's hasFace flips, which tells the map to re-render existing markers.
+const iconResolver = computed(() => {
+  void canSeeOthersPhotos.value
+  return (poi: MapPoi) => {
+    if (poi.kind === 'post') return renderPostMapIconHtml
+    if (poi.kind === 'event') return renderEventMapIconHtml
+    if (poi.kind === 'community') return renderCommunityMapIconHtml
+    return canSeePhotosOf(poi) ? renderProfileMarkerHtml : renderHiddenProfileMarkerHtml
+  }
 })
 
 const popupResolver = computed(() => (poi: MapPoi) => {

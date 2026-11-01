@@ -267,21 +267,38 @@ export function useMapController(
 
   // ── POI markers ───────────────────────────────────────────────────────
 
+  function poiIcon(item: MapPoi, resolveIcon: MarkerConfig['resolveIcon']): L.DivIcon {
+    return hydratePoiIcon(
+      resolveIcon(item),
+      {
+        image: item.image ?? undefined,
+        isSelected: false,
+        isHighlighted: item.highlighted ?? false,
+        hasPost: item.hasPost,
+      },
+      iconCache
+    )
+  }
+
+  /**
+   * Re-render the icon of every existing POI marker. POI data is immutable per
+   * id, but the icon resolver is not (e.g. it depends on the viewer's photo
+   * access), so a new resolver must be applied to markers already on the map.
+   */
+  function refreshPoiIcons(config: MarkerConfig): void {
+    markerConfig = config
+    if (phase === 'uninitialized') return
+    for (const item of pois.allItems()) {
+      pois.get(item.id)?.setIcon(poiIcon(item, config.resolveIcon))
+    }
+  }
+
   function createPoiMarker(item: MapPoi): LMarker {
     if (!markerConfig) throw new Error('markerConfig must be set before createPoiMarker')
     const { resolveIcon, resolvePopup, fetchPopupData } = markerConfig
 
     const m = L.marker([item.lat, item.lon], {
-      icon: hydratePoiIcon(
-        resolveIcon(item),
-        {
-          image: item.image ?? undefined,
-          isSelected: false,
-          isHighlighted: item.highlighted ?? false,
-          hasPost: item.hasPost,
-        },
-        iconCache
-      ),
+      icon: poiIcon(item, resolveIcon),
       keyboard: true,
     })
 
@@ -461,6 +478,11 @@ export function useMapController(
   watch(
     () => props.items,
     (items) => updateMarkers(items, markerConfigFromProps())
+  )
+
+  watch(
+    () => props.iconResolver,
+    () => refreshPoiIcons(markerConfigFromProps())
   )
 
   watch(

@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+import { createPinia, setActivePinia } from 'pinia'
 
 beforeEach(() => {
+  setActivePinia(createPinia())
   ;(window as any).__APP_I18N__ = {
     global: { t: (k: string) => k },
   }
@@ -20,6 +23,7 @@ function makeMessage(overrides: Partial<MessageDTO> = {}): MessageDTO {
     sender: {
       id: 'p2',
       publicName: 'Alice',
+      profileImages: [],
     } as MessageDTO['sender'],
     isMine: false,
     attachment: null,
