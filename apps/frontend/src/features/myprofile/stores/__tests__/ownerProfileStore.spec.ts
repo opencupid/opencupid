@@ -120,4 +120,21 @@ describe('ownerProfileStore.refreshHasFace', () => {
     expect(store.profile?.hasFace).toBe(true)
     expect(store.profile?.publicName).toBe('Unsaved edit')
   })
+
+  it('ignores a refresh response that resolves after a newer one', async () => {
+    const store = useOwnerProfileStore()
+    store.profile = ownerProfilePayload(false) as any
+
+    let resolveOld!: (v: unknown) => void
+    get
+      .mockImplementationOnce(() => new Promise((r) => (resolveOld = r)))
+      .mockResolvedValueOnce({ data: { profile: ownerProfilePayload(true) } })
+
+    const older = store.refreshHasFace()
+    await store.refreshHasFace()
+    resolveOld({ data: { profile: ownerProfilePayload(false) } })
+    await older
+
+    expect(store.profile?.hasFace).toBe(true)
+  })
 })

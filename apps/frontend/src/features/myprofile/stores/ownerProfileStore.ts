@@ -65,6 +65,8 @@ interface ProfileStoreState {
   error: StoreError | null
 }
 
+let hasFaceRefreshSeq = 0
+
 export const useOwnerProfileStore = defineStore('ownerProfile', {
   state: (): ProfileStoreState => ({
     profile: null as OwnerProfile | null,
@@ -104,10 +106,12 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
      * Patches only that field so in-progress edits on `profile` are kept.
      */
     async refreshHasFace(): Promise<StoreVoidSuccess | StoreError> {
+      // Overlapping gallery edits can resolve out of order; only the latest refresh may write.
+      const seq = ++hasFaceRefreshSeq
       try {
         const res = await safeApiCall(() => api.get<GetMyProfileResponse>('/profiles/me'))
         const fetched = OwnerProfileSchema.parse(res.data.profile)
-        if (this.profile) this.profile.hasFace = fetched.hasFace
+        if (this.profile && seq === hasFaceRefreshSeq) this.profile.hasFace = fetched.hasFace
         return storeSuccess()
       } catch (error: any) {
         return storeError(error, 'Failed to refresh profile')

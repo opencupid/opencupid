@@ -8,7 +8,7 @@ import ProfileImage from '../components/ProfileImage.vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const ImageTag = {
-  props: ['image', 'className'],
+  props: ['image', 'className', 'variant'],
   template: '<div class="image-tag">{{ image.variants[0].url }}</div>',
 }
 
@@ -71,4 +71,17 @@ describe('ProfileImage', () => {
     })
     expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
   })
+
+  it.each([true, false])(
+    'forwards caller classes to the rendered image (hasFace=%s)',
+    (hasFace) => {
+      setViewer({ id: 'me', hasFace })
+      const wrapper = mount(ProfileImage, {
+        props: { profile: makeProfile('/one.jpg') },
+        attrs: { class: 'card-image' },
+        global: { stubs: { ImageTag } },
+      })
+      expect(wrapper.classes()).toContain('card-image')
+    }
+  )
 })
