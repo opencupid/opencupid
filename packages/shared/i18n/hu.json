@@ -431,6 +431,7 @@
     },
     "more_options_button_title": "További lehetőségek",
     "photo_hidden": "Tölts fel magadról egy fényképet, hogy lásd mások fényképeit",
+    "photo_hidden_no_face": "Nem látod ezt a fényképet, mert a profilodon nincs arcodat mutató fénykép.",
     "profile_not_found": "Nincs ilyen profil",
     "pronouns_edit_label": "névmások"
   },

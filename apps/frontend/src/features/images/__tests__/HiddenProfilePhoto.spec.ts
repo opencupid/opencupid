@@ -19,9 +19,19 @@ describe('HiddenProfilePhoto', () => {
     const root = wrapper.find('[data-testid="hidden-profile-photo"]')
     expect(root.exists()).toBe(true)
     expect(root.classes()).toContain('rounded')
+    expect(root.attributes('title')).toBe('profiles.photo_hidden_no_face')
     expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
     expect(wrapper.find('.icon-hide').exists()).toBe(true)
     expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(false)
+  })
+
+  it('puts the icon top-left by default and bottom-right on request', () => {
+    const def = mount(HiddenProfilePhoto, { props: { photo: { blurhash: 'L0' } } })
+    expect(def.find('.icon-hide').classes()).toContain('icon-top-left')
+    const br = mount(HiddenProfilePhoto, {
+      props: { photo: { blurhash: 'L0' }, iconCorner: 'bottom-right' },
+    })
+    expect(br.find('.icon-hide').classes()).toContain('icon-bottom-right')
   })
 
   it('shows only the crossed-eye icon when the photo has no blurhash', () => {

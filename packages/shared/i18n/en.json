@@ -427,6 +427,7 @@
     },
     "more_options_button_title": "More options",
     "photo_hidden": "Add a photo of yourself to see photos of others",
+    "photo_hidden_no_face": "You're not seeing this photo because your profile has no photo showing your face.",
     "profile_not_found": "Profile not found",
     "pronouns_edit_label": "pronouns"
   },

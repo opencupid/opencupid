@@ -7,13 +7,17 @@ import BlurhashCanvas from './BlurhashCanvas.vue'
 
 /**
  * Stand-in for a profile photo the viewer may not see (see useProfilePhotoAccess).
- * With a photo: its blurhash with a small crossed-eye icon in the top-left corner.
+ * With a photo: its blurhash with a small crossed-eye icon in a corner (`iconCorner`).
  * Without one: photo-hidden.svg.
  */
-const props = defineProps<{
-  photo?: { blurhash?: string | null }
-  className?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    photo?: { blurhash?: string | null }
+    className?: string
+    iconCorner?: 'top-left' | 'bottom-right'
+  }>(),
+  { iconCorner: 'top-left' }
+)
 
 const emit = defineEmits<{ load: [] }>()
 
@@ -30,9 +34,9 @@ onMounted(() => {
   <div
     v-if="photo"
     :class="['hidden-profile-photo', className]"
-    :title="t('profiles.photo_hidden')"
+    :title="t('profiles.photo_hidden_no_face')"
     role="img"
-    :aria-label="t('profiles.photo_hidden')"
+    :aria-label="t('profiles.photo_hidden_no_face')"
     data-testid="hidden-profile-photo"
   >
     <BlurhashCanvas
@@ -40,7 +44,7 @@ onMounted(() => {
       :blurhash="photo.blurhash"
       class="hidden-profile-photo-blur"
     />
-    <IconHide class="hidden-profile-photo-icon" />
+    <IconHide :class="['hidden-profile-photo-icon', `icon-${iconCorner}`]" />
   </div>
   <img
     v-else
@@ -78,12 +82,19 @@ onMounted(() => {
   min-height: 0;
 }
 .hidden-profile-photo-icon {
-  place-self: start;
   width: 10%;
   height: auto;
   margin: 4%;
   color: #fff;
   opacity: 0.85;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+.icon-top-left {
+  place-self: start;
+}
+/* Used by the full-width profile view, where 10% would be oversized. */
+.icon-bottom-right {
+  place-self: end;
+  width: 5%;
 }
 </style>

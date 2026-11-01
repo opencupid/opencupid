@@ -30,7 +30,10 @@ const photosHidden = computed(() => !canSeePhotosOf(props.profile))
         v-if="photosHidden"
         class="ratio ratio-4x3"
       >
-        <HiddenProfilePhoto :photo="profile.profileImages[0]" />
+        <HiddenProfilePhoto
+          :photo="profile.profileImages[0]"
+          icon-corner="bottom-right"
+        />
       </div>
       <ImageCarousel
         v-else
