@@ -64,6 +64,9 @@ onMounted(() => {
   grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   overflow: hidden;
   object-fit: cover;
+  /* Grid items honour z-index, and Leaflet sets `.leaflet-map-pane canvas { z-index: 100 }`.
+     Isolate so the blurhash canvas can't paint over siblings such as the map card overlay. */
+  isolation: isolate;
   background-color: var(--bs-secondary-bg);
 }
 .hidden-profile-photo > * {
