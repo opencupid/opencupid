@@ -22,6 +22,7 @@ function makeConvo(overrides: Partial<ConversationSummary> = {}): ConversationSu
     partnerProfile: {
       id: 'p2',
       publicName: 'Alice',
+      profileImages: [],
     } as ConversationSummary['partnerProfile'],
     lastMessage: {
       content: 'Hello there',

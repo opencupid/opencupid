@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
+import { computed } from 'vue'
 
 import ImageTag from './ImageTag.vue'
 import HiddenProfilePhoto from './HiddenProfilePhoto.vue'
@@ -18,13 +18,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ load: [] }>()
 
-const image = ref<{ variants: ImageVariant[]; blurhash?: string | null }>()
-
-watchEffect(() => {
-  if (props.profile && props.profile.profileImages && props.profile.profileImages.length > 0) {
-    image.value = props.profile.profileImages[0]
-  }
-})
+const image = computed(() => props.profile.profileImages[0])
 
 const { canSeePhotosOf } = useProfilePhotoAccess()
 const isHidden = computed(() => !canSeePhotosOf(props.profile))

@@ -23,6 +23,7 @@ function makeMessage(overrides: Partial<MessageDTO> = {}): MessageDTO {
     sender: {
       id: 'p2',
       publicName: 'Alice',
+      profileImages: [],
     } as MessageDTO['sender'],
     isMine: false,
     attachment: null,

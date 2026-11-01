@@ -94,4 +94,28 @@ describe('ProfileImage', () => {
       expect(wrapper.classes()).toContain('card-image')
     }
   )
+
+  it('drops the old photo when the gallery becomes empty', async () => {
+    setViewer({ id: 'me', hasFace: false })
+    const wrapper = mount(ProfileImage, {
+      props: {
+        profile: {
+          id: 'other',
+          profileImages: [
+            {
+              blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
+              variants: [{ size: 'original', url: '/one.jpg' }],
+            },
+          ],
+        },
+      },
+      global: { stubs: { ImageTag } },
+    })
+    expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(true)
+
+    await wrapper.setProps({ profile: { id: 'other', profileImages: [] } })
+
+    expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
+  })
 })
