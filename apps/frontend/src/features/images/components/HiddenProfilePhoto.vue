@@ -7,7 +7,8 @@ import BlurhashCanvas from './BlurhashCanvas.vue'
 
 /**
  * Stand-in for a profile photo the viewer may not see (see useProfilePhotoAccess).
- * With a photo: its blurhash under a crossed-eye icon. Without one: photo-hidden.svg.
+ * With a photo: its blurhash with a small crossed-eye icon in the top-left corner.
+ * Without one: photo-hidden.svg.
  */
 const props = defineProps<{
   photo?: { blurhash?: string | null }
@@ -74,10 +75,10 @@ onMounted(() => {
   min-height: 0;
 }
 .hidden-profile-photo-icon {
-  place-self: center;
-  width: 30%;
-  max-width: 4rem;
+  place-self: start;
+  width: 10%;
   height: auto;
+  margin: 4%;
   color: #fff;
   opacity: 0.85;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));

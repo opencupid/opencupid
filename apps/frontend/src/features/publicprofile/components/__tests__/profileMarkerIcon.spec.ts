@@ -9,7 +9,7 @@ import { renderHiddenProfileMarkerHtml } from '../profileMarkerIcon'
 const base = { isSelected: false, isHighlighted: false }
 
 describe('renderHiddenProfileMarkerHtml', () => {
-  it('renders the blurhash and crossed-eye icon, never the photo URL', () => {
+  it('renders the blurhash without an icon, never the photo URL', () => {
     const html = renderHiddenProfileMarkerHtml({
       ...base,
       image: { url: '/secret-photo.webp', blurhash: 'L0' },
@@ -17,7 +17,7 @@ describe('renderHiddenProfileMarkerHtml', () => {
     expect(html).not.toContain('/secret-photo.webp')
     expect(html).toContain('data:blur/L0')
     expect(html).toContain('poi-avatar-hidden')
-    expect(html).toContain('<svg')
+    expect(html).not.toContain('<svg')
   })
 
   it('renders photo-hidden.svg for a profile without a photo', () => {

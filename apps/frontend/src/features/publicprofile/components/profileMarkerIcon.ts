@@ -1,7 +1,6 @@
 import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
 import type { IconRenderer } from '@/features/map/types/map.types'
 import photoHiddenUrl from '@/assets/images/app/photo-hidden.svg?url'
-import hideIconSvg from '@/assets/icons/interface/hide.svg?raw'
 import './profileMarkerIcon.scss'
 
 function escapeAttr(s: string): string {
@@ -21,8 +20,7 @@ export const renderProfileMarkerHtml: IconRenderer = (props) => {
 
 /**
  * Marker for a profile whose photos the viewer may not see (see useProfilePhotoAccess):
- * the photo's blurhash under a crossed-eye icon, or photo-hidden.svg when the
- * profile has no photo at all.
+ * the photo's blurhash, or photo-hidden.svg when the profile has no photo at all.
  */
 export const renderHiddenProfileMarkerHtml: IconRenderer = (props) => {
   const cls = props.isHighlighted ? 'poi-avatar highlighted' : 'poi-avatar'
@@ -30,8 +28,8 @@ export const renderHiddenProfileMarkerHtml: IconRenderer = (props) => {
   if (!props.image?.url) {
     return `<div class="profile-marker"><img src="${escapeAttr(photoHiddenUrl)}" class="w-100 h-100 ${cls}"/>${indicator}</div>`
   }
-  const bg = props.image.blurhash
-    ? ` style="background-image:url(${escapeAttr(blurhashToDataUrl(props.image.blurhash))})"`
-    : ''
-  return `<div class="profile-marker"><div${bg} class="w-100 h-100 ${cls} poi-avatar-hidden">${hideIconSvg}</div>${indicator}</div>`
+  const avatar = props.image.blurhash
+    ? `<img src="${escapeAttr(blurhashToDataUrl(props.image.blurhash))}" class="w-100 h-100 ${cls} poi-avatar-hidden"/>`
+    : `<div class="w-100 h-100 ${cls} poi-avatar-hidden"></div>`
+  return `<div class="profile-marker">${avatar}${indicator}</div>`
 }
