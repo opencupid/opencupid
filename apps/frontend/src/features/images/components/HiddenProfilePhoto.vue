@@ -53,27 +53,31 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* No `position` here: containers such as Bootstrap's .ratio position their child
+   absolutely, and overriding that pushes the placeholder out of the box.
+   The blurhash and icon are stacked in a single grid cell instead. */
 .hidden-profile-photo {
-  position: relative;
   width: 100%;
   height: 100%;
-  display: block;
-  object-fit: cover;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   overflow: hidden;
+  object-fit: cover;
   background-color: var(--bs-secondary-bg);
 }
+.hidden-profile-photo > * {
+  grid-area: 1 / 1;
+}
 .hidden-profile-photo-blur {
-  position: absolute;
-  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 .hidden-profile-photo-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+  place-self: center;
   width: 30%;
   max-width: 4rem;
   height: auto;
-  transform: translate(-50%, -50%);
   color: #fff;
   opacity: 0.85;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
