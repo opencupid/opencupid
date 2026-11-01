@@ -1,5 +1,15 @@
 # frontend
 
+## 0.79.0
+
+### Minor Changes
+
+- 738cd23: Onboarding photo step is now optional, with a warning before continuing without a face photo. Viewers whose profile has no face photo see a placeholder instead of other profiles' photos.
+
+### Patch Changes
+
+- 626ffc9: Show the photo's blurhash while profile images load in the map popover, toasts and thumbnails.
+
 ## 0.78.1
 
 ### Patch Changes
