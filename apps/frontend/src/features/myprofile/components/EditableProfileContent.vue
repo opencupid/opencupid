@@ -11,16 +11,13 @@ import LocationSelector from '@/features/shared/profileform/LocationSelector.vue
 import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue'
 import TagSelector from '@/features/shared/profileform/TagSelector.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
-import ImageEditor from '@/features/images/components/ImageEditor.vue'
-import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
+import ProfilePhotoEditor from './ProfilePhotoEditor.vue'
 
 const { t } = useI18n()
 
 const props = defineProps<{
   profile: PublicProfile
 }>()
-
-const profileImageStore = useProfileImageStore()
 </script>
 
 <template>
@@ -28,8 +25,7 @@ const profileImageStore = useProfileImageStore()
     <template #photo-edit>
       <EditField
         fieldName="profileImages"
-        :editComponent="ImageEditor"
-        :editProps="{ store: profileImageStore, minImages: 1 }"
+        :editComponent="ProfilePhotoEditor"
         buttonClass="btn-icon-lg btn-overlay photo-edit-button"
       >
         <IconPhoto class="svg-icon" />

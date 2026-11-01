@@ -9,6 +9,7 @@ import LanguageSelector from '@/features/shared/profileform/LanguageSelector.vue
 import TagExplorer from '@/features/shared/components/TagExplorer.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
+import PhotoFaceWarning from '@/features/images/components/PhotoFaceWarning.vue'
 import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import DatingSteps from '../components/DatingSteps.vue'
@@ -233,28 +234,16 @@ const siteName = __APP_CONFIG__.SITE_NAME
             </legend>
             <ImageEditor
               :store="profileImageStore"
-              :minImages="1"
+              :minImages="0"
             />
-            <div
+            <PhotoFaceWarning
               v-if="showNoFaceWarning"
-              class="alert alert-warning mt-3 text-center"
-              role="alert"
-              data-testid="no-face-warning"
+              :has-photo="hasPhoto"
             >
-              <p class="mb-2">
-                <!-- We couldn't find a face in your photo. Without one you will not be able to see others' photos. -->
-                <!-- Without a photo you will not be able to see others' photos. -->
-                {{
-                  hasPhoto
-                    ? t('onboarding.photos_no_face_warning')
-                    : t('onboarding.photos_missing_warning')
-                }}
-              </p>
-              <div class="d-flex flex-wrap justify-content-center gap-2">
+              <template #actions>
                 <BButton
                   variant="primary"
                   pill
-                  data-testid="no-face-add"
                   @click="noFaceWarningShown = false"
                 >
                   {{
@@ -266,7 +255,6 @@ const siteName = __APP_CONFIG__.SITE_NAME
                 <BButton
                   variant="outline-secondary"
                   pill
-                  data-testid="no-face-continue"
                   @click="handleNext"
                 >
                   {{
@@ -275,8 +263,8 @@ const siteName = __APP_CONFIG__.SITE_NAME
                       : t('onboarding.photos_missing_continue')
                   }}
                 </BButton>
-              </div>
-            </div>
+              </template>
+            </PhotoFaceWarning>
           </fieldset>
 
           <fieldset v-else-if="isCurrent('dating_mode')">
