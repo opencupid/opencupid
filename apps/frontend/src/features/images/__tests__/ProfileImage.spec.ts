@@ -3,6 +3,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('../composables/useBlurhashDataUrl', () => ({
+  blurhashToDataUrl: (hash: string) => `data:blur/${hash}`,
+}))
 vi.mock('@/assets/icons/interface/hide.svg', () => ({ default: { template: '<svg />' } }))
 
 import ProfileImage from '../components/ProfileImage.vue'
@@ -117,5 +120,25 @@ describe('ProfileImage', () => {
 
     expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
+  })
+
+  it('shows the blurhash behind the photo while it loads', () => {
+    const profile = {
+      id: 'other',
+      profileImages: [{ blurhash: 'L0', variants: [{ size: 'original', url: '/one.jpg' }] }],
+    }
+    const wrapper = mount(ProfileImage, {
+      props: { profile },
+      global: { stubs: { ImageTag } },
+    })
+    expect(wrapper.find('.image-tag').attributes('style')).toContain('data:blur/L0')
+  })
+
+  it('sets no background when the photo has no blurhash', () => {
+    const wrapper = mount(ProfileImage, {
+      props: { profile: makeProfile('/one.jpg') },
+      global: { stubs: { ImageTag } },
+    })
+    expect(wrapper.find('.image-tag').attributes('style')).toBeUndefined()
   })
 })
