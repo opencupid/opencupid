@@ -12,6 +12,20 @@
   background-size: cover;
 }
 
+.poi-avatar-hidden {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bs-secondary-bg);
+  color: #fff;
+
+  svg {
+    width: 55%;
+    height: auto;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  }
+}
+
 .poi-avatar.highlighted {
   box-shadow: 0 0 6px 3px rgba(217, 83, 79, 0.7);
   filter: drop-shadow(0 0 6px rgba(217, 83, 79, 0.6));

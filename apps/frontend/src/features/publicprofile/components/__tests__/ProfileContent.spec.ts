@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('@/assets/icons/interface/hide.svg', () => ({ default: { template: '<svg />' } }))
 vi.mock('../ImageCarousel.vue', () => ({
   default: { template: '<div class="carousel-stub" />', props: ['images'] },
 }))
@@ -68,8 +69,9 @@ describe('ProfileContent photo gating', () => {
     expect(wrapper.find('.carousel-stub').exists()).toBe(true)
   })
 
-  it('does not show the placeholder for a profile without photos', () => {
+  it('shows photo-hidden.svg for a profile without photos when the viewer has no face photo', () => {
     const wrapper = mountWith(false, makeProfile('other', 0))
-    expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
+    expect(wrapper.find('.carousel-stub').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
   })
 })

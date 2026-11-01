@@ -32,7 +32,8 @@ const isHidden = computed(() => !canSeePhotosOf(props.profile))
 
 <template>
   <HiddenProfilePhoto
-    v-if="image && isHidden"
+    v-if="isHidden"
+    :photo="image"
     className="img-fluid rounded"
     @load="emit('load')"
   />

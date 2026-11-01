@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('@/assets/icons/interface/hide.svg', () => ({ default: { template: '<svg />' } }))
 
 import ProfileImage from '../components/ProfileImage.vue'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -63,13 +64,22 @@ describe('ProfileImage', () => {
     expect(wrapper.find('.image-tag').text()).toContain('/mine.jpg')
   })
 
-  it('renders nothing when the profile has no images', () => {
+  it('shows photo-hidden.svg for a profile without photos when the viewer has no face photo', () => {
     setViewer({ id: 'me', hasFace: false })
     const wrapper = mount(ProfileImage, {
       props: { profile: { id: 'other', profileImages: [] } },
       global: { stubs: { ImageTag } },
     })
+    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
+  })
+
+  it('renders nothing for a profile without photos when the viewer has a face photo', () => {
+    const wrapper = mount(ProfileImage, {
+      props: { profile: { id: 'other', profileImages: [] } },
+      global: { stubs: { ImageTag } },
+    })
+    expect(wrapper.html()).toBe('<!--v-if-->')
   })
 
   it.each([true, false])(

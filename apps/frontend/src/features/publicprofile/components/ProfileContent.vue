@@ -20,9 +20,7 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 const viewerLocation = computed(() => viewerProfile?.value?.location)
 
 const { canSeePhotosOf } = useProfilePhotoAccess()
-const photosHidden = computed(
-  () => props.profile.profileImages.length > 0 && !canSeePhotosOf(props.profile)
-)
+const photosHidden = computed(() => !canSeePhotosOf(props.profile))
 </script>
 
 <template>
@@ -32,7 +30,7 @@ const photosHidden = computed(
         v-if="photosHidden"
         class="ratio ratio-4x3"
       >
-        <HiddenProfilePhoto />
+        <HiddenProfilePhoto :photo="profile.profileImages[0]" />
       </div>
       <ImageCarousel
         v-else
