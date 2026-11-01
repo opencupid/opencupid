@@ -10,6 +10,7 @@ import TagExplorer from '@/features/shared/components/TagExplorer.vue'
 import IntrotextEditor from '@/features/shared/profileform/IntrotextEditor.vue'
 import ImageEditor from '@/features/images/components/ImageEditor.vue'
 import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import DatingSteps from '../components/DatingSteps.vue'
 import LocationSelectorComponent from '@/features/shared/profileform/LocationSelector.vue'
 import BackButton from '../components/BackButton.vue'
@@ -50,18 +51,22 @@ const tagStore = useTagsStore()
 const appStore = useAppStore()
 const profileImageStore = useProfileImageStore()
 
-// Continuing past the photos step without a photo needs an explicit confirmation.
-const noPhotoWarningShown = ref(false)
-const showNoPhotoWarning = computed(
-  () => noPhotoWarningShown.value && isCurrent('photos') && profileImageStore.images.length === 0
+// Without a face photo the user can't see others' photos (see useProfilePhotoAccess),
+// so continuing past the photos step without one needs an explicit confirmation.
+const ownerProfileStore = useOwnerProfileStore()
+const hasFace = computed(() => ownerProfileStore.profile?.hasFace === true)
+const hasPhoto = computed(() => profileImageStore.images.length > 0)
+const noFaceWarningShown = ref(false)
+const showNoFaceWarning = computed(
+  () => noFaceWarningShown.value && isCurrent('photos') && !hasFace.value
 )
 
 const handleNext = () => {
-  if (isCurrent('photos') && profileImageStore.images.length === 0 && !noPhotoWarningShown.value) {
-    noPhotoWarningShown.value = true
+  if (isCurrent('photos') && !hasFace.value && !noFaceWarningShown.value) {
+    noFaceWarningShown.value = true
     return
   }
-  noPhotoWarningShown.value = false
+  noFaceWarningShown.value = false
 
   if (current.value.flags === 'stage_one_end') {
     if (!formData.value.isDatingActive) {
@@ -231,31 +236,44 @@ const siteName = __APP_CONFIG__.SITE_NAME
               :minImages="1"
             />
             <div
-              v-if="showNoPhotoWarning"
+              v-if="showNoFaceWarning"
               class="alert alert-warning mt-3 text-center"
               role="alert"
-              data-testid="no-photo-warning"
+              data-testid="no-face-warning"
             >
               <p class="mb-2">
+                <!-- We couldn't find a face in your photo. Without one you will not be able to see others' photos. -->
                 <!-- Without a photo you will not be able to see others' photos. -->
-                {{ t('onboarding.photos_missing_warning') }}
+                {{
+                  hasPhoto
+                    ? t('onboarding.photos_no_face_warning')
+                    : t('onboarding.photos_missing_warning')
+                }}
               </p>
               <div class="d-flex flex-wrap justify-content-center gap-2">
                 <BButton
                   variant="primary"
                   pill
-                  data-testid="no-photo-add"
-                  @click="noPhotoWarningShown = false"
+                  data-testid="no-face-add"
+                  @click="noFaceWarningShown = false"
                 >
-                  {{ t('onboarding.photos_missing_add') }}
+                  {{
+                    hasPhoto
+                      ? t('onboarding.photos_no_face_add')
+                      : t('onboarding.photos_missing_add')
+                  }}
                 </BButton>
                 <BButton
                   variant="outline-secondary"
                   pill
-                  data-testid="no-photo-continue"
+                  data-testid="no-face-continue"
                   @click="handleNext"
                 >
-                  {{ t('onboarding.photos_missing_continue') }}
+                  {{
+                    hasPhoto
+                      ? t('onboarding.photos_no_face_continue')
+                      : t('onboarding.photos_missing_continue')
+                  }}
                 </BButton>
               </div>
             </div>
@@ -306,7 +324,7 @@ const siteName = __APP_CONFIG__.SITE_NAME
           <BButton
             @click="handleNext"
             :disabled="!current.state"
-            v-if="!isLast && !showNoPhotoWarning"
+            v-if="!isLast && !showNoFaceWarning"
             variant="primary"
             size="lg"
             class="px-md-5"

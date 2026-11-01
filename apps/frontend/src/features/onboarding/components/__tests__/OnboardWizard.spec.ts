@@ -63,6 +63,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import OnboardWizard from '../OnboardWizard.vue'
 import { useTagsStore } from '@/store/tagStore'
 import { useProfileImageStore } from '@/features/images/stores/profileImageStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 const mockTags = [
   { id: 't1', name: 'Hiking', slug: 'hiking', count: 10 },
@@ -234,15 +235,15 @@ describe('OnboardWizard photos step', () => {
     const { wrapper } = mountWizard({ location: { country: 'DE' } })
     await goToPhotos(wrapper)
 
-    expect(wrapper.find('[data-testid="no-photo-warning"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
     await clickNext(wrapper)
 
-    expect(wrapper.find('[data-testid="no-photo-warning"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(true)
     expect(wrapper.text()).toContain('onboarding.photos_title')
     expect(findButton(wrapper, 'onboarding.wizard.next')).toBeUndefined()
 
     await clickButton(wrapper, 'onboarding.photos_missing_add')
-    expect(wrapper.find('[data-testid="no-photo-warning"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('onboarding.photos_title')
   })
 
@@ -253,19 +254,54 @@ describe('OnboardWizard photos step', () => {
 
     await clickButton(wrapper, 'onboarding.photos_missing_continue')
 
-    expect(wrapper.find('[data-testid="no-photo-warning"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('onboarding.dating_mode_switch')
   })
 
-  it('does not warn when a photo was added', async () => {
-    const imageStore = useProfileImageStore()
-    imageStore.images = [{ id: 'img1', position: 0, variants: [] } as any]
+  const setViewer = (hasFace: boolean, images: number) => {
+    useOwnerProfileStore().profile = { id: 'me', hasFace } as any
+    useProfileImageStore().images = Array.from(
+      { length: images },
+      (_, i) => ({ id: `img${i}`, position: i, variants: [] }) as any
+    )
+  }
+
+  it('warns when the uploaded photo has no detected face', async () => {
+    setViewer(false, 1)
 
     const { wrapper } = mountWizard({ location: { country: 'DE' } })
     await goToPhotos(wrapper)
     await clickNext(wrapper)
 
-    expect(wrapper.find('[data-testid="no-photo-warning"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(true)
+    expect(wrapper.text()).toContain('onboarding.photos_no_face_warning')
+    expect(wrapper.text()).not.toContain('onboarding.photos_missing_warning')
+
+    await clickButton(wrapper, 'onboarding.photos_no_face_continue')
+    expect(wrapper.text()).toContain('onboarding.dating_mode_switch')
+  })
+
+  it('hides the warning once a face photo is added', async () => {
+    setViewer(false, 0)
+
+    const { wrapper } = mountWizard({ location: { country: 'DE' } })
+    await goToPhotos(wrapper)
+    await clickNext(wrapper)
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(true)
+
+    setViewer(true, 1)
+    await flushPromises()
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
+  })
+
+  it('does not warn when the profile has a face photo', async () => {
+    setViewer(true, 1)
+
+    const { wrapper } = mountWizard({ location: { country: 'DE' } })
+    await goToPhotos(wrapper)
+    await clickNext(wrapper)
+
+    expect(wrapper.find('[data-testid="no-face-warning"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('onboarding.dating_mode_switch')
   })
 })
