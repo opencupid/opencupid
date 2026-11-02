@@ -583,6 +583,7 @@ describe('POST /refresh', () => {
       sign: vi.fn().mockReturnValue('new-jwt'),
       verify: vi.fn().mockReturnValue({ userId: 'user1', profileId, tokenVersion: 0 }),
     }
+    fastify.deleteSession = vi.fn().mockResolvedValue(undefined)
     const req = {
       body: {},
       cookies: {
@@ -604,6 +605,7 @@ describe('POST /refresh', () => {
     expect(reply.cookies[1].name).toBe('__refresh')
     expect(reply.cookies[1].value).toBe('new-refresh-token')
     expect(reply.cookies[1].opts.httpOnly).toBe(true)
+    expect(fastify.deleteSession).toHaveBeenCalledWith('expired-jwt', 'user1')
   })
 })
 
