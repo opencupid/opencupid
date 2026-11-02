@@ -5,6 +5,16 @@
  *
  * Idempotent — safe to re-run.
  *
+ * Edge cases:
+ * - Run it after the deploy. Sessions created after the deploy are already
+ *   indexed by SessionService; this only needs to catch older ones.
+ * - Keys whose data no longer matches SessionDataSchema, or that have no TTL,
+ *   are skipped (counted as "skipped"). They aren't indexed and so can't be
+ *   revoked by deleteAllForUser(). session-auth rejects unparseable sessions
+ *   anyway.
+ * - `session:<id>:roles` keys are skipped; deleteAllForUser() deletes them
+ *   alongside their session.
+ *
  *   pnpm --filter backend sessions:backfill                       # dev
  *   docker compose exec backend node dist/scripts/backfill-user-sessions.js   # prod
  */
