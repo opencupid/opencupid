@@ -273,10 +273,10 @@ const userDetail = ref<AdminUserDetail | null>(null)
 const userLoading = ref(false)
 const userError = ref<string | null>(null)
 const editUserActive = ref(false)
-const editUserBlocked = ref(false)
 const editUserLanguage = ref('')
 const editUserOrigin = ref('')
 const userSaving = ref(false)
+const userBlocking = ref(false)
 const userSaveError = ref<string | null>(null)
 
 const languageOptions = Object.entries(appLocales).map(([code, label]) => ({ code, label }))
@@ -321,7 +321,6 @@ async function fetchUserDetail(userId: string) {
     if (token !== userFetchToken) return
     userDetail.value = res.user
     editUserActive.value = res.user.isActive
-    editUserBlocked.value = res.user.isBlocked
     editUserLanguage.value = res.user.language
     editUserOrigin.value = res.user.originDomain
     ensureOriginOption(res.user.originDomain)
@@ -343,7 +342,6 @@ async function saveUser() {
       method: 'PATCH',
       body: {
         isActive: editUserActive.value,
-        isBlocked: editUserBlocked.value,
         language: editUserLanguage.value,
         originDomain,
       },
@@ -351,7 +349,6 @@ async function saveUser() {
     userDetail.value = {
       ...userDetail.value,
       isActive: editUserActive.value,
-      isBlocked: editUserBlocked.value,
       language: editUserLanguage.value,
       originDomain,
     }
@@ -361,7 +358,6 @@ async function saveUser() {
       users.value[idx] = {
         ...row,
         isActive: editUserActive.value,
-        isBlocked: editUserBlocked.value,
         originDomain,
       }
     }
@@ -370,6 +366,27 @@ async function saveUser() {
     userSaveError.value = err instanceof Error ? err.message : 'Failed to save'
   } finally {
     userSaving.value = false
+  }
+}
+
+// Applied immediately, separately from Save. Blocking also logs the user out
+// everywhere (the backend bumps tokenVersion and deletes their sessions).
+async function toggleUserBlocked() {
+  if (!userDetail.value) return
+  const id = userDetail.value.id
+  const isBlocked = !userDetail.value.isBlocked
+  userBlocking.value = true
+  userSaveError.value = null
+  try {
+    await apiRequest(`/admin/users/${id}`, { method: 'PATCH', body: { isBlocked } })
+    if (userDetail.value?.id === id) userDetail.value = { ...userDetail.value, isBlocked }
+    const idx = users.value.findIndex((u) => u.id === id)
+    const row = idx >= 0 ? users.value[idx] : undefined
+    if (row) users.value[idx] = { ...row, isBlocked }
+  } catch (err) {
+    userSaveError.value = err instanceof Error ? err.message : 'Failed to update block status'
+  } finally {
+    userBlocking.value = false
   }
 }
 
@@ -1240,20 +1257,23 @@ onUnmounted(() => {
                       </div>
                     </dd>
                     <dt class="col-sm-4">Blocked</dt>
-                    <dd class="col-sm-8">
-                      <div class="form-check">
-                        <input
-                          id="editUserBlocked"
-                          v-model="editUserBlocked"
-                          class="form-check-input"
-                          type="checkbox"
-                        />
-                        <label
-                          class="form-check-label"
-                          for="editUserBlocked"
-                          >Blocked</label
-                        >
-                      </div>
+                    <dd class="col-sm-8 d-flex align-items-center gap-2">
+                      <span
+                        :class="userDetail.isBlocked ? 'badge bg-danger' : 'badge bg-secondary'"
+                      >
+                        {{ userDetail.isBlocked ? 'Yes' : 'No' }}
+                      </span>
+                      <button
+                        class="btn btn-sm"
+                        :class="
+                          userDetail.isBlocked ? 'btn-outline-secondary' : 'btn-outline-danger'
+                        "
+                        :disabled="userBlocking"
+                        @keydown.enter.stop
+                        @click="toggleUserBlocked"
+                      >
+                        {{ userDetail.isBlocked ? 'Unblock' : 'Block' }}
+                      </button>
                     </dd>
                     <dt class="col-sm-4">Created</dt>
                     <dd class="col-sm-8">{{ new Date(userDetail.createdAt).toLocaleString() }}</dd>

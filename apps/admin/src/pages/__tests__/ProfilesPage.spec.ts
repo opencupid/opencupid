@@ -465,7 +465,7 @@ describe('ProfilesPage', () => {
       .filter((t) => t.text() === 'User')[0]
       .trigger('click')
     await flushPromises()
-    await wrapper.find('#editUserBlocked').setValue(true)
+    await wrapper.find('#editUserActive').setValue(false)
     await wrapper
       .findAll('button')
       .filter((b) => b.text() === 'Save')[0]
@@ -474,8 +474,90 @@ describe('ProfilesPage', () => {
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1', {
       method: 'PATCH',
-      body: { isActive: true, isBlocked: true, language: 'en', originDomain: 'example.org' },
+      body: { isActive: false, language: 'en', originDomain: 'example.org' },
     })
+  })
+
+  async function openUserTab() {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'User')[0]
+      .trigger('click')
+    await flushPromises()
+    return wrapper
+  }
+
+  it('Block button patches only isBlocked and flips to Unblock', async () => {
+    const wrapper = await openUserTab()
+
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Block')[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1', {
+      method: 'PATCH',
+      body: { isBlocked: true },
+    })
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Unblock')).toHaveLength(1)
+  })
+
+  it('Unblock button patches isBlocked=false for a blocked user', async () => {
+    const defaultImpl = apiRequestMock.getMockImplementation()!
+    apiRequestMock.mockImplementation((path: string, opts?: unknown) =>
+      path === '/admin/users/u1' && !opts
+        ? Promise.resolve({ success: true, user: { ...baseUser, isBlocked: true } })
+        : defaultImpl(path, opts)
+    )
+    const wrapper = await openUserTab()
+
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Unblock')[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u1', {
+      method: 'PATCH',
+      body: { isBlocked: false },
+    })
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Block')).toHaveLength(1)
+  })
+
+  it('Enter on the Block button does not trigger the modal Save', async () => {
+    const wrapper = await openUserTab()
+    apiRequestMock.mockClear()
+
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Block')[0]
+      .trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    const patches = apiRequestMock.mock.calls.filter(([, opts]) => opts?.method === 'PATCH')
+    expect(patches).toHaveLength(0)
+  })
+
+  it('shows an error and keeps the state when blocking fails', async () => {
+    const defaultImpl = apiRequestMock.getMockImplementation()!
+    apiRequestMock.mockImplementation((path: string, opts?: { method?: string }) =>
+      opts?.method === 'PATCH' ? Promise.reject(new Error('boom')) : defaultImpl(path, opts)
+    )
+    const wrapper = await openUserTab()
+
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Block')[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('boom')
+    expect(wrapper.findAll('button').filter((b) => b.text() === 'Block')).toHaveLength(1)
   })
 
   it('Language and Origin selects are populated without hardcoded options', async () => {
@@ -543,7 +625,6 @@ describe('ProfilesPage', () => {
       method: 'PATCH',
       body: {
         isActive: true,
-        isBlocked: false,
         language: 'hu',
         originDomain: 'otherbrand.example',
       },
@@ -657,7 +738,7 @@ describe('ProfilesPage', () => {
     // No Profile/User tab bar in user-only mode
     expect(wrapper.find('.nav-tabs').exists()).toBe(false)
 
-    await wrapper.find('#editUserBlocked').setValue(true)
+    await wrapper.find('#editUserActive').setValue(false)
     await wrapper
       .findAll('button')
       .filter((b) => b.text() === 'Save')[0]
@@ -666,7 +747,7 @@ describe('ProfilesPage', () => {
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/users/u9', {
       method: 'PATCH',
-      body: { isActive: true, isBlocked: true, language: 'en', originDomain: 'example.org' },
+      body: { isActive: false, language: 'en', originDomain: 'example.org' },
     })
   })
 

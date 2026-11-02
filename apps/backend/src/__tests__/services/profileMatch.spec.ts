@@ -54,6 +54,8 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     const age = 28
 
     expect(res[0].id).toBe('p2')
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.where.user).toEqual({ isBlocked: false })
   })
 
   it('findMutualMatchIds returns only IDs', async () => {

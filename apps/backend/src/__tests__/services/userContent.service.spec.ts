@@ -48,3 +48,32 @@ describe('findByProfileId', () => {
     expect(where).toMatchObject({ postedById: 'p1', isDeleted: false, isVisible: true })
   })
 })
+
+describe('findAllWithLocation', () => {
+  it('excludes content whose author account is blocked', async () => {
+    await service.findAllWithLocation('viewer-1', ['post'])
+
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where.postedBy.user).toEqual({ isBlocked: false })
+  })
+})
+
+describe('feeds hide content by blocked authors', () => {
+  it('findFeed', async () => {
+    await service.findFeed({ kind: 'post', limit: 10, offset: 0 })
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where.postedBy).toEqual({ user: { isBlocked: false } })
+  })
+
+  it('findInBounds', async () => {
+    await service.findInBounds(box, { kinds: ['post'] })
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where.postedBy).toEqual({ user: { isBlocked: false } })
+  })
+
+  it('findNearby', async () => {
+    await service.findNearby(47.5, 19.0, 10, { kind: 'post', limit: 10, offset: 0 })
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where.postedBy).toEqual({ user: { isBlocked: false } })
+  })
+})

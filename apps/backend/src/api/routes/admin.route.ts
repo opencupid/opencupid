@@ -23,6 +23,7 @@ import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { mapMessageToDTO } from '../mappers/messaging.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { ProfileTrustService } from '@/services/profileTrust.service'
+import { ClusterService } from '@/services/cluster.service'
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
 
@@ -462,6 +463,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * PATCH /users/:id
    * Updates user admin fields (active/blocked status, language, origin domain).
+   * Setting isBlocked=true also bumps tokenVersion and deletes the user's
+   * sessions, logging them out everywhere.
    * @param {string} id - User ID
    * @body {boolean} [isActive] - Active status
    * @body {boolean} [isBlocked] - Blocked status
@@ -505,15 +508,47 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 400, 'No valid fields to update')
       }
 
+      // Blocking also ends the user's access: bumping tokenVersion makes their
+      // refresh tokens fail, clearing loginToken voids a pending magic link,
+      // and their sessions and live sockets are closed below.
+      //
+      // Order matters: tokenVersion is bumped (here) before sessions are
+      // deleted, so a refresh that starts after this update fails. Remaining
+      // edge cases, accepted as narrow windows:
+      // - A refresh already past its tokenVersion check can still create a
+      //   session after deleteUserSessions() (see
+      //   SessionService.deleteAllForUser).
+      // - A ws-ticket issued before the block is single-use with a 30s TTL and
+      //   doesn't recheck the session, so it allows one reconnect within 30s.
+      // - Sockets are closed only on this API process; `fastify.connections`
+      //   is in-memory, so sockets held by other replicas stay open.
+      // Unblocking only clears the flag: revoked sessions aren't restored,
+      // so the user has to log in again.
       const user = await prisma.user.update({
         where: { id },
-        data,
+        data: data.isBlocked
+          ? { ...data, tokenVersion: { increment: 1 }, loginToken: null, loginTokenExp: null }
+          : data,
         omit: {
           tokenVersion: true,
           loginToken: true,
           loginTokenExp: true,
         },
       })
+
+      if (data.isBlocked) {
+        await fastify.deleteUserSessions(id)
+        const profile = await prisma.profile.findUnique({
+          where: { userId: id },
+          select: { id: true },
+        })
+        for (const socket of (profile && fastify.connections.get(profile.id)) || []) {
+          socket.close()
+        }
+      }
+      // Cached map indexes are shared across viewers and include this user's
+      // profile and content pins (or exclude them, when unblocking).
+      if (data.isBlocked !== undefined) ClusterService.getInstance().evictAll()
 
       return reply.code(200).send({ success: true, user })
     } catch (err) {

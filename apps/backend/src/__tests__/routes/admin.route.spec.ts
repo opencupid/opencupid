@@ -123,6 +123,11 @@ vi.mock('@/services/messaging.stateMachine', () => ({
 
 const mockBroadcastToProfile = vi.hoisted(() => vi.fn())
 
+const mockEvictAll = vi.hoisted(() => vi.fn())
+vi.mock('@/services/cluster.service', () => ({
+  ClusterService: { getInstance: () => ({ evictAll: mockEvictAll }) },
+}))
+
 vi.mock('@/utils/wsUtils', () => ({
   broadcastToProfile: mockBroadcastToProfile,
 }))
@@ -145,6 +150,7 @@ class AdminMockFastify {
   // entries for recipients they want to receive a broadcast; absent entries
   // mean "offline" and exercise the pre-check path that skips broadcasting.
   public connections: Map<string, Set<unknown>> = new Map()
+  public deleteUserSessions = vi.fn().mockResolvedValue(undefined)
 
   get(path: string, opts: any, handler?: any) {
     this.routes[`GET ${path}`] = typeof opts === 'function' ? opts : handler
@@ -636,7 +642,7 @@ describe('GET /users/:id', () => {
 })
 
 describe('PATCH /users/:id', () => {
-  it('updates user isActive and isBlocked', async () => {
+  it("blocking bumps tokenVersion and deletes all of the user's sessions", async () => {
     const updatedUser = { id: 'user1', isActive: false, isBlocked: true }
     mockPrisma.user.update.mockResolvedValue(updatedUser)
 
@@ -645,15 +651,53 @@ describe('PATCH /users/:id', () => {
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
+    expect(fastify.deleteUserSessions).toHaveBeenCalledWith('user1')
     expect(mockPrisma.user.update).toHaveBeenCalledWith({
       where: { id: 'user1' },
-      data: { isActive: false, isBlocked: true },
+      data: {
+        isActive: false,
+        isBlocked: true,
+        tokenVersion: { increment: 1 },
+        loginToken: null,
+        loginTokenExp: null,
+      },
       omit: {
         tokenVersion: true,
         loginToken: true,
         loginTokenExp: true,
       },
     })
+  })
+
+  it("blocking closes the user's live sockets and evicts cached map indexes", async () => {
+    mockPrisma.user.update.mockResolvedValue({ id: 'user1', isBlocked: true })
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'prof1' })
+    const socket = { close: vi.fn() }
+    fastify.connections.set('prof1', new Set([socket]))
+    mockEvictAll.mockClear()
+
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler({ params: { id: 'user1' }, body: { isBlocked: true } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(socket.close).toHaveBeenCalled()
+    expect(mockEvictAll).toHaveBeenCalled()
+  })
+
+  it('unblocking does not bump tokenVersion or delete sessions', async () => {
+    mockEvictAll.mockClear()
+    mockPrisma.user.update.mockResolvedValue({ id: 'user1', isBlocked: false })
+
+    const handler = fastify.routes['PATCH /users/:id']
+    await handler({ params: { id: 'user1' }, body: { isBlocked: false } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(fastify.deleteUserSessions).not.toHaveBeenCalled()
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { isBlocked: false } })
+    )
+    // Unblocking must also rebuild indexes that were built while blocked
+    expect(mockEvictAll).toHaveBeenCalled()
   })
 
   it('returns 400 when no valid fields provided', async () => {

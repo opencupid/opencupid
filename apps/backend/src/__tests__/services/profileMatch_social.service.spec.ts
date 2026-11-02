@@ -75,6 +75,15 @@ describe('ProfileMatchService.findSocialProfilesWithLocation', () => {
     expect(call.where).not.toHaveProperty('id')
   })
 
+  it('excludes profiles whose user account is blocked', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.where.user).toEqual({ isBlocked: false })
+  })
+
   it('limits results to 500', async () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
 
@@ -82,5 +91,16 @@ describe('ProfileMatchService.findSocialProfilesWithLocation', () => {
 
     const call = mockPrisma.profile.findMany.mock.calls[0][0]
     expect(call.take).toBe(500)
+  })
+})
+
+describe('ProfileMatchService.findNewProfilesAnywhere', () => {
+  it('excludes profiles whose user account is blocked', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findNewProfilesAnywhere(mockProfileId)
+
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.where.user).toEqual({ isBlocked: false })
   })
 })
