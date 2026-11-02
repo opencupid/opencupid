@@ -30,10 +30,14 @@ async function main() {
         continue
       }
       const ukey = `user:${parsed.data.userId}:sessions`
-      const setTtl = await redis.ttl(ukey)
-      const tx = redis.multi().sadd(ukey, key.slice('session:'.length))
-      if (ttl > setTtl) tx.expire(ukey, ttl)
-      await tx.exec()
+      // NX sets a TTL on a fresh set; GT only ever extends an existing one, so
+      // a concurrent login that already extended the set is never shortened.
+      await redis
+        .multi()
+        .sadd(ukey, key.slice('session:'.length))
+        .expire(ukey, ttl, 'NX')
+        .expire(ukey, ttl, 'GT')
+        .exec()
       indexed++
     }
   } while (cursor !== '0')

@@ -175,10 +175,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const newJwt = fastify.jwt.sign(newPayload)
 
-      await fastify.createSession(newJwt, session.sessionData)
       // The new JWT replaces the old one — delete its session so it can't be
-      // reused (a not-yet-expired JWT would otherwise stay valid).
+      // reused (a not-yet-expired JWT would otherwise stay valid). Delete
+      // before creating: a refresh in the same second as issuance signs an
+      // identical JWT, and deleting afterwards would remove the new session.
       await fastify.deleteSession(expiredJwt, jwtPayload.userId)
+      await fastify.createSession(newJwt, session.sessionData)
 
       const newRefreshToken = await refreshTokenService.create(
         user.id,
