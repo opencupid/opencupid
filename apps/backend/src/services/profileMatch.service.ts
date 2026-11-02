@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma'
 import { type DbProfileWithImages, DatingEligibleProfileSchema } from '@zod/profile/profile.db'
 
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { notBlockedUserWhere } from '@/db/includes/notBlockedUserWhere'
 import { profileImageInclude, tagsInclude } from '@/db/includes/profileIncludes'
 import { type Prisma } from '@prisma/client'
 import { calculateAge } from '@zod/match/filters.form'
@@ -18,7 +19,7 @@ const defaultOrderBy: OrderBy = {
 const statusFlags = {
   isActive: true,
   isOnboarded: true,
-  user: { isBlocked: false },
+  ...notBlockedUserWhere,
 } satisfies Prisma.ProfileWhereInput
 
 export class ProfileMatchService {

@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
+import { notBlockedUserWhere } from '@/db/includes/notBlockedUserWhere'
 import { userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { TagService } from './tag.service'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
@@ -97,6 +98,7 @@ export class UserContentService {
         isDeleted: false,
         isVisible: true,
         kind: opts.kind,
+        postedBy: notBlockedUserWhere,
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
@@ -116,6 +118,7 @@ export class UserContentService {
         kind: { in: opts.kinds },
         lat: { gte: box.south, lte: box.north },
         lon: { gte: box.west, lte: box.east },
+        postedBy: notBlockedUserWhere,
       },
       include: profileSummaryInclude,
       orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
@@ -139,6 +142,7 @@ export class UserContentService {
         kind: opts.kind,
         lat: { gte: lat - dLat, lte: lat + dLat },
         lon: { gte: lon - dLon, lte: lon + dLon },
+        postedBy: notBlockedUserWhere,
       },
       include: profileSummaryInclude,
       orderBy: { createdAt: 'desc' },
@@ -308,7 +312,7 @@ export class UserContentService {
         isVisible: true,
         lat: { not: null },
         lon: { not: null },
-        postedBy: { ...blocklistWhereClause(viewerProfileId), user: { isBlocked: false } },
+        postedBy: { ...blocklistWhereClause(viewerProfileId), ...notBlockedUserWhere },
         kind: { in: kinds },
       },
       include: contentSummaryInclude,
