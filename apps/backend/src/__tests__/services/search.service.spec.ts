@@ -163,6 +163,16 @@ describe('SearchService.search — profiles (trigram)', () => {
     expect(serialized).not.toContain('"hu"')
   })
 
+  it('excludes profiles whose user account is blocked', async () => {
+    const router = installQueryRawRouter()
+
+    await service.search('guitar', 'en', 'me')
+
+    const sql = (router.profileCalls[0][0] as string[]).join('?')
+    expect(sql).toContain('JOIN "User" u ON u.id = p."userId"')
+    expect(sql).toContain('u."isBlocked" = false')
+  })
+
   it('hydrates matching profiles and preserves rank order', async () => {
     const router = installQueryRawRouter()
     router.setProfileResult([

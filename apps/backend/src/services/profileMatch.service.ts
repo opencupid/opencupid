@@ -18,7 +18,8 @@ const defaultOrderBy: OrderBy = {
 const statusFlags = {
   isActive: true,
   isOnboarded: true,
-}
+  user: { isBlocked: false },
+} satisfies Prisma.ProfileWhereInput
 
 export class ProfileMatchService {
   async findNewProfilesAnywhere(

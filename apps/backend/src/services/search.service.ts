@@ -105,11 +105,13 @@ export class SearchService {
              MAX(similarity(lpf."value", ${term})) AS rank
       FROM "LocalizedProfileField" lpf
       JOIN "Profile" p ON p.id = lpf."profileId"
+      JOIN "User" u ON u.id = p."userId"
       WHERE lpf."locale" IN (${Prisma.join(localeFilter)})
         AND lpf."value" ILIKE ${pattern}
         AND p."isActive" = true
         AND p."isOnboarded" = true
         AND p."isSocialActive" = true
+        AND u."isBlocked" = false
         AND NOT EXISTS (
           SELECT 1 FROM "_BlockedProfiles" bp
           WHERE (bp."A" = p.id AND bp."B" = ${myProfileId})
