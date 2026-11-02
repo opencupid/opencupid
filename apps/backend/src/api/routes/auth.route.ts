@@ -175,6 +175,19 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const newJwt = fastify.jwt.sign(newPayload)
 
+      // The new JWT replaces the old one — delete its session so it can't be
+      // reused (a not-yet-expired JWT would otherwise stay valid). Delete
+      // before creating: a refresh in the same second as issuance signs an
+      // identical JWT (same claims, same iat, no jti), and deleting afterwards
+      // would remove the new session. In that case the "new" token is the old
+      // one, which is fine — only the refresh token is actually rotated.
+      //
+      // Edge case: user.tokenVersion was read above, before these writes. If
+      // the user's sessions are revoked (deleteUserSessions + tokenVersion
+      // bump) in between, the session created here survives with the old
+      // tokenVersion; session-auth compares the JWT only against the session
+      // copy, never the DB.
+      await fastify.deleteSession(expiredJwt, jwtPayload.userId)
       await fastify.createSession(newJwt, session.sessionData)
 
       const newRefreshToken = await refreshTokenService.create(

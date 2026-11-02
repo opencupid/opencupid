@@ -17,6 +17,7 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write src/",
     "images:reprocess": "npx tsx scripts/reprocess-images.ts",
+    "sessions:backfill": "npx tsx scripts/backfill-user-sessions.ts",
     "redis:flush": "docker compose exec redis redis-cli FLUSHALL",
     "redis:sessions": "docker compose exec redis  redis-cli KEYS '*'",
     "tags:translate": "npx node scripts/translate-tags-deepl.js",

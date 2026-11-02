@@ -583,6 +583,7 @@ describe('POST /refresh', () => {
       sign: vi.fn().mockReturnValue('new-jwt'),
       verify: vi.fn().mockReturnValue({ userId: 'user1', profileId, tokenVersion: 0 }),
     }
+    fastify.deleteSession = vi.fn().mockResolvedValue(undefined)
     const req = {
       body: {},
       cookies: {
@@ -604,6 +605,59 @@ describe('POST /refresh', () => {
     expect(reply.cookies[1].name).toBe('__refresh')
     expect(reply.cookies[1].value).toBe('new-refresh-token')
     expect(reply.cookies[1].opts.httpOnly).toBe(true)
+    expect(fastify.deleteSession).toHaveBeenCalledWith('expired-jwt', 'user1')
+  })
+})
+
+describe('POST /refresh — same-second refresh', () => {
+  it('deletes the old session before creating the new one, so an identical JWT survives', async () => {
+    const handler = fastify.routes['POST /refresh']
+    const profileId = 'cmc7t45x400086w39gj30pzn3'
+    mockRefreshTokenService.validate.mockResolvedValue({
+      userId: 'user1',
+      profileId,
+      tokenVersion: 0,
+    })
+    mockUserService.getUserById.mockResolvedValue({
+      id: 'user1',
+      tokenVersion: 0,
+      roles: [],
+      language: 'en',
+    })
+    mockGetExistingUserSession.mockResolvedValue({
+      profileId,
+      sessionData: {
+        userId: 'user1',
+        profileId,
+        tokenVersion: 0,
+        lang: 'en',
+        roles: [],
+        hasActiveProfile: false,
+        profile: { id: profileId, isDatingActive: false, isSocialActive: false, isActive: false },
+      },
+    })
+    // Same claims + same iat second → jwt.sign returns the very token being refreshed
+    fastify.jwt = {
+      sign: vi.fn().mockReturnValue('same-jwt'),
+      verify: vi.fn().mockReturnValue({ userId: 'user1', profileId, tokenVersion: 0 }),
+    }
+    fastify.deleteSession = vi.fn().mockResolvedValue(undefined)
+    fastify.createSession = vi.fn().mockResolvedValue(undefined)
+
+    await handler(
+      {
+        body: {},
+        cookies: { __session: 'same-jwt', __refresh: '550e8400-e29b-41d4-a716-446655440000' },
+      } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(fastify.deleteSession).toHaveBeenCalledWith('same-jwt', 'user1')
+    expect(fastify.createSession).toHaveBeenCalledWith('same-jwt', expect.anything())
+    const deleteOrder = (fastify.deleteSession as any).mock.invocationCallOrder[0]
+    const createOrder = (fastify.createSession as any).mock.invocationCallOrder[0]
+    expect(deleteOrder).toBeLessThan(createOrder)
   })
 })
 

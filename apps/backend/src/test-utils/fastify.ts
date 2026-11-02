@@ -13,6 +13,8 @@ export class MockFastify {
   public log = { error: () => {}, warn: () => {}, info: () => {} }
   public authenticate = (_req: any, _reply: any) => {}
   public createSession = (_token: string, _data: SessionData): Promise<void> => Promise.resolve()
+  public deleteSession = (_token: string, _userId: string): Promise<void> => Promise.resolve()
+  public deleteUserSessions = (_userId: string): Promise<void> => Promise.resolve()
 
   get(path: string, opts: any | RouteHandler, handler?: RouteHandler) {
     this.routes[`GET ${path}`] = (typeof opts === 'function' ? opts : handler) as RouteHandler

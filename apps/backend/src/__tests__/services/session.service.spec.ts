@@ -6,10 +6,13 @@ function createMockRedis() {
     set: vi.fn().mockReturnThis(),
     expire: vi.fn().mockReturnThis(),
     del: vi.fn().mockReturnThis(),
+    sadd: vi.fn().mockReturnThis(),
+    srem: vi.fn().mockReturnThis(),
     exec: vi.fn().mockResolvedValue([]),
   }
   return {
     get: vi.fn(),
+    smembers: vi.fn(),
     multi: vi.fn(() => chain),
     _chain: chain,
   }
@@ -46,6 +49,13 @@ describe('SessionService.getOrCreate', () => {
     expect(redis._chain.set).toHaveBeenCalledWith('session:sess1', JSON.stringify(sessionData))
     expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
   })
+
+  it("adds the session to the user's session set", async () => {
+    await service.getOrCreate('sess1', sessionData as any)
+    const ukey = `user:${sessionData.userId}:sessions`
+    expect(redis._chain.sadd).toHaveBeenCalledWith(ukey, 'sess1')
+    expect(redis._chain.expire).toHaveBeenCalledWith(ukey, 2592000)
+  })
 })
 
 describe('SessionService.get', () => {
@@ -71,11 +81,12 @@ describe('SessionService.get', () => {
 })
 
 describe('SessionService.refreshTtl', () => {
-  it('refreshes TTL on session and roles keys', async () => {
-    await service.refreshTtl('sess1')
+  it("refreshes TTL on session, roles and the user's session set", async () => {
+    await service.refreshTtl('sess1', 'user1')
     expect(redis.multi).toHaveBeenCalled()
     expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
     expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1:roles', 2592000)
+    expect(redis._chain.expire).toHaveBeenCalledWith('user:user1:sessions', 2592000)
   })
 })
 
@@ -88,6 +99,7 @@ describe('SessionService.patch', () => {
     const storedJson = redis._chain.set.mock.calls[0][1]
     expect(JSON.parse(storedJson)).toEqual({ ...sessionData, lang: 'hu' })
     expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
+    expect(redis._chain.expire).toHaveBeenCalledWith(`user:${sessionData.userId}:sessions`, 2592000)
   })
 
   it('does nothing when session does not exist', async () => {
@@ -99,10 +111,32 @@ describe('SessionService.patch', () => {
 })
 
 describe('SessionService.delete', () => {
-  it('deletes session and roles keys', async () => {
-    await service.delete('sess1')
+  it("deletes session and roles keys and removes it from the user's set", async () => {
+    await service.delete('sess1', 'user1')
     expect(redis.multi).toHaveBeenCalled()
     expect(redis._chain.del).toHaveBeenCalledWith('session:sess1')
     expect(redis._chain.del).toHaveBeenCalledWith('session:sess1:roles')
+    expect(redis._chain.srem).toHaveBeenCalledWith('user:user1:sessions', 'sess1')
+  })
+})
+
+describe('SessionService.deleteAllForUser', () => {
+  it("deletes every session in the user's set", async () => {
+    redis.smembers.mockResolvedValue(['s1', 's2'])
+    await service.deleteAllForUser('user1')
+    expect(redis.smembers).toHaveBeenCalledWith('user:user1:sessions')
+    for (const key of ['session:s1', 'session:s1:roles', 'session:s2', 'session:s2:roles']) {
+      expect(redis._chain.del).toHaveBeenCalledWith(key)
+    }
+    // Only the IDs read are removed, so a session added concurrently stays indexed
+    expect(redis._chain.srem).toHaveBeenCalledWith('user:user1:sessions', 's1', 's2')
+    expect(redis._chain.del).not.toHaveBeenCalledWith('user:user1:sessions')
+    expect(redis._chain.exec).toHaveBeenCalled()
+  })
+
+  it('does nothing when the user has no sessions', async () => {
+    redis.smembers.mockResolvedValue([])
+    await service.deleteAllForUser('user1')
+    expect(redis.multi).not.toHaveBeenCalled()
   })
 })
