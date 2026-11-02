@@ -23,6 +23,7 @@ import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { mapMessageToDTO } from '../mappers/messaging.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { ProfileTrustService } from '@/services/profileTrust.service'
+import { ClusterService } from '@/services/cluster.service'
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
 
@@ -507,11 +508,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 400, 'No valid fields to update')
       }
 
-      // Blocking also ends the user's active logins: bumping tokenVersion
-      // makes their refresh tokens fail, and their sessions are deleted below.
+      // Blocking also ends the user's access: bumping tokenVersion makes their
+      // refresh tokens fail, clearing loginToken voids a pending magic link,
+      // and their sessions and live sockets are closed below.
       const user = await prisma.user.update({
         where: { id },
-        data: data.isBlocked ? { ...data, tokenVersion: { increment: 1 } } : data,
+        data: data.isBlocked
+          ? { ...data, tokenVersion: { increment: 1 }, loginToken: null, loginTokenExp: null }
+          : data,
         omit: {
           tokenVersion: true,
           loginToken: true,
@@ -519,7 +523,19 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      if (data.isBlocked) await fastify.deleteUserSessions(id)
+      if (data.isBlocked) {
+        await fastify.deleteUserSessions(id)
+        const profile = await prisma.profile.findUnique({
+          where: { userId: id },
+          select: { id: true },
+        })
+        for (const socket of (profile && fastify.connections.get(profile.id)) || []) {
+          socket.close()
+        }
+      }
+      // Cached map indexes are shared across viewers and include this user's
+      // profile and content pins (or exclude them, when unblocking).
+      if (data.isBlocked !== undefined) ClusterService.getInstance().evictAll()
 
       return reply.code(200).send({ success: true, user })
     } catch (err) {

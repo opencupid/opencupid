@@ -48,3 +48,12 @@ describe('findByProfileId', () => {
     expect(where).toMatchObject({ postedById: 'p1', isDeleted: false, isVisible: true })
   })
 })
+
+describe('findAllWithLocation', () => {
+  it('excludes content whose author account is blocked', async () => {
+    await service.findAllWithLocation('viewer-1', ['post'])
+
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where.postedBy.user).toEqual({ isBlocked: false })
+  })
+})

@@ -529,6 +529,20 @@ describe('ProfilesPage', () => {
     expect(wrapper.findAll('button').filter((b) => b.text() === 'Block')).toHaveLength(1)
   })
 
+  it('Enter on the Block button does not trigger the modal Save', async () => {
+    const wrapper = await openUserTab()
+    apiRequestMock.mockClear()
+
+    await wrapper
+      .findAll('button')
+      .filter((b) => b.text() === 'Block')[0]
+      .trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    const patches = apiRequestMock.mock.calls.filter(([, opts]) => opts?.method === 'PATCH')
+    expect(patches).toHaveLength(0)
+  })
+
   it('shows an error and keeps the state when blocking fails', async () => {
     const defaultImpl = apiRequestMock.getMockImplementation()!
     apiRequestMock.mockImplementation((path: string, opts?: { method?: string }) =>

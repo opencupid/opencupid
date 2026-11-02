@@ -1269,6 +1269,7 @@ onUnmounted(() => {
                           userDetail.isBlocked ? 'btn-outline-secondary' : 'btn-outline-danger'
                         "
                         :disabled="userBlocking"
+                        @keydown.enter.stop
                         @click="toggleUserBlocked"
                       >
                         {{ userDetail.isBlocked ? 'Unblock' : 'Block' }}

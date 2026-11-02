@@ -308,7 +308,7 @@ export class UserContentService {
         isVisible: true,
         lat: { not: null },
         lon: { not: null },
-        postedBy: blocklistWhereClause(viewerProfileId),
+        postedBy: { ...blocklistWhereClause(viewerProfileId), user: { isBlocked: false } },
         kind: { in: kinds },
       },
       include: contentSummaryInclude,
