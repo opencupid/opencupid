@@ -511,6 +511,19 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       // Blocking also ends the user's access: bumping tokenVersion makes their
       // refresh tokens fail, clearing loginToken voids a pending magic link,
       // and their sessions and live sockets are closed below.
+      //
+      // Order matters: tokenVersion is bumped (here) before sessions are
+      // deleted, so a refresh that starts after this update fails. Remaining
+      // edge cases, accepted as narrow windows:
+      // - A refresh already past its tokenVersion check can still create a
+      //   session after deleteUserSessions() (see
+      //   SessionService.deleteAllForUser).
+      // - A ws-ticket issued before the block is single-use with a 30s TTL and
+      //   doesn't recheck the session, so it allows one reconnect within 30s.
+      // - Sockets are closed only on this API process; `fastify.connections`
+      //   is in-memory, so sockets held by other replicas stay open.
+      // Unblocking only clears the flag: revoked sessions aren't restored,
+      // so the user has to log in again.
       const user = await prisma.user.update({
         where: { id },
         data: data.isBlocked
