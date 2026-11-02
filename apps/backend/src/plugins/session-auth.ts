@@ -17,6 +17,8 @@ declare module 'fastify' {
   interface FastifyInstance {
     redis: Redis
     createSession: (token: string, data: SessionData) => Promise<void>
+    deleteSession: (token: string, userId: string) => Promise<void>
+    deleteUserSessions: (userId: string) => Promise<void>
   }
   interface FastifyRequest {
     session: SessionData
@@ -45,6 +47,12 @@ export default fp(async (fastify: FastifyInstance) => {
   fastify.decorate('createSession', async (token: string, data: SessionData): Promise<void> => {
     await sessionService.getOrCreate(token, data)
   })
+  fastify.decorate('deleteSession', (token: string, userId: string) =>
+    sessionService.delete(token, userId)
+  )
+  fastify.decorate('deleteUserSessions', (userId: string) =>
+    sessionService.deleteAllForUser(userId)
+  )
 
   // Auth hook reads JWT from Authorization header (if present) or __session
   // cookie. @fastify/jwt checks Bearer header first, then falls back to cookie.
@@ -108,15 +116,16 @@ export default fp(async (fastify: FastifyInstance) => {
       // planned host migration does not force active sessions to
       // re-authenticate. Sunsets together with `session-legacy.ts`.
       restampRefreshCookieIfPresent(req, reply)
-      await sessionService.refreshTtl(sessionId)
+      await sessionService.refreshTtl(sessionId, sess.userId)
     } catch (err) {
       req.log.error({ err, sessionId }, 'Redis error during authenticated request')
       return sendServiceUnavailableError(reply, 'Session lookup failed')
     }
 
-    req.session = sess
+    const session = sess
+    req.session = session
     req.deleteSession = async () => {
-      return await sessionService.delete(sessionId)
+      return await sessionService.delete(sessionId, session.userId)
     }
     req.updateSession = async (data: Partial<SessionData>) => {
       return await sessionService.patch(sessionId, data)

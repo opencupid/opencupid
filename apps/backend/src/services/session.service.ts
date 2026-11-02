@@ -15,6 +15,10 @@ export class SessionService {
   private rolesKey(id: string) {
     return `session:${id}:roles`
   }
+  /** Set of session IDs belonging to a user, so they can be revoked together. */
+  private userSessionsKey(userId: string) {
+    return `user:${userId}:sessions`
+  }
 
   /**
    * Fetch or create the session hash and roles set
@@ -22,7 +26,15 @@ export class SessionService {
   async getOrCreate(id: string, data: SessionData): Promise<SessionData> {
     const hkey = this.sessionKey(id)
 
-    await this.redis.multi().set(hkey, JSON.stringify(data)).expire(hkey, this.ttlSec).exec()
+    const ukey = this.userSessionsKey(data.userId)
+
+    await this.redis
+      .multi()
+      .set(hkey, JSON.stringify(data))
+      .expire(hkey, this.ttlSec)
+      .sadd(ukey, id)
+      .expire(ukey, this.ttlSec)
+      .exec()
 
     return data
   }
@@ -42,10 +54,16 @@ export class SessionService {
   /**
    * Refresh TTL on session data
    */
-  async refreshTtl(id: string): Promise<void> {
+  async refreshTtl(id: string, userId: string): Promise<void> {
     const hkey = this.sessionKey(id)
     const rkey = this.rolesKey(id)
-    await this.redis.multi().expire(hkey, this.ttlSec).expire(rkey, this.ttlSec).exec()
+    const ukey = this.userSessionsKey(userId)
+    await this.redis
+      .multi()
+      .expire(hkey, this.ttlSec)
+      .expire(rkey, this.ttlSec)
+      .expire(ukey, this.ttlSec)
+      .exec()
   }
 
   /**
@@ -56,15 +74,35 @@ export class SessionService {
     if (!existing) return
     const merged = { ...existing, ...data }
     const hkey = this.sessionKey(id)
-    await this.redis.multi().set(hkey, JSON.stringify(merged)).expire(hkey, this.ttlSec).exec()
+    const ukey = this.userSessionsKey(existing.userId)
+    await this.redis
+      .multi()
+      .set(hkey, JSON.stringify(merged))
+      .expire(hkey, this.ttlSec)
+      .expire(ukey, this.ttlSec)
+      .exec()
   }
 
   /**
    * Delete a session and its roles
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: string, userId: string): Promise<void> {
     const hkey = this.sessionKey(id)
     const rkey = this.rolesKey(id)
-    await this.redis.multi().del(hkey).del(rkey).exec()
+    const ukey = this.userSessionsKey(userId)
+    await this.redis.multi().del(hkey).del(rkey).srem(ukey, id).exec()
+  }
+
+  /**
+   * Delete every session belonging to a user (e.g. when they are blocked).
+   */
+  async deleteAllForUser(userId: string): Promise<void> {
+    const ukey = this.userSessionsKey(userId)
+    const ids = await this.redis.smembers(ukey)
+    const tx = this.redis.multi()
+    for (const id of ids) {
+      tx.del(this.sessionKey(id)).del(this.rolesKey(id))
+    }
+    await tx.del(ukey).exec()
   }
 }
