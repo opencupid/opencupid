@@ -1,5 +1,16 @@
 # backend
 
+## 0.80.0
+
+### Minor Changes
+
+- 0a16b7d: Block/Unblock button on the admin User tab; blocking a user now logs them out everywhere
+- 1c9f0cd: Track sessions per user so they can be revoked together; token refresh now deletes the session it replaces
+
+### Patch Changes
+
+- 0a16b7d: Hide blocked users' profiles and content from browse, map, matches and search
+
 ## 0.79.0
 
 ### Minor Changes

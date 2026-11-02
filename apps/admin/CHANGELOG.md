@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.80.0
+
+### Minor Changes
+
+- 0a16b7d: Block/Unblock button on the admin User tab; blocking a user now logs them out everywhere
+
 ## 0.79.0
 
 ## 0.78.1
