@@ -206,6 +206,18 @@ describe('SearchService.search — profiles (trigram)', () => {
 })
 
 describe('SearchService.search — posts (trigram)', () => {
+  it('excludes content authored by blocked users', async () => {
+    const router = installQueryRawRouter()
+
+    await service.search('guitar', 'en', 'me')
+
+    for (const calls of [router.postCalls, router.eventCalls, router.communityCalls]) {
+      const sql = (calls[0][0] as string[]).join('?')
+      expect(sql).toContain('JOIN "User" u ON u.id = pr."userId"')
+      expect(sql).toContain('u."isBlocked" = false')
+    }
+  })
+
   it('runs the post query and hydrates posts in rank order', async () => {
     const router = installQueryRawRouter()
     router.setPostResult([

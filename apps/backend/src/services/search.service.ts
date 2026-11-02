@@ -139,8 +139,8 @@ export class SearchService {
   /**
    * Trigram substring rank over `UserContent.content` for one ContentKind.
    * Filters apply uniformly across kinds: visible, non-deleted content
-   * authored by an active, onboarded, social-active profile not in a
-   * blocking relationship with the searcher.
+   * authored by an active, onboarded, social-active profile of a non-blocked
+   * user, not in a blocking relationship with the searcher.
    *
    * `Prisma.sql` interpolation is used for the kind literal because Prisma's
    * tagged template parameter substitution doesn't compose inside enum casts
@@ -162,6 +162,7 @@ export class SearchService {
              similarity(p."content", ${term}) AS rank
       FROM "UserContent" p
       JOIN "Profile" pr ON pr.id = p."postedById"
+      JOIN "User" u ON u.id = pr."userId"
       WHERE p."kind" = ${kindLiteral}
         AND p."isVisible" = true
         AND p."isDeleted" = false
@@ -169,6 +170,7 @@ export class SearchService {
         AND pr."isActive" = true
         AND pr."isOnboarded" = true
         AND pr."isSocialActive" = true
+        AND u."isBlocked" = false
         AND NOT EXISTS (
           SELECT 1 FROM "_BlockedProfiles" bp
           WHERE (bp."A" = pr.id AND bp."B" = ${myProfileId})

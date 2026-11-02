@@ -2,4 +2,4 @@
 '@opencupid/backend': patch
 ---
 
-Hide profiles of blocked users from browse, map, matches and profile search
+Hide blocked users' profiles and content from browse, map, matches and search
