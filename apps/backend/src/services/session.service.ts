@@ -99,10 +99,13 @@ export class SessionService {
   async deleteAllForUser(userId: string): Promise<void> {
     const ukey = this.userSessionsKey(userId)
     const ids = await this.redis.smembers(ukey)
+    if (ids.length === 0) return
     const tx = this.redis.multi()
     for (const id of ids) {
       tx.del(this.sessionKey(id)).del(this.rolesKey(id))
     }
-    await tx.del(ukey).exec()
+    // Remove only the IDs read above: a session created after SMEMBERS stays
+    // indexed (and revocable) instead of being dropped with the whole set.
+    await tx.srem(ukey, ...ids).exec()
   }
 }

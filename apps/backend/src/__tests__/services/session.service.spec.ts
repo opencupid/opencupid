@@ -121,21 +121,22 @@ describe('SessionService.delete', () => {
 })
 
 describe('SessionService.deleteAllForUser', () => {
-  it("deletes every session in the user's set and the set itself", async () => {
+  it("deletes every session in the user's set", async () => {
     redis.smembers.mockResolvedValue(['s1', 's2'])
     await service.deleteAllForUser('user1')
     expect(redis.smembers).toHaveBeenCalledWith('user:user1:sessions')
     for (const key of ['session:s1', 'session:s1:roles', 'session:s2', 'session:s2:roles']) {
       expect(redis._chain.del).toHaveBeenCalledWith(key)
     }
-    expect(redis._chain.del).toHaveBeenCalledWith('user:user1:sessions')
+    // Only the IDs read are removed, so a session added concurrently stays indexed
+    expect(redis._chain.srem).toHaveBeenCalledWith('user:user1:sessions', 's1', 's2')
+    expect(redis._chain.del).not.toHaveBeenCalledWith('user:user1:sessions')
     expect(redis._chain.exec).toHaveBeenCalled()
   })
 
-  it('only deletes the set when the user has no sessions', async () => {
+  it('does nothing when the user has no sessions', async () => {
     redis.smembers.mockResolvedValue([])
     await service.deleteAllForUser('user1')
-    expect(redis._chain.del).toHaveBeenCalledTimes(1)
-    expect(redis._chain.del).toHaveBeenCalledWith('user:user1:sessions')
+    expect(redis.multi).not.toHaveBeenCalled()
   })
 })
