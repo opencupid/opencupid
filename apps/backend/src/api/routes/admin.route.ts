@@ -462,6 +462,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * PATCH /users/:id
    * Updates user admin fields (active/blocked status, language, origin domain).
+   * Setting isBlocked=true also bumps tokenVersion and deletes the user's
+   * sessions, logging them out everywhere.
    * @param {string} id - User ID
    * @body {boolean} [isActive] - Active status
    * @body {boolean} [isBlocked] - Blocked status
@@ -505,15 +507,19 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 400, 'No valid fields to update')
       }
 
+      // Blocking also ends the user's active logins: bumping tokenVersion
+      // makes their refresh tokens fail, and their sessions are deleted below.
       const user = await prisma.user.update({
         where: { id },
-        data,
+        data: data.isBlocked ? { ...data, tokenVersion: { increment: 1 } } : data,
         omit: {
           tokenVersion: true,
           loginToken: true,
           loginTokenExp: true,
         },
       })
+
+      if (data.isBlocked) await fastify.deleteUserSessions(id)
 
       return reply.code(200).send({ success: true, user })
     } catch (err) {
