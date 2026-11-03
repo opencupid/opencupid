@@ -952,3 +952,55 @@ describe('gallery mutations keep positions contiguous', () => {
     })
   })
 })
+
+describe('attach repairs galleries left broken by earlier code', () => {
+  it('attachToProfile compacts before appending, so a lone image at position 1 does not tie with the new one', async () => {
+    // Production state: single image B stuck at position 1.
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'NEW',
+      ownerProfileId: 'profile-1',
+      profileGallery: null,
+      userContentGallery: null,
+      messageGallery: null,
+    })
+    mockPrisma.image.findMany.mockResolvedValueOnce([{ id: 'B', position: 1 }])
+    mockPrisma.profileImage.count.mockResolvedValue(1)
+    mockPrisma.profileImage.findFirst.mockResolvedValue({ image: { hasFace: true } })
+
+    await service.attachToProfile('NEW', 'profile-1')
+
+    expect(mockPrisma.image.update.mock.calls).toEqual([
+      [{ where: { id: 'B' }, data: { position: 0 } }],
+      [{ where: { id: 'NEW' }, data: { position: 1 } }],
+    ])
+    expect(mockPrisma.image.findMany.mock.invocationCallOrder[0]).toBeLessThan(
+      mockPrisma.profileImage.count.mock.invocationCallOrder[0]
+    )
+  })
+
+  it('attachToUserContent compacts before appending', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'NEW',
+      ownerProfileId: 'profile-1',
+      profileGallery: null,
+      userContentGallery: null,
+      messageGallery: null,
+    })
+    mockPrisma.userContent.findUnique.mockResolvedValue({
+      id: 'content-1',
+      postedById: 'profile-1',
+    })
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      { id: 'A', position: 0 },
+      { id: 'C', position: 2 },
+    ])
+    mockPrisma.userContentImage.count.mockResolvedValue(2)
+
+    await service.attachToUserContent('NEW', 'content-1')
+
+    expect(mockPrisma.image.update.mock.calls).toEqual([
+      [{ where: { id: 'C' }, data: { position: 1 } }],
+      [{ where: { id: 'NEW' }, data: { position: 2 } }],
+    ])
+  })
+})

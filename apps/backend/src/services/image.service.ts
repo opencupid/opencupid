@@ -19,8 +19,9 @@ type GalleryRef = { profileId: string } | { userContentId: string }
 /**
  * Renumber a gallery's Image.position to a contiguous 0..n-1, preserving the
  * current order (ties broken by createdAt, then id). Every gallery mutation runs
- * this inside its transaction so `position = count(gallery)` on attach can never
- * collide and position 0 is always the primary image.
+ * this inside its transaction, so position 0 is always the primary image and
+ * `position = count(gallery)` on attach always appends. Galleries left with gaps
+ * or duplicates by earlier code are repaired by their owner's next mutation.
  */
 export async function compactGalleryPositions(
   tx: Prisma.TransactionClient,
@@ -177,6 +178,8 @@ export class ImageService {
 
     await prisma.$transaction(
       async (tx) => {
+        // Compact first so count() is the end of the gallery even if it held gaps.
+        await compactGalleryPositions(tx, { profileId })
         const position = await tx.profileImage.count({ where: { profileId } })
         await tx.profileImage.create({ data: { imageId, profileId } })
         await tx.image.update({ where: { id: imageId }, data: { position } })
@@ -210,6 +213,8 @@ export class ImageService {
 
     await prisma.$transaction(
       async (tx) => {
+        // Compact first so count() is the end of the gallery even if it held gaps.
+        await compactGalleryPositions(tx, { userContentId })
         const position = await tx.userContentImage.count({ where: { userContentId } })
         await tx.userContentImage.create({ data: { imageId, userContentId } })
         await tx.image.update({ where: { id: imageId }, data: { position } })
