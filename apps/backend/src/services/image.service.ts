@@ -41,6 +41,12 @@ export async function lockGallery(
  * lockGallery(), so two attaches of the same image into different galleries
  * cannot both pass the membership check: the second waits for the first to
  * commit and then sees the image as attached.
+ *
+ * Only images that are not in a gallery are locked. Gallery members are updated
+ * by compaction/reorder/delete under their gallery lock; never locking them here
+ * means an attach (gallery lock, then unattached images) cannot form a cycle with
+ * those paths (gallery lock, then member images). Members named by a caller are
+ * still rejected by the membership read below.
  */
 async function lockUnattachedImages(
   tx: Prisma.TransactionClient,
@@ -48,7 +54,12 @@ async function lockUnattachedImages(
   ownerProfileId?: string
 ) {
   await tx.$queryRaw`
-    SELECT id FROM "Image" WHERE id IN (${Prisma.join(imageIds)}) ORDER BY id FOR UPDATE`
+    SELECT i.id FROM "Image" i
+    WHERE i.id IN (${Prisma.join(imageIds)})
+      AND NOT EXISTS (SELECT 1 FROM "ProfileImage" WHERE "imageId" = i.id)
+      AND NOT EXISTS (SELECT 1 FROM "UserContentImage" WHERE "imageId" = i.id)
+      AND NOT EXISTS (SELECT 1 FROM "MessageImage" WHERE "imageId" = i.id)
+    ORDER BY i.id FOR UPDATE`
   const images = await tx.image.findMany({
     where: { id: { in: imageIds } },
     include: { profileGallery: true, userContentGallery: true, messageGallery: true },
@@ -65,6 +76,21 @@ async function lockUnattachedImages(
     }
   }
   return images
+}
+
+const MEMBERSHIP_ATTEMPTS = 3
+
+/**
+ * Detach/delete must lock the image's gallery before touching it, but only learn
+ * which gallery that is from an unlocked read. `attempt` performs that read and
+ * the locked transaction, and returns false if, under the lock, the image turned
+ * out to have changed gallery since the read; it is then re-run from the read.
+ */
+async function retryOnMembershipChange(attempt: () => Promise<boolean>): Promise<void> {
+  for (let i = 0; i < MEMBERSHIP_ATTEMPTS; i++) {
+    if (await attempt()) return
+  }
+  throw new ImageServiceError('CONFLICT', 'Image gallery changed concurrently; retry')
 }
 
 /**
@@ -113,6 +139,7 @@ export type ImageServiceErrorCode =
   | 'OWNER_MISMATCH'
   | 'ALREADY_ATTACHED'
   | 'INVALID_REORDER'
+  | 'CONFLICT'
 
 export class ImageServiceError extends Error {
   constructor(
@@ -312,24 +339,28 @@ export class ImageService {
    * Re-syncs Profile.hasFace inside the same transaction.
    */
   async detachFromProfile(imageId: string, requesterProfileId: string): Promise<void> {
-    const image = await prisma.image.findUnique({
-      where: { id: imageId },
-      include: { profileGallery: true, userContentGallery: true },
-    })
-    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
-    if (image.ownerProfileId !== requesterProfileId) {
-      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
-    }
-    if (!image.profileGallery) {
-      throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a profile gallery')
-    }
+    await retryOnMembershipChange(async () => {
+      const image = await prisma.image.findUnique({
+        where: { id: imageId },
+        include: { profileGallery: true },
+      })
+      if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+      if (image.ownerProfileId !== requesterProfileId) {
+        throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      }
+      if (!image.profileGallery) {
+        throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a profile gallery')
+      }
 
-    const profileId = image.profileGallery.profileId
-    await prisma.$transaction(async (tx) => {
-      await lockGallery(tx, { profileId })
-      await tx.profileImage.delete({ where: { imageId } })
-      await compactGalleryPositions(tx, { profileId })
-      await syncProfileHasFace(tx, profileId)
+      const { profileId } = image.profileGallery
+      return prisma.$transaction(async (tx) => {
+        await lockGallery(tx, { profileId })
+        const { count } = await tx.profileImage.deleteMany({ where: { imageId, profileId } })
+        if (count === 0) return false
+        await compactGalleryPositions(tx, { profileId })
+        await syncProfileHasFace(tx, profileId)
+        return true
+      })
     })
   }
 
@@ -338,23 +369,29 @@ export class ImageService {
    * Profile.hasFace is intentionally NOT touched here (symmetry with attach).
    */
   async detachFromUserContent(imageId: string, requesterProfileId: string): Promise<void> {
-    const image = await prisma.image.findUnique({
-      where: { id: imageId },
-      include: { userContentGallery: true },
-    })
-    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
-    if (image.ownerProfileId !== requesterProfileId) {
-      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
-    }
-    if (!image.userContentGallery) {
-      throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a content gallery')
-    }
+    await retryOnMembershipChange(async () => {
+      const image = await prisma.image.findUnique({
+        where: { id: imageId },
+        include: { userContentGallery: true },
+      })
+      if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+      if (image.ownerProfileId !== requesterProfileId) {
+        throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
+      }
+      if (!image.userContentGallery) {
+        throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a content gallery')
+      }
 
-    const { userContentId } = image.userContentGallery
-    await prisma.$transaction(async (tx) => {
-      await lockGallery(tx, { userContentId })
-      await tx.userContentImage.delete({ where: { imageId } })
-      await compactGalleryPositions(tx, { userContentId })
+      const { userContentId } = image.userContentGallery
+      return prisma.$transaction(async (tx) => {
+        await lockGallery(tx, { userContentId })
+        const { count } = await tx.userContentImage.deleteMany({
+          where: { imageId, userContentId },
+        })
+        if (count === 0) return false
+        await compactGalleryPositions(tx, { userContentId })
+        return true
+      })
     })
   }
 
@@ -456,35 +493,54 @@ export class ImageService {
    * Profile.hasFace when applicable, then unlinks the on-disk variants.
    */
   async deleteImage(imageId: string, requesterProfileId: string): Promise<void> {
-    const image = await prisma.image.findUnique({
-      where: { id: imageId },
-      include: { profileGallery: true, userContentGallery: true },
-    })
-    if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
-    if (image.ownerProfileId !== requesterProfileId) {
-      throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
-    }
-
-    await prisma.$transaction(async (tx) => {
-      if (image.profileGallery) {
-        const { profileId } = image.profileGallery
-        await lockGallery(tx, { profileId })
-        await tx.profileImage.delete({ where: { imageId } })
-        await tx.image.delete({ where: { id: imageId } })
-        await compactGalleryPositions(tx, { profileId })
-        await syncProfileHasFace(tx, profileId)
-      } else if (image.userContentGallery) {
-        const { userContentId } = image.userContentGallery
-        await lockGallery(tx, { userContentId })
-        await tx.userContentImage.delete({ where: { imageId } })
-        await tx.image.delete({ where: { id: imageId } })
-        await compactGalleryPositions(tx, { userContentId })
-      } else {
-        await tx.image.delete({ where: { id: imageId } })
+    let storagePath = ''
+    await retryOnMembershipChange(async () => {
+      const image = await prisma.image.findUnique({
+        where: { id: imageId },
+        include: { profileGallery: true, userContentGallery: true, messageGallery: true },
+      })
+      if (!image) throw new ImageServiceError('NOT_FOUND', 'Image not found')
+      if (image.ownerProfileId !== requesterProfileId) {
+        throw new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
       }
+      storagePath = image.storagePath
+
+      return prisma.$transaction(async (tx) => {
+        if (image.profileGallery) {
+          const { profileId } = image.profileGallery
+          await lockGallery(tx, { profileId })
+          const { count } = await tx.profileImage.deleteMany({ where: { imageId, profileId } })
+          if (count === 0) return false
+          await tx.image.delete({ where: { id: imageId } })
+          await compactGalleryPositions(tx, { profileId })
+          await syncProfileHasFace(tx, profileId)
+        } else if (image.userContentGallery) {
+          const { userContentId } = image.userContentGallery
+          await lockGallery(tx, { userContentId })
+          const { count } = await tx.userContentImage.deleteMany({
+            where: { imageId, userContentId },
+          })
+          if (count === 0) return false
+          await tx.image.delete({ where: { id: imageId } })
+          await compactGalleryPositions(tx, { userContentId })
+        } else if (image.messageGallery) {
+          // Message galleries are never compacted; the join cascades with the image.
+          await tx.image.delete({ where: { id: imageId } })
+        } else {
+          // Must still be unattached: take the attach paths' image lock and recheck.
+          try {
+            await lockUnattachedImages(tx, [imageId])
+          } catch (err) {
+            if (err instanceof ImageServiceError && err.code === 'ALREADY_ATTACHED') return false
+            throw err
+          }
+          await tx.image.delete({ where: { id: imageId } })
+        }
+        return true
+      })
     })
 
-    await this.unlinkImageFiles(image.storagePath)
+    await this.unlinkImageFiles(storagePath)
   }
 
   /**
@@ -524,25 +580,25 @@ export class ImageService {
    * Re-syncs Profile.hasFace and returns the gallery sorted by position.
    */
   async reorderProfileGallery(profileId: string, items: ImagePosition[]): Promise<Image[]> {
-    const galleryCount = await prisma.profileImage.count({ where: { profileId } })
-    if (items.length !== galleryCount || new Set(items.map((i) => i.id)).size !== items.length) {
-      throw new ImageServiceError(
-        'INVALID_REORDER',
-        'Reorder must include every image in the gallery exactly once'
-      )
-    }
-
-    const valid = await prisma.profileImage.findMany({
-      where: { profileId, imageId: { in: items.map((i) => i.id) } },
-      select: { imageId: true },
-    })
-    const validIds = new Set(valid.map((v) => v.imageId))
-    if (items.some((i) => !validIds.has(i.id))) {
-      throw new ImageServiceError('INVALID_REORDER', 'Invalid image ID')
-    }
-
     await prisma.$transaction(async (tx) => {
       await lockGallery(tx, { profileId })
+      // Validate under the lock: membership cannot change until this commits.
+      const galleryCount = await tx.profileImage.count({ where: { profileId } })
+      if (items.length !== galleryCount || new Set(items.map((i) => i.id)).size !== items.length) {
+        throw new ImageServiceError(
+          'INVALID_REORDER',
+          'Reorder must include every image in the gallery exactly once'
+        )
+      }
+      const valid = await tx.profileImage.findMany({
+        where: { profileId, imageId: { in: items.map((i) => i.id) } },
+        select: { imageId: true },
+      })
+      const validIds = new Set(valid.map((v) => v.imageId))
+      if (items.some((i) => !validIds.has(i.id))) {
+        throw new ImageServiceError('INVALID_REORDER', 'Invalid image ID')
+      }
+
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
@@ -557,25 +613,25 @@ export class ImageService {
    * Profile.hasFace is intentionally NOT touched here.
    */
   async reorderUserContentGallery(userContentId: string, items: ImagePosition[]): Promise<Image[]> {
-    const galleryCount = await prisma.userContentImage.count({ where: { userContentId } })
-    if (items.length !== galleryCount || new Set(items.map((i) => i.id)).size !== items.length) {
-      throw new ImageServiceError(
-        'INVALID_REORDER',
-        'Reorder must include every image in the gallery exactly once'
-      )
-    }
-
-    const valid = await prisma.userContentImage.findMany({
-      where: { userContentId, imageId: { in: items.map((i) => i.id) } },
-      select: { imageId: true },
-    })
-    const validIds = new Set(valid.map((v) => v.imageId))
-    if (items.some((i) => !validIds.has(i.id))) {
-      throw new ImageServiceError('INVALID_REORDER', 'Invalid image ID')
-    }
-
     await prisma.$transaction(async (tx) => {
       await lockGallery(tx, { userContentId })
+      // Validate under the lock: membership cannot change until this commits.
+      const galleryCount = await tx.userContentImage.count({ where: { userContentId } })
+      if (items.length !== galleryCount || new Set(items.map((i) => i.id)).size !== items.length) {
+        throw new ImageServiceError(
+          'INVALID_REORDER',
+          'Reorder must include every image in the gallery exactly once'
+        )
+      }
+      const valid = await tx.userContentImage.findMany({
+        where: { userContentId, imageId: { in: items.map((i) => i.id) } },
+        select: { imageId: true },
+      })
+      const validIds = new Set(valid.map((v) => v.imageId))
+      if (items.some((i) => !validIds.has(i.id))) {
+        throw new ImageServiceError('INVALID_REORDER', 'Invalid image ID')
+      }
+
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
