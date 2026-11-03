@@ -17,7 +17,9 @@ COPY apps/frontend ./apps/frontend
 COPY packages ./packages
 WORKDIR /app/apps/frontend
 
-RUN pnpm run build-only
+# Hashed bundle output lives outside /var/www in the image: docker-entrypoint.sh
+# publishes it into the /var/www/assets/build volume on start.
+RUN pnpm run build-only && mv dist/assets/build /app/frontend-build
 
 FROM nginx:trixie
 LABEL org.opencontainers.image.source=https://github.com/opencupid/opencupid
@@ -26,6 +28,7 @@ COPY apps/frontend/security-headers.conf.tmpl /etc/nginx/security-headers.conf.t
 COPY apps/frontend/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 COPY --from=builder /app/apps/frontend/dist /var/www
+COPY --from=builder /app/frontend-build /opt/opencupid/build
 COPY --from=builder /app/apps/frontend/package.json /app/apps/frontend/package.json
 COPY apps/frontend/config.template.js /var/www/config.template.js
 

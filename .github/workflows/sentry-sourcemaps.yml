@@ -45,6 +45,8 @@ jobs:
           docker pull "$IMAGE"
           CID=$(docker create "$IMAGE")
           docker cp "$CID:/var/www" ./frontend-dist
+          # Hashed bundle + sourcemaps live outside /var/www in the image.
+          docker cp "$CID:/opt/opencupid/build" ./frontend-dist/assets/build
           docker cp "$CID:/app/apps/frontend/package.json" ./frontend-package.json
           docker rm "$CID"
           VERSION=$(jq -r .version ./frontend-package.json)

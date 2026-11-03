@@ -44,9 +44,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           // 30 KB raw ≈ ~9 KB gz — catches small single-consumer shared
           // utility chunks without forcing per-route lazy chunks to merge.
           experimentalMinChunkSize: 30 * 1024,
-          chunkFileNames: 'assets/chunk-[hash].js',
-          entryFileNames: 'assets/entry-[hash].js',
-          assetFileNames: 'assets/asset-[hash][extname]',
+          chunkFileNames: 'assets/build/chunk-[hash].js',
+          entryFileNames: 'assets/build/entry-[hash].js',
+          assetFileNames: 'assets/build/asset-[hash][extname]',
           manualChunks(id) {
             if (id.includes('/src/assets/icons/')) {
               return 'icons'
