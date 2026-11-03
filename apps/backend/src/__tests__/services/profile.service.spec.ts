@@ -333,3 +333,34 @@ describe('ProfileService.updateScopes', () => {
     await expect(service.updateScopes('u1', { isDatingActive: true })).rejects.toThrow()
   })
 })
+
+describe('syncProfileHasFace', () => {
+  it('copies hasFace from the lowest-position profile attachment', async () => {
+    const { syncProfileHasFace } = await import('../../services/profile.service')
+    mockPrisma.imageAttachment.findFirst.mockResolvedValue({ image: { hasFace: true } })
+
+    await syncProfileHasFace(mockPrisma, 'p1')
+
+    expect(mockPrisma.imageAttachment.findFirst).toHaveBeenCalledWith({
+      where: { profileId: 'p1' },
+      include: { image: { select: { hasFace: true } } },
+      orderBy: { position: 'asc' },
+    })
+    expect(mockPrisma.profile.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: { hasFace: true },
+    })
+  })
+
+  it('writes false for an empty gallery', async () => {
+    const { syncProfileHasFace } = await import('../../services/profile.service')
+    mockPrisma.imageAttachment.findFirst.mockResolvedValue(null)
+
+    await syncProfileHasFace(mockPrisma, 'p1')
+
+    expect(mockPrisma.profile.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: { hasFace: false },
+    })
+  })
+})

@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { notBlockedUserWhere } from '@/db/includes/notBlockedUserWhere'
-import { userContentTagsInclude } from '@/db/includes/profileIncludes'
+import { profileImageInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { TagService } from './tag.service'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
 
@@ -36,12 +36,12 @@ export interface BoundsBox {
 export const userContentImagesInclude = {
   images: {
     include: { image: true },
-    orderBy: { image: { position: 'asc' } },
+    orderBy: { position: 'asc' },
   },
 } as const satisfies Prisma.UserContentInclude
 
 const profileSummaryInclude = {
-  postedBy: { include: { profileImages: { include: { image: true } } } },
+  postedBy: { include: profileImageInclude() },
   ...userContentImagesInclude,
   ...userContentTagsInclude,
 } as const
@@ -55,7 +55,7 @@ const profileSummaryInclude = {
  * would be discarded work.
  */
 const contentSummaryInclude = {
-  postedBy: { include: { profileImages: { include: { image: true } } } },
+  postedBy: { include: profileImageInclude() },
   ...userContentImagesInclude,
 } as const
 
@@ -63,7 +63,7 @@ const hydratedContentInclude = {
   post: true,
   event: true,
   community: true,
-  postedBy: { include: { profileImages: { include: { image: true } } } },
+  postedBy: { include: profileImageInclude() },
   ...userContentImagesInclude,
   ...userContentTagsInclude,
 } as const

@@ -18,7 +18,7 @@ export function createMockPrisma() {
       create: vi.fn(),
       count: vi.fn(),
     },
-    profileImage: {
+    imageAttachment: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),

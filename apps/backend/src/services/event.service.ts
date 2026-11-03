@@ -6,7 +6,11 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreateEventPayload, UpdateEventPayload } from '@zod/event/event.dto'
-import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
+import {
+  conversationContextInclude,
+  profileImageInclude,
+  userContentTagsInclude,
+} from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 export class EventNotVisibleError extends Error {
@@ -18,7 +22,7 @@ export class EventNotVisibleError extends Error {
 
 const eventWithMetadataInclude = {
   event: true,
-  postedBy: { include: { profileImages: { include: { image: true } } } },
+  postedBy: { include: profileImageInclude() },
   ...userContentImagesInclude,
   ...userContentTagsInclude,
 } as const
@@ -28,7 +32,7 @@ const eventWithMetadataAndContextInclude = (viewerProfileId: string) =>
     event: true,
     postedBy: {
       include: {
-        profileImages: { include: { image: true } },
+        ...profileImageInclude(),
         ...conversationContextInclude(viewerProfileId),
       },
     },
@@ -237,7 +241,7 @@ export class EventService extends UserContentService {
     await this.assertEventVisibleTo(eventContentId, viewerProfileId)
     return prisma.eventAttendance.findMany({
       where: { eventContentId, ...(status ? { status } : {}) },
-      include: { profile: { include: { profileImages: { include: { image: true } } } } },
+      include: { profile: { include: profileImageInclude() } },
       orderBy: { rsvpedAt: 'asc' },
     })
   }

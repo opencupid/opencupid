@@ -17,7 +17,7 @@ export const ImageSchema = z.object({
   isModerated: z.boolean(),
   isFlagged: z.boolean(),
   /**
-   * Order within whichever gallery (Profile or UserContent) currently owns this image; 0 = primary. Meaningful only when the image is attached.
+   * Order within a Message's image grid. Profile and UserContent galleries order by ImageAttachment.position instead.
    */
   position: z.number().int(),
   altText: z.string(),

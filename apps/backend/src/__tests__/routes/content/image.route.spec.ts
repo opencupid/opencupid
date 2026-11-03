@@ -172,7 +172,12 @@ describe('content/image.route', () => {
       const handler = fastify.routes['DELETE /:contentId/image/:imageId']
       await handler(makeReq({ params: { contentId: CONTENT_ID, imageId } }), reply as any)
 
-      expect(mockImageService.detachFromUserContent).toHaveBeenCalledWith(imageId, 'p-1')
+      // Scoped to the content in the URL, not inferred from the image.
+      expect(mockImageService.detachFromUserContent).toHaveBeenCalledWith(
+        imageId,
+        'p-1',
+        CONTENT_ID
+      )
       expect(reply.statusCode).toBe(200)
       expect(reply.payload).toEqual({ success: true, images: galleryAfter })
     })

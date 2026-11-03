@@ -22,7 +22,7 @@ export function mapUserContentMetadata(
     isOwn: row.postedById === ctx.viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
-    images: row.images.map((j) => toPublicImage(j.image)),
+    images: row.images.map((j, position) => toPublicImage(j.image, position)),
     tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }

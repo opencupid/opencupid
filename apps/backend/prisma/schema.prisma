@@ -166,9 +166,9 @@ model Profile {
   relationship RelationshipStatus?
   hasKids      HasKids?
 
-  tags          Tag[]          @relation("ProfileTags")
-  ownedImages   Image[]        @relation("OwnedImages") // lifecycle (cascade-delete)
-  profileImages ProfileImage[] @relation("ProfileImages")
+  tags          Tag[]             @relation("ProfileTags")
+  ownedImages   Image[]           @relation("OwnedImages") // lifecycle (cascade-delete)
+  profileImages ImageAttachment[]
 
   // Dating preferences
   prefAgeMin Int?
@@ -246,36 +246,36 @@ model Image {
   isModerated Boolean @default(false)
   isFlagged   Boolean @default(false)
 
-  /// Order within whichever gallery (Profile or UserContent) currently owns this image; 0 = primary. Meaningful only when the image is attached.
+  /// Order within a Message's image grid. Profile and UserContent galleries order by ImageAttachment.position instead.
   position Int    @default(0)
   altText  String @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profileGallery     ProfileImage?
-  userContentGallery UserContentImage?
-  messageGallery     MessageImage?
+  attachment     ImageAttachment?
+  messageGallery MessageImage?
 
   @@index([ownerProfileId])
 }
 
-model ProfileImage {
-  imageId   String  @id
-  image     Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
-  profileId String
-  profile   Profile @relation("ProfileImages", fields: [profileId], references: [id], onDelete: Cascade)
+/// Membership of an Image in a Profile or UserContent gallery. Exactly one of
+/// profileId / userContentId is set (CHECK constraint in the migration), and the
+/// imageId primary key makes "an image is in at most one gallery" a DB invariant.
+/// position is drawn from a sequence: new rows always sort last and never
+/// collide; the lowest position in a gallery is its primary image. Positions are
+/// sparse — API DTOs expose the sorted index instead.
+model ImageAttachment {
+  imageId       String       @id
+  image         Image        @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  profileId     String?
+  profile       Profile?     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  userContentId String?
+  userContent   UserContent? @relation(fields: [userContentId], references: [id], onDelete: Cascade)
+  position      Int          @default(autoincrement())
 
-  @@index([profileId])
-}
-
-model UserContentImage {
-  imageId       String      @id
-  image         Image       @relation(fields: [imageId], references: [id], onDelete: Cascade)
-  userContentId String
-  userContent   UserContent @relation(fields: [userContentId], references: [id], onDelete: Cascade)
-
-  @@index([userContentId])
+  @@unique([profileId, position])
+  @@unique([userContentId, position])
 }
 
 model MessageImage {
@@ -422,8 +422,8 @@ model UserContent {
   post      PostContent?
   event     EventContent?
   community CommunityContent?
-  images    UserContentImage[]
-  tags      Tag[]              @relation("UserContentTags")
+  images    ImageAttachment[]
+  tags      Tag[]             @relation("UserContentTags")
 
   @@unique([externalSource, externalId])
   @@index([postedById])

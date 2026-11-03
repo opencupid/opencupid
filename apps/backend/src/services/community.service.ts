@@ -6,12 +6,16 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreateCommunityPayload, UpdateCommunityPayload } from '@zod/community/community.dto'
-import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
+import {
+  conversationContextInclude,
+  profileImageInclude,
+  userContentTagsInclude,
+} from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 const communityWithMetadataInclude = {
   community: true,
-  postedBy: { include: { profileImages: { include: { image: true } } } },
+  postedBy: { include: profileImageInclude() },
   ...userContentImagesInclude,
   ...userContentTagsInclude,
 } as const
@@ -21,7 +25,7 @@ const communityWithMetadataAndContextInclude = (viewerProfileId: string) =>
     community: true,
     postedBy: {
       include: {
-        profileImages: { include: { image: true } },
+        ...profileImageInclude(),
         ...conversationContextInclude(viewerProfileId),
       },
     },

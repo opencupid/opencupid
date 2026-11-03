@@ -83,18 +83,18 @@ export function mapProfileToPublic(
 }
 
 export function mapProfileImagesToOwner(images: Image[]): OwnerImage[] {
-  return images.map((img) => toOwnerImage(img))
+  return images.map((img, position) => toOwnerImage(img, position))
 }
 
 export function mapProfileImagesToPublic(images: Image[]): PublicImage[] {
-  return images.map((img) => toPublicImage(img))
+  return images.map((img, position) => toPublicImage(img, position))
 }
 
 export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {
   return {
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile?.profileImages.map((g) => toPublicImage(g.image)),
+    profileImages: profile?.profileImages.map((g, position) => toPublicImage(g.image, position)),
     location: DbLocationToLocationDTO({
       country: profile.country ?? null,
       cityName: profile.cityName ?? null,

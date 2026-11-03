@@ -1194,8 +1194,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             },
           },
           profileImages: {
-            select: { image: { select: { id: true, storagePath: true, position: true } } },
-            orderBy: { image: { position: 'asc' } },
+            select: { image: { select: { id: true, storagePath: true } } },
+            orderBy: { position: 'asc' },
           },
           trustFlags: {
             where: { clearedAt: null },
@@ -1211,7 +1211,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         success: true,
         profile: {
           ...profileRest,
-          profileImages: profileImages.map((g) => g.image),
+          // position = sorted index (ImageAttachment.position is a sparse sequence value)
+          profileImages: profileImages.map((g, position) => ({ ...g.image, position })),
           hasActiveTrustFlag: profile.trustFlags.length > 0,
         },
       })
