@@ -54,8 +54,9 @@ SELECT uci."imageId",
 FROM "UserContentImage" uci
 JOIN "Image" i ON i."id" = uci."imageId";
 
--- 3) Every later write (append and reorder) draws from the sequence, so start
---    it above every copied position.
+-- 3) New attachments draw their position from the sequence (reorder only
+--    permutes positions a gallery already holds), so start it above every
+--    copied position.
 SELECT setval(
   pg_get_serial_sequence('"ImageAttachment"', 'position'),
   (SELECT COALESCE(MAX("position"), 0) + 1 FROM "ImageAttachment"),
