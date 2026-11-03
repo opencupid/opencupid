@@ -47,7 +47,8 @@ beforeEach(async () => {
   mockPrisma.image = {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
-    findMany: vi.fn(),
+    // Default: empty gallery, so compactGalleryPositions is a no-op unless a test opts in.
+    findMany: vi.fn().mockResolvedValue([]),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
@@ -650,7 +651,7 @@ describe('attachManyToUserContentTx', () => {
   it('swallows P2002 from userContentImage.create and continues with remaining ids', async () => {
     const { Prisma } = await import('@prisma/client')
     const svc = service
-    mockPrisma.image.findMany.mockResolvedValue([
+    mockPrisma.image.findMany.mockResolvedValueOnce([
       { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
       { id: 'img-b', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
     ] as any)
@@ -736,5 +737,218 @@ describe('detachFromUserContent', () => {
     expect(mockPrisma.userContentImage.delete).toHaveBeenCalledWith({ where: { imageId: IMG } })
     expect(mockPrisma.image.delete).not.toHaveBeenCalled()
     expect(mockPrisma.profile.update).not.toHaveBeenCalled()
+  })
+})
+
+describe('compactGalleryPositions', () => {
+  it('renumbers a profile gallery with a gap and a duplicate to contiguous 0..n-1', async () => {
+    const { compactGalleryPositions } = await import('../../services/image.service')
+    // State reproduced via the API: delete primary A, then attach D → [B@1 C@2 D@2]
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      { id: 'B', position: 1 },
+      { id: 'C', position: 2 },
+      { id: 'D', position: 2 },
+    ])
+
+    await compactGalleryPositions(mockPrisma, { profileId: 'profile-1' })
+
+    expect(mockPrisma.image.findMany).toHaveBeenCalledWith({
+      where: { profileGallery: { profileId: 'profile-1' } },
+      select: { id: true, position: true },
+      orderBy: [{ position: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    })
+    expect(mockPrisma.image.update.mock.calls).toEqual([
+      [{ where: { id: 'B' }, data: { position: 0 } }],
+      [{ where: { id: 'C' }, data: { position: 1 } }],
+      // D is already at index 2
+    ])
+  })
+
+  it('skips images already at their index', async () => {
+    const { compactGalleryPositions } = await import('../../services/image.service')
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      { id: 'A', position: 0 },
+      { id: 'C', position: 2 },
+    ])
+
+    await compactGalleryPositions(mockPrisma, { profileId: 'profile-1' })
+
+    expect(mockPrisma.image.update.mock.calls).toEqual([
+      [{ where: { id: 'C' }, data: { position: 1 } }],
+    ])
+  })
+
+  it('scopes to a UserContent gallery', async () => {
+    const { compactGalleryPositions } = await import('../../services/image.service')
+
+    await compactGalleryPositions(mockPrisma, { userContentId: 'content-1' })
+
+    expect(mockPrisma.image.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userContentGallery: { userContentId: 'content-1' } } })
+    )
+  })
+})
+
+describe('gallery mutations keep positions contiguous', () => {
+  const remaining = [
+    { id: 'B', position: 1 },
+    { id: 'C', position: 2 },
+  ]
+
+  it('deleteImage on the primary compacts the profile gallery before re-syncing hasFace', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'A',
+      ownerProfileId: 'profile-1',
+      storagePath: 'x/a',
+      profileGallery: { profileId: 'profile-1' },
+      userContentGallery: null,
+    })
+    mockPrisma.image.findMany.mockResolvedValueOnce(remaining)
+    mockPrisma.profileImage.findFirst.mockResolvedValue({ image: { hasFace: true } })
+
+    await service.deleteImage('A', 'profile-1')
+
+    expect(mockPrisma.image.update.mock.calls).toEqual([
+      [{ where: { id: 'B' }, data: { position: 0 } }],
+      [{ where: { id: 'C' }, data: { position: 1 } }],
+    ])
+    expect(mockPrisma.image.update.mock.invocationCallOrder.at(-1)).toBeLessThan(
+      mockPrisma.profileImage.findFirst.mock.invocationCallOrder[0]
+    )
+  })
+
+  it('deleteImage compacts a UserContent gallery', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'A',
+      ownerProfileId: 'profile-1',
+      storagePath: 'x/a',
+      profileGallery: null,
+      userContentGallery: { userContentId: 'content-1' },
+    })
+    mockPrisma.image.findMany.mockResolvedValueOnce(remaining)
+
+    await service.deleteImage('A', 'profile-1')
+
+    expect(mockPrisma.image.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userContentGallery: { userContentId: 'content-1' } } })
+    )
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'B' },
+      data: { position: 0 },
+    })
+  })
+
+  it('detachFromProfile compacts the profile gallery', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'A',
+      ownerProfileId: 'profile-1',
+      profileGallery: { profileId: 'profile-1' },
+      userContentGallery: null,
+    })
+    mockPrisma.image.findMany.mockResolvedValueOnce(remaining)
+    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+
+    await service.detachFromProfile('A', 'profile-1')
+
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'B' },
+      data: { position: 0 },
+    })
+  })
+
+  it('detachFromUserContent compacts the content gallery in one transaction', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      id: 'A',
+      ownerProfileId: 'profile-1',
+      userContentGallery: { userContentId: 'content-1' },
+    })
+    mockPrisma.image.findMany.mockResolvedValueOnce(remaining)
+
+    await service.detachFromUserContent('A', 'profile-1')
+
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.image.update).toHaveBeenCalledWith({
+      where: { id: 'B' },
+      data: { position: 0 },
+    })
+  })
+
+  it('reorderProfileGallery normalizes client-supplied duplicate/sparse positions', async () => {
+    mockPrisma.profileImage.count.mockResolvedValue(2)
+    mockPrisma.profileImage.findMany
+      .mockResolvedValueOnce([{ imageId: 'A' }, { imageId: 'B' }])
+      .mockResolvedValueOnce([])
+    // After applying the client's A:5, B:5 the compaction pass sees the tie.
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      { id: 'A', position: 5 },
+      { id: 'B', position: 5 },
+    ])
+    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+
+    await service.reorderProfileGallery('profile-1', [
+      { id: 'A', position: 5 },
+      { id: 'B', position: 5 },
+    ])
+
+    expect(mockPrisma.image.update.mock.calls.slice(-2)).toEqual([
+      [{ where: { id: 'A' }, data: { position: 0 } }],
+      [{ where: { id: 'B' }, data: { position: 1 } }],
+    ])
+  })
+
+  it.each([
+    ['reorderProfileGallery', 'profileImage', 'profile-1'],
+    ['reorderUserContentGallery', 'userContentImage', 'content-1'],
+  ])('%s rejects a payload that repeats an image id', async (method, joinModel, galleryId) => {
+    // Same length as the gallery, but A twice and C omitted.
+    mockPrisma[joinModel].count.mockResolvedValue(3)
+    mockPrisma[joinModel].findMany.mockResolvedValue([{ imageId: 'A' }, { imageId: 'B' }])
+
+    await expect(
+      service[method](galleryId, [
+        { id: 'A', position: 0 },
+        { id: 'A', position: 1 },
+        { id: 'B', position: 2 },
+      ])
+    ).rejects.toMatchObject({ code: 'INVALID_REORDER' })
+    expect(mockPrisma.image.update).not.toHaveBeenCalled()
+  })
+
+  it('attachManyToUserContentTx closes the hole left by a P2002-skipped image', async () => {
+    const { Prisma } = await import('@prisma/client')
+    mockPrisma.image.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'img-a',
+          ownerProfileId: 'profile-1',
+          profileGallery: null,
+          userContentGallery: null,
+        },
+        {
+          id: 'img-b',
+          ownerProfileId: 'profile-1',
+          profileGallery: null,
+          userContentGallery: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ id: 'img-b', position: 1 }])
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+    mockPrisma.userContentImage.create
+      .mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('dup', { code: 'P2002', clientVersion: '0' })
+      )
+      .mockResolvedValueOnce(undefined)
+
+    await service.attachManyToUserContentTx(
+      mockPrisma,
+      ['img-a', 'img-b'],
+      'content-1',
+      'profile-1'
+    )
+
+    expect(mockPrisma.image.update).toHaveBeenLastCalledWith({
+      where: { id: 'img-b' },
+      data: { position: 0 },
+    })
   })
 })

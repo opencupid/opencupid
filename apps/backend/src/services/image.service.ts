@@ -14,6 +14,34 @@ import sharp from 'sharp'
 import { ImageProcessor } from './imageprocessor'
 import { syncProfileHasFace } from './profile.service'
 
+type GalleryRef = { profileId: string } | { userContentId: string }
+
+/**
+ * Renumber a gallery's Image.position to a contiguous 0..n-1, preserving the
+ * current order (ties broken by createdAt, then id). Every gallery mutation runs
+ * this inside its transaction so `position = count(gallery)` on attach can never
+ * collide and position 0 is always the primary image.
+ */
+export async function compactGalleryPositions(
+  tx: Prisma.TransactionClient,
+  gallery: GalleryRef
+): Promise<void> {
+  const where: Prisma.ImageWhereInput =
+    'profileId' in gallery
+      ? { profileGallery: { profileId: gallery.profileId } }
+      : { userContentGallery: { userContentId: gallery.userContentId } }
+  const images = await tx.image.findMany({
+    where,
+    select: { id: true, position: true },
+    orderBy: [{ position: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+  })
+  for (const [index, image] of images.entries()) {
+    if (image.position !== index) {
+      await tx.image.update({ where: { id: image.id }, data: { position: index } })
+    }
+  }
+}
+
 type Variant = {
   name: string
   width: number
@@ -244,6 +272,8 @@ export class ImageService {
       }
       await tx.image.update({ where: { id }, data: { position: startPos + i } })
     }
+    // A skipped (P2002) id leaves a hole in the startPos + i sequence.
+    await compactGalleryPositions(tx, { userContentId })
   }
 
   /**
@@ -323,6 +353,7 @@ export class ImageService {
     await prisma.$transaction(
       async (tx) => {
         await tx.profileImage.delete({ where: { imageId } })
+        await compactGalleryPositions(tx, { profileId })
         await syncProfileHasFace(tx, profileId)
       },
       { isolationLevel: 'Serializable' }
@@ -346,7 +377,11 @@ export class ImageService {
       throw new ImageServiceError('NOT_FOUND', 'Image is not attached to a content gallery')
     }
 
-    await prisma.userContentImage.delete({ where: { imageId } })
+    const { userContentId } = image.userContentGallery
+    await prisma.$transaction(async (tx) => {
+      await tx.userContentImage.delete({ where: { imageId } })
+      await compactGalleryPositions(tx, { userContentId })
+    })
   }
 
   async processImage(filePath: string, outputDir: string, baseName: string) {
@@ -464,7 +499,11 @@ export class ImageService {
       }
       await tx.image.delete({ where: { id: imageId } })
       if (image.profileGallery) {
-        await syncProfileHasFace(tx, image.profileGallery.profileId)
+        const { profileId } = image.profileGallery
+        await compactGalleryPositions(tx, { profileId })
+        await syncProfileHasFace(tx, profileId)
+      } else if (image.userContentGallery) {
+        await compactGalleryPositions(tx, { userContentId: image.userContentGallery.userContentId })
       }
     })
 
@@ -520,7 +559,7 @@ export class ImageService {
    */
   async reorderProfileGallery(profileId: string, items: ImagePosition[]): Promise<Image[]> {
     const galleryCount = await prisma.profileImage.count({ where: { profileId } })
-    if (items.length !== galleryCount) {
+    if (items.length !== galleryCount || new Set(items.map((i) => i.id)).size !== items.length) {
       throw new ImageServiceError(
         'INVALID_REORDER',
         'Reorder must include every image in the gallery exactly once'
@@ -540,6 +579,7 @@ export class ImageService {
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
+      await compactGalleryPositions(tx, { profileId })
       await syncProfileHasFace(tx, profileId)
     })
     return this.listProfileGallery(profileId)
@@ -551,7 +591,7 @@ export class ImageService {
    */
   async reorderUserContentGallery(userContentId: string, items: ImagePosition[]): Promise<Image[]> {
     const galleryCount = await prisma.userContentImage.count({ where: { userContentId } })
-    if (items.length !== galleryCount) {
+    if (items.length !== galleryCount || new Set(items.map((i) => i.id)).size !== items.length) {
       throw new ImageServiceError(
         'INVALID_REORDER',
         'Reorder must include every image in the gallery exactly once'
@@ -571,6 +611,7 @@ export class ImageService {
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
+      await compactGalleryPositions(tx, { userContentId })
     })
     return this.listUserContentGallery(userContentId)
   }
