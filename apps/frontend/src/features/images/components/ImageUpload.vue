@@ -25,7 +25,6 @@ const { t } = useI18n()
 // Upload state
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref<string | null>(null)
-const captionText = ref<string>('')
 
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -55,7 +54,7 @@ const handleUpload = async () => {
   isLoading.value = true
   error.value = null
 
-  const res = await imageStore.upload(selectedFile.value, captionText.value)
+  const res = await imageStore.upload(selectedFile.value)
   if (!res.success) {
     const code = res.message ?? 'unknown'
     const key = `profiles.image_upload.errors.${code}`
@@ -110,7 +109,6 @@ function onModalHidden() {
   modalState.value = 'closed'
   selectedFile.value = null
   previewUrl.value = null
-  captionText.value = ''
   error.value = null
   isLoading.value = false
   uploadButtonKey.value++

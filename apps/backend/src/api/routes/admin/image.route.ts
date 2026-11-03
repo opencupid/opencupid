@@ -54,7 +54,7 @@ const adminImageRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
-      const image = await imageService.createImage(profileId, file.filepath, '')
+      const image = await imageService.createImage(profileId, file.filepath)
       return reply.code(201).send({ success: true, id: image.id })
     } catch (err) {
       fastify.log.error({ err }, 'Error storing admin image')

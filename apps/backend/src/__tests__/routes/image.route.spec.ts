@@ -90,7 +90,7 @@ describe('image.route', () => {
     const fileFixture = {
       filepath: '/tmp/test.jpg',
       mimetype: 'image/jpeg',
-      fields: { captionText: { value: 'cap' } },
+      fields: {},
     }
 
     const makeUploadReq = (overrides: any = {}) =>
@@ -100,17 +100,31 @@ describe('image.route', () => {
       })
 
     it('happy path: creates the image and returns the single created image (no attach)', async () => {
-      const created = { id: 'img-new', mimeType: 'image/jpeg', altText: 'cap', position: 0 }
+      const created = { id: 'img-new', mimeType: 'image/jpeg', altText: '', position: 0 }
       mockImageService.createImage.mockResolvedValue(created)
 
       const handler = fastify.routes['POST /']
       await handler(makeUploadReq(), reply as any)
 
-      expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg', 'cap')
+      expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg')
       expect(mockImageService.attachToProfile).not.toHaveBeenCalled()
       expect(mockImageService.listProfileGallery).not.toHaveBeenCalled()
       expect(reply.statusCode).toBe(200)
       expect(reply.payload).toEqual({ success: true, image: created })
+    })
+
+    it('ignores a captionText field sent by clients deployed before it was dropped', async () => {
+      mockImageService.createImage.mockResolvedValue({ id: 'img-new', mimeType: 'image/jpeg' })
+      const req = makeUploadReq({
+        saveRequestFiles: vi
+          .fn()
+          .mockResolvedValue([{ ...fileFixture, fields: { captionText: { value: 'cap' } } }]),
+      })
+
+      await fastify.routes['POST /'](req, reply as any)
+
+      expect(reply.statusCode).toBe(200)
+      expect(mockImageService.createImage).toHaveBeenCalledWith('p-1', '/tmp/test.jpg')
     })
 
     it('createImage failure → 500, no compensating delete', async () => {

@@ -105,7 +105,7 @@ export class ImageService {
    * subsequent attach fails the route is responsible for compensating delete (atomicity is
    * not provided here; createImage opens its own write).
    */
-  async createImage(ownerProfileId: string, tmpImagePath: string, altText: string): Promise<Image> {
+  async createImage(ownerProfileId: string, tmpImagePath: string): Promise<Image> {
     const imageLocation = await makeImageLocation(ownerProfileId)
     const processed = await this.processImage(
       tmpImagePath,
@@ -118,7 +118,6 @@ export class ImageService {
       data: {
         ownerProfileId,
         mimeType: processed.mime,
-        altText,
         storagePath: path.join(imageLocation.relPath, imageLocation.base),
         contentHash,
         blurhash: processed.blurhash,

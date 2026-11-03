@@ -7,7 +7,7 @@ export interface GalleryStore {
   images: OwnerImage[]
   isLoading: boolean
   load(): Promise<GalleryStoreResponse>
-  upload(file: File, captionText: string): Promise<GalleryStoreResponse>
+  upload(file: File): Promise<GalleryStoreResponse>
   remove(image: OwnerImage): Promise<GalleryStoreResponse>
   reorder(items: ImagePosition[]): Promise<GalleryStoreResponse>
   cleanup?(): Promise<GalleryStoreResponse>

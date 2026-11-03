@@ -39,7 +39,7 @@ describe('useProfileImageStore', () => {
 
     const store = useProfileImageStore()
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(true)
     expect((api.post as any).mock.calls[0][0]).toBe('/image')
@@ -56,7 +56,7 @@ describe('useProfileImageStore', () => {
     const refresh = vi.spyOn(ownerStore, 'refreshHasFace').mockResolvedValue({ success: true })
 
     const store = useProfileImageStore()
-    await store.upload(new File(['x'], 'x.jpg', { type: 'image/jpeg' }), 'cap')
+    await store.upload(new File(['x'], 'x.jpg', { type: 'image/jpeg' }))
 
     expect(refresh).toHaveBeenCalledOnce()
   })
@@ -69,7 +69,7 @@ describe('useProfileImageStore', () => {
 
     const store = useProfileImageStore()
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(false)
     expect(api.delete).toHaveBeenCalledWith(`/image/${CREATED.id}`)
@@ -80,7 +80,7 @@ describe('useProfileImageStore', () => {
 
     const store = useProfileImageStore()
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(false)
     expect(api.delete).not.toHaveBeenCalled()

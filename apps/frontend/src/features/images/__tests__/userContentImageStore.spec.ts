@@ -59,7 +59,7 @@ describe('useUserContentImageStore', () => {
 
     const store = useUserContentImageStore({ contentId: 'content-1' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(true)
     expect((api.post as any).mock.calls[0][0]).toBe('/image')
@@ -79,7 +79,7 @@ describe('useUserContentImageStore', () => {
 
     const store = useUserContentImageStore({ contentId: 'content-1' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(false)
     expect(api.delete).toHaveBeenCalledWith(`/image/${CREATED.id}`)
@@ -90,7 +90,7 @@ describe('useUserContentImageStore', () => {
 
     const store = useUserContentImageStore({ contentId: 'content-1' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(false)
     expect(api.delete).not.toHaveBeenCalled()
@@ -133,7 +133,7 @@ describe('draft mode', () => {
 
     const store = useUserContentImageStore({ draftKey: 'k2' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(true)
     expect((api.post as any).mock.calls).toHaveLength(1)
@@ -148,7 +148,7 @@ describe('draft mode', () => {
 
     const store = useUserContentImageStore({ draftKey: 'k3' })
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
-    const res = await store.upload(file, 'cap')
+    const res = await store.upload(file)
 
     expect(res.success).toBe(false)
     expect(api.delete).not.toHaveBeenCalled()
@@ -159,7 +159,7 @@ describe('draft mode', () => {
     ;(api.post as any).mockResolvedValueOnce({ data: { success: true, image: CREATED } })
 
     const store = useUserContentImageStore({ draftKey: 'k4' })
-    await store.upload(new File(['x'], 'x.jpg'), 'cap')
+    await store.upload(new File(['x'], 'x.jpg'))
     expect(store.images).toHaveLength(1)
 
     const removeRes = await store.remove(CREATED as any)
@@ -177,8 +177,8 @@ describe('draft mode', () => {
       .mockResolvedValueOnce({ data: { success: true, image: { ...CREATED, id: ID2 } } })
 
     const store = useUserContentImageStore({ draftKey: 'k5' })
-    await store.upload(new File(['x'], 'x.jpg'), 'cap')
-    await store.upload(new File(['y'], 'y.jpg'), 'cap')
+    await store.upload(new File(['x'], 'x.jpg'))
+    await store.upload(new File(['y'], 'y.jpg'))
     expect(store.images.map((i) => i.id)).toEqual([ID1, ID2])
 
     const res = await store.reorder([
@@ -203,8 +203,8 @@ describe('draft mode', () => {
       .mockResolvedValueOnce({ data: { success: true } })
 
     const store = useUserContentImageStore({ draftKey: 'k6' })
-    await store.upload(new File(['x'], 'x.jpg'), 'cap')
-    await store.upload(new File(['y'], 'y.jpg'), 'cap')
+    await store.upload(new File(['x'], 'x.jpg'))
+    await store.upload(new File(['y'], 'y.jpg'))
 
     await store.cleanup()
     expect(api.delete).toHaveBeenCalledTimes(2)
@@ -221,7 +221,7 @@ describe('draft mode', () => {
   it('cleanup() after $reset is a no-op (no DELETEs)', async () => {
     ;(api.post as any).mockResolvedValueOnce({ data: { success: true, image: CREATED } })
     const store = useUserContentImageStore({ draftKey: 'k7' })
-    await store.upload(new File(['x'], 'x.jpg'), 'cap')
+    await store.upload(new File(['x'], 'x.jpg'))
     store.$reset()
     await store.cleanup()
     expect(api.delete).not.toHaveBeenCalled()

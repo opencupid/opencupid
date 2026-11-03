@@ -47,7 +47,7 @@ describe('POST /', () => {
 
     await upload([{ mimetype: 'image/jpeg', filepath: '/tmp/uploads/a' }])
 
-    expect(mockImageService.createImage).toHaveBeenCalledWith(profileId, '/tmp/uploads/a', '')
+    expect(mockImageService.createImage).toHaveBeenCalledWith(profileId, '/tmp/uploads/a')
     expect(reply.statusCode).toBe(201)
     expect(reply.payload).toEqual({ success: true, id: 'img-1' })
   })

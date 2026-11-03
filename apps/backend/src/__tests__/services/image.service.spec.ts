@@ -107,7 +107,7 @@ describe('ImageService.createImage', () => {
       position: 0,
     } as any)
 
-    const result = await service.createImage('profile-1', '/tmp/upload.jpg', 'cap')
+    const result = await service.createImage('profile-1', '/tmp/upload.jpg')
 
     expect(result.id).toBe('img-1')
     expect(result.ownerProfileId).toBe('profile-1')

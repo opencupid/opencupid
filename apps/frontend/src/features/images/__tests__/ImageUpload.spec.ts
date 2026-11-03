@@ -66,7 +66,7 @@ describe('ImageUpload', () => {
     })
     const file = new File(['a'], 'a.png', { type: 'image/png' })
     await (wrapper.vm as any).handleFileChange({ target: { files: [file] } } as any)
-    expect(store.upload).toHaveBeenCalledWith(file, '')
+    expect(store.upload).toHaveBeenCalledWith(file)
     expect((wrapper.vm as any).showModal).toBe(false)
   })
 

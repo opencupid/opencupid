@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { FastifyPluginAsync } from 'fastify'
-import multipart, { MultipartValue } from '@fastify/multipart'
+import multipart from '@fastify/multipart'
 
 import { ImageService, ImageServiceError } from '@/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
@@ -74,6 +74,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
           limits: {
             fileSize: appConfig.IMAGE_MAX_SIZE,
             files: 1,
+            // Clients deployed before this field was dropped still send `captionText`; it is ignored.
             fields: 1,
           },
         })
@@ -90,18 +91,8 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, 400, 'Uploaded file must be an image')
       }
 
-      const captionText = ((
-        (Array.isArray(fileUpload.fields.captionText)
-          ? fileUpload.fields.captionText[0]
-          : fileUpload.fields.captionText) as MultipartValue
-      ).value ?? '') as string
-
       try {
-        const created = await imageService.createImage(
-          req.session.profileId,
-          fileUpload.filepath,
-          captionText
-        )
+        const created = await imageService.createImage(req.session.profileId, fileUpload.filepath)
         const response: ImageResponse = {
           success: true,
           image: toOwnerImage(created),

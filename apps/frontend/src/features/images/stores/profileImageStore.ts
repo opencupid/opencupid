@@ -24,10 +24,9 @@ export const useProfileImageStore = defineStore('profileImage', {
   }),
 
   actions: {
-    async upload(file: File, captionText: string): Promise<GalleryStoreResponse> {
+    async upload(file: File): Promise<GalleryStoreResponse> {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('captionText', captionText)
       this.isLoading = true
       let createdId: string | null = null
       try {
