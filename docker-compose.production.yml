@@ -121,10 +121,15 @@ services:
       - .env
     depends_on:
       - backend
-    # Optional local branding/theming: mount a stylesheet over the empty
-    # placeholder baked into the image. Applies without rebuilding.
-    # volumes:
-    #   - './custom.css:/var/www/custom.css:ro'
+    volumes:
+      # Content-hashed bundle files of the last 10 releases, so browser tabs
+      # opened before a deploy can still lazy-load their chunks. Must persist
+      # across container recreation; give each frontend service its own volume
+      # (see apps/frontend/docker-entrypoint.sh).
+      - frontend-build:/var/www/assets/build
+      # Optional local branding/theming: mount a stylesheet over the empty
+      # placeholder baked into the image. Applies without rebuilding.
+      # - './custom.css:/var/www/custom.css:ro'
     labels:
       traefik.enable: "true"
       traefik.docker.allownonrunning: "true"
@@ -270,6 +275,7 @@ services:
     restart: always
     
 volumes:
+  frontend-build:
   redis-data:
     driver: local
   traefik-acme:
