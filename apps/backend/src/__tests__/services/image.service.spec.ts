@@ -122,12 +122,14 @@ describe('ImageService.createImage', () => {
 
 describe('ImageService.attachToProfile', () => {
   it('inserts the join row, sets Image.position to gallery count, syncs Profile.hasFace, in one transaction', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue({
-      id: 'img-1',
-      ownerProfileId: 'profile-1',
-      profileGallery: null,
-      userContentGallery: null,
-    } as any)
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      {
+        id: 'img-1',
+        ownerProfileId: 'profile-1',
+        profileGallery: null,
+        userContentGallery: null,
+      },
+    ] as any)
     mockPrisma.profileImage.count.mockResolvedValue(2) // gallery already has 2 items
     mockPrisma.profileImage.create.mockResolvedValue({} as any)
     mockPrisma.image.update.mockResolvedValue({} as any)
@@ -152,23 +154,27 @@ describe('ImageService.attachToProfile', () => {
   })
 
   it('rejects when image is not owned by the profile', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue({
-      id: 'img-1',
-      ownerProfileId: 'profile-OTHER',
-      profileGallery: null,
-      userContentGallery: null,
-    } as any)
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      {
+        id: 'img-1',
+        ownerProfileId: 'profile-OTHER',
+        profileGallery: null,
+        userContentGallery: null,
+      },
+    ] as any)
 
     await expect(service.attachToProfile('img-1', 'profile-1')).rejects.toThrow(/owner/i)
   })
 
   it('rejects when image is already attached', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue({
-      id: 'img-1',
-      ownerProfileId: 'profile-1',
-      profileGallery: { profileId: 'profile-1' },
-      userContentGallery: null,
-    } as any)
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      {
+        id: 'img-1',
+        ownerProfileId: 'profile-1',
+        profileGallery: { profileId: 'profile-1' },
+        userContentGallery: null,
+      },
+    ] as any)
 
     await expect(service.attachToProfile('img-1', 'profile-1')).rejects.toThrow(/already attached/i)
   })
@@ -177,12 +183,14 @@ describe('ImageService.attachToProfile', () => {
 describe('attachToUserContent', () => {
   it('inserts join row + updates Image.position; does NOT touch Profile.hasFace', async () => {
     const svc = service
-    mockPrisma.image.findUnique.mockResolvedValue({
-      id: 'img-1',
-      ownerProfileId: 'profile-1',
-      profileGallery: null,
-      userContentGallery: null,
-    } as any)
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      {
+        id: 'img-1',
+        ownerProfileId: 'profile-1',
+        profileGallery: null,
+        userContentGallery: null,
+      },
+    ] as any)
     mockPrisma.userContent.findUnique.mockResolvedValue({
       id: 'content-1',
       postedById: 'profile-1',
@@ -203,12 +211,14 @@ describe('attachToUserContent', () => {
 
   it('rejects when content owner does not match image owner', async () => {
     const svc = service
-    mockPrisma.image.findUnique.mockResolvedValue({
-      id: 'img-1',
-      ownerProfileId: 'profile-1',
-      profileGallery: null,
-      userContentGallery: null,
-    } as any)
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      {
+        id: 'img-1',
+        ownerProfileId: 'profile-1',
+        profileGallery: null,
+        userContentGallery: null,
+      },
+    ] as any)
     mockPrisma.userContent.findUnique.mockResolvedValue({
       id: 'content-1',
       postedById: 'profile-OTHER',
@@ -283,8 +293,7 @@ describe('deleteUnattachedImage', () => {
   }
 
   beforeEach(() => {
-    mockPrisma.$queryRaw = vi.fn().mockResolvedValue([{ id: 'img-1' }])
-    mockPrisma.image.findUniqueOrThrow = vi.fn().mockResolvedValue(unattached)
+    mockPrisma.image.findMany.mockResolvedValue([unattached])
   })
 
   it('locks the row, then checks attachment and deletes inside the same transaction', async () => {
@@ -294,17 +303,16 @@ describe('deleteUnattachedImage', () => {
     const lockSql = mockPrisma.$queryRaw.mock.calls[0][0].join('?')
     expect(lockSql).toMatch(/FOR UPDATE/)
     const lockOrder = mockPrisma.$queryRaw.mock.invocationCallOrder[0]
-    expect(lockOrder).toBeLessThan(mockPrisma.image.findUniqueOrThrow.mock.invocationCallOrder[0])
+    expect(lockOrder).toBeLessThan(mockPrisma.image.findMany.mock.invocationCallOrder[0])
     expect(lockOrder).toBeLessThan(mockPrisma.image.delete.mock.invocationCallOrder[0])
     expect(mockPrisma.image.delete).toHaveBeenCalledWith({ where: { id: 'img-1' } })
     expect(mockUnlink).toHaveBeenCalled()
   })
 
   it('refuses an image an attach committed before the lock, without touching files', async () => {
-    mockPrisma.image.findUniqueOrThrow.mockResolvedValue({
-      ...unattached,
-      userContentGallery: { userContentId: 'content-1' },
-    })
+    mockPrisma.image.findMany.mockResolvedValue([
+      { ...unattached, userContentGallery: { userContentId: 'content-1' } },
+    ])
 
     await expect(service.deleteUnattachedImage('img-1')).rejects.toMatchObject({
       code: 'ALREADY_ATTACHED',
@@ -314,7 +322,7 @@ describe('deleteUnattachedImage', () => {
   })
 
   it('reports a missing image', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([])
+    mockPrisma.image.findMany.mockResolvedValue([])
 
     await expect(service.deleteUnattachedImage('img-1')).rejects.toMatchObject({
       code: 'NOT_FOUND',
@@ -650,33 +658,6 @@ describe('attachManyToUserContentTx', () => {
     })
   })
 
-  it('swallows P2002 from userContentImage.create and continues with remaining ids', async () => {
-    const { Prisma } = await import('@prisma/client')
-    const svc = service
-    mockPrisma.image.findMany.mockResolvedValueOnce([
-      { id: 'img-a', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
-      { id: 'img-b', ownerProfileId: 'profile-1', profileGallery: null, userContentGallery: null },
-    ] as any)
-    mockPrisma.userContentImage.count.mockResolvedValue(0)
-
-    const p2002 = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-      code: 'P2002',
-      clientVersion: '0',
-    })
-    mockPrisma.userContentImage.create.mockRejectedValueOnce(p2002).mockResolvedValueOnce(undefined)
-
-    await expect(
-      svc.attachManyToUserContentTx(mockPrisma, ['img-a', 'img-b'], 'content-1', 'profile-1')
-    ).resolves.toBeUndefined()
-
-    // First image's join failed; its position update is skipped.
-    expect(mockPrisma.image.update).toHaveBeenCalledTimes(1)
-    expect(mockPrisma.image.update).toHaveBeenCalledWith({
-      where: { id: 'img-b' },
-      data: { position: 1 },
-    })
-  })
-
   it('re-throws non-P2002 errors from userContentImage.create', async () => {
     const svc = service
     mockPrisma.image.findMany.mockResolvedValue([
@@ -915,57 +896,22 @@ describe('gallery mutations keep positions contiguous', () => {
     ).rejects.toMatchObject({ code: 'INVALID_REORDER' })
     expect(mockPrisma.image.update).not.toHaveBeenCalled()
   })
-
-  it('attachManyToUserContentTx closes the hole left by a P2002-skipped image', async () => {
-    const { Prisma } = await import('@prisma/client')
-    mockPrisma.image.findMany
-      .mockResolvedValueOnce([
-        {
-          id: 'img-a',
-          ownerProfileId: 'profile-1',
-          profileGallery: null,
-          userContentGallery: null,
-        },
-        {
-          id: 'img-b',
-          ownerProfileId: 'profile-1',
-          profileGallery: null,
-          userContentGallery: null,
-        },
-      ])
-      .mockResolvedValueOnce([{ id: 'img-b', position: 1 }])
-    mockPrisma.userContentImage.count.mockResolvedValue(0)
-    mockPrisma.userContentImage.create
-      .mockRejectedValueOnce(
-        new Prisma.PrismaClientKnownRequestError('dup', { code: 'P2002', clientVersion: '0' })
-      )
-      .mockResolvedValueOnce(undefined)
-
-    await service.attachManyToUserContentTx(
-      mockPrisma,
-      ['img-a', 'img-b'],
-      'content-1',
-      'profile-1'
-    )
-
-    expect(mockPrisma.image.update).toHaveBeenLastCalledWith({
-      where: { id: 'img-b' },
-      data: { position: 0 },
-    })
-  })
 })
 
 describe('attach repairs galleries left broken by earlier code', () => {
   it('attachToProfile compacts before appending, so a lone image at position 1 does not tie with the new one', async () => {
     // Production state: single image B stuck at position 1.
-    mockPrisma.image.findUnique.mockResolvedValue({
-      id: 'NEW',
-      ownerProfileId: 'profile-1',
-      profileGallery: null,
-      userContentGallery: null,
-      messageGallery: null,
-    })
-    mockPrisma.image.findMany.mockResolvedValueOnce([{ id: 'B', position: 1 }])
+    mockPrisma.image.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'NEW',
+          ownerProfileId: 'profile-1',
+          profileGallery: null,
+          userContentGallery: null,
+          messageGallery: null,
+        },
+      ]) // locked load of the image being attached
+      .mockResolvedValueOnce([{ id: 'B', position: 1 }]) // compaction read
     mockPrisma.profileImage.count.mockResolvedValue(1)
     mockPrisma.profileImage.findFirst.mockResolvedValue({ image: { hasFace: true } })
 
@@ -975,27 +921,30 @@ describe('attach repairs galleries left broken by earlier code', () => {
       [{ where: { id: 'B' }, data: { position: 0 } }],
       [{ where: { id: 'NEW' }, data: { position: 1 } }],
     ])
-    expect(mockPrisma.image.findMany.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mockPrisma.image.findMany.mock.invocationCallOrder[1]).toBeLessThan(
       mockPrisma.profileImage.count.mock.invocationCallOrder[0]
     )
   })
 
   it('attachToUserContent compacts before appending', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue({
-      id: 'NEW',
-      ownerProfileId: 'profile-1',
-      profileGallery: null,
-      userContentGallery: null,
-      messageGallery: null,
-    })
     mockPrisma.userContent.findUnique.mockResolvedValue({
       id: 'content-1',
       postedById: 'profile-1',
     })
-    mockPrisma.image.findMany.mockResolvedValueOnce([
-      { id: 'A', position: 0 },
-      { id: 'C', position: 2 },
-    ])
+    mockPrisma.image.findMany
+      .mockResolvedValueOnce([
+        {
+          id: 'NEW',
+          ownerProfileId: 'profile-1',
+          profileGallery: null,
+          userContentGallery: null,
+          messageGallery: null,
+        },
+      ])
+      .mockResolvedValueOnce([
+        { id: 'A', position: 0 },
+        { id: 'C', position: 2 },
+      ])
     mockPrisma.userContentImage.count.mockResolvedValue(2)
 
     await service.attachToUserContent('NEW', 'content-1')
@@ -1038,7 +987,7 @@ describe('gallery mutations are serialized per gallery', () => {
       ].flatMap((m: any) => m.mock.invocationCallOrder)
     )
   const expectLockedFirst = (id: string) => {
-    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(lockSql(mockPrisma.$queryRaw.mock.calls[0])).toMatch(/FROM "(Profile|UserContent)"/)
     expect(mockPrisma.$queryRaw.mock.calls[0][1]).toBe(id)
     expect(mockPrisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(firstWrite())
   }
@@ -1052,7 +1001,7 @@ describe('gallery mutations are serialized per gallery', () => {
   }
 
   it('attachToProfile', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue(unattached)
+    mockPrisma.image.findMany.mockResolvedValueOnce([unattached])
     mockPrisma.profileImage.count.mockResolvedValue(0)
     mockPrisma.profileImage.findFirst.mockResolvedValue(null)
     await service.attachToProfile('IMG', 'profile-1')
@@ -1060,7 +1009,7 @@ describe('gallery mutations are serialized per gallery', () => {
   })
 
   it('attachToUserContent', async () => {
-    mockPrisma.image.findUnique.mockResolvedValue(unattached)
+    mockPrisma.image.findMany.mockResolvedValueOnce([unattached])
     mockPrisma.userContent.findUnique.mockResolvedValue({
       id: 'content-1',
       postedById: 'profile-1',
@@ -1127,5 +1076,75 @@ describe('gallery mutations are serialized per gallery', () => {
     expect(mockPrisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
       mockPrisma.userContentImage.count.mock.invocationCallOrder[0]
     )
+  })
+})
+
+describe('attach paths lock the image before checking gallery membership', () => {
+  const lockSql = (call: any[]) => call[0].join('?')
+  const unattached = {
+    id: 'IMG',
+    ownerProfileId: 'profile-1',
+    profileGallery: null,
+    userContentGallery: null,
+    messageGallery: null,
+  }
+  // The image lock is the $queryRaw on "Image"; membership is read by the first image.findMany.
+  const expectImageLockBeforeMembershipRead = (galleryLocked: boolean) => {
+    const calls = mockPrisma.$queryRaw.mock.calls
+    const imageLockIdx = calls.findIndex((c: any[]) => /FROM "Image"/.test(lockSql(c)))
+    expect(imageLockIdx).toBe(galleryLocked ? 1 : 0) // gallery lock (if any) first, then image
+    expect(lockSql(calls[imageLockIdx])).toMatch(/WHERE id IN \(\?\) ORDER BY id FOR UPDATE/)
+    expect(mockPrisma.$queryRaw.mock.invocationCallOrder[imageLockIdx]).toBeLessThan(
+      mockPrisma.image.findMany.mock.invocationCallOrder[0]
+    )
+  }
+
+  it('attachToProfile', async () => {
+    mockPrisma.image.findMany.mockResolvedValueOnce([unattached])
+    mockPrisma.profileImage.count.mockResolvedValue(0)
+    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+    await service.attachToProfile('IMG', 'profile-1')
+    expectImageLockBeforeMembershipRead(true)
+  })
+
+  it('attachToUserContent', async () => {
+    mockPrisma.userContent.findUnique.mockResolvedValue({
+      id: 'content-1',
+      postedById: 'profile-1',
+    })
+    mockPrisma.image.findMany.mockResolvedValueOnce([unattached])
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+    await service.attachToUserContent('IMG', 'content-1')
+    expectImageLockBeforeMembershipRead(true)
+  })
+
+  it('attachManyToUserContentTx', async () => {
+    mockPrisma.image.findMany.mockResolvedValueOnce([unattached])
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+    await service.attachManyToUserContentTx(mockPrisma, ['IMG'], 'content-1', 'profile-1')
+    expectImageLockBeforeMembershipRead(true)
+  })
+
+  it('attachManyToMessageTx', async () => {
+    mockPrisma.messageImage = { create: vi.fn() }
+    mockPrisma.image.findMany.mockResolvedValueOnce([unattached])
+    await service.attachManyToMessageTx(mockPrisma, ['IMG'], 'msg-1', 'profile-1')
+    expectImageLockBeforeMembershipRead(false)
+    expect(mockPrisma.messageImage.create).toHaveBeenCalledWith({
+      data: { imageId: 'IMG', messageId: 'msg-1' },
+    })
+  })
+
+  it('a concurrent attach that committed first is seen under the lock and rejected', async () => {
+    // The other gallery's attach committed while we waited on the image lock.
+    mockPrisma.image.findMany.mockResolvedValueOnce([
+      { ...unattached, userContentGallery: { userContentId: 'content-1' } },
+    ])
+
+    await expect(service.attachToProfile('IMG', 'profile-1')).rejects.toMatchObject({
+      code: 'ALREADY_ATTACHED',
+    })
+    expect(mockPrisma.profileImage.create).not.toHaveBeenCalled()
+    expect(mockPrisma.image.update).not.toHaveBeenCalled()
   })
 })
