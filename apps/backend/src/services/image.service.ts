@@ -17,9 +17,27 @@ import { syncProfileHasFace } from './profile.service'
 type GalleryRef = { profileId: string } | { userContentId: string }
 
 /**
+ * Serialize mutations of one gallery by row-locking its owner (Profile or
+ * UserContent) until the transaction ends. Must be the first statement of every
+ * transaction that changes gallery membership or positions: under READ COMMITTED
+ * the later transaction then reads the earlier one's committed result, and taking
+ * the lock before any Image row writes keeps lock order consistent (no deadlocks).
+ */
+export async function lockGallery(
+  tx: Prisma.TransactionClient,
+  gallery: GalleryRef
+): Promise<void> {
+  if ('profileId' in gallery) {
+    await tx.$queryRaw`SELECT 1 FROM "Profile" WHERE id = ${gallery.profileId} FOR UPDATE`
+  } else {
+    await tx.$queryRaw`SELECT 1 FROM "UserContent" WHERE id = ${gallery.userContentId} FOR UPDATE`
+  }
+}
+
+/**
  * Renumber a gallery's Image.position to a contiguous 0..n-1, preserving the
  * current order (ties broken by createdAt, then id). Every gallery mutation runs
- * this inside its transaction, so position 0 is always the primary image and
+ * this inside its transaction, after lockGallery(), so position 0 is always the primary image and
  * `position = count(gallery)` on attach always appends. Galleries left with gaps
  * or duplicates by earlier code are repaired by their owner's next mutation.
  */
@@ -176,17 +194,15 @@ export class ImageService {
       throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
     }
 
-    await prisma.$transaction(
-      async (tx) => {
-        // Compact first so count() is the end of the gallery even if it held gaps.
-        await compactGalleryPositions(tx, { profileId })
-        const position = await tx.profileImage.count({ where: { profileId } })
-        await tx.profileImage.create({ data: { imageId, profileId } })
-        await tx.image.update({ where: { id: imageId }, data: { position } })
-        await syncProfileHasFace(tx, profileId)
-      },
-      { isolationLevel: 'Serializable' }
-    )
+    await prisma.$transaction(async (tx) => {
+      await lockGallery(tx, { profileId })
+      // Compact first so count() is the end of the gallery even if it held gaps.
+      await compactGalleryPositions(tx, { profileId })
+      const position = await tx.profileImage.count({ where: { profileId } })
+      await tx.profileImage.create({ data: { imageId, profileId } })
+      await tx.image.update({ where: { id: imageId }, data: { position } })
+      await syncProfileHasFace(tx, profileId)
+    })
   }
 
   /**
@@ -211,16 +227,14 @@ export class ImageService {
       throw new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
     }
 
-    await prisma.$transaction(
-      async (tx) => {
-        // Compact first so count() is the end of the gallery even if it held gaps.
-        await compactGalleryPositions(tx, { userContentId })
-        const position = await tx.userContentImage.count({ where: { userContentId } })
-        await tx.userContentImage.create({ data: { imageId, userContentId } })
-        await tx.image.update({ where: { id: imageId }, data: { position } })
-      },
-      { isolationLevel: 'Serializable' }
-    )
+    await prisma.$transaction(async (tx) => {
+      await lockGallery(tx, { userContentId })
+      // Compact first so count() is the end of the gallery even if it held gaps.
+      await compactGalleryPositions(tx, { userContentId })
+      const position = await tx.userContentImage.count({ where: { userContentId } })
+      await tx.userContentImage.create({ data: { imageId, userContentId } })
+      await tx.image.update({ where: { id: imageId }, data: { position } })
+    })
   }
 
   /**
@@ -260,6 +274,7 @@ export class ImageService {
     // Writes iterate `uniqueIds` (deduped input order) — not the validated `images`
     // set, which Prisma may return in arbitrary order — so positions follow
     // caller-supplied order.
+    await lockGallery(tx, { userContentId })
     const startPos = await tx.userContentImage.count({ where: { userContentId } })
     for (let i = 0; i < uniqueIds.length; i++) {
       const id = uniqueIds[i]
@@ -355,14 +370,12 @@ export class ImageService {
     }
 
     const profileId = image.profileGallery.profileId
-    await prisma.$transaction(
-      async (tx) => {
-        await tx.profileImage.delete({ where: { imageId } })
-        await compactGalleryPositions(tx, { profileId })
-        await syncProfileHasFace(tx, profileId)
-      },
-      { isolationLevel: 'Serializable' }
-    )
+    await prisma.$transaction(async (tx) => {
+      await lockGallery(tx, { profileId })
+      await tx.profileImage.delete({ where: { imageId } })
+      await compactGalleryPositions(tx, { profileId })
+      await syncProfileHasFace(tx, profileId)
+    })
   }
 
   /**
@@ -384,6 +397,7 @@ export class ImageService {
 
     const { userContentId } = image.userContentGallery
     await prisma.$transaction(async (tx) => {
+      await lockGallery(tx, { userContentId })
       await tx.userContentImage.delete({ where: { imageId } })
       await compactGalleryPositions(tx, { userContentId })
     })
@@ -498,17 +512,20 @@ export class ImageService {
 
     await prisma.$transaction(async (tx) => {
       if (image.profileGallery) {
-        await tx.profileImage.delete({ where: { imageId } })
-      } else if (image.userContentGallery) {
-        await tx.userContentImage.delete({ where: { imageId } })
-      }
-      await tx.image.delete({ where: { id: imageId } })
-      if (image.profileGallery) {
         const { profileId } = image.profileGallery
+        await lockGallery(tx, { profileId })
+        await tx.profileImage.delete({ where: { imageId } })
+        await tx.image.delete({ where: { id: imageId } })
         await compactGalleryPositions(tx, { profileId })
         await syncProfileHasFace(tx, profileId)
       } else if (image.userContentGallery) {
-        await compactGalleryPositions(tx, { userContentId: image.userContentGallery.userContentId })
+        const { userContentId } = image.userContentGallery
+        await lockGallery(tx, { userContentId })
+        await tx.userContentImage.delete({ where: { imageId } })
+        await tx.image.delete({ where: { id: imageId } })
+        await compactGalleryPositions(tx, { userContentId })
+      } else {
+        await tx.image.delete({ where: { id: imageId } })
       }
     })
 
@@ -581,6 +598,7 @@ export class ImageService {
     }
 
     await prisma.$transaction(async (tx) => {
+      await lockGallery(tx, { profileId })
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }
@@ -613,6 +631,7 @@ export class ImageService {
     }
 
     await prisma.$transaction(async (tx) => {
+      await lockGallery(tx, { userContentId })
       for (const item of items) {
         await tx.image.update({ where: { id: item.id }, data: { position: item.position } })
       }

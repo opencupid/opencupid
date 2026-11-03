@@ -76,6 +76,8 @@ beforeEach(async () => {
   // image / userContentImage extensions land. Re-bind it to the live mockPrisma
   // so transactions see the full surface.
   mockPrisma.$transaction = vi.fn((fn: (client: any) => any) => fn(mockPrisma))
+  // lockGallery() issues a SELECT ... FOR UPDATE through $queryRaw.
+  mockPrisma.$queryRaw = vi.fn().mockResolvedValue([])
   mockUnlink.mockClear()
   const mod = await import('../../services/image.service')
   ;(mod.ImageService as any).instance = undefined
@@ -1002,5 +1004,128 @@ describe('attach repairs galleries left broken by earlier code', () => {
       [{ where: { id: 'C' }, data: { position: 1 } }],
       [{ where: { id: 'NEW' }, data: { position: 2 } }],
     ])
+  })
+})
+
+describe('gallery mutations are serialized per gallery', () => {
+  const lockSql = (call: any[]) => call[0].join('?')
+
+  it('lockGallery row-locks the owning Profile or UserContent', async () => {
+    const { lockGallery } = await import('../../services/image.service')
+
+    await lockGallery(mockPrisma, { profileId: 'profile-1' })
+    await lockGallery(mockPrisma, { userContentId: 'content-1' })
+
+    const [profileCall, contentCall] = mockPrisma.$queryRaw.mock.calls
+    expect(lockSql(profileCall)).toMatch(/FROM "Profile" WHERE id = \? FOR UPDATE/)
+    expect(profileCall[1]).toBe('profile-1')
+    expect(lockSql(contentCall)).toMatch(/FROM "UserContent" WHERE id = \? FOR UPDATE/)
+    expect(contentCall[1]).toBe('content-1')
+  })
+
+  const firstWrite = () =>
+    Math.min(
+      ...[
+        mockPrisma.image.update,
+        mockPrisma.image.delete,
+        mockPrisma.profileImage.create,
+        mockPrisma.profileImage.delete,
+        mockPrisma.userContentImage.create,
+        mockPrisma.userContentImage.delete,
+        mockPrisma.image.findMany,
+        mockPrisma.profileImage.count,
+        mockPrisma.userContentImage.count,
+      ].flatMap((m: any) => m.mock.invocationCallOrder)
+    )
+  const expectLockedFirst = (id: string) => {
+    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.$queryRaw.mock.calls[0][1]).toBe(id)
+    expect(mockPrisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(firstWrite())
+  }
+  const unattached = {
+    id: 'IMG',
+    ownerProfileId: 'profile-1',
+    storagePath: 'x/img',
+    profileGallery: null,
+    userContentGallery: null,
+    messageGallery: null,
+  }
+
+  it('attachToProfile', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue(unattached)
+    mockPrisma.profileImage.count.mockResolvedValue(0)
+    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+    await service.attachToProfile('IMG', 'profile-1')
+    expectLockedFirst('profile-1')
+  })
+
+  it('attachToUserContent', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue(unattached)
+    mockPrisma.userContent.findUnique.mockResolvedValue({
+      id: 'content-1',
+      postedById: 'profile-1',
+    })
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+    await service.attachToUserContent('IMG', 'content-1')
+    expectLockedFirst('content-1')
+  })
+
+  it('detachFromProfile', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      ...unattached,
+      profileGallery: { profileId: 'profile-1' },
+    })
+    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+    await service.detachFromProfile('IMG', 'profile-1')
+    expectLockedFirst('profile-1')
+  })
+
+  it('detachFromUserContent', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      ...unattached,
+      userContentGallery: { userContentId: 'content-1' },
+    })
+    await service.detachFromUserContent('IMG', 'profile-1')
+    expectLockedFirst('content-1')
+  })
+
+  it('deleteImage (profile gallery)', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue({
+      ...unattached,
+      profileGallery: { profileId: 'profile-1' },
+    })
+    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+    await service.deleteImage('IMG', 'profile-1')
+    expectLockedFirst('profile-1')
+  })
+
+  it('deleteImage (unattached) takes no gallery lock', async () => {
+    mockPrisma.image.findUnique.mockResolvedValue(unattached)
+    await service.deleteImage('IMG', 'profile-1')
+    expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
+    expect(mockPrisma.image.delete).toHaveBeenCalledWith({ where: { id: 'IMG' } })
+  })
+
+  it('reorderProfileGallery', async () => {
+    mockPrisma.profileImage.count.mockResolvedValue(1)
+    mockPrisma.profileImage.findMany
+      .mockResolvedValueOnce([{ imageId: 'IMG' }])
+      .mockResolvedValueOnce([])
+    mockPrisma.profileImage.findFirst.mockResolvedValue(null)
+    await service.reorderProfileGallery('profile-1', [{ id: 'IMG', position: 0 }])
+    // count() for validation runs before the transaction; the lock must precede the writes.
+    expect(mockPrisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockPrisma.image.update.mock.invocationCallOrder[0]
+    )
+  })
+
+  it('attachManyToUserContentTx', async () => {
+    mockPrisma.image.findMany.mockResolvedValueOnce([unattached])
+    mockPrisma.userContentImage.count.mockResolvedValue(0)
+    await service.attachManyToUserContentTx(mockPrisma, ['IMG'], 'content-1', 'profile-1')
+    expect(mockPrisma.$queryRaw.mock.calls[0][1]).toBe('content-1')
+    expect(mockPrisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockPrisma.userContentImage.count.mock.invocationCallOrder[0]
+    )
   })
 })
