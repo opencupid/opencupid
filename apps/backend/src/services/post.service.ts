@@ -54,31 +54,28 @@ export class PostService extends UserContentService {
 
   async create(profileId: string, data: CreatePostPayload): Promise<PostWithMetadata> {
     const { imageIds, tagIds, ...contentData } = data
-    return prisma.$transaction(
-      async (tx) => {
-        const tagConnect = await this.tagConnectTx(tx, tagIds)
-        const created = await tx.userContent.create({
-          data: {
-            ...this.baseCreateData(contentData),
-            ...tagConnect,
-            kind: 'post',
-            postedById: profileId,
-            post: { create: { type: data.type } },
-          },
-          include: postWithMetadataInclude,
-        })
-        if (imageIds && imageIds.length > 0) {
-          await ImageService.getInstance().attachManyToUserContentTx(
-            tx,
-            imageIds,
-            created.id,
-            profileId
-          )
-        }
-        return created
-      },
-      { isolationLevel: 'Serializable' }
-    )
+    return prisma.$transaction(async (tx) => {
+      const tagConnect = await this.tagConnectTx(tx, tagIds)
+      const created = await tx.userContent.create({
+        data: {
+          ...this.baseCreateData(contentData),
+          ...tagConnect,
+          kind: 'post',
+          postedById: profileId,
+          post: { create: { type: data.type } },
+        },
+        include: postWithMetadataInclude,
+      })
+      if (imageIds && imageIds.length > 0) {
+        await ImageService.getInstance().attachManyToUserContentTx(
+          tx,
+          imageIds,
+          created.id,
+          profileId
+        )
+      }
+      return created
+    })
   }
 
   async update(

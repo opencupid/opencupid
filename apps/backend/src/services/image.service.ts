@@ -101,11 +101,12 @@ function assertAttachable(
 }
 
 /**
- * Rewrite a gallery's order to `items` order. Positions come only from the
- * sequence: the gallery's rows are deleted and re-created in the new order, so
- * new positions never collide with existing ones. Images attached later still
- * land last. The images are locked first: re-inserting rows checks the Image
- * foreign key, which would otherwise wait on a concurrent deleteImage.
+ * Rewrite a gallery's order to `items` order by permuting the positions the
+ * gallery already holds: the i-th image gets the i-th smallest existing value.
+ * No new sequence values are drawn, so an image attached concurrently (which
+ * draws a higher value) still lands last, and no gallery-level lock is needed
+ * for post galleries. Positions are written in two phases (negatives, then
+ * final values) so the per-gallery unique index never sees a duplicate midway.
  */
 async function reorderGallery(
   tx: Prisma.TransactionClient,
@@ -126,7 +127,10 @@ async function reorderGallery(
   }
 
   // Validated under the locks: these images cannot join or leave the gallery meanwhile.
-  const members = await tx.imageAttachment.findMany({ where: gallery, select: { imageId: true } })
+  const members = await tx.imageAttachment.findMany({
+    where: gallery,
+    select: { imageId: true, position: true },
+  })
   const memberIds = new Set(members.map((m) => m.imageId))
   if (members.length !== ids.length || ids.some((id) => !memberIds.has(id))) {
     throw new ImageServiceError(
@@ -135,11 +139,12 @@ async function reorderGallery(
     )
   }
 
-  // Scoped to the reordered images: a post gallery takes no gallery-level lock,
-  // so an image attached after the check above must keep its row.
-  await tx.imageAttachment.deleteMany({ where: { ...gallery, imageId: { in: ids } } })
-  for (const imageId of ids) {
-    await tx.imageAttachment.create({ data: { imageId, ...gallery } })
+  const slots = members.map((m) => m.position).sort((a, b) => a - b)
+  for (const [i, imageId] of ids.entries()) {
+    await tx.imageAttachment.update({ where: { imageId }, data: { position: -(i + 1) } })
+  }
+  for (const [i, imageId] of ids.entries()) {
+    await tx.imageAttachment.update({ where: { imageId }, data: { position: slots[i] } })
   }
 }
 

@@ -479,17 +479,25 @@ describe('updateImage', () => {
   })
 })
 
+/** calls to imageAttachment.update as [imageId, position] */
+const positionWrites = () =>
+  mockPrisma.imageAttachment.update.mock.calls.map((c: any) => [
+    c[0].where.imageId,
+    c[0].data.position,
+  ])
+
 describe('reorderProfileGallery', () => {
   beforeEach(() => {
     given(img('a'), img('b'), img('c'))
+    // sparse sequence-drawn positions
     mockPrisma.imageAttachment.findMany.mockResolvedValue([
-      { imageId: 'a' },
-      { imageId: 'b' },
-      { imageId: 'c' },
+      { imageId: 'a', position: 10 },
+      { imageId: 'b', position: 20 },
+      { imageId: 'c', position: 30 },
     ])
   })
 
-  it('re-creates the rows in array order (client positions ignored) under the gallery lock, then syncs', async () => {
+  it('permutes the existing positions into array order (client positions ignored), two-phase, then syncs', async () => {
     await service.reorderProfileGallery(ME, [
       { id: 'c', position: 7 },
       { id: 'a', position: 7 },
@@ -502,14 +510,18 @@ describe('reorderProfileGallery', () => {
     expect(firstCall(mockPrisma.image.update)).toBeLessThan(
       firstCall(mockPrisma.imageAttachment.findMany)
     )
-    expect(mockPrisma.imageAttachment.deleteMany).toHaveBeenCalledWith({
-      where: { profileId: ME, imageId: { in: ['c', 'a', 'b'] } },
-    })
-    expect(mockPrisma.imageAttachment.create.mock.calls.map((c: any) => c[0].data)).toEqual([
-      { imageId: 'c', profileId: ME },
-      { imageId: 'a', profileId: ME },
-      { imageId: 'b', profileId: ME },
+    // phase 1: unique negatives; phase 2: the gallery's own values, smallest first
+    expect(positionWrites()).toEqual([
+      ['c', -1],
+      ['a', -2],
+      ['b', -3],
+      ['c', 10],
+      ['a', 20],
+      ['b', 30],
     ])
+    // no rows deleted or created, so no new sequence values are drawn
+    expect(mockPrisma.imageAttachment.deleteMany).not.toHaveBeenCalled()
+    expect(mockPrisma.imageAttachment.create).not.toHaveBeenCalled()
     expect(mockPrisma.profile.update).toHaveBeenLastCalledWith({
       where: { id: ME },
       data: { hasFace: false },
@@ -544,15 +556,17 @@ describe('reorderProfileGallery', () => {
     await expect(service.reorderProfileGallery(ME, items)).rejects.toMatchObject({
       code: 'INVALID_REORDER',
     })
-    expect(mockPrisma.imageAttachment.deleteMany).not.toHaveBeenCalled()
-    expect(mockPrisma.imageAttachment.create).not.toHaveBeenCalled()
+    expect(mockPrisma.imageAttachment.update).not.toHaveBeenCalled()
   })
 })
 
 describe('reorderUserContentGallery', () => {
-  it('re-creates rows scoped to the reordered images and takes no profile lock', async () => {
+  it('takes no profile lock and only reuses the gallery positions', async () => {
     given(img('a'), img('b'))
-    mockPrisma.imageAttachment.findMany.mockResolvedValue([{ imageId: 'a' }, { imageId: 'b' }])
+    mockPrisma.imageAttachment.findMany.mockResolvedValue([
+      { imageId: 'a', position: 4 },
+      { imageId: 'b', position: 9 },
+    ])
 
     await service.reorderUserContentGallery('content-1', [
       { id: 'b', position: 0 },
@@ -560,13 +574,30 @@ describe('reorderUserContentGallery', () => {
     ])
 
     expect(mockPrisma.profile.update).not.toHaveBeenCalled()
-    // Scoped: an image attached after validation keeps its row.
-    expect(mockPrisma.imageAttachment.deleteMany).toHaveBeenCalledWith({
-      where: { userContentId: 'content-1', imageId: { in: ['b', 'a'] } },
-    })
-    expect(mockPrisma.imageAttachment.create.mock.calls.map((c: any) => c[0].data)).toEqual([
-      { imageId: 'b', userContentId: 'content-1' },
-      { imageId: 'a', userContentId: 'content-1' },
+    expect(positionWrites()).toEqual([
+      ['b', -1],
+      ['a', -2],
+      ['b', 4],
+      ['a', 9],
     ])
+  })
+
+  it('leaves an image attached after validation last (its higher sequence value is untouched)', async () => {
+    // Gallery A(4), B(9) validated; C attaches concurrently with sequence value 12.
+    given(img('a'), img('b'))
+    mockPrisma.imageAttachment.findMany.mockResolvedValue([
+      { imageId: 'a', position: 4 },
+      { imageId: 'b', position: 9 },
+    ])
+
+    await service.reorderUserContentGallery('content-1', [
+      { id: 'b', position: 0 },
+      { id: 'a', position: 1 },
+    ])
+
+    // Only B and A are written, with values ≤ 9, so the final order is B(4), A(9), C(12).
+    const written = positionWrites()
+    expect(written.every(([id]: [string]) => id === 'a' || id === 'b')).toBe(true)
+    expect(Math.max(...written.map(([, pos]: [string, number]) => pos))).toBeLessThan(12)
   })
 })

@@ -67,46 +67,43 @@ export class EventService extends UserContentService {
     external?: ExternalRef
   ): Promise<EventWithMetadata> {
     const { imageIds, tagIds, ...contentData } = data
-    return prisma.$transaction(
-      async (tx) => {
-        const tagConnect = await this.tagConnectTx(tx, tagIds)
-        const created = await tx.userContent.create({
-          data: {
-            ...this.baseCreateData(contentData),
-            ...tagConnect,
-            externalSource: external?.source ?? null,
-            externalId: external?.id ?? null,
-            kind: 'event',
-            postedById: profileId,
-            event: {
-              create: {
-                startsAt: data.startsAt,
-                venue: data.venue ?? null,
-                externalUrl: external?.url ?? null,
-              },
+    return prisma.$transaction(async (tx) => {
+      const tagConnect = await this.tagConnectTx(tx, tagIds)
+      const created = await tx.userContent.create({
+        data: {
+          ...this.baseCreateData(contentData),
+          ...tagConnect,
+          externalSource: external?.source ?? null,
+          externalId: external?.id ?? null,
+          kind: 'event',
+          postedById: profileId,
+          event: {
+            create: {
+              startsAt: data.startsAt,
+              venue: data.venue ?? null,
+              externalUrl: external?.url ?? null,
             },
           },
-          include: eventWithMetadataInclude,
-        })
-        await tx.eventAttendance.create({
-          data: {
-            eventContentId: created.id,
-            profileId,
-            status: 'GOING',
-          },
-        })
-        if (imageIds && imageIds.length > 0) {
-          await ImageService.getInstance().attachManyToUserContentTx(
-            tx,
-            imageIds,
-            created.id,
-            profileId
-          )
-        }
-        return created
-      },
-      { isolationLevel: 'Serializable' }
-    )
+        },
+        include: eventWithMetadataInclude,
+      })
+      await tx.eventAttendance.create({
+        data: {
+          eventContentId: created.id,
+          profileId,
+          status: 'GOING',
+        },
+      })
+      if (imageIds && imageIds.length > 0) {
+        await ImageService.getInstance().attachManyToUserContentTx(
+          tx,
+          imageIds,
+          created.id,
+          profileId
+        )
+      }
+      return created
+    })
   }
 
   async update(
