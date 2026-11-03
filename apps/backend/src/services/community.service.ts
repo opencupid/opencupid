@@ -6,12 +6,16 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreateCommunityPayload, UpdateCommunityPayload } from '@zod/community/community.dto'
-import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
+import {
+  conversationContextInclude,
+  profileImageInclude,
+  userContentTagsInclude,
+} from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 const communityWithMetadataInclude = {
   community: true,
-  postedBy: { include: { profileImages: { include: { image: true } } } },
+  postedBy: { include: profileImageInclude() },
   ...userContentImagesInclude,
   ...userContentTagsInclude,
 } as const
@@ -21,7 +25,7 @@ const communityWithMetadataAndContextInclude = (viewerProfileId: string) =>
     community: true,
     postedBy: {
       include: {
-        profileImages: { include: { image: true } },
+        ...profileImageInclude(),
         ...conversationContextInclude(viewerProfileId),
       },
     },
@@ -49,38 +53,35 @@ export class CommunityService extends UserContentService {
 
   async create(profileId: string, data: CreateCommunityPayload): Promise<CommunityWithMetadata> {
     const { imageIds, tagIds, ...contentData } = data
-    return prisma.$transaction(
-      async (tx) => {
-        const tagConnect = await this.tagConnectTx(tx, tagIds)
-        const created = await tx.userContent.create({
-          data: {
-            ...this.baseCreateData(contentData),
-            ...tagConnect,
-            kind: 'community',
-            postedById: profileId,
-            community: {
-              create: {
-                yearFounded: data.yearFounded ?? null,
-                description: data.description ?? null,
-                contactUrl: data.contactUrl ?? null,
-                contactEmail: data.contactEmail ?? null,
-              },
+    return prisma.$transaction(async (tx) => {
+      const tagConnect = await this.tagConnectTx(tx, tagIds)
+      const created = await tx.userContent.create({
+        data: {
+          ...this.baseCreateData(contentData),
+          ...tagConnect,
+          kind: 'community',
+          postedById: profileId,
+          community: {
+            create: {
+              yearFounded: data.yearFounded ?? null,
+              description: data.description ?? null,
+              contactUrl: data.contactUrl ?? null,
+              contactEmail: data.contactEmail ?? null,
             },
           },
-          include: communityWithMetadataInclude,
-        })
-        if (imageIds && imageIds.length > 0) {
-          await ImageService.getInstance().attachManyToUserContentTx(
-            tx,
-            imageIds,
-            created.id,
-            profileId
-          )
-        }
-        return created
-      },
-      { isolationLevel: 'Serializable' }
-    )
+        },
+        include: communityWithMetadataInclude,
+      })
+      if (imageIds && imageIds.length > 0) {
+        await ImageService.getInstance().attachManyToUserContentTx(
+          tx,
+          imageIds,
+          created.id,
+          profileId
+        )
+      }
+      return created
+    })
   }
 
   async update(

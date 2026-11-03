@@ -27,7 +27,7 @@ export function mapDbPostToPublic(row: PostWithMetadata, ctx: MapperContext): Pu
     isOwn: row.postedById === ctx.viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
-    images: row.images.map((j) => toPublicImage(j.image)),
+    images: row.images.map((j, position) => toPublicImage(j.image, position)),
     tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
@@ -48,7 +48,7 @@ export function mapDbPostToDetail(
       ...mapConversationContext(row.postedBy, ctx.viewerProfileId),
     },
     location: extractLocation(row) ?? undefined,
-    images: row.images.map((j) => toPublicImage(j.image)),
+    images: row.images.map((j, position) => toPublicImage(j.image, position)),
     tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
@@ -66,7 +66,7 @@ export function mapDbPostToOwner(row: PostWithMetadata, ctx: MapperContext): Own
     isOwn: true,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
-    images: row.images.map((j) => toOwnerImage(j.image)),
+    images: row.images.map((j, position) => toOwnerImage(j.image, position)),
     tags: mapTagsTranslated(row.tags, ctx.locale),
   })
 }

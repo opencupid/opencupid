@@ -47,7 +47,7 @@ export function profileImageInclude() {
   return {
     profileImages: {
       include: { image: true },
-      orderBy: { image: { position: 'asc' } },
+      orderBy: { position: 'asc' },
     },
   } satisfies Prisma.ProfileInclude
 }

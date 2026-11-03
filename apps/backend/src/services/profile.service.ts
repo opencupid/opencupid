@@ -24,18 +24,19 @@ import {
 } from '@/db/includes/profileIncludes'
 
 /**
- * Mirror Profile.hasFace from the lowest-position Image in the profile's gallery.
- * Falls back to false when the gallery is empty. Caller must run this inside a
- * transaction so the read and write stay consistent.
+ * Mirror Profile.hasFace from the primary (lowest-position) image in the
+ * profile's gallery; false when the gallery is empty. Callers run this at the end
+ * of a transaction that holds the profile-gallery lock, so it reads the gallery
+ * as committed by every earlier change.
  */
 export async function syncProfileHasFace(
   tx: Prisma.TransactionClient,
   profileId: string
 ): Promise<void> {
-  const top = await tx.profileImage.findFirst({
+  const top = await tx.imageAttachment.findFirst({
     where: { profileId },
     include: { image: { select: { hasFace: true } } },
-    orderBy: { image: { position: 'asc' } },
+    orderBy: { position: 'asc' },
   })
   await tx.profile.update({
     where: { id: profileId },
@@ -511,7 +512,7 @@ export class ProfileService {
           include: {
             profileImages: {
               include: { image: true },
-              orderBy: { image: { position: 'asc' } },
+              orderBy: { position: 'asc' },
             },
           },
         },

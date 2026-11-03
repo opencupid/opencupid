@@ -25,7 +25,9 @@ export function mapMessageProfileRef(profile: {
   return {
     id: profile.id,
     publicName: profile.publicName,
-    profileImages: profile.profileImages.slice(0, 1).map((g) => toPublicImage(g.image)),
+    profileImages: profile.profileImages
+      .slice(0, 1)
+      .map((g, position) => toPublicImage(g.image, position)),
   }
 }
 

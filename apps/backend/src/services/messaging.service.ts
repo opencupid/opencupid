@@ -37,7 +37,7 @@ const conversationSummaryInclude = {
         include: {
           profileImages: {
             include: { image: true },
-            orderBy: { image: { position: 'asc' as const } },
+            orderBy: { position: 'asc' as const },
             take: 1,
           },
         },
@@ -46,7 +46,7 @@ const conversationSummaryInclude = {
         include: {
           profileImages: {
             include: { image: true },
-            orderBy: { image: { position: 'asc' as const } },
+            orderBy: { position: 'asc' as const },
             take: 1,
           },
         },
@@ -77,7 +77,7 @@ export const messageWithSenderInclude = {
       publicName: true,
       profileImages: {
         include: { image: true },
-        orderBy: { image: { position: 'asc' } },
+        orderBy: { position: 'asc' },
         take: 1,
       },
     },

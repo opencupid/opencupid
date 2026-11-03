@@ -7,12 +7,16 @@ import {
   userContentImagesInclude,
 } from './userContent.service'
 import type { CreatePostPayload, UpdatePostPayload } from '@zod/post/post.dto'
-import { conversationContextInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
+import {
+  conversationContextInclude,
+  profileImageInclude,
+  userContentTagsInclude,
+} from '@/db/includes/profileIncludes'
 import { ImageService } from './image.service'
 
 const postWithMetadataInclude = {
   post: true,
-  postedBy: { include: { profileImages: { include: { image: true } } } },
+  postedBy: { include: profileImageInclude() },
   ...userContentImagesInclude,
   ...userContentTagsInclude,
 } as const
@@ -22,7 +26,7 @@ const postWithMetadataAndContextInclude = (viewerProfileId: string) =>
     post: true,
     postedBy: {
       include: {
-        profileImages: { include: { image: true } },
+        ...profileImageInclude(),
         ...conversationContextInclude(viewerProfileId),
       },
     },
@@ -50,31 +54,28 @@ export class PostService extends UserContentService {
 
   async create(profileId: string, data: CreatePostPayload): Promise<PostWithMetadata> {
     const { imageIds, tagIds, ...contentData } = data
-    return prisma.$transaction(
-      async (tx) => {
-        const tagConnect = await this.tagConnectTx(tx, tagIds)
-        const created = await tx.userContent.create({
-          data: {
-            ...this.baseCreateData(contentData),
-            ...tagConnect,
-            kind: 'post',
-            postedById: profileId,
-            post: { create: { type: data.type } },
-          },
-          include: postWithMetadataInclude,
-        })
-        if (imageIds && imageIds.length > 0) {
-          await ImageService.getInstance().attachManyToUserContentTx(
-            tx,
-            imageIds,
-            created.id,
-            profileId
-          )
-        }
-        return created
-      },
-      { isolationLevel: 'Serializable' }
-    )
+    return prisma.$transaction(async (tx) => {
+      const tagConnect = await this.tagConnectTx(tx, tagIds)
+      const created = await tx.userContent.create({
+        data: {
+          ...this.baseCreateData(contentData),
+          ...tagConnect,
+          kind: 'post',
+          postedById: profileId,
+          post: { create: { type: data.type } },
+        },
+        include: postWithMetadataInclude,
+      })
+      if (imageIds && imageIds.length > 0) {
+        await ImageService.getInstance().attachManyToUserContentTx(
+          tx,
+          imageIds,
+          created.id,
+          profileId
+        )
+      }
+      return created
+    })
   }
 
   async update(

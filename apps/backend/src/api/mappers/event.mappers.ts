@@ -24,7 +24,7 @@ export function mapDbEventToPublic(row: EventWithMetadata, ctx: MapperContext): 
     isOwn: row.postedById === ctx.viewerProfileId,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
-    images: row.images.map((j) => toPublicImage(j.image)),
+    images: row.images.map((j, position) => toPublicImage(j.image, position)),
     tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
@@ -47,7 +47,7 @@ export function mapDbEventToDetail(
       ...mapConversationContext(row.postedBy, ctx.viewerProfileId),
     },
     location: extractLocation(row) ?? undefined,
-    images: row.images.map((j) => toPublicImage(j.image)),
+    images: row.images.map((j, position) => toPublicImage(j.image, position)),
     tags: mapTagsTranslated(row.tags, ctx.locale),
   }
 }
@@ -67,7 +67,7 @@ export function mapDbEventToOwner(row: EventWithMetadata, ctx: MapperContext): O
     isOwn: true,
     postedBy: mapProfileSummary(row.postedBy),
     location: extractLocation(row) ?? undefined,
-    images: row.images.map((j) => toOwnerImage(j.image)),
+    images: row.images.map((j, position) => toOwnerImage(j.image, position)),
     tags: mapTagsTranslated(row.tags, ctx.locale),
   })
 }

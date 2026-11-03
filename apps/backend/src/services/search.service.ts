@@ -204,7 +204,7 @@ export class SearchService {
             publicName: true,
             profileImages: {
               include: { image: true },
-              orderBy: { image: { position: 'asc' } },
+              orderBy: { position: 'asc' },
             },
           },
         },
@@ -254,7 +254,7 @@ export class SearchService {
             publicName: true,
             profileImages: {
               include: { image: true },
-              orderBy: { image: { position: 'asc' } },
+              orderBy: { position: 'asc' },
             },
           },
         },
@@ -311,7 +311,7 @@ export class SearchService {
             publicName: true,
             profileImages: {
               include: { image: true },
-              orderBy: { image: { position: 'asc' } },
+              orderBy: { position: 'asc' },
             },
           },
         },

@@ -33,7 +33,7 @@ const contentImageRoutes: FastifyPluginAsync = async (fastify) => {
       const images = await imageService.listUserContentGallery(contentId)
       const response: ImageApiResponse = {
         success: true,
-        images: images.map(toOwnerImage),
+        images: images.map((img, position) => toOwnerImage(img, position)),
       }
       return reply.code(200).send(response)
     } catch (err) {
@@ -63,7 +63,7 @@ const contentImageRoutes: FastifyPluginAsync = async (fastify) => {
         const updated = await imageService.listUserContentGallery(contentId)
         const response: ImageApiResponse = {
           success: true,
-          images: updated.map(toOwnerImage),
+          images: updated.map((img, position) => toOwnerImage(img, position)),
         }
         return reply.code(200).send(response)
       } catch (err) {
@@ -94,11 +94,11 @@ const contentImageRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        await imageService.detachFromUserContent(imageId, req.session.profileId)
+        await imageService.detachFromUserContent(imageId, req.session.profileId, contentId)
         const updated = await imageService.listUserContentGallery(contentId)
         const response: ImageApiResponse = {
           success: true,
-          images: updated.map(toOwnerImage),
+          images: updated.map((img, position) => toOwnerImage(img, position)),
         }
         return reply.code(200).send(response)
       } catch (err) {
@@ -131,7 +131,7 @@ const contentImageRoutes: FastifyPluginAsync = async (fastify) => {
         const updated = await imageService.reorderUserContentGallery(contentId, images)
         const response: ImageApiResponse = {
           success: true,
-          images: updated.map(toOwnerImage),
+          images: updated.map((img, position) => toOwnerImage(img, position)),
         }
         return reply.code(200).send(response)
       } catch (err) {

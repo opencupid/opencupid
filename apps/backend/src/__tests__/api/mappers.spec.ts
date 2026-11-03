@@ -5,6 +5,7 @@ import {
   mapProfileToPublic,
 } from '../../api/mappers/profile.mappers'
 import { DbTagToPublicTagTransform } from '../../api/mappers/tag.mappers'
+import { toPublicImage } from '../../api/mappers/image.mappers'
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     MEDIA_URL_BASE: '/user-content',
@@ -39,6 +40,20 @@ describe('mappers', () => {
     const res = mapProfileImagesToOwner([image])
     expect(res[0]).toHaveProperty('variants')
     expect(res[0].variants[0]).toEqual({ size: 'thumb', url: 'http://img/signed' })
+  })
+
+  it('exposes the sorted index as position, not the stored Image.position', () => {
+    // Callers pass gallery images already ordered by ImageAttachment.position.
+    const res = mapProfileImagesToOwner([
+      { ...image, id: 'ckaaaaaaaaaaaaaac', position: 9 },
+      { ...image, id: 'ckaaaaaaaaaaaaaad', position: 9 },
+    ])
+    expect(res.map((i) => i.position)).toEqual([0, 1])
+  })
+
+  it('keeps Image.position when no index is given (message images)', () => {
+    expect(toPublicImage({ ...image, position: 3 }).position).toBe(3)
+    expect(toPublicImage({ ...image, position: 3 }, 0).position).toBe(0)
   })
 
   it('creates upsert payloads from localized data', () => {
