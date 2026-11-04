@@ -291,7 +291,7 @@ const InviteCtaShareDialog = {
 }
 
 import BrowseProfiles from '../BrowseProfiles.vue'
-import { MAP_DEFAULT_CENTER } from '@shared/maps'
+import { BROWSE_GRID_MIN_ZOOM, MAP_DEFAULT_CENTER } from '@shared/maps'
 
 describe('BrowseProfiles view', () => {
   beforeEach(() => {
@@ -509,6 +509,7 @@ describe('BrowseProfiles view', () => {
     it('shows the grid button with the number of map items in view', async () => {
       const store = useFindProfileStore()
       store.lastMapBounds = bounds
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM
       store.clusterFeatures = [
         { type: 'cluster', id: 1, lat: 47.5, lon: 19, count: 4, expansionZoom: 9 },
         {
@@ -538,8 +539,20 @@ describe('BrowseProfiles view', () => {
       expect(wrapper.findComponent({ name: 'BrowseGridChip' }).props('count')).toBe(5)
     })
 
-    it('opens the grid from the grid button with the current tags and area', async () => {
+    it('hides the grid button below the minimum zoom', async () => {
+      const store = useFindProfileStore()
+      store.lastMapBounds = bounds
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM - 1
       const wrapper = mountComponent()
+      await nextTick()
+
+      expect(wrapper.find('.grid-chip-stub').exists()).toBe(false)
+    })
+
+    it('opens the grid from the grid button with the current tags and area', async () => {
+      useFindProfileStore().lastMapZoom = BROWSE_GRID_MIN_ZOOM
+      const wrapper = mountComponent()
+      await nextTick()
       await wrapper.find('.grid-chip-stub').trigger('click')
 
       expect(mockPush).toHaveBeenCalledWith(mockGridRoute)
