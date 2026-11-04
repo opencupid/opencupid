@@ -13,6 +13,9 @@ import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
 let clusterAbortController: AbortController | null = null
+// The viewport the clusters were last requested for, to skip repeats.
+let lastFetchedBounds: MapBounds | null = null
+let lastFetchedZoom: number | null = null
 let cachedClusterZoom: number | null = null
 let cachedClusterBounds: MapBounds | null = null
 let cachedClusterTagSig = ''
@@ -66,6 +69,8 @@ function sameViewport(
 }
 
 function invalidateBoundsCache(): void {
+  lastFetchedBounds = null
+  lastFetchedZoom = null
   cachedClusterBounds = null
   cachedClusterZoom = null
   cachedClusterTagSig = ''
@@ -75,8 +80,9 @@ function invalidateBoundsCache(): void {
 
 type FindProfileStoreState = {
   clusterFeatures: MapFeature[]
+  /** The map's current viewport, recorded by setViewport as soon as the map settles. */
   lastMapBounds: MapBounds | null
-  /** Zoom the clusters for `lastMapBounds` were fetched at (integer). */
+  /** The map's current zoom (integer). */
   lastMapZoom: number | null
   isLoading: boolean
   availableTags: PublicTag[]
@@ -114,8 +120,6 @@ export const useFindProfileStore = defineStore('findProfile', {
       }
       const controller = new AbortController()
       clusterAbortController = controller
-      this.lastMapBounds = bounds
-      this.lastMapZoom = zoom
 
       const tagIds = useSearchStore().selectedTagIds
       const sig = tagSignature(tagIds)
@@ -175,11 +179,24 @@ export const useFindProfileStore = defineStore('findProfile', {
     },
 
     /**
+     * Records the map's viewport. Called as soon as the map settles, ahead
+     * of the (debounced) cluster fetch, so everything reading the viewport
+     * (the grid, its button) follows the map without lag.
+     */
+    setViewport(bounds: MapBounds, zoom: number): void {
+      this.lastMapBounds = bounds
+      this.lastMapZoom = Math.round(zoom)
+    },
+
+    /**
      * Unified bounds handler — deduplicates viewport, then fetches
      * clusters (including posts and tags) in a single request.
      */
     async fetchBounds(bounds: MapBounds, zoom: number): Promise<void> {
-      if (sameViewport(this.lastMapBounds, this.lastMapZoom, bounds, Math.round(zoom))) return
+      zoom = Math.round(zoom)
+      if (sameViewport(lastFetchedBounds, lastFetchedZoom, bounds, zoom)) return
+      lastFetchedBounds = bounds
+      lastFetchedZoom = zoom
       await this.findClustersForMapBounds(bounds, zoom)
     },
 

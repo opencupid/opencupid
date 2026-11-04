@@ -184,6 +184,30 @@ describe('useBrowseViewModel', () => {
   })
 
   describe('onBoundsChanged', () => {
+    it('records the viewport at once and fetches once the map has stayed put', async () => {
+      vi.useFakeTimers()
+      try {
+        const store = useFindProfileStore()
+        const fetchBoundsSpy = vi.spyOn(store, 'fetchBounds').mockResolvedValue()
+        const first = { south: 47, north: 48, west: 18, east: 20 }
+        const last = { south: 47.2, north: 47.6, west: 18.9, east: 19.2 }
+
+        const { onBoundsChanged } = useBrowseViewModel()
+        void onBoundsChanged({ bounds: first, zoom: 10 })
+        void onBoundsChanged({ bounds: last, zoom: 11 })
+
+        expect(store.lastMapBounds).toEqual(last)
+        expect(store.lastMapZoom).toBe(11)
+        expect(fetchBoundsSpy).not.toHaveBeenCalled()
+
+        await vi.advanceTimersByTimeAsync(500)
+        expect(fetchBoundsSpy).toHaveBeenCalledTimes(1)
+        expect(fetchBoundsSpy).toHaveBeenCalledWith(last, 11)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
     it('fetches cluster features and bounds posts in parallel', async () => {
       const store = useFindProfileStore()
       const fetchBoundsSpy = vi.spyOn(store, 'fetchBounds').mockResolvedValue()

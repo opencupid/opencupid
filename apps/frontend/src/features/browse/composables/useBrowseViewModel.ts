@@ -1,10 +1,13 @@
 import { computed, markRaw, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useDebounceFn } from '@vueuse/core'
 import type { ContentKind } from '@zod/userContent/userContent.dto'
 import type { MapCluster, MapPoi, BoundsWithZoom } from '@/features/map/types/map.types'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
+
+const VIEWPORT_FETCH_DEBOUNCE_MS = 500
 
 /**
  * View-model for the browse map. Map POIs derive from findProfileStore
@@ -147,11 +150,21 @@ export function useBrowseViewModel() {
   }
 
   // ── Bounds handler ─────────────────────────────────────────────────
+  // The viewport is recorded at once, so whatever follows the map (the
+  // grid, its button) is never behind it; only the fetches wait for the
+  // map to stay put, so a burst of moves costs one round of requests.
+  const fetchForViewport = useDebounceFn(
+    (bounds: BoundsWithZoom['bounds'], zoom: number) =>
+      Promise.all([
+        findProfileStore.fetchBounds(bounds, zoom),
+        contentStore.fetchFeedInBounds(bounds, contentKinds.value),
+      ]),
+    VIEWPORT_FETCH_DEBOUNCE_MS
+  )
+
   async function onBoundsChanged({ bounds, zoom }: BoundsWithZoom) {
-    await Promise.all([
-      findProfileStore.fetchBounds(bounds, zoom),
-      contentStore.fetchFeedInBounds(bounds, contentKinds.value),
-    ])
+    findProfileStore.setViewport(bounds, zoom)
+    await fetchForViewport(bounds, zoom)
   }
 
   /**

@@ -359,32 +359,6 @@ describe('OsmPoiMap', () => {
     expect(aliceIcon.iconAnchor).toEqual([POI_ICON_SIZE / 2, POI_ICON_SIZE / 2])
   })
 
-  it('emits bounds:changed on moveend with viewport bounds', async () => {
-    vi.useFakeTimers()
-    const wrapper = await mountMap()
-    await flushPromises()
-
-    const mapInstance = (L.map as any).mock.results[0].value
-    const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
-
-    mapInstance.getBounds = vi.fn(() => ({
-      getSouth: () => 45.0,
-      getNorth: () => 48.0,
-      getWest: () => 16.0,
-      getEast: () => 23.0,
-    }))
-
-    moveendHandler()
-    vi.advanceTimersByTime(500)
-
-    expect(wrapper.emitted('bounds:changed')).toBeTruthy()
-    expect(wrapper.emitted('bounds:changed')![0]).toEqual([
-      { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
-    ])
-
-    vi.useRealTimers()
-  })
-
   it('registers moveend listener during map init', async () => {
     await mountMap()
     await flushPromises()
@@ -429,40 +403,30 @@ describe('OsmPoiMap', () => {
   })
 
   it('suppresses bounds:changed when container has zero dimensions', async () => {
-    vi.useFakeTimers()
     const wrapper = await mountMap()
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
     const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
-
-    mapInstance.getBounds = vi.fn(() => ({
-      getSouth: () => 45.0,
-      getNorth: () => 48.0,
-      getWest: () => 16.0,
-      getEast: () => 23.0,
-    }))
+    const emittedCount = () => wrapper.emitted('bounds:changed')?.length ?? 0
+    const before = emittedCount()
 
     mapInstance.getSize.mockReturnValue({ x: 0, y: 0 })
     moveendHandler()
-    vi.advanceTimersByTime(500)
-    expect(wrapper.emitted('bounds:changed')).toBeFalsy()
+    expect(emittedCount()).toBe(before)
 
     mapInstance.getSize.mockReturnValue({ x: 1000, y: 800 })
     moveendHandler()
-    vi.advanceTimersByTime(500)
-    expect(wrapper.emitted('bounds:changed')).toBeTruthy()
-
-    vi.useRealTimers()
+    expect(emittedCount()).toBe(before + 1)
   })
 
-  it('debounces bounds:changed emission on rapid moveend events', async () => {
-    vi.useFakeTimers()
+  it('reports every settled move at once, without waiting', async () => {
     const wrapper = await mountMap()
     await flushPromises()
 
     const mapInstance = (L.map as any).mock.results[0].value
     const moveendHandler = mapInstance.on.mock.calls.find((c: any) => c[0] === 'moveend')[1]
+    const before = wrapper.emitted('bounds:changed')?.length ?? 0
 
     mapInstance.getBounds = vi.fn(() => ({
       getSouth: () => 45.0,
@@ -470,21 +434,14 @@ describe('OsmPoiMap', () => {
       getWest: () => 16.0,
       getEast: () => 23.0,
     }))
-
     moveendHandler()
     moveendHandler()
-    moveendHandler()
 
-    expect(wrapper.emitted('bounds:changed')).toBeFalsy()
-
-    vi.advanceTimersByTime(500)
-
-    expect(wrapper.emitted('bounds:changed')).toHaveLength(1)
-    expect(wrapper.emitted('bounds:changed')![0]).toEqual([
+    const emitted = wrapper.emitted('bounds:changed')!
+    expect(emitted).toHaveLength(before + 2)
+    expect(emitted.at(-1)).toEqual([
       { bounds: { south: 45.0, north: 48.0, west: 16.0, east: 23.0 }, zoom: expect.any(Number) },
     ])
-
-    vi.useRealTimers()
   })
 
   describe('marker emphasis and pulse', () => {

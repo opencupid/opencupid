@@ -392,8 +392,9 @@ const isInitialized = ref(false)
 
 async function initialize() {
   if (!ownerProfileStore.profile) return
-  if (findProfileStore.lastMapBounds) {
-    await findProfileStore.fetchBounds(findProfileStore.lastMapBounds, 7)
+  const { lastMapBounds: bounds, lastMapZoom: zoom } = findProfileStore
+  if (bounds && zoom !== null) {
+    await findProfileStore.fetchBounds(bounds, zoom)
   }
   isInitialized.value = true
 }

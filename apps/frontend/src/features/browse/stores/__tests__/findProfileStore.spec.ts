@@ -64,14 +64,25 @@ describe('findClustersForMapBounds', () => {
     vi.clearAllMocks()
   })
 
-  it('records the bounds and the integer zoom it fetched for', async () => {
-    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
+  it('setViewport records the bounds and the integer zoom without fetching', () => {
     const bounds = { south: 47, north: 48, west: 18, east: 19 }
 
-    await store.fetchBounds(bounds, 10.6)
+    store.setViewport(bounds, 10.6)
 
     expect(store.lastMapBounds).toEqual(bounds)
     expect(store.lastMapZoom).toBe(11)
+    expect(mockGet).not.toHaveBeenCalled()
+  })
+
+  it('fetchBounds skips a viewport it already fetched, even after setViewport', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
+    const bounds = { south: 47, north: 48, west: 18, east: 19 }
+
+    store.setViewport(bounds, 11)
+    await store.fetchBounds(bounds, 11)
+    await store.fetchBounds(bounds, 11)
+
+    expect(mockGet).toHaveBeenCalledTimes(1)
   })
 
   it('fetches clusters and tags from the cluster endpoint', async () => {

@@ -78,7 +78,6 @@ function supportsHover(): boolean {
 // Tuning constants
 // ---------------------------------------------------------------------------
 
-const BOUNDS_DEBOUNCE_MS = 500
 const SEARCH_FOCUS_ZOOM = 12
 
 // ---------------------------------------------------------------------------
@@ -111,7 +110,6 @@ export function useMapController(
   let clusterLayer: L.LayerGroup
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
-  let boundsTimer: ReturnType<typeof setTimeout> | null = null
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -130,10 +128,6 @@ export function useMapController(
     pulseTimer = null
     pulsing = null
     emphasized = undefined
-    if (boundsTimer) {
-      clearTimeout(boundsTimer)
-      boundsTimer = null
-    }
     iconCache.clear()
     map?.off('moveend', emitBounds)
     pois?.clear()
@@ -240,24 +234,22 @@ export function useMapController(
 
   // ── Bounds emission ───────────────────────────────────────────────────
 
+  // Leaflet fires moveend once a move has settled, so every one is reported:
+  // consumers need the current viewport, and debounce their own fetches.
   const emitBounds = (): void => {
-    if (boundsTimer) clearTimeout(boundsTimer)
-    boundsTimer = setTimeout(() => {
-      boundsTimer = null
-      if (!map) return
-      const size = map.getSize()
-      if (size.x === 0 || size.y === 0) return
-      const b = map.getBounds()
-      emit('bounds:changed', {
-        bounds: {
-          south: b.getSouth(),
-          north: b.getNorth(),
-          west: b.getWest(),
-          east: b.getEast(),
-        },
-        zoom: map.getZoom(),
-      })
-    }, BOUNDS_DEBOUNCE_MS)
+    if (!map) return
+    const size = map.getSize()
+    if (size.x === 0 || size.y === 0) return
+    const b = map.getBounds()
+    emit('bounds:changed', {
+      bounds: {
+        south: b.getSouth(),
+        north: b.getNorth(),
+        west: b.getWest(),
+        east: b.getEast(),
+      },
+      zoom: map.getZoom(),
+    })
   }
 
   // ── POI markers ───────────────────────────────────────────────────────
