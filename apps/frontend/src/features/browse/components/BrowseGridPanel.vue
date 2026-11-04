@@ -11,7 +11,6 @@ import BrowseGridFilters from './BrowseGridFilters.vue'
 import type { GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
 import { browseItemTarget } from '../utils/browseListItem'
 import ShareSheet, { type SharePayload } from '@/features/app/components/ShareSheet.vue'
-import IconCross from '@/assets/icons/interface/cross.svg'
 import IconChevronDown from '@/assets/icons/arrows/chevrons-down.svg'
 import IconChevronUp from '@/assets/icons/arrows/chevrons-up.svg'
 
@@ -107,14 +106,6 @@ const shareOpen = ref(false)
     :aria-label="title"
   >
     <header class="grid-summary d-flex align-items-center gap-2 px-2 py-2 border-bottom">
-      <BButton
-        variant="light"
-        class="close-button rounded-circle d-flex align-items-center justify-content-center p-0 flex-shrink-0"
-        :aria-label="t('profiles.browse.grid.close')"
-        @click="emit('close')"
-      >
-        <IconCross class="svg-icon" />
-      </BButton>
       <div class="flex-grow-1 text-truncate">
         <span class="fw-bold">{{ title }}</span>
         <span
@@ -141,6 +132,13 @@ const shareOpen = ref(false)
           class="svg-icon"
         />
       </BButton>
+      <!-- At the end of the header, like the owner drawer's close button. -->
+      <button
+        type="button"
+        class="close-button btn-close flex-shrink-0 ms-1"
+        :aria-label="t('profiles.browse.grid.close')"
+        @click="emit('close')"
+      />
     </header>
 
     <div class="position-relative flex-grow-1 overflow-hidden d-flex flex-column">
@@ -238,10 +236,6 @@ const shareOpen = ref(false)
 </template>
 
 <style scoped lang="scss">
-.close-button {
-  width: 2.25rem;
-  height: 2.25rem;
-}
 .fields-drop {
   z-index: 3;
 }
