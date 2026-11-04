@@ -577,10 +577,13 @@ describe('OsmPoiMap', () => {
 
       // The map is only now showing: it jumps instead of flying.
       expect(mapInstance.flyToBounds).not.toHaveBeenCalled()
-      expect(mapInstance.fitBounds).toHaveBeenCalledWith([
-        [47.35, 18.93],
-        [47.61, 19.33],
-      ])
+      expect(mapInstance.fitBounds).toHaveBeenCalledWith(
+        [
+          [47.35, 18.93],
+          [47.61, 19.33],
+        ],
+        { animate: false }
+      )
     })
 
     it('applies bounds given before the map is ready, before the first viewport report', async () => {
@@ -588,15 +591,18 @@ describe('OsmPoiMap', () => {
       await flushPromises()
       const mapInstance = (L.map as any).mock.results[0].value
 
-      expect(mapInstance.fitBounds).toHaveBeenCalledWith([
-        [47.35, 18.93],
-        [47.61, 19.33],
-      ])
+      expect(mapInstance.fitBounds).toHaveBeenCalledWith(
+        [
+          [47.35, 18.93],
+          [47.61, 19.33],
+        ],
+        { animate: false }
+      )
       expect(mapInstance.flyToBounds).not.toHaveBeenCalled()
       // The fit happens before the map's first bounds:changed report.
       const fitOrder = mapInstance.fitBounds.mock.invocationCallOrder[0]
-      const getBoundsOrder = mapInstance.getBounds.mock.invocationCallOrder.at(-1)
-      expect(fitOrder).toBeLessThan(getBoundsOrder)
+      const firstReportOrder = mapInstance.getBounds.mock.invocationCallOrder[0]
+      expect(fitOrder).toBeLessThan(firstReportOrder)
       expect(wrapper.emitted('bounds:changed')).toBeTruthy()
     })
   })

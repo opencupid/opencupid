@@ -438,7 +438,7 @@ export function useMapController(
       [bounds.north, bounds.east],
     ]
     if (animate) map.flyToBounds(latLngs, { duration: 1 })
-    else map.fitBounds(latLngs)
+    else map.fitBounds(latLngs, { animate: false })
   }
 
   // ── Marker emphasis and pulse (browse grid ↔ map) ─────────────────────
