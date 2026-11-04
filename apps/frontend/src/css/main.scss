@@ -32,6 +32,8 @@
   // ─── Component tokens ────────────────────────────────────────────
   --overlay-dark: rgba(0, 0, 0, 0.75);
   --overlay-medium: rgba(0, 0, 0, 0.5);
+  // Info strip over card pictures (profile and event cards)
+  --overlay-card: rgba(80, 80, 80, 0.6);
 }
 
 @import './layout.scss';
