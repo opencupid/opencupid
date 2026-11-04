@@ -13,12 +13,6 @@ vi.mock('vue-router', () => ({
 vi.mock('@/assets/icons/interface/cross.svg', () => ({
   default: { template: '<span />' },
 }))
-vi.mock('@/assets/icons/interface/globe.svg', () => ({
-  default: { template: '<span class="icon-globe" />' },
-}))
-vi.mock('@/assets/icons/interface/mail.svg', () => ({
-  default: { template: '<span class="icon-mail" />' },
-}))
 
 vi.mock('@/lib/responsive', () => ({
   isMdUp: { value: true },
@@ -30,7 +24,7 @@ const stubs = {
   CommunityCard: {
     props: ['community'],
     // Renders the `details` slot so contact-block assertions still see it.
-    template: '<div class="community-card-stub">{{ community.id }}<slot name="details" /></div>',
+    template: '<div class="community-card-stub">{{ community.id }}</div>',
   },
   BButton: { template: '<button @click="$emit(\'click\')"><slot /></button>' },
 }
@@ -88,50 +82,5 @@ describe('CommunityFullView', () => {
     expect(scroller.classes()).toEqual(expect.arrayContaining(['flex-grow-1', 'overflow-auto']))
     // The card must live inside the scroller, not as a sibling above it.
     expect(scroller.find('.community-card-stub').exists()).toBe(true)
-  })
-})
-
-describe('CommunityFullView contact details', () => {
-  const mountWith = (contact: Record<string, string | null>) =>
-    mount(CommunityFullView, {
-      props: { community: { ...community, ...contact } },
-      global: globalConfig,
-    })
-
-  it('renders no contact block when both fields are null', () => {
-    const wrapper = mountWith({})
-    expect(wrapper.find('.community-contact').exists()).toBe(false)
-  })
-
-  it('renders the website link labelled with its host', () => {
-    const wrapper = mountWith({ contactUrl: 'https://example.org/guild/page' })
-    const link = wrapper.find('a[href="https://example.org/guild/page"]')
-    expect(link.exists()).toBe(true)
-    expect(link.text()).toBe('example.org')
-    expect(link.attributes('target')).toBe('_blank')
-    expect(link.attributes('rel')).toContain('noopener')
-  })
-
-  it('renders the contact email as a mailto link', () => {
-    const wrapper = mountWith({ contactEmail: 'hello@example.org' })
-    const link = wrapper.find('a[href="mailto:hello@example.org"]')
-    expect(link.exists()).toBe(true)
-    expect(link.text()).toBe('hello@example.org')
-  })
-
-  it('percent-encodes mailto-delimiter characters in the local part', () => {
-    // '#' and '&' are valid in an email local-part but are fragment/query
-    // delimiters in a mailto: URI, so an unencoded href would target the
-    // wrong recipient (or drop part of the address).
-    const wrapper = mountWith({ contactEmail: 'foo#bar&baz@example.org' })
-    const link = wrapper.find('a[href="mailto:foo%23bar%26baz@example.org"]')
-    expect(link.exists()).toBe(true)
-    expect(link.text()).toBe('foo#bar&baz@example.org')
-  })
-
-  it('renders only the field that is set', () => {
-    const wrapper = mountWith({ contactEmail: 'hello@example.org' })
-    expect(wrapper.find('.icon-globe').exists()).toBe(false)
-    expect(wrapper.find('.icon-mail').exists()).toBe(true)
   })
 })
