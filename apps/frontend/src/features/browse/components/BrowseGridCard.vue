@@ -42,6 +42,7 @@ const { t } = useI18n()
       <EventMapPopup
         v-else-if="item.kind === 'event'"
         :item="item.event"
+        title-only
       />
       <CommunityMapPopup
         v-else

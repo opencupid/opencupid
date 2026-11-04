@@ -11,7 +11,11 @@ vi.mock('@/features/posts/components/PostMapPopup.vue', () => ({
   default: { name: 'PostMapPopup', props: ['item'], template: '<div class="post-popup" />' },
 }))
 vi.mock('@/features/events/components/EventMapPopup.vue', () => ({
-  default: { name: 'EventMapPopup', props: ['item'], template: '<div class="event-popup" />' },
+  default: {
+    name: 'EventMapPopup',
+    props: { item: Object, titleOnly: Boolean },
+    template: '<div class="event-popup" />',
+  },
 }))
 vi.mock('@/features/community/components/CommunityMapPopup.vue', () => ({
   default: {
@@ -37,6 +41,11 @@ describe('BrowseGridCard', () => {
     const card = wrapper.findComponent({ name: component })
     expect(card.exists()).toBe(true)
     expect(card.props('item')).toEqual({ id: `${kind}-1` })
+  })
+
+  it('shows events by name only', () => {
+    const wrapper = mount(BrowseGridCard, { props: { item: item('event') } })
+    expect(wrapper.findComponent({ name: 'EventMapPopup' }).props('titleOnly')).toBe(true)
   })
 
   it('does not show the distance under the card', () => {
