@@ -1,6 +1,13 @@
 /** Maximum zoom level used by the map and the supercluster index. */
 export const MAP_MAX_ZOOM = 12
 
+/**
+ * Supercluster `radius`: points within it of a cluster's seed join the
+ * cluster. Measured in Supercluster's 512-px tile extent, i.e. half as many
+ * screen pixels on the map's 256-px tiles.
+ */
+export const MAP_CLUSTER_RADIUS = 40
+
 /** Default zoom level used on map initialization. */
 export const MAP_DEFAULT_ZOOM = 8
 

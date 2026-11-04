@@ -5,9 +5,8 @@ import { UserContentService } from './userContent.service'
 import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
-import { MAP_MAX_ZOOM, haversineKm, type UserContentKind } from '@shared/maps'
+import { MAP_CLUSTER_RADIUS, MAP_MAX_ZOOM, haversineKm, type UserContentKind } from '@shared/maps'
 import type { ContentKind } from '@shared/zod/userContent/userContent.dto'
-const CLUSTER_RADIUS = 40
 const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
 
@@ -163,7 +162,7 @@ export class ClusterService {
     // Cluster up to the map's max zoom: points that would overlap there stay
     // one cluster, whose click opens the browse grid on the frontend.
     const index = new Supercluster<PointProperties, Supercluster.AnyProps>({
-      radius: CLUSTER_RADIUS,
+      radius: MAP_CLUSTER_RADIUS,
       maxZoom: MAP_MAX_ZOOM,
       minPoints: 2,
     })

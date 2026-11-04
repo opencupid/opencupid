@@ -91,6 +91,14 @@ vi.mock('leaflet', () => {
     })),
     invalidateSize: vi.fn().mockReturnThis(),
     getCenter: vi.fn(() => ({ lat: 47, lng: 19 })),
+    // 1° = 1000 px, so a few metres of offset is measurable.
+    latLngToContainerPoint: vi.fn(([lat, lng]: [number, number]) => ({
+      x: lng * 1000,
+      y: lat * 1000,
+      distanceTo(o: { x: number; y: number }) {
+        return Math.hypot(this.x - o.x, this.y - o.y)
+      },
+    })),
     latLngToLayerPoint: vi.fn((latlng: { lat: number; lng: number }) => ({
       x: latlng.lng * 10,
       y: latlng.lat * 10,
@@ -483,26 +491,73 @@ describe('OsmPoiMap', () => {
     const elementOf = (index: number) =>
       (L.marker as any).mock.results[index].value.getElement() as HTMLElement
 
-    it('emphasises the marker for emphasizedPoiId and moves the emphasis on change', async () => {
+    it('emphasises the marker for emphasizedPoi and moves the emphasis on change', async () => {
       const wrapper = await mountMap()
       await flushPromises()
 
-      await wrapper.setProps({ emphasizedPoiId: '1' })
+      await wrapper.setProps({ emphasizedPoi: { id: '1' } })
       expect(elementOf(0).classList.contains('poi-emphasized')).toBe(true)
 
-      await wrapper.setProps({ emphasizedPoiId: '2' })
+      await wrapper.setProps({ emphasizedPoi: { id: '2' } })
       expect(elementOf(0).classList.contains('poi-emphasized')).toBe(false)
       expect(elementOf(1).classList.contains('poi-emphasized')).toBe(true)
 
-      await wrapper.setProps({ emphasizedPoiId: null })
+      await wrapper.setProps({ emphasizedPoi: null })
       expect(elementOf(1).classList.contains('poi-emphasized')).toBe(false)
     })
 
-    it('ignores ids without a marker (e.g. inside a cluster)', async () => {
+    it('ignores items with neither a marker nor a location', async () => {
       const wrapper = await mountMap()
       await flushPromises()
 
-      await expect(wrapper.setProps({ emphasizedPoiId: 'missing' })).resolves.not.toThrow()
+      await expect(wrapper.setProps({ emphasizedPoi: { id: 'missing' } })).resolves.not.toThrow()
+    })
+
+    describe('items inside a cluster', () => {
+      const cluster: MapCluster = {
+        type: 'cluster',
+        id: 300,
+        lat: 47.0,
+        lon: 19.0,
+        count: 3,
+        expansionZoom: MAP_MAX_ZOOM,
+      }
+      // 10 px from the cluster at the mock's scale: within its reach.
+      const member = { id: 'm1', point: { lat: 47.0, lon: 19.01 } }
+      const clusterElement = () =>
+        (L.marker as any).mock.results[0].value.getElement() as HTMLElement
+
+      it('emphasises the cluster holding an item without its own marker', async () => {
+        const wrapper = await mountMap({ items: [], clusters: [cluster] })
+        await flushPromises()
+
+        await wrapper.setProps({ emphasizedPoi: member })
+        expect(clusterElement().classList.contains('poi-emphasized')).toBe(true)
+
+        await wrapper.setProps({ emphasizedPoi: null })
+        expect(clusterElement().classList.contains('poi-emphasized')).toBe(false)
+      })
+
+      it('leaves a cluster alone when the item lies outside its reach', async () => {
+        const wrapper = await mountMap({ items: [], clusters: [cluster] })
+        await flushPromises()
+
+        await wrapper.setProps({ emphasizedPoi: { id: 'far', point: { lat: 47.0, lon: 19.5 } } })
+        expect(clusterElement().classList.contains('poi-emphasized')).toBe(false)
+      })
+
+      it("pulses the cluster, then the item's own marker once it appears", async () => {
+        const wrapper = await mountMap({ items: [], clusters: [cluster] })
+        await flushPromises()
+
+        await wrapper.setProps({ pulsePoi: { id: '1', point: { lat: 47.0, lon: 19.01 } } })
+        expect(clusterElement().classList.contains('poi-pulse')).toBe(true)
+
+        await wrapper.setProps({ clusters: [], items })
+        await flushPromises()
+        expect(clusterElement().classList.contains('poi-pulse')).toBe(false)
+        expect(elementOf(1).classList.contains('poi-pulse')).toBe(true)
+      })
     })
 
     it('pulses a marker for three seconds', async () => {
