@@ -519,8 +519,25 @@ onMounted(async () => {
 .list-view {
   height: 100vh;
 }
+// The wrapper grows with its content (on phones the owner controls stack
+// into a tall column), so it must not paint or catch clicks itself: only
+// its controls take clicks, and the fade is a fixed-height strip behind
+// the search row instead of the wrapper's background.
 .search-bar-wrapper {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3.5rem;
+    z-index: -1;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+  }
 }
 
 // Below the search bar row; the bottom edge belongs to NearbyFeatures.
