@@ -1,5 +1,11 @@
 # backend
 
+## 0.83.0
+
+### Minor Changes
+
+- 178eb1f: Admin tag editor: update rows in place after edits instead of reloading the table, show who submitted user-created tags with a link to their profile, and add a submitter filter
+
 ## 0.82.0
 
 ### Minor Changes

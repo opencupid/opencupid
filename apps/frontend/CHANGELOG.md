@@ -1,5 +1,15 @@
 # frontend
 
+## 0.83.0
+
+### Minor Changes
+
+- 6a848fe: Zooming the map out below the grid button's minimum zoom (11) closes an open browse grid, so it is never left listing a wide area (#1565)
+
+### Patch Changes
+
+- 64376e2: Browse grid links open on the area in the link: the map now moves to a linked `bbox` as it loads, instead of listing the map's starting area (#1565)
+
 ## 0.82.0
 
 ### Minor Changes
