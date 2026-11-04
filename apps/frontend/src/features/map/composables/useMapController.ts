@@ -228,7 +228,9 @@ export function useMapController(
     if (deferred.focusBounds) {
       const bounds = deferred.focusBounds
       deferred.focusBounds = undefined
-      showFocusBounds(bounds)
+      // The map is only now appearing, so there is nothing to fly from: jump,
+      // so the first viewport it reports is already the requested one.
+      showFocusBounds(bounds, false)
     }
   }
 
@@ -425,19 +427,18 @@ export function useMapController(
     map.flyTo(point, SEARCH_FOCUS_ZOOM, { duration: 1 })
   }
 
-  function showFocusBounds(bounds: MapBounds): void {
+  function showFocusBounds(bounds: MapBounds, animate = true): void {
     const size = phase === 'ready' ? map.getSize() : null
     if (!size || size.x === 0 || size.y === 0) {
       deferred.focusBounds = bounds
       return
     }
-    map.flyToBounds(
-      [
-        [bounds.south, bounds.west],
-        [bounds.north, bounds.east],
-      ],
-      { duration: 1 }
-    )
+    const latLngs: L.LatLngBoundsLiteral = [
+      [bounds.south, bounds.west],
+      [bounds.north, bounds.east],
+    ]
+    if (animate) map.flyToBounds(latLngs, { duration: 1 })
+    else map.fitBounds(latLngs)
   }
 
   // ── Marker emphasis and pulse (browse grid ↔ map) ─────────────────────
@@ -576,11 +577,14 @@ export function useMapController(
     }
   )
 
+  // Immediate: a fit requested before the map exists (e.g. a grid link's
+  // bbox, set while the page sets up) is deferred until the map is ready.
   watch(
     () => props.focusBounds,
     (bounds) => {
       if (bounds) showFocusBounds(bounds)
-    }
+    },
+    { immediate: true }
   )
 
   return { popupItem, popupFullData, popupTarget }
