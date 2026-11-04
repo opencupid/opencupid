@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
 import { apiRequest } from '../composables/useApi'
+import PublicProfileLink from '../components/PublicProfileLink.vue'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -23,6 +24,17 @@ interface AdminTag {
   createdAt: string
   translations: TagTranslation[]
   _count: { profiles: number }
+  creator: { profile: { id: string; publicName: string } | null } | null
+}
+
+interface TagSubmitter {
+  id: string
+  profile: { id: string; publicName: string } | null
+}
+
+interface TagResponse {
+  success: boolean
+  tag: AdminTag
 }
 
 interface TagsResponse {
@@ -50,6 +62,8 @@ const deleting = ref(false)
 const showMerge = ref(false)
 const selectedOrigins = ref<string[]>([])
 const originDropdownOpen = ref(false)
+const submitters = ref<TagSubmitter[]>([])
+const selectedSubmitter = ref('')
 
 const isNewTag = computed(() => selectedTag.value?.id === '')
 const mergeSearch = ref('')
@@ -148,7 +162,15 @@ function buildParams() {
           ? 'true'
           : 'false'
         : undefined,
+    submittedBy: selectedSubmitter.value || undefined,
   }
+}
+
+async function fetchSubmitters() {
+  const res = await apiRequest<{ success: boolean; submitters: TagSubmitter[] }>(
+    '/admin/tags/submitters'
+  )
+  submitters.value = res.submitters
 }
 
 async function fetchTags() {
@@ -187,6 +209,7 @@ function openAddModal() {
     createdAt: new Date().toISOString(),
     translations: [],
     _count: { profiles: 0 },
+    creator: null,
   }
   editSlug.value = ''
   editName.value = ''
@@ -227,7 +250,7 @@ async function saveTag() {
     })).filter((t) => t.name)
 
     if (isNewTag.value) {
-      await apiRequest('/admin/tags', {
+      const res = await apiRequest<TagResponse>('/admin/tags', {
         method: 'POST',
         body: {
           name: editName.value,
@@ -235,8 +258,10 @@ async function saveTag() {
           translations,
         },
       })
+      tags.value.unshift(res.tag)
+      total.value++
     } else {
-      await apiRequest(`/admin/tags/${selectedTag.value.id}`, {
+      const res = await apiRequest<TagResponse>(`/admin/tags/${selectedTag.value.id}`, {
         method: 'PATCH',
         body: {
           slug: editSlug.value,
@@ -244,9 +269,9 @@ async function saveTag() {
           translations,
         },
       })
+      replaceTag(res.tag)
     }
     selectedTag.value = null
-    resetAndFetch()
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Failed to save'
   } finally {
@@ -288,8 +313,8 @@ async function deleteTag() {
       method: 'PATCH',
       body: { isDeleted: true },
     })
+    removeTags([selectedTag.value.id])
     selectedTag.value = null
-    resetAndFetch()
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Failed to delete'
   } finally {
@@ -329,14 +354,14 @@ async function confirmMerge() {
   merging.value = true
   saveError.value = null
   try {
-    const res = (await apiRequest('/admin/tags/merge', {
+    const loserTagIds = mergeLoserTags.value.map((t) => t.id)
+    const res = await apiRequest<TagResponse>('/admin/tags/merge', {
       method: 'POST',
-      body: {
-        winnerTagId: selectedTag.value.id,
-        loserTagIds: mergeLoserTags.value.map((t) => t.id),
-      },
-    })) as { success: boolean; tag: AdminTag }
+      body: { winnerTagId: selectedTag.value.id, loserTagIds },
+    })
     if (res.success) {
+      replaceTag(res.tag)
+      removeTags(loserTagIds)
       selectedTag.value = res.tag
       editSlug.value = res.tag.slug
       editName.value = res.tag.name
@@ -345,13 +370,25 @@ async function confirmMerge() {
       }
       mergeLoserTags.value = []
       showMerge.value = false
-      resetAndFetch()
     }
   } catch (err: unknown) {
     saveError.value = err instanceof Error ? err.message : 'Merge failed'
   } finally {
     merging.value = false
   }
+}
+
+// Modal actions patch the loaded rows instead of refetching, so the admin keeps
+// their scroll position and loaded pages.
+function replaceTag(tag: AdminTag) {
+  const idx = tags.value.findIndex((t) => t.id === tag.id)
+  if (idx >= 0) tags.value[idx] = tag
+}
+
+function removeTags(ids: string[]) {
+  const before = tags.value.length
+  tags.value = tags.value.filter((t) => !ids.includes(t.id))
+  total.value -= before - tags.value.length
 }
 
 function resetAndFetch() {
@@ -389,6 +426,7 @@ let observer: IntersectionObserver | null = null
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
   fetchTags()
+  fetchSubmitters()
   observer = new IntersectionObserver(
     ([entry]) => {
       if (entry?.isIntersecting) loadMore()
@@ -469,6 +507,22 @@ onUnmounted(() => {
           </li>
         </ul>
       </div>
+      <select
+        v-model="selectedSubmitter"
+        class="form-select"
+        style="width: 200px; flex-shrink: 0"
+        data-testid="submitter-filter"
+        @change="resetAndFetch"
+      >
+        <option value="">All Submitters</option>
+        <option
+          v-for="submitter in submitters"
+          :key="submitter.id"
+          :value="submitter.id"
+        >
+          {{ submitter.profile?.publicName ?? submitter.id }}
+        </option>
+      </select>
       <button
         class="btn btn-primary text-nowrap"
         @click="openAddModal"
@@ -608,6 +662,23 @@ onUnmounted(() => {
               <dd class="col-sm-8">
                 <code>{{ selectedTag.id }}</code>
               </dd>
+              <template v-if="selectedTag.isUserCreated">
+                <dt class="col-sm-4">Submitted by</dt>
+                <dd
+                  class="col-sm-8 d-flex align-items-center gap-2"
+                  data-testid="tag-submitted-by"
+                >
+                  <template v-if="selectedTag.creator?.profile">
+                    <span>{{ selectedTag.creator.profile.publicName }}</span>
+                    <PublicProfileLink :profile-id="selectedTag.creator.profile.id" />
+                  </template>
+                  <span
+                    v-else
+                    class="text-muted"
+                    >Unknown</span
+                  >
+                </dd>
+              </template>
             </dl>
             <div class="mb-3">
               <label
