@@ -4,6 +4,9 @@ import { ref } from 'vue'
 import type { PublicEventDetail } from '@zod/event/event.dto'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ locale: ref('en') }) }))
+vi.mock('@/assets/icons/interface/calendar.svg', () => ({
+  default: { template: '<svg class="calendar-icon" />' },
+}))
 vi.mock('@/features/userContent/components/UserContentMapPopup.vue', () => ({
   default: { props: ['item'], template: '<div><slot name="content" /></div>' },
 }))
@@ -35,12 +38,20 @@ describe('EventMapPopup', () => {
     expect(wrapper.find('.event-overlay .event-title').text()).toBe('Name')
   })
 
-  it('keeps the coloured block without a picture', () => {
+  it('shows a calendar icon above the same caption without a picture', () => {
     const wrapper = mount(EventMapPopup, {
       props: { item: event('Name\n\nDescription'), titleOnly: true },
     })
     expect(wrapper.find('.event-overlay').exists()).toBe(false)
-    expect(wrapper.find('.bg-event-light').exists()).toBe(true)
+    expect(wrapper.find('.bg-event-light .event-icon .calendar-icon').exists()).toBe(true)
+    expect(wrapper.find('.event-caption .event-title').text()).toBe('Name')
+  })
+
+  it('shows no calendar icon over a picture', () => {
+    const wrapper = mount(EventMapPopup, {
+      props: { item: event('Name', [{ id: 'img' }]), titleOnly: true },
+    })
+    expect(wrapper.find('.calendar-icon').exists()).toBe(false)
   })
 
   it('never uses the overlay in the map popup', () => {
