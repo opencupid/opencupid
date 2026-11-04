@@ -2,14 +2,11 @@
 import { ref } from 'vue'
 import { BButton, BFormCheckbox, BPopover } from 'bootstrap-vue-next'
 import { useI18n } from '@/lib/i18n'
-import type { UserContentKind } from '@shared/maps'
+import { USER_CONTENT_KINDS, type UserContentKind } from '@shared/maps'
 import { useTimeoutFn } from '@vueuse/core'
 
 import IconLayer from '@/assets/icons/interface/layer.svg'
-import IconProfile from '@/assets/icons/interface/user.svg'
-import IconPost from '@/assets/icons/interface/post-it.svg'
-import IconEvent from '@/assets/icons/interface/calendar.svg'
-import IconCommunity from '@/assets/icons/interface/community.svg'
+import { CONTENT_KIND_DISPLAY } from '../utils/contentKinds'
 
 const { t } = useI18n()
 
@@ -67,62 +64,29 @@ const { start: startHideTimer, stop: stopHideTimer } = useTimeoutFn(
         @mouseenter="stopHideTimer"
         @mouseleave="startHideTimer"
       >
-        <BCol class="text-center">
-          <BFormCheckbox
-            button
-            :button-variant="model.includes('profile') ? 'outline-primary' : 'outline-secondary'"
-            size="lg"
-            class="btn-layer-select"
-            :model-value="model.includes('profile')"
-            :disabled="isLocked('profile')"
-            @update:model-value="toggle('profile')"
-          >
-            <IconProfile class="svg-icon-lg" />
-            <div class="layer-label mt-1">{{ t('map.layer_control.people') }}</div>
-          </BFormCheckbox>
-        </BCol>
-        <BCol class="text-center">
-          <BFormCheckbox
-            button
-            :button-variant="model.includes('post') ? 'outline-post' : 'outline-secondary'"
-            size="lg"
-            class="btn-layer-select"
-            :model-value="model.includes('post')"
-            :disabled="isLocked('post')"
-            @update:model-value="toggle('post')"
-          >
-            <IconPost class="svg-icon-lg" />
-            <div class="layer-label mt-1">{{ t('map.layer_control.posts') }}</div>
-          </BFormCheckbox>
-        </BCol>
-        <BCol class="text-center">
-          <BFormCheckbox
-            button
-            :button-variant="model.includes('event') ? 'outline-event' : 'outline-secondary'"
-            size="lg"
-            class="btn-layer-select"
-            :model-value="model.includes('event')"
-            :disabled="isLocked('event')"
-            @update:model-value="toggle('event')"
-          >
-            <IconEvent class="svg-icon-lg" />
-            <div class="layer-label mt-1">{{ t('map.layer_control.events') }}</div>
-          </BFormCheckbox>
-        </BCol>
-        <BCol class="text-center">
+        <BCol
+          v-for="kind in USER_CONTENT_KINDS"
+          :key="kind"
+          class="text-center"
+        >
           <BFormCheckbox
             button
             :button-variant="
-              model.includes('community') ? 'outline-community' : 'outline-secondary'
+              model.includes(kind)
+                ? `outline-${CONTENT_KIND_DISPLAY[kind].color}`
+                : 'outline-secondary'
             "
             size="lg"
             class="btn-layer-select"
-            :model-value="model.includes('community')"
-            :disabled="isLocked('community')"
-            @update:model-value="toggle('community')"
+            :model-value="model.includes(kind)"
+            :disabled="isLocked(kind)"
+            @update:model-value="toggle(kind)"
           >
-            <IconCommunity class="svg-icon-lg" />
-            <div class="layer-label mt-1">{{ t('map.layer_control.communities') }}</div>
+            <component
+              :is="CONTENT_KIND_DISPLAY[kind].icon"
+              class="svg-icon-lg"
+            />
+            <div class="layer-label mt-1">{{ t(CONTENT_KIND_DISPLAY[kind].label) }}</div>
           </BFormCheckbox>
         </BCol>
       </BRow>

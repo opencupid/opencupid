@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { BrowseListItem } from '@zod/browse/browseList.dto'
 
@@ -18,15 +17,7 @@ const emit = defineEmits<{
   hover: [active: boolean]
 }>()
 
-const { t, locale } = useI18n()
-
-const distance = computed(() =>
-  t('profiles.browse.grid.distance_km', {
-    distance: new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 }).format(
-      props.item.distanceKm
-    ),
-  })
-)
+const { t } = useI18n()
 </script>
 
 <template>
@@ -66,7 +57,6 @@ const distance = computed(() =>
         <IconPin class="svg-icon" />
       </button>
     </div>
-    <div class="small text-muted mt-1 text-end">{{ distance }}</div>
   </div>
 </template>
 
