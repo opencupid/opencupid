@@ -1,8 +1,14 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
+import { ref } from 'vue'
 import type { BrowseListItem } from '@zod/browse/browseList.dto'
 
-vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({
+    t: (k: string, p?: Record<string, unknown>) => (p ? `${k}:${JSON.stringify(p)}` : k),
+    locale: ref('en'),
+  }),
+}))
 vi.mock('@/assets/icons/interface/pin.svg', () => ({ default: { template: '<svg />' } }))
 vi.mock('../ProfileMapCard.vue', () => ({
   default: { name: 'ProfileMapCard', props: ['item'], template: '<div class="profile-card" />' },
@@ -10,18 +16,11 @@ vi.mock('../ProfileMapCard.vue', () => ({
 vi.mock('@/features/posts/components/PostMapPopup.vue', () => ({
   default: { name: 'PostMapPopup', props: ['item'], template: '<div class="post-popup" />' },
 }))
-vi.mock('@/features/events/components/EventMapPopup.vue', () => ({
+vi.mock('@/features/userContent/components/UserContentCard.vue', () => ({
   default: {
-    name: 'EventMapPopup',
-    props: { item: Object, titleOnly: Boolean },
-    template: '<div class="event-popup" />',
-  },
-}))
-vi.mock('@/features/community/components/CommunityMapPopup.vue', () => ({
-  default: {
-    name: 'CommunityMapPopup',
-    props: ['item'],
-    template: '<div class="community-popup" />',
+    name: 'UserContentCard',
+    props: ['item', 'kind'],
+    template: '<div class="content-card"><slot /></div>',
   },
 }))
 
@@ -34,8 +33,6 @@ describe('BrowseGridCard', () => {
   it.each([
     ['profile', 'ProfileMapCard'],
     ['post', 'PostMapPopup'],
-    ['event', 'EventMapPopup'],
-    ['community', 'CommunityMapPopup'],
   ] as const)('renders the existing map popup card for a %s', (kind, component) => {
     const wrapper = mount(BrowseGridCard, { props: { item: item(kind) } })
     const card = wrapper.findComponent({ name: component })
@@ -43,9 +40,30 @@ describe('BrowseGridCard', () => {
     expect(card.props('item')).toEqual({ id: `${kind}-1` })
   })
 
-  it('shows events by name only', () => {
-    const wrapper = mount(BrowseGridCard, { props: { item: item('event') } })
-    expect(wrapper.findComponent({ name: 'EventMapPopup' }).props('titleOnly')).toBe(true)
+  it('renders an event as a content card with its start time', () => {
+    const event = {
+      kind: 'event',
+      distanceKm: 1,
+      event: { id: 'e1', startsAt: new Date('2026-11-15T16:00:00Z') },
+    } as unknown as BrowseListItem
+    const card = mount(BrowseGridCard, { props: { item: event } }).findComponent({
+      name: 'UserContentCard',
+    })
+    expect(card.props('kind')).toBe('event')
+    expect(card.text()).toContain('2026')
+  })
+
+  it('renders a community as a content card with its founding year', () => {
+    const community = {
+      kind: 'community',
+      distanceKm: 1,
+      community: { id: 'c1', yearFounded: 2019 },
+    } as unknown as BrowseListItem
+    const card = mount(BrowseGridCard, { props: { item: community } }).findComponent({
+      name: 'UserContentCard',
+    })
+    expect(card.props('kind')).toBe('community')
+    expect(card.text()).toBe('community.labels.founded_since:{"year":2019}')
   })
 
   it('does not show the distance under the card', () => {

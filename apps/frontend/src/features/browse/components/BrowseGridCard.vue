@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { BrowseListItem } from '@zod/browse/browseList.dto'
 
 import ProfileMapCard from './ProfileMapCard.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
-import EventMapPopup from '@/features/events/components/EventMapPopup.vue'
-import CommunityMapPopup from '@/features/community/components/CommunityMapPopup.vue'
+import UserContentCard from '@/features/userContent/components/UserContentCard.vue'
 import IconPin from '@/assets/icons/interface/pin.svg'
 
 const props = defineProps<{ item: BrowseListItem }>()
@@ -17,7 +17,15 @@ const emit = defineEmits<{
   hover: [active: boolean]
 }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+const eventStartsAt = computed(() =>
+  props.item.kind === 'event'
+    ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(
+        props.item.event.startsAt
+      )
+    : ''
+)
 </script>
 
 <template>
@@ -39,15 +47,22 @@ const { t } = useI18n()
         v-else-if="item.kind === 'post'"
         :item="item.post"
       />
-      <EventMapPopup
+      <UserContentCard
         v-else-if="item.kind === 'event'"
         :item="item.event"
-        title-only
-      />
-      <CommunityMapPopup
+        kind="event"
+      >
+        {{ eventStartsAt }}
+      </UserContentCard>
+      <UserContentCard
         v-else
         :item="item.community"
-      />
+        kind="community"
+      >
+        <template v-if="item.community.yearFounded != null">
+          {{ t('community.labels.founded_since', { year: item.community.yearFounded }) }}
+        </template>
+      </UserContentCard>
       <button
         type="button"
         class="locate-button btn btn-light btn-sm rounded-circle position-absolute d-flex align-items-center justify-content-center p-0"
