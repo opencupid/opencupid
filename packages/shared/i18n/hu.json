@@ -351,6 +351,7 @@
     }
   },
   "profiles": {
+    "dating_match": "A párkereső preferenciáitok megegyeznek",
     "back_button_title": "Vissza",
     "blocklist": {
       "block_confirm_message": "Nem fogod többé látni.",

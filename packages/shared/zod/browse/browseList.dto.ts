@@ -17,7 +17,13 @@ const distanceKm = z.number().nonnegative()
  * routes.
  */
 export const BrowseListItemSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('profile'), distanceKm, profile: PublicProfileSchema }),
+  z.object({
+    kind: z.literal('profile'),
+    distanceKm,
+    /** A potential dating match of the viewer, as the map pin's `highlighted`. */
+    highlighted: z.boolean(),
+    profile: PublicProfileSchema,
+  }),
   z.object({
     kind: z.literal('post'),
     distanceKm,

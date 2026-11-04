@@ -10,6 +10,9 @@ vi.mock('vue-i18n', () => ({
   }),
 }))
 vi.mock('@/assets/icons/interface/pin.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('@/assets/icons/interface/heart.svg', () => ({
+  default: { template: '<svg class="icon-heart" />' },
+}))
 vi.mock('../ProfileMapCard.vue', () => ({
   default: { name: 'ProfileMapCard', props: ['item'], template: '<div class="profile-card" />' },
 }))
@@ -64,6 +67,21 @@ describe('BrowseGridCard', () => {
     })
     expect(card.props('kind')).toBe('community')
     expect(card.text()).toBe('community.labels.founded_since:{"year":2019}')
+  })
+
+  it('marks a potential dating match with the halo and a heart', () => {
+    const match = { ...item('profile'), highlighted: true } as BrowseListItem
+    const wrapper = mount(BrowseGridCard, { props: { item: match } })
+    expect(wrapper.find('.card-frame').classes()).toContain('card-frame--match')
+    expect(wrapper.find('.match-badge .icon-heart').exists()).toBe(true)
+    expect(wrapper.find('.match-badge').attributes('aria-label')).toBe('profiles.dating_match')
+  })
+
+  it('leaves other profiles unmarked', () => {
+    const other = { ...item('profile'), highlighted: false } as BrowseListItem
+    const wrapper = mount(BrowseGridCard, { props: { item: other } })
+    expect(wrapper.find('.card-frame').classes()).not.toContain('card-frame--match')
+    expect(wrapper.find('.match-badge').exists()).toBe(false)
   })
 
   it('does not show the distance under the card', () => {

@@ -34,6 +34,8 @@
   --overlay-medium: rgba(0, 0, 0, 0.5);
   // Info strip over card pictures (profile and event cards)
   --overlay-card: rgba(80, 80, 80, 0.75);
+  // Potential dating match: halo and heart on map pins and grid cards
+  --match-rgb: 217, 83, 79;
 }
 
 @import './layout.scss';

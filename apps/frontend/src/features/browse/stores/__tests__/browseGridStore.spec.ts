@@ -30,6 +30,7 @@ const query: BrowseGridQuery = {
 const profileItem = (id: string, distanceKm = 1) => ({
   kind: 'profile',
   distanceKm,
+  highlighted: false,
   profile: {
     id: `cprofile${id}0000000000`,
     publicName: id,

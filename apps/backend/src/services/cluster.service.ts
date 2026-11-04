@@ -33,6 +33,8 @@ export interface ListRef {
   kind: UserContentKind
   id: string
   distanceKm: number
+  /** A potential dating match of the viewer (the map pin's halo). */
+  highlighted: boolean
 }
 
 /**
@@ -230,6 +232,7 @@ export class ClusterService {
         kind: f.properties.kind,
         id: f.properties.id,
         distanceKm: haversineKm(center, { lat, lon }),
+        highlighted: f.properties.highlighted,
       })
     }
     inBounds.sort((a, b) => a.distanceKm - b.distanceKm || a.id.localeCompare(b.id))

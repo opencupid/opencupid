@@ -355,6 +355,21 @@ describe('ClusterService', () => {
       mockFindMutualMatchIds.mockResolvedValue([])
     })
 
+    it("flags the viewer's potential dating matches, as on the map", async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([
+        makeProfile('match', 47.5, 19.0),
+        makeProfile('other', 47.6, 19.0),
+      ])
+      mockFindMutualMatchIds.mockResolvedValue(['match'])
+
+      const { refs } = await service.getOrBuildList('viewer-1', bbox, [], ['profile'], page)
+
+      expect(refs.map((r) => [r.id, r.highlighted])).toEqual([
+        ['match', true],
+        ['other', false],
+      ])
+    })
+
     it('returns only points inside the bbox, nearest to the centre first', async () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue([
         makeProfile('far', 47.9, 19.4),

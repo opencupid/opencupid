@@ -147,34 +147,39 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
         communityService.findManyByIdsHydrated(idsOf('community'), viewerId),
       ])
 
-      const byId = new Map<string, (distanceKm: number) => BrowseListItem>()
+      const byId = new Map<string, (ref: ListRef) => BrowseListItem>()
       for (const p of profiles) {
         const profile = mapProfileToPublic(p, false, req.session.lang)
-        byId.set(p.id, (distanceKm) => ({ kind: 'profile', distanceKm, profile }))
+        byId.set(p.id, ({ distanceKm, highlighted }) => ({
+          kind: 'profile',
+          distanceKm,
+          highlighted,
+          profile,
+        }))
       }
       for (const row of posts) {
         const post =
           row.postedById === viewerId ? mapDbPostToOwner(row, ctx) : mapDbPostToDetail(row, ctx)
-        byId.set(row.id, (distanceKm) => ({ kind: 'post', distanceKm, post }))
+        byId.set(row.id, ({ distanceKm }) => ({ kind: 'post', distanceKm, post }))
       }
       for (const row of events) {
         const event =
           row.postedById === viewerId ? mapDbEventToOwner(row, ctx) : mapDbEventToDetail(row, ctx)
-        byId.set(row.id, (distanceKm) => ({ kind: 'event', distanceKm, event }))
+        byId.set(row.id, ({ distanceKm }) => ({ kind: 'event', distanceKm, event }))
       }
       for (const row of communities) {
         const community =
           row.postedById === viewerId
             ? mapDbCommunityToOwner(row, ctx)
             : mapDbCommunityToDetail(row, ctx)
-        byId.set(row.id, (distanceKm) => ({ kind: 'community', distanceKm, community }))
+        byId.set(row.id, ({ distanceKm }) => ({ kind: 'community', distanceKm, community }))
       }
 
       // Keep the nearest-first order; drop refs that no longer hydrate
       // (deleted or hidden since the index was built).
       const items = refs.flatMap((r) => {
         const build = byId.get(r.id)
-        return build ? [build(r.distanceKm)] : []
+        return build ? [build(r)] : []
       })
 
       const response: BrowseListResponse = {
