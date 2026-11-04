@@ -539,6 +539,47 @@ describe('BrowseProfiles view', () => {
       expect(wrapper.findComponent({ name: 'BrowseGridChip' }).props('count')).toBe(5)
     })
 
+    it('closes the grid when the map zooms out below the minimum zoom', async () => {
+      mockGridOpen.value = true
+      const store = useFindProfileStore()
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM
+      mountComponent()
+      await nextTick()
+      mockReplace.mockClear()
+
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM - 1
+      await nextTick()
+
+      expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
+    })
+
+    it('keeps the grid open while the map stays at or above the minimum zoom', async () => {
+      mockGridOpen.value = true
+      const store = useFindProfileStore()
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM
+      mountComponent()
+      await nextTick()
+      mockReplace.mockClear()
+
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM + 1
+      await nextTick()
+
+      expect(mockReplace).not.toHaveBeenCalledWith({ name: 'Browse' })
+    })
+
+    it('does nothing on zooming out while the grid is closed', async () => {
+      const store = useFindProfileStore()
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM
+      mountComponent()
+      await nextTick()
+      mockReplace.mockClear()
+
+      store.lastMapZoom = BROWSE_GRID_MIN_ZOOM - 1
+      await nextTick()
+
+      expect(mockReplace).not.toHaveBeenCalledWith({ name: 'Browse' })
+    })
+
     it('hides the grid button below the minimum zoom', async () => {
       const store = useFindProfileStore()
       store.lastMapBounds = bounds

@@ -289,6 +289,12 @@ function onMaxZoomCluster() {
   if (!isGridOpen.value) openGrid()
 }
 
+// Zooming the map out below the grid button's minimum zoom closes an open
+// grid, so the grid is never left listing a wide area.
+watch(canOpenGridFromMap, (canOpen) => {
+  if (!canOpen && isGridOpen.value) closeGrid()
+})
+
 function closeGrid() {
   // Step back when the grid was opened from the map, so the back button
   // doesn't reopen it; otherwise (deep link) replace it with the map.
