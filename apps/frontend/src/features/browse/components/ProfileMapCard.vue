@@ -26,9 +26,9 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
       />
     </div>
     <div class="overlay d-flex flex-column flex-grow-1">
-      <div class="card-title mb-0 pb-0 d-flex align-items-center justify-content-between flex-row">
+      <div class="card-title mb-0 pb-0 d-flex">
         <div class="flex-grow-1 fs-6 fw-bold m-0">{{ item.publicName }}</div>
-        <span class="location position-absolute end-0 top-0 me-2 mt-2">
+        <span class="location">
           <LocationLabel
             :viewerLocation="viewerLocation"
             :location="item.location"
@@ -46,6 +46,10 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 </template>
 
 <style scoped lang="scss">
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+
 .icons {
   position: absolute;
   top: 0.5rem;
@@ -62,6 +66,17 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
   color: var(--bs-light);
   padding: 0.5rem;
   width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Location in the top-right corner of the title row; on phones the cards are
+// too narrow to share the row, so it goes under the name, smaller.
+.location {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0.5rem 0.5rem 0 0;
 }
 
 .overlay {
@@ -92,5 +107,22 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
     background: linear-gradient(to bottom, rgba(33, 37, 41, 0), rgba(33, 37, 41, 1));
   }
   pointer-events: none;
+}
+
+@include media-breakpoint-down(md) {
+  // Room for the extra location line above the tags.
+  .overlay {
+    max-height: 4.75rem;
+  }
+  .card-title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .location {
+    position: static;
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
 }
 </style>
