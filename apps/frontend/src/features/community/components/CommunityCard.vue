@@ -7,6 +7,8 @@ import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
 import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
 import IconCommunity from '@/assets/icons/interface/community.svg'
+import IconGlobe from '@/assets/icons/interface/globe.svg'
+import IconMail from '@/assets/icons/interface/mail.svg'
 import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue'
 import { tagsDataAttr } from '@/features/shared/contentTags'
 
@@ -29,6 +31,22 @@ const shareCommunityPayload = computed<SharePayload>(() => ({
   text: t('community.share.community_text', { publicName: props.community.postedBy.publicName }),
   url: `${window.location.origin}/communities/${props.community.id}`,
 }))
+
+// Hostname reads better than the raw URL; the schema guarantees it parses.
+const contactUrlLabel = computed(() =>
+  props.community.contactUrl ? new URL(props.community.contactUrl).host : null
+)
+
+// z.email() allows RFC local-part characters (#, ?, &, ...) that are
+// fragment/query delimiters inside a mailto: URI, so the address must be
+// percent-encoded before interpolation. Encode each side of the `@`
+// separately so it stays a literal separator rather than being escaped too.
+const contactEmailHref = computed(() => {
+  const email = props.community.contactEmail
+  if (!email) return undefined
+  const at = email.lastIndexOf('@')
+  return `mailto:${encodeURIComponent(email.slice(0, at))}@${encodeURIComponent(email.slice(at + 1))}`
+})
 
 const communityLocation = computed(() => props.community.location ?? null)
 
@@ -80,8 +98,50 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
         </p>
       </div>
 
-      <!-- Detail-view extras (e.g. contact links) sit above the meta/toolbar row. -->
-      <slot name="details" />
+      <!-- Contact links sit above the meta/toolbar row; clicks on them
+           follow the link without opening the card. -->
+      <dl
+        v-if="community.contactUrl || community.contactEmail"
+        class="community-contact d-flex flex-column gap-2 px-2 pt-2 mb-0 small"
+        @click.stop
+      >
+        <div
+          v-if="community.contactUrl"
+          class="d-flex align-items-center gap-2"
+        >
+          <dt class="text-muted mb-0">
+            <IconGlobe
+              class="svg-icon"
+              aria-hidden="true"
+            />
+            <span class="visually-hidden">{{ t('community.labels.contact_url') }}</span>
+          </dt>
+          <dd class="mb-0 text-truncate">
+            <a
+              :href="community.contactUrl"
+              target="_blank"
+              rel="noopener noreferrer external"
+            >
+              {{ contactUrlLabel }}
+            </a>
+          </dd>
+        </div>
+        <div
+          v-if="community.contactEmail"
+          class="d-flex align-items-center gap-2"
+        >
+          <dt class="text-muted mb-0">
+            <IconMail
+              class="svg-icon"
+              aria-hidden="true"
+            />
+            <span class="visually-hidden">{{ t('community.labels.contact_email') }}</span>
+          </dt>
+          <dd class="mb-0 text-truncate">
+            <a :href="contactEmailHref">{{ community.contactEmail }}</a>
+          </dd>
+        </div>
+      </dl>
 
       <div
         class="community-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"

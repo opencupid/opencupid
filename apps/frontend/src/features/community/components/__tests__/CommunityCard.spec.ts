@@ -11,6 +11,12 @@ vi.mock('vue-i18n', () => ({
 vi.mock('@/assets/icons/interface/community.svg', () => ({
   default: { template: '<span class="icon-community" />' },
 }))
+vi.mock('@/assets/icons/interface/globe.svg', () => ({
+  default: { template: '<span class="icon-globe" />' },
+}))
+vi.mock('@/assets/icons/interface/mail.svg', () => ({
+  default: { template: '<span class="icon-mail" />' },
+}))
 
 vi.mock('@/features/userContent/components/ViewerToolbar.vue', () => ({
   default: {
@@ -161,5 +167,58 @@ describe('CommunityCard', () => {
       global: { stubs },
     })
     expect(wrapper.get('.community-wrapper').attributes('data-tags')).toBe('')
+  })
+
+  describe('contact details', () => {
+    const mountWith = (contact: Record<string, string | null>) =>
+      mount(CommunityCard, {
+        props: {
+          community: { ...baseCommunity, contactUrl: null, contactEmail: null, ...contact },
+          showDetails: false,
+        },
+        global: { stubs },
+      })
+
+    it('renders no contact block when both fields are null', () => {
+      expect(mountWith({}).find('.community-contact').exists()).toBe(false)
+    })
+
+    it('renders the website link labelled with its host', () => {
+      const link = mountWith({ contactUrl: 'https://example.org/guild/page' }).find(
+        'a[href="https://example.org/guild/page"]'
+      )
+      expect(link.text()).toBe('example.org')
+      expect(link.attributes('target')).toBe('_blank')
+      expect(link.attributes('rel')).toContain('noopener')
+    })
+
+    it('renders the contact email as a mailto link', () => {
+      const link = mountWith({ contactEmail: 'hello@example.org' }).find(
+        'a[href="mailto:hello@example.org"]'
+      )
+      expect(link.text()).toBe('hello@example.org')
+    })
+
+    it('percent-encodes mailto-delimiter characters in the local part', () => {
+      // '#' and '&' are valid in an email local-part but are fragment/query
+      // delimiters in a mailto: URI, so an unencoded href would target the
+      // wrong recipient (or drop part of the address).
+      const link = mountWith({ contactEmail: 'foo#bar&baz@example.org' }).find(
+        'a[href="mailto:foo%23bar%26baz@example.org"]'
+      )
+      expect(link.text()).toBe('foo#bar&baz@example.org')
+    })
+
+    it('renders only the field that is set', () => {
+      const wrapper = mountWith({ contactEmail: 'hello@example.org' })
+      expect(wrapper.find('.icon-globe').exists()).toBe(false)
+      expect(wrapper.find('.icon-mail').exists()).toBe(true)
+    })
+
+    it('follows a contact link without opening the card', async () => {
+      const wrapper = mountWith({ contactUrl: 'https://example.org' })
+      await wrapper.find('.community-contact a').trigger('click')
+      expect(wrapper.emitted('click')).toBeUndefined()
+    })
   })
 })

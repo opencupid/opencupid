@@ -53,8 +53,11 @@ describe('ProfileContentList', () => {
       ['event-view', 'c2'],
       ['community-view', 'c3'],
     ])
-    // Cards render without toolbars; PostCard shows full text by default.
-    expect(wrapper.findAll('[data-show-details="true"]')).toHaveLength(0)
+    // Communities show all their details (contact links, toolbar); posts
+    // and events render without toolbars, PostCard with its full text.
+    expect(
+      wrapper.findAll('[data-show-details="true"]').map((el) => el.attributes('data-id'))
+    ).toEqual(['c3'])
   })
 
   it('renders nothing when the profile has no content', async () => {

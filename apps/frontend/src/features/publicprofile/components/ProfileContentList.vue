@@ -47,7 +47,7 @@ watch(
       <CommunityCard
         v-else-if="item.kind === 'community'"
         :community="item"
-        :show-details="false"
+        :show-details="true"
       />
     </template>
   </div>
