@@ -1,7 +1,7 @@
 import { blurhashToDataUrl } from '@/features/images/composables/useBlurhashDataUrl'
 import type { IconRenderer } from '@/features/map/types/map.types'
 import photoHiddenUrl from '@/assets/images/app/photo-hidden.svg?url'
-import heartSvg from '@/assets/icons/interface/heart.svg?raw'
+import heartSvg from '@/assets/icons/interface/heart-filled.svg?raw'
 import './profileMarkerIcon.scss'
 
 /** Post-it and dating-match badges shared by both profile marker renderers. */

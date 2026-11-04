@@ -21,19 +21,17 @@
   filter: drop-shadow(0 0 6px rgba(var(--match-rgb), 0.6));
 }
 
-// Heart on a potential dating match, opposite the post-it indicator.
+// Filled heart on a potential dating match, in the top-right corner; the
+// shadow keeps it readable over the photo without a background.
 .match-indicator {
   position: absolute;
-  bottom: -4px;
-  right: -4px;
-  width: 1.1rem;
-  height: 1.1rem;
-  padding: 3px;
+  top: -5px;
+  right: -5px;
+  width: 1rem;
+  height: 1rem;
   display: flex;
-  border-radius: 50%;
-  background: white;
   color: rgb(var(--match-rgb));
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
   pointer-events: none;
 
   svg {

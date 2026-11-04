@@ -4,7 +4,7 @@ vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
   blurhashToDataUrl: (hash: string) => `data:blur/${hash}`,
 }))
 
-vi.mock('@/assets/icons/interface/heart.svg?raw', () => ({
+vi.mock('@/assets/icons/interface/heart-filled.svg?raw', () => ({
   default: '<svg class="icon-heart"></svg>',
 }))
 
