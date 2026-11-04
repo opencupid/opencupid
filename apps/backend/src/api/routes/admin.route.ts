@@ -47,6 +47,13 @@ const DEEPL_LOCALE_MAP: Record<string, string> = {
   pt: 'pt-PT',
 }
 
+// Shape returned by every admin tag endpoint, so the admin UI can update rows in place
+const adminTagInclude = {
+  translations: { select: { locale: true, name: true } },
+  _count: { select: { profiles: true } },
+  creator: { select: { profile: { select: { id: true, publicName: true } } } },
+} satisfies Prisma.TagInclude
+
 const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // Defense in depth: require trusted header set by nginx mTLS admin proxy
   fastify.addHook('onRequest', async (req, reply) => {
@@ -860,10 +867,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             create: translationCreates,
           },
         },
-        include: {
-          translations: { select: { locale: true, name: true } },
-          _count: { select: { profiles: true } },
-        },
+        include: adminTagInclude,
       })
 
       return reply.code(201).send({ success: true, tag })
@@ -880,6 +884,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {number} [pageSize=25] - Page size (max 100)
    * @query {string} [search] - Search by name, slug, or translation
    * @query {string} [userSubmitted] - Filter by isUserCreated flag ("true" to show only user-submitted)
+   * @query {string} [submittedBy] - Filter by the submitting user's ID
    * @returns {{ success, tags, total, page, pageSize }}
    */
   fastify.get('/tags', async (req, reply) => {
@@ -889,6 +894,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         pageSize = '25',
         search = '',
         userSubmitted = '',
+        submittedBy = '',
       } = req.query as Record<string, string>
       const pageNum = Math.max(1, parseInt(page, 10) || 1)
       const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
@@ -907,6 +913,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       } else if (userSubmitted === 'false') {
         where.isUserCreated = false
       }
+      if (submittedBy) {
+        where.createdBy = submittedBy
+      }
 
       const [tags, total] = await Promise.all([
         prisma.tag.findMany({
@@ -914,10 +923,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           skip,
           take: size,
           orderBy: { profiles: { _count: 'desc' } },
-          include: {
-            translations: { select: { locale: true, name: true } },
-            _count: { select: { profiles: true } },
-          },
+          include: adminTagInclude,
         }),
         prisma.tag.count({ where }),
       ])
@@ -932,6 +938,25 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin tags')
       return sendError(reply, 500, 'Failed to fetch tags')
+    }
+  })
+
+  /**
+   * GET /tags/submitters
+   * Returns every user who submitted at least one non-deleted tag, with their profile.
+   * @returns {{ success, submitters: { id, profile: { id, publicName } | null }[] }}
+   */
+  fastify.get('/tags/submitters', async (_req, reply) => {
+    try {
+      const submitters = await prisma.user.findMany({
+        where: { createdTags: { some: { isDeleted: false } } },
+        select: { id: true, profile: { select: { id: true, publicName: true } } },
+        orderBy: { profile: { publicName: 'asc' } },
+      })
+      return reply.code(200).send({ success: true, submitters })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching tag submitters')
+      return sendError(reply, 500, 'Failed to fetch tag submitters')
     }
   })
 
@@ -983,7 +1008,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const tag = await prisma.tag.update({
         where: { id },
         data,
-        include: { translations: { select: { locale: true, name: true } } },
+        include: adminTagInclude,
       })
 
       return reply.code(200).send({ success: true, tag })
@@ -1080,10 +1105,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         // Return updated winner
         return tx.tag.findUnique({
           where: { id: winnerTagId },
-          include: {
-            translations: { select: { locale: true, name: true } },
-            _count: { select: { profiles: true } },
-          },
+          include: adminTagInclude,
         })
       })
 

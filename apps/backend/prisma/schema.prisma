@@ -97,6 +97,7 @@ model Tag {
   isHidden       Boolean          @default(false)
   isDeleted      Boolean          @default(false)
   createdBy      String?
+  creator        User?            @relation("TagCreator", fields: [createdBy], references: [id], onDelete: SetNull)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   translations   TagTranslation[]
@@ -134,7 +135,8 @@ model User {
   roles                   UserRole[] @default([user])
 
   // relations
-  profile Profile? @relation
+  profile     Profile? @relation
+  createdTags Tag[]    @relation("TagCreator")
 
   pushSubscription          PushSubscription[]
   // TODO: remove isPushNotificationEnabled — push state should be derived from PushSubscription existence
@@ -449,7 +451,7 @@ model EventContent {
   /// The event's page at its external feed; null for member-created events.
   externalUrl   String?
 
-  attendees     EventAttendance[]
+  attendees EventAttendance[]
 
   @@index([startsAt])
 }
@@ -461,14 +463,14 @@ enum AttendanceStatus {
 
 model EventAttendance {
   eventContentId String
-  event          EventContent     @relation(fields: [eventContentId], references: [userContentId], onDelete: Cascade)
+  event          EventContent @relation(fields: [eventContentId], references: [userContentId], onDelete: Cascade)
 
-  profileId      String
-  profile        Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  status         AttendanceStatus @default(GOING)
-  rsvpedAt       DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  status    AttendanceStatus @default(GOING)
+  rsvpedAt  DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
   @@id([eventContentId, profileId])
   @@index([profileId, status])

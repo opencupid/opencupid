@@ -1064,6 +1064,23 @@ describe('GET /tags', () => {
     expect(reply.payload.total).toBe(1)
   })
 
+  it("includes profile count and the submitting user's profile", async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: {} }, reply)
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          _count: { select: { profiles: true } },
+          creator: { select: { profile: { select: { id: true, publicName: true } } } },
+        }),
+      })
+    )
+  })
+
   it('applies search filter', async () => {
     mockPrisma.tag.findMany.mockResolvedValue([])
     mockPrisma.tag.count.mockResolvedValue(0)
@@ -1119,6 +1136,20 @@ describe('GET /tags', () => {
     )
   })
 
+  it('filters by submitting user when submittedBy is given', async () => {
+    mockPrisma.tag.findMany.mockResolvedValue([])
+    mockPrisma.tag.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /tags']
+    await handler({ query: { submittedBy: 'u1' } }, reply)
+
+    expect(mockPrisma.tag.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isDeleted: false, createdBy: 'u1' },
+      })
+    )
+  })
+
   it('handles errors gracefully', async () => {
     mockPrisma.tag.findMany.mockRejectedValueOnce(new Error('DB error'))
 
@@ -1127,6 +1158,33 @@ describe('GET /tags', () => {
 
     expect(reply.statusCode).toBe(500)
     expect(reply.payload.success).toBe(false)
+  })
+})
+
+describe('GET /tags/submitters', () => {
+  it('returns users with at least one non-deleted tag, with their profile', async () => {
+    const submitters = [{ id: 'u1', profile: { id: 'p1', publicName: 'Alice' } }]
+    mockPrisma.user.findMany.mockResolvedValue(submitters)
+
+    const handler = fastify.routes['GET /tags/submitters']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.submitters).toEqual(submitters)
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { createdTags: { some: { isDeleted: false } } },
+      })
+    )
+  })
+
+  it('handles errors gracefully', async () => {
+    mockPrisma.user.findMany.mockRejectedValueOnce(new Error('DB error'))
+
+    const handler = fastify.routes['GET /tags/submitters']
+    await handler({}, reply)
+
+    expect(reply.statusCode).toBe(500)
   })
 })
 
@@ -1186,6 +1244,22 @@ describe('PATCH /tags/:id', () => {
               },
             ],
           },
+        }),
+      })
+    )
+  })
+
+  it('returns the full admin tag shape so the UI can update the row in place', async () => {
+    mockPrisma.tag.update.mockResolvedValue({ id: 'tag1' })
+
+    const handler = fastify.routes['PATCH /tags/:id']
+    await handler({ params: { id: 'tag1' }, body: { name: 'Hiking' } }, reply)
+
+    expect(mockPrisma.tag.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({
+          _count: { select: { profiles: true } },
+          creator: { select: { profile: { select: { id: true, publicName: true } } } },
         }),
       })
     )

@@ -9,8 +9,7 @@ import {
   flagOriginBadgeClass,
 } from '../composables/useTrustFlags'
 import { appLocales } from '@shared/i18n/locales'
-
-const frontendUrl = __APP_CONFIG__.FRONTEND_URL
+import PublicProfileLink from '../components/PublicProfileLink.vue'
 
 interface AdminProfile {
   id: string
@@ -1112,14 +1111,7 @@ onUnmounted(() => {
                   <dt class="col-sm-4">ID</dt>
                   <dd class="col-sm-8 d-flex align-items-center gap-2">
                     <code>{{ selectedProfile.id }}</code>
-                    <a
-                      :href="`${frontendUrl}/profile/${selectedProfile.id}`"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="btn btn-sm btn-outline-primary"
-                      data-testid="view-public-profile"
-                      >Profile</a
-                    >
+                    <PublicProfileLink :profile-id="selectedProfile.id" />
                   </dd>
                   <dt class="col-sm-4">Name</dt>
                   <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
