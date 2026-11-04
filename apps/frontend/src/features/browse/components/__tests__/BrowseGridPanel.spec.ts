@@ -14,7 +14,7 @@ vi.mock('../BrowseGridCard.vue', () => ({
   default: {
     name: 'BrowseGridCard',
     props: ['item'],
-    emits: ['select', 'locate'],
+    emits: ['select', 'locate', 'hover'],
     template: '<div class="grid-card-stub" />',
   },
 }))
@@ -97,6 +97,14 @@ describe('BrowseGridPanel', () => {
     await card.vm.$emit('locate')
     expect(wrapper.emitted('select')).toEqual([[profile('p2')]])
     expect(wrapper.emitted('locate')).toEqual([[profile('p2')]])
+  })
+
+  it('forwards card hover as the item, and null on leave', async () => {
+    const wrapper = mountPanel()
+    const card = wrapper.findAllComponents({ name: 'BrowseGridCard' })[0]!
+    await card.vm.$emit('hover', true)
+    await card.vm.$emit('hover', false)
+    expect(wrapper.emitted('hover')).toEqual([[profile('p1')], [null]])
   })
 
   it('shows placeholder cards instead of results while loading', () => {

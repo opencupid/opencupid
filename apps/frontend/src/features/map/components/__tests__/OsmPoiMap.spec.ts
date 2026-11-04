@@ -55,7 +55,8 @@ vi.mock('leaflet', () => {
   /** Each marker gets its own `on` spy so we can extract per-marker handlers. */
   const marker = vi.fn((latLng: [number, number], opts: any) => {
     const perMarkerOn = vi.fn().mockReturnThis()
-    const m = { ...markerProto, on: perMarkerOn, _icon: opts?.icon }
+    const el = document.createElement('div')
+    const m = { ...markerProto, on: perMarkerOn, _icon: opts?.icon, getElement: () => el }
     createdMarkers.push({ latLng, opts, icon: opts?.icon })
     return m
   })
@@ -505,6 +506,57 @@ describe('OsmPoiMap', () => {
     ])
 
     vi.useRealTimers()
+  })
+
+  describe('marker emphasis and pulse', () => {
+    const elementOf = (index: number) =>
+      (L.marker as any).mock.results[index].value.getElement() as HTMLElement
+
+    it('emphasises the marker for emphasizedPoiId and moves the emphasis on change', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+
+      await wrapper.setProps({ emphasizedPoiId: '1' })
+      expect(elementOf(0).classList.contains('poi-emphasized')).toBe(true)
+
+      await wrapper.setProps({ emphasizedPoiId: '2' })
+      expect(elementOf(0).classList.contains('poi-emphasized')).toBe(false)
+      expect(elementOf(1).classList.contains('poi-emphasized')).toBe(true)
+
+      await wrapper.setProps({ emphasizedPoiId: null })
+      expect(elementOf(1).classList.contains('poi-emphasized')).toBe(false)
+    })
+
+    it('ignores ids without a marker (e.g. inside a cluster)', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+
+      await expect(wrapper.setProps({ emphasizedPoiId: 'missing' })).resolves.not.toThrow()
+    })
+
+    it('pulses a marker for three seconds', async () => {
+      const wrapper = await mountMap()
+      await flushPromises()
+      vi.useFakeTimers()
+
+      await wrapper.setProps({ pulsePoi: { id: '1' } })
+      expect(elementOf(0).classList.contains('poi-pulse')).toBe(true)
+
+      vi.advanceTimersByTime(3000)
+      expect(elementOf(0).classList.contains('poi-pulse')).toBe(false)
+      vi.useRealTimers()
+    })
+
+    it('pulses a marker that appears shortly after the request', async () => {
+      const wrapper = await mountMap({ items: [] })
+      await flushPromises()
+
+      await wrapper.setProps({ pulsePoi: { id: '1' } })
+      await wrapper.setProps({ items })
+      await flushPromises()
+
+      expect(elementOf(0).classList.contains('poi-pulse')).toBe(true)
+    })
   })
 
   describe('focusBounds', () => {
