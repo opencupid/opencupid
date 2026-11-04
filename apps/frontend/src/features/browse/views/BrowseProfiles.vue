@@ -494,28 +494,31 @@ onMounted(async () => {
       </div>
     </main>
 
-    <BrowseGridPanel
-      v-if="isGridOpen"
-      v-model:kinds="selectedLayers"
-      class="browse-grid-overlay"
-      :area-name="gridAreaName"
-      :items="gridStore.items"
-      :total="gridStore.total"
-      :has-more="gridStore.hasMore"
-      :is-loading="gridStore.isLoading"
-      :is-loading-more="gridStore.isLoadingMore"
-      :selected-tags="selectedTags"
-      :available-tags="availableTags"
-      :share-payload="shareInvitePayload"
-      @close="closeGrid"
-      @place:select="onGridPlaceSelect"
-      @select="onGridSelect"
-      @locate="onGridLocate"
-      @hover="onGridHover"
-      @tag:add="onGridTagToggle"
-      @tag:remove="onGridTagToggle"
-      @load-more="gridStore.loadMore()"
-    />
+    <!-- Slides in and out like the owner drawer (Bootstrap offcanvas). -->
+    <Transition name="grid-drawer">
+      <BrowseGridPanel
+        v-if="isGridOpen"
+        v-model:kinds="selectedLayers"
+        class="browse-grid-overlay"
+        :area-name="gridAreaName"
+        :items="gridStore.items"
+        :total="gridStore.total"
+        :has-more="gridStore.hasMore"
+        :is-loading="gridStore.isLoading"
+        :is-loading-more="gridStore.isLoadingMore"
+        :selected-tags="selectedTags"
+        :available-tags="availableTags"
+        :share-payload="shareInvitePayload"
+        @close="closeGrid"
+        @place:select="onGridPlaceSelect"
+        @select="onGridSelect"
+        @locate="onGridLocate"
+        @hover="onGridHover"
+        @tag:add="onGridTagToggle"
+        @tag:remove="onGridTagToggle"
+        @load-more="gridStore.loadMore()"
+      />
+    </Transition>
   </div>
 </template>
 
@@ -568,6 +571,16 @@ $grid-panel-width: 26rem;
     border-left: 1px solid var(--bs-border-color);
     box-shadow: var(--bs-box-shadow);
   }
+}
+
+// Same motion as Bootstrap's offcanvas (the owner drawer): in from the right.
+.grid-drawer-enter-active,
+.grid-drawer-leave-active {
+  @include transition(transform $offcanvas-transition-duration ease-in-out);
+}
+.grid-drawer-enter-from,
+.grid-drawer-leave-to {
+  transform: translateX(100%);
 }
 
 // Keep the search bar and owner controls clear of the grid panel.

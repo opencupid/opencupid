@@ -7,7 +7,6 @@ vi.mock('vue-i18n', () => ({
     t: (k: string, p?: Record<string, unknown>) => (p ? `${k}:${JSON.stringify(p)}` : k),
   }),
 }))
-vi.mock('@/assets/icons/interface/cross.svg', () => ({ default: { template: '<svg />' } }))
 vi.mock('@/assets/icons/arrows/chevrons-down.svg', () => ({ default: { template: '<svg />' } }))
 vi.mock('@/assets/icons/arrows/chevrons-up.svg', () => ({ default: { template: '<svg />' } }))
 vi.mock('../BrowseGridCard.vue', () => ({
@@ -127,9 +126,11 @@ describe('BrowseGridPanel', () => {
     expect(wrapper.findComponent({ name: 'ShareSheet' }).props('open')).toBe(true)
   })
 
-  it('emits close from the close button', async () => {
+  it('emits close from the close button at the end of the header', async () => {
     const wrapper = mountPanel()
-    await wrapper.find('.close-button').trigger('click')
+    const close = wrapper.find('header > :last-child')
+    expect(close.classes()).toContain('btn-close')
+    await close.trigger('click')
     expect(wrapper.emitted('close')).toHaveLength(1)
   })
 
