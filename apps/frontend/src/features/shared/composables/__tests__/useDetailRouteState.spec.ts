@@ -90,16 +90,18 @@ describe('useDetailRouteState', () => {
 
 describe('detailRoute', () => {
   it('builds the map route for a detail', () => {
-    expect(detailRoute('event', 'e1', false)).toEqual({
+    expect(detailRoute('event', 'e1', null)).toEqual({
       name: 'PublicEvent',
       params: { eventId: 'e1' },
     })
   })
 
-  it('builds the grid route for a detail', () => {
-    expect(detailRoute('profile', 'p1', true)).toEqual({
+  it('builds the grid route for a detail, carrying the grid query', () => {
+    const query = { tags: 't1,t2', bbox: '19,47,20,48' }
+    expect(detailRoute('profile', 'p1', query)).toEqual({
       name: 'GridProfile',
       params: { profileId: 'p1' },
+      query,
     })
   })
 })

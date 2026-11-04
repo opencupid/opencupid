@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onActivated, onMounted, provide, ref, toRef, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
@@ -139,6 +139,7 @@ provide('viewerProfile', toRef(viewerProfile))
 
 // ── Route-driven detail panel ──────────────────────────────────────
 const router = useRouter()
+const route = useRoute()
 const toast = useToast()
 const { t } = useI18n()
 const ownerProfileStore = useOwnerProfileStore()
@@ -233,16 +234,16 @@ function openInboxDrawer() {
 
 // Details open over whatever the user is looking at: the map, or the grid.
 function handlePostSelect(post: { id: string }) {
-  router.push(detailRoute('post', post.id, isGridOpen.value))
+  router.push(detailRoute('post', post.id, gridQuery.value))
 }
 function handleEventSelect(event: { id: string }) {
-  router.push(detailRoute('event', event.id, isGridOpen.value))
+  router.push(detailRoute('event', event.id, gridQuery.value))
 }
 function handleCommunitySelect(community: { id: string }) {
-  router.push(detailRoute('community', community.id, isGridOpen.value))
+  router.push(detailRoute('community', community.id, gridQuery.value))
 }
 function handleProfileSelect(profile: { id: string }) {
-  router.push(detailRoute('profile', profile.id, isGridOpen.value))
+  router.push(detailRoute('profile', profile.id, gridQuery.value))
 }
 
 // ── Browse grid ────────────────────────────────────────────────────
@@ -263,12 +264,16 @@ const gridChipCount = computed(() =>
   lastMapBounds.value ? countFeaturesInBounds(clusterFeatures.value, lastMapBounds.value) : 0
 )
 
+// The grid's query (tags, map area) while the grid or a detail over it is
+// open; details over the grid carry it so closing them restores the grid.
+const gridQuery = computed(() => (isGridOpen.value ? route.query : null))
+
 function closeDetailRoute() {
-  return { name: isGridOpen.value ? GRID_ROUTE : 'Browse' }
+  return gridQuery.value ? { name: GRID_ROUTE, query: gridQuery.value } : { name: 'Browse' }
 }
 
 function openGrid() {
-  router.push({ name: GRID_ROUTE })
+  router.push(gridRoute())
 }
 
 function closeGrid() {
@@ -281,7 +286,7 @@ function closeGrid() {
 
 function onGridSelect(item: BrowseListItem) {
   const { type, id } = browseItemTarget(item)
-  router.push(detailRoute(type, id, true))
+  router.push(detailRoute(type, id, route.query))
 }
 
 // Hovering a grid card emphasises its pin; only where the map is visible
@@ -323,7 +328,7 @@ function onGridPlaceSelect(place: GeocodingResult) {
 }
 
 // Tags and map area live in the grid URL, so a grid link can be shared.
-useGridUrlSync({
+const { gridRoute } = useGridUrlSync({
   bounds: lastMapBounds,
   selectedTags,
   setTags: (tags) => searchStore.setTags(tags),
