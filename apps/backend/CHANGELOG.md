@@ -1,5 +1,14 @@
 # backend
 
+## 0.82.0
+
+### Minor Changes
+
+- c017728: Add `GET /find/list`: a paged, nearest-first list of the profiles, posts, events and communities inside a map area, hydrated for the upcoming browse grid view (#1565)
+- 36dc26a: Map clusters that do not split any further open the browse grid instead of fanning out: the backend keeps clustering at max zoom, so overlapping pins stay one cluster icon there, and the marker spiderfier is removed (#1565)
+- 37e7628: Browse grid links keep their filters: the tags and map area are in the URL (`/browse/grid?tags=…&bbox=…`), restored when a link is opened, via a new `GET /tags/by-ids` endpoint (#1565)
+- c025711: Potential dating matches are marked with a heart: on their map pin (next to the halo), on their browse grid card (with the same halo) and after the name in their full profile, labelled "Your dating preferences match". `GET /find/list` marks them with `highlighted` on profile items (#1565)
+
 ## 0.81.0
 
 ### Minor Changes

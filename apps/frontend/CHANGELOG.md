@@ -1,5 +1,26 @@
 # frontend
 
+## 0.82.0
+
+### Minor Changes
+
+- b08087f: Browse grid: name the map area in the header ("Szentendre & around") and add a location field that fits the map to the picked place (#1565)
+- dc5c9b9: Browse grid: hovering a card highlights its pin on the map, and "show on map" pulses the pin (#1565)
+- a41858e: Communities listed on a profile show all their details, like the community's own view: the website and email contact links and the copy/share toolbar
+- c620e73: Browse grid refinements (#1565): type pills use the map layers' icons and colours; cards drop the distance line; event and community cards show only their name and a date or founding year, in the profile cards' overlay (or under the type's icon when there is no picture), with a darker overlay for contrast; event detail cards show the event name as a heading; content card pictures show their blurhash until they load; the community badge no longer covers the name; and the grid keeps its tags and map area when a detail is opened and closed, or the grid is reopened from the map
+- b315f7e: Add the browse grid view: a grid overlay listing the people, posts, events and communities in the current map area, nearest first, opened from a "nearby" button on the map (#1565)
+- 36dc26a: Map clusters that do not split any further open the browse grid instead of fanning out: the backend keeps clustering at max zoom, so overlapping pins stay one cluster icon there, and the marker spiderfier is removed (#1565)
+- 37e7628: Browse grid links keep their filters: the tags and map area are in the URL (`/browse/grid?tags=…&bbox=…`), restored when a link is opened, via a new `GET /tags/by-ids` endpoint (#1565)
+- 0469d34: The map's browse grid button only appears from zoom 11 (`BROWSE_GRID_MIN_ZOOM`), so the grid can't be opened over whole regions from the map (#1565)
+- c025711: Potential dating matches are marked with a heart: on their map pin (next to the halo), on their browse grid card (with the same halo) and after the name in their full profile, labelled "Your dating preferences match". `GET /find/list` marks them with `highlighted` on profile items (#1565)
+
+### Patch Changes
+
+- 86d63b1: The browse grid opens straight onto the area the map shows: right after a pan it no longer lists the previous area first and then re-renders (#1565)
+- b4a84fb: On phones, profile cards show the location under the name in a smaller size, so long names no longer run under it (#1565)
+- cf6a582: The browse grid panel slides in and out like the profile drawer, with its close button at the right end of the header (#1565)
+- 6b92565: The fade under the map's search bar is a fixed strip again: on phones it no longer stretches down with the stacked owner controls, and its empty area no longer blocks clicks on the "N nearby" grid button (#1565)
+
 ## 0.81.0
 
 ## 0.80.1
