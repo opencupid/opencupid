@@ -25,7 +25,7 @@ import { isMdUp } from '@/lib/responsive'
 import { useAreaName } from '@/features/geocoding/composables/useAreaName'
 import { useGridUrlSync } from '../composables/useGridUrlSync'
 import type { GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
-import type { MapBounds } from '@/features/map/types/map.types'
+import type { MapBounds, MapTarget } from '@/features/map/types/map.types'
 
 import OsmPoiMap from '@/features/map/components/OsmPoiMap.vue'
 import MapLayerControl from '@/features/map/components/MapLayerControl.vue'
@@ -276,6 +276,12 @@ function openGrid() {
   router.push(gridRoute())
 }
 
+// A cluster that does not split any further opens the grid, listing its
+// members first; the map has already centred on it.
+function onMaxZoomCluster() {
+  if (!isGridOpen.value) openGrid()
+}
+
 function closeGrid() {
   // Step back when the grid was opened from the map, so the back button
   // doesn't reopen it; otherwise (deep link) replace it with the map.
@@ -291,22 +297,27 @@ function onGridSelect(item: BrowseListItem) {
 
 // Hovering a grid card emphasises its pin; only where the map is visible
 // next to the grid.
-const hoveredGridItemId = ref<string | null>(null)
-const emphasizedPoiId = computed(() => (isMdUp.value ? hoveredGridItemId.value : null))
+const hoveredGridItem = ref<MapTarget | null>(null)
+const emphasizedPoi = computed(() => (isMdUp.value ? hoveredGridItem.value : null))
 function onGridHover(item: BrowseListItem | null) {
-  hoveredGridItemId.value = item ? browseItemTarget(item).id : null
+  if (!item) {
+    hoveredGridItem.value = null
+    return
+  }
+  const { id, point } = browseItemTarget(item)
+  hoveredGridItem.value = { id, point }
 }
 // The panel unmounts on close without a mouseleave.
 watch(isGridOpen, (open) => {
-  if (!open) hoveredGridItemId.value = null
+  if (!open) hoveredGridItem.value = null
 })
 
-const pulsePoi = ref<{ id: string } | null>(null)
+const pulsePoi = ref<MapTarget | null>(null)
 
 function onGridLocate(item: BrowseListItem) {
   const { id, point } = browseItemTarget(item)
   if (point) highlightedLocation.value = [point.lat, point.lon]
-  pulsePoi.value = { id }
+  pulsePoi.value = { id, point }
   // On phones the grid covers the map: close it to show the item.
   if (!isMdUp.value) closeGrid()
 }
@@ -448,7 +459,7 @@ onMounted(async () => {
           :initial-center="initialMapCenter"
           :highlighted-location="highlightedLocation"
           :focus-bounds="focusBounds"
-          :emphasized-poi-id="emphasizedPoiId"
+          :emphasized-poi="emphasizedPoi"
           :pulse-poi="pulsePoi"
           :popup-resolver="popupResolver"
           :fetch-popup-data="fetchPopupData"
@@ -456,6 +467,7 @@ onMounted(async () => {
           @item:select="handleMarkerSelect"
           @bounds:changed="onBoundsChanged"
           @map:ready="onMapReady"
+          @cluster:max-zoom="onMaxZoomCluster"
         />
 
         <NearbyFeatures

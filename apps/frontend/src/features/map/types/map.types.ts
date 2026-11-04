@@ -35,6 +35,16 @@ export interface PoiIconProps {
   hasPost?: boolean
 }
 
+/**
+ * An item to point out on the map (e.g. a hovered or located grid card). Its
+ * location lets the map point at the cluster holding it when it has no
+ * marker of its own.
+ */
+export interface MapTarget {
+  id: string
+  point?: { lat: number; lon: number }
+}
+
 /** Bounds + zoom emitted on viewport change for cluster queries. */
 export interface BoundsWithZoom {
   bounds: MapBounds

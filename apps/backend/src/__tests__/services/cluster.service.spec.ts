@@ -38,6 +38,7 @@ vi.mock('@/services/image.service', () => ({
 
 import { ClusterService } from '@/services/cluster.service'
 import type { PointFeature } from '@shared/zod/map/cluster.dto'
+import { MAP_MAX_ZOOM } from '@shared/maps'
 
 const makeProfile = (id: string, lat: number, lon: number, name = 'User') => ({
   id,
@@ -233,6 +234,28 @@ describe('ClusterService', () => {
   })
 
   describe('getClusters', () => {
+    it('keeps nearby points clustered at max zoom, expanding no further', async () => {
+      const profiles = [makeProfile('p1', 47.5, 19.0), makeProfile('p2', 47.5001, 19.0001)]
+      mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)
+      mockFindMutualMatchIds.mockResolvedValue([])
+
+      await service.buildIndex('viewer-1', [], ['profile', 'post'])
+
+      const { features } = service.getClusters(
+        'viewer-1',
+        [18.9, 47.4, 19.1, 47.6],
+        MAP_MAX_ZOOM,
+        [],
+        ['profile', 'post']
+      )
+      expect(features).toHaveLength(1)
+      expect(features[0]).toMatchObject({
+        type: 'cluster',
+        count: 2,
+        expansionZoom: MAP_MAX_ZOOM,
+      })
+    })
+
     it('returns empty features and tags when no index exists and builds on demand', async () => {
       mockFindSocialProfilesWithLocation.mockResolvedValue([])
       mockFindMutualMatchIds.mockResolvedValue([])

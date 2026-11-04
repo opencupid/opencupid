@@ -1,5 +1,4 @@
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
-import { OverlappingMarkerSpiderfier } from 'ts-overlapping-marker-spiderfier-leaflet'
 import { nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated, ref, watch } from 'vue'
 import type { Component, Ref } from 'vue'
 
@@ -11,6 +10,7 @@ import type {
   MarkerConfig,
   IconRenderer,
   MapBounds,
+  MapTarget,
 } from '../types/map.types'
 import {
   isValidLatLng,
@@ -18,7 +18,7 @@ import {
   hydratePoiIcon,
   MAP_MAX_ZOOM,
 } from '../utils/mapUtils'
-import { MAP_DEFAULT_ZOOM } from '@shared/maps'
+import { MAP_CLUSTER_RADIUS, MAP_DEFAULT_ZOOM } from '@shared/maps'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -40,10 +40,10 @@ export interface MapProps {
   highlightedLocation?: [number, number] | null
   /** Area to fit the map to, e.g. a place picked in the grid's location field. */
   focusBounds?: MapBounds | null
-  /** Marker to emphasise, e.g. while its grid card is hovered. */
-  emphasizedPoiId?: string | null
-  /** Marker to pulse once; pass a new object each time to pulse again. */
-  pulsePoi?: { id: string } | null
+  /** Item to emphasise, e.g. while its grid card is hovered. */
+  emphasizedPoi?: MapTarget | null
+  /** Item to pulse once; pass a new object each time to pulse again. */
+  pulsePoi?: MapTarget | null
   fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
 }
 
@@ -51,6 +51,8 @@ type MapEmit = {
   (e: 'bounds:changed', payload: BoundsWithZoom): void
   (e: 'item:select', id: string): void
   (e: 'map:ready', map: LMap): void
+  /** A cluster that does not split any further was clicked. */
+  (e: 'cluster:max-zoom'): void
 }
 
 // ---------------------------------------------------------------------------
@@ -73,14 +75,9 @@ function supportsHover(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// OMS tuning constants
+// Tuning constants
 // ---------------------------------------------------------------------------
 
-const SPIDERFY_COLOCATION_THRESHOLD_M = 10
-const OMS_CIRCLE_FOOT_SEPARATION = 65
-const OMS_SPIRAL_FOOT_SEPARATION = 50
-const OMS_SPIRAL_LENGTH_START = 16
-const OMS_SPIRAL_LENGTH_FACTOR = 12
 const BOUNDS_DEBOUNCE_MS = 500
 const SEARCH_FOCUS_ZOOM = 12
 
@@ -108,7 +105,6 @@ export function useMapController(
   let phase: MapPhase = 'uninitialized'
   const deferred: DeferredWork = {}
   let map: LMap
-  let oms: OverlappingMarkerSpiderfier
   let pois: DiffableLayer<MapPoi>
   let clusters: DiffableLayer<MapCluster>
   let pointLayer: L.LayerGroup
@@ -116,13 +112,6 @@ export function useMapController(
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
-  // One-shot continuation invoked the next time an items batch arrives.
-  // Used by the max-zoom cluster click to spiderfy as soon as the leaves
-  // land, and only then. A second click overwrites the slot; an items
-  // batch with no matching leaves consumes it silently. Bounding the
-  // intent to the first batch after the click means a stale flag can't
-  // fire a phantom spiderfy minutes later if the user has panned away.
-  let pendingItemsCallback: (() => void) | null = null
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -137,6 +126,10 @@ export function useMapController(
 
   function destroy(): void {
     resizeObserver?.disconnect()
+    if (pulseTimer) clearTimeout(pulseTimer)
+    pulseTimer = null
+    pulsing = null
+    emphasized = undefined
     if (boundsTimer) {
       clearTimeout(boundsTimer)
       boundsTimer = null
@@ -202,17 +195,6 @@ export function useMapController(
   function initLayers(): void {
     pointLayer = L.layerGroup().addTo(map)
     clusterLayer = L.layerGroup().addTo(map)
-
-    oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true, circleSpiralSwitchover: 5 })
-    oms.circleFootSeparation = OMS_CIRCLE_FOOT_SEPARATION
-    oms.spiralFootSeparation = OMS_SPIRAL_FOOT_SEPARATION
-    oms.spiralLengthStart = OMS_SPIRAL_LENGTH_START
-    oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
-
-    oms.addListener('click', (marker) => {
-      const id = pois.getId(marker as LMarker)
-      if (id !== undefined) emit('item:select', String(id))
-    })
 
     // POI data is treated as immutable per id for the lifetime of a session
     // (the GUI is not expected to reflect mid-session DB changes). No
@@ -315,6 +297,8 @@ export function useMapController(
       keyboard: true,
     })
 
+    m.on('click', () => emit('item:select', String(item.id)))
+
     if (resolvePopup && supportsHover()) {
       const classes = ['item-popup', `item-popup-${item.kind}`]
       if (item.highlighted) classes.push('item-popup-highlighted')
@@ -396,12 +380,11 @@ export function useMapController(
 
     m.on('click', () => {
       if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
-        clusters.update(clusters.allItems().filter((c) => c.id !== cluster.id))
-        const target = L.latLng(cluster.lat, cluster.lon)
-        // Bind the spiderfy intent to this click's closure. The next items
-        // batch consumes it; a second click before that overwrites it.
-        pendingItemsCallback = () => triggerSpiderfy(target)
+        // The backend clusters up to max zoom, so this cluster never splits:
+        // centre on it and let the host open the grid, which lists the area
+        // nearest-first from the map centre, i.e. the cluster's members first.
         map.setView([cluster.lat, cluster.lon], MAP_MAX_ZOOM)
+        emit('cluster:max-zoom')
       } else {
         map.flyTo([cluster.lat, cluster.lon], cluster.expansionZoom, {
           duration: 0.5,
@@ -416,28 +399,8 @@ export function useMapController(
 
   function doUpdateMarkers(items: MapPoi[]): void {
     if (!markerConfig) return
-    const { added, removed } = pois.update(items)
-
-    for (const m of removed) oms.removeMarker(m)
-    for (const m of added) oms.addMarker(m)
-    if (added.length) {
-      markerElement(props.emphasizedPoiId)?.classList.add(EMPHASIS_CLASS)
-      applyPendingPulse()
-    }
-
-    if (pendingItemsCallback) {
-      const cb = pendingItemsCallback
-      pendingItemsCallback = null
-      cb()
-    }
-  }
-
-  function triggerSpiderfy(target: L.LatLng): void {
-    const match = [...pois.values()].find(
-      (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
-    )
-    if (!match) return
-    ;(oms as any).spiderListener(match)
+    pois.update(items)
+    refreshTargets()
   }
 
   function updateMarkers(items: MapPoi[], config: MarkerConfig): void {
@@ -451,6 +414,7 @@ export function useMapController(
   function updateClusters(newClusters: MapCluster[]): void {
     if (phase !== 'ready') return
     clusters.update(newClusters)
+    refreshTargets()
   }
 
   // ── Highlighted location (search-driven flyTo) ────────────────────────
@@ -486,48 +450,84 @@ export function useMapController(
 
   // ── Marker emphasis and pulse (browse grid ↔ map) ─────────────────────
   // Applied as classes on the marker element, so the immutable-per-id
-  // markers are never re-created. A marker inside a cluster has no element
-  // and is left alone.
+  // markers are never re-created. An item inside a cluster has no marker of
+  // its own, so the cluster holding it is pointed at instead. Both are
+  // re-resolved after every marker or cluster update, as the item's marker
+  // can change while the map moves (e.g. flying in for "show on map").
 
   const EMPHASIS_CLASS = 'poi-emphasized'
   const PULSE_CLASS = 'poi-pulse'
   const PULSE_MS = 3000
+  // A cluster's members lie within one radius of its seed, and the seed
+  // within one radius of the cluster's centre; the radius is in
+  // Supercluster's 512-px extent, half as many pixels on 256-px tiles.
+  const CLUSTER_REACH_PX = 2 * (MAP_CLUSTER_RADIUS / 2)
 
-  function markerElement(id: string | null | undefined): HTMLElement | undefined {
-    if (!id || phase !== 'ready') return undefined
-    return pois.get(id)?.getElement() ?? undefined
-  }
-
-  function setEmphasis(id: string | null | undefined, prev: string | null | undefined): void {
-    markerElement(prev)?.classList.remove(EMPHASIS_CLASS)
-    markerElement(id)?.classList.add(EMPHASIS_CLASS)
-  }
-
-  // A pulse requested before its marker exists (e.g. while the map is still
-  // flying there) is applied on the next marker update, if still recent.
-  let pendingPulse: { id: string; until: number } | null = null
-
-  function pulse(id: string): void {
-    const el = markerElement(id)
-    if (!el) {
-      pendingPulse = { id, until: Date.now() + PULSE_MS }
-      return
+  function clusterElementAt(point: { lat: number; lon: number }): HTMLElement | undefined {
+    const at = map.latLngToContainerPoint([point.lat, point.lon])
+    let nearest: { id: number; distance: number } | null = null
+    for (const c of clusters.allItems()) {
+      const distance = at.distanceTo(map.latLngToContainerPoint([c.lat, c.lon]))
+      if (distance <= CLUSTER_REACH_PX && (!nearest || distance < nearest.distance)) {
+        nearest = { id: c.id, distance }
+      }
     }
-    pendingPulse = null
-    el.classList.remove(PULSE_CLASS)
-    // Restart the CSS animation when the same marker is pulsed again.
-    void el.offsetWidth
-    el.classList.add(PULSE_CLASS)
-    setTimeout(() => el.classList.remove(PULSE_CLASS), PULSE_MS)
+    return nearest ? clusters.get(nearest.id)?.getElement() : undefined
   }
 
-  function applyPendingPulse(): void {
-    if (!pendingPulse) return
-    if (Date.now() > pendingPulse.until) {
-      pendingPulse = null
-      return
+  function targetElement(target: MapTarget | null | undefined): HTMLElement | undefined {
+    if (!target || phase !== 'ready') return undefined
+    const own = pois.get(target.id)?.getElement()
+    if (own) return own
+    return target.point ? clusterElementAt(target.point) : undefined
+  }
+
+  let emphasized: HTMLElement | undefined
+
+  function applyEmphasis(): void {
+    const el = targetElement(props.emphasizedPoi)
+    if (el === emphasized) return
+    emphasized?.classList.remove(EMPHASIS_CLASS)
+    el?.classList.add(EMPHASIS_CLASS)
+    emphasized = el
+  }
+
+  // The pulse lasts PULSE_MS from the request and follows its item to
+  // whichever marker shows it, e.g. once the map has flown there.
+  let pulsing: { target: MapTarget; el?: HTMLElement } | null = null
+  let pulseTimer: ReturnType<typeof setTimeout> | null = null
+
+  function pulse(target: MapTarget): void {
+    pulsing?.el?.classList.remove(PULSE_CLASS)
+    pulsing = { target }
+    if (pulseTimer) clearTimeout(pulseTimer)
+    pulseTimer = setTimeout(endPulse, PULSE_MS)
+    applyPulse()
+  }
+
+  function applyPulse(): void {
+    if (!pulsing) return
+    const el = targetElement(pulsing.target)
+    if (el === pulsing.el) return
+    pulsing.el?.classList.remove(PULSE_CLASS)
+    if (el) {
+      // Restart the CSS animation when the same marker is pulsed again.
+      el.classList.remove(PULSE_CLASS)
+      void el.offsetWidth
+      el.classList.add(PULSE_CLASS)
     }
-    if (markerElement(pendingPulse.id)) pulse(pendingPulse.id)
+    pulsing.el = el
+  }
+
+  function endPulse(): void {
+    pulsing?.el?.classList.remove(PULSE_CLASS)
+    pulsing = null
+    pulseTimer = null
+  }
+
+  function refreshTargets(): void {
+    applyEmphasis()
+    applyPulse()
   }
 
   // ── Helper ────────────────────────────────────────────────────────────
@@ -575,15 +575,12 @@ export function useMapController(
     }
   )
 
-  watch(
-    () => props.emphasizedPoiId,
-    (id, prev) => setEmphasis(id, prev)
-  )
+  watch(() => props.emphasizedPoi, applyEmphasis)
 
   watch(
     () => props.pulsePoi,
     (target) => {
-      if (target) pulse(target.id)
+      if (target) pulse(target)
     }
   )
 
