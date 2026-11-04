@@ -21,8 +21,8 @@ vi.mock('../BrowseGridCard.vue', () => ({
 vi.mock('../BrowseGridFilters.vue', () => ({
   default: {
     name: 'BrowseGridFilters',
-    props: ['selectedTags', 'availableTags', 'kinds'],
-    emits: ['tag:add', 'tag:remove', 'update:kinds'],
+    props: ['areaName', 'selectedTags', 'availableTags', 'kinds'],
+    emits: ['place:select', 'tag:add', 'tag:remove', 'update:kinds'],
     template: '<div class="grid-filters-stub" />',
   },
 }))
@@ -44,6 +44,7 @@ const BButton = { template: '<button><slot /></button>' }
 function mountPanel(props: Record<string, unknown> = {}) {
   return mount(BrowseGridPanel, {
     props: {
+      areaName: null,
       items: [profile('p1'), profile('p2')],
       total: 30,
       hasMore: true,
@@ -64,6 +65,23 @@ describe('BrowseGridPanel', () => {
     const wrapper = mountPanel()
     expect(wrapper.find('.grid-summary').text()).toContain('profiles.browse.grid.title')
     expect(wrapper.find('.grid-summary').text()).toContain('#hiking')
+  })
+
+  it('names the area in the title when the place is known', () => {
+    const wrapper = mountPanel({ areaName: 'Szentendre' })
+    expect(wrapper.find('.grid-summary').text()).toContain(
+      'profiles.browse.grid.title_named:{"place":"Szentendre"}'
+    )
+    expect(wrapper.findComponent({ name: 'BrowseGridFilters' }).props('areaName')).toBe(
+      'Szentendre'
+    )
+  })
+
+  it('forwards a picked place', async () => {
+    const wrapper = mountPanel()
+    const place = { name: 'Budapest', country: 'HU', lat: 47.5, lon: 19.04 }
+    await wrapper.findComponent({ name: 'BrowseGridFilters' }).vm.$emit('place:select', place)
+    expect(wrapper.emitted('place:select')).toEqual([[place]])
   })
 
   it('renders a card per item and the result count', () => {

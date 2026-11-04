@@ -5,13 +5,18 @@ import { MAX_BROWSE_TAGS, USER_CONTENT_KINDS, type UserContentKind } from '@shar
 import type { PublicTag } from '@zod/tag/tag.dto'
 
 import SelectableTagList from './SelectableTagList.vue'
+import BrowseGridLocationField from './BrowseGridLocationField.vue'
+import type { GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
+import IconPin from '@/assets/icons/interface/pin.svg'
 import IconTag from '@/assets/icons/e-commerce/tag.svg'
 
 /**
- * The grid's filter fields: the shared tag selection and the content types.
- * Both are the same state the map uses (search pill tags, map layers).
+ * The grid's filter fields: the map area, the shared tag selection and the
+ * content types. Tags and types are the same state the map uses (search pill
+ * tags, map layers); picking a place moves the map.
  */
 const props = defineProps<{
+  areaName: string | null
   selectedTags: PublicTag[]
   availableTags: PublicTag[]
 }>()
@@ -19,6 +24,7 @@ const props = defineProps<{
 const kinds = defineModel<UserContentKind[]>('kinds', { required: true })
 
 const emit = defineEmits<{
+  'place:select': [place: GeocodingResult]
   'tag:add': [tag: PublicTag]
   'tag:remove': [tag: PublicTag]
 }>()
@@ -61,6 +67,17 @@ function isLocked(kind: UserContentKind) {
 
 <template>
   <div class="browse-grid-filters d-flex flex-column gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <IconPin
+        width="20"
+        height="20"
+        class="text-secondary flex-shrink-0"
+      />
+      <BrowseGridLocationField
+        :area-name="areaName"
+        @place:select="emit('place:select', $event)"
+      />
+    </div>
     <div
       class="d-flex align-items-start gap-2"
       role="group"
