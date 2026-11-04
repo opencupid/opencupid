@@ -69,7 +69,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
   position: absolute;
   bottom: 0rem;
   max-height: 4rem;
-  background-color: rgba(80, 80, 80, 0.5);
+  background-color: var(--overlay-card);
 }
 .tags-wrapper {
   font-size: 0.75rem;

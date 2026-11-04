@@ -37,8 +37,8 @@ function setup(
     selectedTags.value = tags
   })
   const fitBounds = vi.fn()
-  useGridUrlSync({ bounds, selectedTags, setTags, fitBounds })
-  return { bounds, selectedTags, setTags, fitBounds }
+  const { gridRoute } = useGridUrlSync({ bounds, selectedTags, setTags, fitBounds })
+  return { bounds, selectedTags, setTags, fitBounds, gridRoute }
 }
 
 describe('bbox helpers', () => {
@@ -73,6 +73,15 @@ describe('useGridUrlSync', () => {
     expect(mockReplace).toHaveBeenLastCalledWith({
       name: 'BrowseGrid',
       query: { bbox: '18.9800,47.6000,19.1800,47.7400', tags: 'cktagA,cktagB' },
+    })
+  })
+
+  it('builds the route to open the grid with the current area and tags', () => {
+    const { selectedTags, gridRoute } = setup({ name: 'Browse' })
+    selectedTags.value = [tag('cktagA')]
+    expect(gridRoute()).toEqual({
+      name: 'BrowseGrid',
+      query: { bbox: '18.9800,47.6000,19.1800,47.7400', tags: 'cktagA' },
     })
   })
 

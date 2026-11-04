@@ -1,5 +1,5 @@
 import { computed, watch, type Ref } from 'vue'
-import { useRoute, useRouter, type LocationQuery } from 'vue-router'
+import { useRoute, useRouter, type LocationQuery, type RouteLocationRaw } from 'vue-router'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { MapBounds } from '@/features/map/types/map.types'
 import { GRID_ROUTE } from '@/features/shared/composables/useDetailRouteState'
@@ -53,6 +53,8 @@ function fitReached(actual: MapBounds, requested: MapBounds): boolean {
  * - while on the grid route, map moves and tag changes replace the query;
  * - a query that differs from the current state (deep link, back/forward)
  *   restores the tags and fits the map to the bbox.
+ * Open the grid through the returned `gridRoute()`: it carries the current
+ * state, which a bare grid URL would otherwise reset.
  */
 export function useGridUrlSync(opts: {
   bounds: Ref<MapBounds | null>
@@ -136,4 +138,11 @@ export function useGridUrlSync(opts: {
     },
     { immediate: true }
   )
+
+  /** The grid route for the current map area and tags. */
+  function gridRoute(): RouteLocationRaw {
+    return { name: GRID_ROUTE, query: desiredQuery(opts.bounds.value) }
+  }
+
+  return { gridRoute }
 }

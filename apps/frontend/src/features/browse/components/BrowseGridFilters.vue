@@ -9,6 +9,7 @@ import BrowseGridLocationField from './BrowseGridLocationField.vue'
 import type { GeocodingResult } from '@/features/geocoding/composables/useGeocoder'
 import IconPin from '@/assets/icons/interface/pin.svg'
 import IconTag from '@/assets/icons/e-commerce/tag.svg'
+import { CONTENT_KIND_DISPLAY } from '@/features/map/utils/contentKinds'
 
 /**
  * The grid's filter fields: the map area, the shared tag selection and the
@@ -30,13 +31,6 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-
-const KIND_LABELS: Record<UserContentKind, string> = {
-  profile: 'map.layer_control.people',
-  post: 'map.layer_control.posts',
-  event: 'map.layer_control.events',
-  community: 'map.layer_control.communities',
-}
 
 const showTagPicker = ref(false)
 
@@ -125,13 +119,18 @@ function isLocked(kind: UserContentKind) {
         v-for="kind in USER_CONTENT_KINDS"
         :key="kind"
         size="sm"
-        :variant="kinds.includes(kind) ? 'secondary' : 'outline-secondary'"
+        :variant="kinds.includes(kind) ? CONTENT_KIND_DISPLAY[kind].color : 'outline-secondary'"
+        class="d-flex align-items-center gap-1"
         :aria-pressed="kinds.includes(kind)"
         :disabled="isLocked(kind)"
         :data-kind="kind"
         @click="toggleKind(kind)"
       >
-        {{ t(KIND_LABELS[kind]) }}
+        <component
+          :is="CONTENT_KIND_DISPLAY[kind].icon"
+          class="svg-icon"
+        />
+        {{ t(CONTENT_KIND_DISPLAY[kind].label) }}
       </BButton>
     </div>
   </div>

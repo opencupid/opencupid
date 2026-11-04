@@ -119,11 +119,6 @@ describe('BrowseGridPanel', () => {
     expect(wrapper.findAll('.grid-skeleton')).toHaveLength(4)
   })
 
-  it('says when the end of the list is reached', () => {
-    expect(mountPanel().text()).not.toContain('profiles.browse.grid.end_of_list')
-    expect(mountPanel({ hasMore: false }).text()).toContain('profiles.browse.grid.end_of_list')
-  })
-
   it('shows the empty state with an invite button that opens the share sheet', async () => {
     const wrapper = mountPanel({ items: [], total: 0, hasMore: false })
     expect(wrapper.find('.grid-empty').text()).toContain('profiles.browse.grid.empty_title')

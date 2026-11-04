@@ -5,6 +5,10 @@ import { MAX_BROWSE_TAGS, type UserContentKind } from '@shared/maps'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@/assets/icons/e-commerce/tag.svg', () => ({ default: { template: '<svg />' } }))
 vi.mock('@/assets/icons/interface/pin.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('@/assets/icons/interface/user.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('@/assets/icons/interface/post-it.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('@/assets/icons/interface/calendar.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('@/assets/icons/interface/community.svg', () => ({ default: { template: '<svg />' } }))
 vi.mock('../BrowseGridLocationField.vue', () => ({
   default: {
     name: 'BrowseGridLocationField',
@@ -90,6 +94,14 @@ describe('BrowseGridFilters', () => {
     // Without a parent binding, defineModel keeps the first change locally.
     await wrapper.find('[data-kind="post"]').trigger('click')
     expect(wrapper.emitted('update:kinds')![1]).toEqual([['profile', 'event']])
+  })
+
+  it('colours selected type pills like the map layer chooser and shows their icon', () => {
+    const wrapper = mountFilters({ kinds: ['post', 'community'] })
+    expect(wrapper.find('[data-kind="post"]').attributes('variant')).toBe('post')
+    expect(wrapper.find('[data-kind="community"]').attributes('variant')).toBe('community')
+    expect(wrapper.find('[data-kind="profile"]').attributes('variant')).toBe('outline-secondary')
+    expect(wrapper.find('[data-kind="event"] svg').exists()).toBe(true)
   })
 
   it('keeps the last remaining type switched on', () => {

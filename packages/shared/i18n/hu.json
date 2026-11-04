@@ -368,10 +368,8 @@
       "grid": {
         "add_tag": "+ címke",
         "close": "Rács bezárása",
-        "distance_km": "{distance} km",
         "empty_hint": "Próbálj más szűrőket",
         "empty_title": "Itt még nincs senki",
-        "end_of_list": "Ennyi van ezen a területen",
         "invite_friend": "Hívj meg egy barátot",
         "loading": "Közeli elemek betöltése",
         "location_label": "Térképterület helye",

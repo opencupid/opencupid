@@ -224,12 +224,6 @@ const shareOpen = ref(false)
               <span class="placeholder col-4 mt-1"></span>
             </div>
           </div>
-          <div
-            v-if="!isLoading && !hasMore && items.length > 0"
-            class="small text-muted text-center pb-3"
-          >
-            {{ t('profiles.browse.grid.end_of_list') }}
-          </div>
         </template>
       </div>
     </div>

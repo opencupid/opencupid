@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { useRoute, type RouteLocationRaw } from 'vue-router'
+import { useRoute, type LocationQuery, type RouteLocationRaw } from 'vue-router'
 
 export type DetailType = 'profile' | 'post' | 'event' | 'community'
 
@@ -27,10 +27,19 @@ for (const [type, r] of Object.entries(DETAIL_ROUTES) as [
   byRouteName.set(r.grid, { type, param: r.param, grid: true })
 }
 
-/** Route to a detail, over the grid or over the map. */
-export function detailRoute(type: DetailType, id: string, overGrid: boolean): RouteLocationRaw {
+/**
+ * Route to a detail: over the map (`gridQuery` null), or over the grid. A
+ * detail over the grid carries the grid's query (tags, map area), so
+ * closing it returns to the same grid.
+ */
+export function detailRoute(
+  type: DetailType,
+  id: string,
+  gridQuery: LocationQuery | null
+): RouteLocationRaw {
   const r = DETAIL_ROUTES[type]
-  return { name: overGrid ? r.grid : r.map, params: { [r.param]: id } }
+  const params = { [r.param]: id }
+  return gridQuery ? { name: r.grid, params, query: gridQuery } : { name: r.map, params }
 }
 
 export function useDetailRouteState() {

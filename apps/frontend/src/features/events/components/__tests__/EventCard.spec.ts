@@ -104,13 +104,13 @@ describe('EventCard', () => {
   describe('truncateText', () => {
     const longEvent = { ...baseEvent, content: 'First para.\n\n' + 'word '.repeat(60).trim() }
 
-    it('shows the full content without the toolbar by default', () => {
+    it('shows the first line as the name heading and the rest as the description', () => {
       const wrapper = mount(EventCard, {
         props: { event: longEvent, showDetails: false },
         global: { stubs },
       })
-      const body = wrapper.get('p.pre-line')
-      expect(body.element.textContent).toBe(longEvent.content)
+      expect(wrapper.get('h5.event-name').text()).toBe('First para.')
+      expect(wrapper.get('p.pre-line').text()).toBe('word '.repeat(60).trim())
       expect(wrapper.find('.viewer-toolbar').exists()).toBe(false)
     })
 
@@ -121,7 +121,7 @@ describe('EventCard', () => {
       })
       const text = wrapper.get('p.pre-line').text()
       expect(text.endsWith('\u2026')).toBe(true)
-      expect(text.length).toBeLessThan(longEvent.content.length)
+      expect(text.length).toBeLessThan('word '.repeat(60).trim().length)
     })
   })
 })

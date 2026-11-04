@@ -50,6 +50,27 @@ const stubs = {
 }
 
 describe('CommunityCard', () => {
+  it('puts the badge beside the name when there is no picture, so they cannot overlap', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: baseCommunity, showDetails: true },
+      global: { stubs },
+    })
+    const badge = wrapper.find('.community-badge')
+    expect(badge.classes()).not.toContain('floating-icon')
+    expect(badge.element.parentElement!.contains(wrapper.find('.community-name').element)).toBe(
+      true
+    )
+  })
+
+  it('floats the badge over the picture when there is one', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, images: [{ id: 'img' }] }, showDetails: true },
+      global: { stubs: { ...stubs, ImageCarousel: true } },
+    })
+    expect(wrapper.findAll('.community-badge')).toHaveLength(1)
+    expect(wrapper.find('.community-badge').classes()).toContain('floating-icon')
+  })
+
   it('renders the name as the card heading', () => {
     const wrapper = mount(CommunityCard, {
       props: { community: baseCommunity, showDetails: true },

@@ -12,6 +12,7 @@ import ImageCarousel from '@/features/publicprofile/components/ImageCarousel.vue
 import { useI18n } from 'vue-i18n'
 import { useUserContentStore } from '@/features/userContent/stores/userContentStore'
 import { tagsDataAttr } from '@/features/shared/contentTags'
+import { splitContentTitle } from '@/features/userContent/contentTitle'
 
 const props = defineProps<{
   event: PublicEvent | OwnerEvent
@@ -72,10 +73,13 @@ const startsAtMonthAndDay = computed(() =>
 )
 
 const GRID_TRUNCATE_LENGTH = 100
-const displayContent = computed(() => {
-  const content = props.event.content
-  if (!props.truncateText || content.length <= GRID_TRUNCATE_LENGTH) return content
-  const truncated = content.substring(0, GRID_TRUNCATE_LENGTH)
+// The first line of the content is the event's name, the rest its
+// description, truncated on request to keep grid cards compact.
+const contentParts = computed(() => splitContentTitle(props.event.content))
+const displayDescription = computed(() => {
+  const description = contentParts.value.body
+  if (!props.truncateText || description.length <= GRID_TRUNCATE_LENGTH) return description
+  const truncated = description.substring(0, GRID_TRUNCATE_LENGTH)
   const lastSpace = truncated.lastIndexOf(' ')
   return (lastSpace > 0 ? truncated.substring(0, lastSpace) : truncated) + '…'
 })
@@ -104,7 +108,15 @@ const tagSlugs = computed(() => tagsDataAttr(props.event.tags))
           cols="12"
           md="8"
         >
-          <p class="lh-sm small mb-0 p-2 pre-line">{{ displayContent }}</p>
+          <div class="p-2">
+            <h5 class="event-name lh-sm mb-1">{{ contentParts.title }}</h5>
+            <p
+              v-if="displayDescription"
+              class="lh-sm small mb-0 pre-line"
+            >
+              {{ displayDescription }}
+            </p>
+          </div>
           <a
             v-if="event.externalUrl"
             :href="event.externalUrl"

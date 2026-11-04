@@ -16,28 +16,23 @@ vi.mock('../ProfileMapCard.vue', () => ({
 vi.mock('@/features/posts/components/PostMapPopup.vue', () => ({
   default: { name: 'PostMapPopup', props: ['item'], template: '<div class="post-popup" />' },
 }))
-vi.mock('@/features/events/components/EventMapPopup.vue', () => ({
-  default: { name: 'EventMapPopup', props: ['item'], template: '<div class="event-popup" />' },
-}))
-vi.mock('@/features/community/components/CommunityMapPopup.vue', () => ({
+vi.mock('@/features/userContent/components/UserContentCard.vue', () => ({
   default: {
-    name: 'CommunityMapPopup',
-    props: ['item'],
-    template: '<div class="community-popup" />',
+    name: 'UserContentCard',
+    props: ['item', 'kind'],
+    template: '<div class="content-card"><slot /></div>',
   },
 }))
 
 import BrowseGridCard from '../BrowseGridCard.vue'
 
-const item = (kind: BrowseListItem['kind'], distanceKm = 1.24) =>
-  ({ kind, distanceKm, [kind]: { id: `${kind}-1` } }) as unknown as BrowseListItem
+const item = (kind: BrowseListItem['kind']) =>
+  ({ kind, distanceKm: 1, [kind]: { id: `${kind}-1` } }) as unknown as BrowseListItem
 
 describe('BrowseGridCard', () => {
   it.each([
     ['profile', 'ProfileMapCard'],
     ['post', 'PostMapPopup'],
-    ['event', 'EventMapPopup'],
-    ['community', 'CommunityMapPopup'],
   ] as const)('renders the existing map popup card for a %s', (kind, component) => {
     const wrapper = mount(BrowseGridCard, { props: { item: item(kind) } })
     const card = wrapper.findComponent({ name: component })
@@ -45,9 +40,35 @@ describe('BrowseGridCard', () => {
     expect(card.props('item')).toEqual({ id: `${kind}-1` })
   })
 
-  it('shows the distance rounded to one decimal', () => {
-    const wrapper = mount(BrowseGridCard, { props: { item: item('profile', 1.24) } })
-    expect(wrapper.text()).toContain('profiles.browse.grid.distance_km:{"distance":"1.2"}')
+  it('renders an event as a content card with its start time', () => {
+    const event = {
+      kind: 'event',
+      distanceKm: 1,
+      event: { id: 'e1', startsAt: new Date('2026-11-15T16:00:00Z') },
+    } as unknown as BrowseListItem
+    const card = mount(BrowseGridCard, { props: { item: event } }).findComponent({
+      name: 'UserContentCard',
+    })
+    expect(card.props('kind')).toBe('event')
+    expect(card.text()).toContain('2026')
+  })
+
+  it('renders a community as a content card with its founding year', () => {
+    const community = {
+      kind: 'community',
+      distanceKm: 1,
+      community: { id: 'c1', yearFounded: 2019 },
+    } as unknown as BrowseListItem
+    const card = mount(BrowseGridCard, { props: { item: community } }).findComponent({
+      name: 'UserContentCard',
+    })
+    expect(card.props('kind')).toBe('community')
+    expect(card.text()).toBe('community.labels.founded_since:{"year":2019}')
+  })
+
+  it('does not show the distance under the card', () => {
+    const wrapper = mount(BrowseGridCard, { props: { item: item('profile') } })
+    expect(wrapper.text()).not.toContain('km')
   })
 
   it('emits select when the card is clicked or activated with Enter', async () => {

@@ -36,9 +36,10 @@ vi.mock('@/features/shared/components/MapPlaceholder.vue', () => ({
 vi.mock('../../components/ProfileMapCard.vue', () => ({
   default: { template: '<div class="profile-map-card" />' },
 }))
+const mockPanelOpen = ref(false)
 vi.mock('@/features/app/composables/useDetailPanel', () => ({
   useDetailPanel: () => ({
-    isOpen: ref(false),
+    isOpen: mockPanelOpen,
     show: vi.fn(),
     close: vi.fn(),
   }),
@@ -152,6 +153,7 @@ const mockPush = vi.fn()
 const mockReplace = vi.fn()
 const mockBack = vi.fn()
 const mockRouteName = ref('Browse')
+const mockRouteQuery = ref<Record<string, string>>({})
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({
@@ -164,7 +166,9 @@ vi.mock('vue-router', () => ({
     get name() {
       return mockRouteName.value
     },
-    query: {},
+    get query() {
+      return mockRouteQuery.value
+    },
   }),
 }))
 
@@ -229,9 +233,13 @@ vi.mock('@/features/geocoding/composables/useAreaName', () => ({
   },
 }))
 
-const mockUseGridUrlSync = vi.fn()
+const mockGridRoute = { name: 'BrowseGrid', query: { tags: 't1' } }
+type GridUrlSyncOpts = Parameters<
+  (typeof import('../../composables/useGridUrlSync'))['useGridUrlSync']
+>[0]
+const mockUseGridUrlSync = vi.fn((_opts: GridUrlSyncOpts) => ({ gridRoute: () => mockGridRoute }))
 vi.mock('../../composables/useGridUrlSync', () => ({
-  useGridUrlSync: (opts: unknown) => mockUseGridUrlSync(opts),
+  useGridUrlSync: (opts: GridUrlSyncOpts) => mockUseGridUrlSync(opts),
 }))
 
 vi.mock('@/features/browse/stores/browseGridStore', () => ({
@@ -299,6 +307,8 @@ describe('BrowseProfiles view', () => {
     mockRouteName.value = 'Browse'
     mockDetail.value = null
     mockGridOpen.value = false
+    mockPanelOpen.value = false
+    mockRouteQuery.value = {}
     mockAreaName.value = null
     mockIsMdUp.value = false
     gridStoreMock.load.mockClear()
@@ -528,11 +538,11 @@ describe('BrowseProfiles view', () => {
       expect(wrapper.findComponent({ name: 'BrowseGridChip' }).props('count')).toBe(5)
     })
 
-    it('opens the grid route from the grid button', async () => {
+    it('opens the grid from the grid button with the current tags and area', async () => {
       const wrapper = mountComponent()
       await wrapper.find('.grid-chip-stub').trigger('click')
 
-      expect(mockPush).toHaveBeenCalledWith({ name: 'BrowseGrid' })
+      expect(mockPush).toHaveBeenCalledWith(mockGridRoute)
     })
 
     it('shows the grid panel instead of the button and nearby strip on the grid route', () => {
@@ -565,20 +575,46 @@ describe('BrowseProfiles view', () => {
       expect(gridStoreMock.load).not.toHaveBeenCalled()
     })
 
-    it('opens a selected grid item as a detail over the grid', async () => {
+    const gridQuery = { tags: 't1', bbox: '19.0000,47.0000,20.0000,48.0000' }
+
+    it('opens a selected grid item as a detail over the grid, keeping the grid query', async () => {
       mockGridOpen.value = true
+      mockRouteQuery.value = gridQuery
       const wrapper = mountComponent()
       await wrapper.findComponent({ name: 'BrowseGridPanel' }).vm.$emit('select', profileItem)
 
-      expect(mockPush).toHaveBeenCalledWith({ name: 'GridProfile', params: { profileId: 'p1' } })
+      expect(mockPush).toHaveBeenCalledWith({
+        name: 'GridProfile',
+        params: { profileId: 'p1' },
+        query: gridQuery,
+      })
     })
 
     it('opens map selections over the grid while the grid is open', async () => {
       mockGridOpen.value = true
+      mockRouteQuery.value = gridQuery
       const wrapper = mountComponent()
       await wrapper.findComponent({ name: 'SearchBar' }).vm.$emit('profile:select', { id: 'p9' })
 
-      expect(mockPush).toHaveBeenCalledWith({ name: 'GridProfile', params: { profileId: 'p9' } })
+      expect(mockPush).toHaveBeenCalledWith({
+        name: 'GridProfile',
+        params: { profileId: 'p9' },
+        query: gridQuery,
+      })
+    })
+
+    it('closing a detail over the grid returns to the grid with its tags and area', async () => {
+      mockGridOpen.value = true
+      mockDetail.value = { type: 'profile', id: 'p1' }
+      mockRouteQuery.value = gridQuery
+      mockPanelOpen.value = true
+      mountComponent()
+      await nextTick()
+
+      mockPanelOpen.value = false
+      await nextTick()
+
+      expect(mockReplace).toHaveBeenCalledWith({ name: 'BrowseGrid', query: gridQuery })
     })
 
     it('on phones, "show on map" centres the item and closes the grid', async () => {
