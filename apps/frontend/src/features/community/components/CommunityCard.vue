@@ -32,6 +32,8 @@ const shareCommunityPayload = computed<SharePayload>(() => ({
   url: `${window.location.origin}/communities/${props.community.id}`,
 }))
 
+const hasImages = computed(() => props.community.images.length > 0)
+
 // Hostname reads better than the raw URL; the schema guarantees it parses.
 const contactUrlLabel = computed(() =>
   props.community.contactUrl ? new URL(props.community.contactUrl).host : null
@@ -75,21 +77,36 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
       @click="$emit('click', community)"
     >
       <span class="brand-container"></span>
-      <span class="position-absolute p-2 p-md-3 bg-community-light shadow-sm floating-icon">
+      <!-- Over a picture the badge floats in the corner; without one it
+           sits beside the name so the title wraps before it. -->
+      <span
+        v-if="hasImages"
+        class="community-badge position-absolute p-2 p-md-3 bg-community-light shadow-sm floating-icon"
+      >
         <IconCommunity class="text-primary d-block svg-icon-lg" />
       </span>
       <ImageCarousel
-        v-if="community.images.length > 0"
+        v-if="hasImages"
         :images="community.images"
         class="mb-2"
       />
       <div class="p-2">
-        <h5 class="community-name lh-sm mb-1">
-          {{ community.content }}
-          <!-- Parens stay inside the guard so a community without a location
-             does not render an empty "()". -->
-          <span v-if="communityLocation"> (<LocationLabel :location="communityLocation" />) </span>
-        </h5>
+        <div class="d-flex align-items-start gap-2">
+          <h5 class="community-name lh-sm mb-1 flex-grow-1">
+            {{ community.content }}
+            <!-- Parens stay inside the guard so a community without a location
+               does not render an empty "()". -->
+            <span v-if="communityLocation">
+              (<LocationLabel :location="communityLocation" />)
+            </span>
+          </h5>
+          <span
+            v-if="!hasImages"
+            class="community-badge flex-shrink-0 p-2 p-md-3 bg-community-light shadow-sm"
+          >
+            <IconCommunity class="text-primary d-block svg-icon-lg" />
+          </span>
+        </div>
         <p
           v-if="displayDescription"
           class="lh-sm small mb-0 pre-line"
@@ -161,10 +178,12 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
 .community-card {
   background-color: var(--bs-community-light);
 }
+.community-badge {
+  border-radius: 50%;
+}
 .floating-icon {
   top: 0.5rem;
   right: 1.5rem;
   z-index: 10;
-  border-radius: 50%;
 }
 </style>
