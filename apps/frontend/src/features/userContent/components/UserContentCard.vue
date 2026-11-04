@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { PublicImage } from '@zod/image/image.dto'
 import { CONTENT_KIND_DISPLAY } from '@/features/map/utils/contentKinds'
 import UserContentMapPopup from './UserContentMapPopup.vue'
+import { splitContentTitle } from '../contentTitle'
 
 /**
  * Grid card for user content, laid out like ProfileMapCard: the name and a
@@ -17,7 +18,7 @@ const props = defineProps<{
 
 const display = computed(() => CONTENT_KIND_DISPLAY[props.kind])
 
-const name = computed(() => props.item.content.split('\n', 1)[0])
+const name = computed(() => splitContentTitle(props.item.content).title)
 const hasImage = computed(() => props.item.images.length > 0)
 </script>
 
