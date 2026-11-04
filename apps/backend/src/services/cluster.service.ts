@@ -5,7 +5,7 @@ import { UserContentService } from './userContent.service'
 import { ImageService } from './image.service'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
-import { MAP_MAX_ZOOM, type UserContentKind } from '@shared/maps'
+import { MAP_MAX_ZOOM, haversineKm, type UserContentKind } from '@shared/maps'
 import type { ContentKind } from '@shared/zod/userContent/userContent.dto'
 const CLUSTER_RADIUS = 40
 const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
@@ -23,8 +23,17 @@ interface PointProperties {
 
 interface CachedIndex {
   index: Supercluster<PointProperties, Supercluster.AnyProps>
+  /** The points loaded into `index`, kept for bbox list queries. */
+  points: Feature<Point, PointProperties>[]
   tags: TagWithTranslations[]
   updatedAt: Date
+}
+
+/** A located item in the browse list, before hydration. */
+export interface ListRef {
+  kind: UserContentKind
+  id: string
+  distanceKm: number
 }
 
 /**
@@ -157,9 +166,11 @@ export class ClusterService {
       minPoints: 2,
     })
 
-    index.load([...profileFeatures, ...postFeatures])
+    const points = [...profileFeatures, ...postFeatures]
+    index.load(points)
     this.indexes.set(buildCacheKey(profileId, tagIds, kinds), {
       index,
+      points,
       tags: Array.from(tagMap.values()),
       updatedAt: new Date(),
     })
@@ -190,12 +201,56 @@ export class ClusterService {
     tagIds: string[],
     kinds: UserContentKind[]
   ): Promise<{ features: MapFeature[]; tags: TagWithTranslations[] }> {
+    await this.ensureIndex(profileId, tagIds, kinds)
+    return this.getClusters(profileId, bbox, zoom, tagIds, kinds)
+  }
+
+  /**
+   * Returns one page of the points inside `bbox`, nearest first, measured from
+   * the bbox centre. Reads the same cached index as the map clusters, so the
+   * list and the map always agree on what is in an area.
+   */
+  async getOrBuildList(
+    profileId: string,
+    bbox: [number, number, number, number],
+    tagIds: string[],
+    kinds: UserContentKind[],
+    page: { limit: number; offset: number }
+  ): Promise<{ refs: ListRef[]; total: number }> {
+    const cached = await this.ensureIndex(profileId, tagIds, kinds)
+    const [west, south, east, north] = bbox
+    const center = { lat: (south + north) / 2, lon: (west + east) / 2 }
+
+    const inBounds: ListRef[] = []
+    for (const f of cached.points) {
+      const [lon, lat] = f.geometry.coordinates
+      if (lat < south || lat > north || lon < west || lon > east) continue
+      inBounds.push({
+        kind: f.properties.kind,
+        id: f.properties.id,
+        distanceKm: haversineKm(center, { lat, lon }),
+      })
+    }
+    inBounds.sort((a, b) => a.distanceKm - b.distanceKm || a.id.localeCompare(b.id))
+
+    return {
+      refs: inBounds.slice(page.offset, page.offset + page.limit),
+      total: inBounds.length,
+    }
+  }
+
+  /** Prunes stale indexes, then returns the cached index, building it if missing. */
+  private async ensureIndex(
+    profileId: string,
+    tagIds: string[],
+    kinds: UserContentKind[]
+  ): Promise<CachedIndex> {
     this.pruneIndexes()
     const key = buildCacheKey(profileId, tagIds, kinds)
     if (!this.indexes.has(key)) {
       await this.buildIndex(profileId, tagIds, kinds)
     }
-    return this.getClusters(profileId, bbox, zoom, tagIds, kinds)
+    return this.indexes.get(key)!
   }
 
   getExpansionZoom(

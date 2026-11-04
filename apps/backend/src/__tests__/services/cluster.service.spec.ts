@@ -323,6 +323,91 @@ describe('ClusterService', () => {
     })
   })
 
+  describe('getOrBuildList', () => {
+    // bbox [west, south, east, north] centred on (47.5, 19.0)
+    const bbox: [number, number, number, number] = [18.5, 47.0, 19.5, 48.0]
+    const page = { limit: 10, offset: 0 }
+
+    beforeEach(() => {
+      mockFindMutualMatchIds.mockResolvedValue([])
+    })
+
+    it('returns only points inside the bbox, nearest to the centre first', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([
+        makeProfile('far', 47.9, 19.4),
+        makeProfile('near', 47.51, 19.0),
+        makeProfile('outside', 46.0, 19.0),
+      ])
+      mockFindAllWithLocation.mockResolvedValue([makeEvent('ev1', 47.6, 19.0, 'someone')])
+
+      const { refs, total } = await service.getOrBuildList(
+        'viewer-1',
+        bbox,
+        [],
+        ['profile', 'event'],
+        page
+      )
+
+      expect(total).toBe(3)
+      expect(refs.map((r) => r.id)).toEqual(['near', 'ev1', 'far'])
+      expect(refs[1]!.kind).toBe('event')
+      // 0.01° of latitude ≈ 1.11 km
+      expect(refs[0]!.distanceKm).toBeCloseTo(1.11, 1)
+    })
+
+    it('breaks distance ties by id so pages are stable', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([
+        makeProfile('b', 47.6, 19.0),
+        makeProfile('a', 47.6, 19.0),
+      ])
+
+      const { refs } = await service.getOrBuildList('viewer-1', bbox, [], ['profile'], page)
+
+      expect(refs.map((r) => r.id)).toEqual(['a', 'b'])
+    })
+
+    it('pages with limit and offset while reporting the full total', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([
+        makeProfile('p1', 47.51, 19.0),
+        makeProfile('p2', 47.52, 19.0),
+        makeProfile('p3', 47.53, 19.0),
+      ])
+
+      const { refs, total } = await service.getOrBuildList('viewer-1', bbox, [], ['profile'], {
+        limit: 2,
+        offset: 1,
+      })
+
+      expect(total).toBe(3)
+      expect(refs.map((r) => r.id)).toEqual(['p2', 'p3'])
+    })
+
+    it('reuses the cached index shared with the map clusters', async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+
+      await service.getOrBuildClusters('viewer-1', bbox, 10, [], ['profile'])
+      await service.getOrBuildList('viewer-1', bbox, [], ['profile'], page)
+
+      expect(mockFindSocialProfilesWithLocation).toHaveBeenCalledTimes(1)
+    })
+
+    it("leaves out a post placed at its poster's location, as the map does", async () => {
+      mockFindSocialProfilesWithLocation.mockResolvedValue([makeProfile('p1', 47.5, 19.0)])
+      mockFindAllWithLocation.mockResolvedValue([makePost('post1', 47.5, 19.0, 'p1', 47.5, 19.0)])
+
+      const { refs, total } = await service.getOrBuildList(
+        'viewer-1',
+        bbox,
+        [],
+        ['profile', 'post'],
+        page
+      )
+
+      expect(total).toBe(1)
+      expect(refs.map((r) => r.id)).toEqual(['p1'])
+    })
+  })
+
   describe('collocated post filtering', () => {
     it('absorbs a post into its owner profile when locations match', async () => {
       const profiles = [makeProfile('p1', 47.5, 19.0, 'Alice')]

@@ -233,7 +233,9 @@ describe('POST /:id/block', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(204)
     expect(mockProfileService.blockProfile).toHaveBeenCalledWith('p1', 'cm000000000000000000000p2')
+    // Both sides' cached indexes: the blocked profile must stop seeing the blocker too.
     expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
+    expect(mockClusterService.evict).toHaveBeenCalledWith('cm000000000000000000000p2')
   })
 
   it('returns 400 when trying to block yourself', async () => {
@@ -258,6 +260,7 @@ describe('POST /:id/unblock', () => {
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(204)
     expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
+    expect(mockClusterService.evict).toHaveBeenCalledWith('cm000000000000000000000p2')
   })
 })
 
