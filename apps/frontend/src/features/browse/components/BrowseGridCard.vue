@@ -141,9 +141,15 @@ const eventStartsAt = computed(() =>
 .locate-button {
   top: 0.4rem;
   right: 0.4rem;
-  width: 2rem;
-  height: 2rem;
+  width: 1.6rem;
+  height: 1.6rem;
   z-index: 2;
   opacity: 0.9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+  .svg-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
 }
 </style>
