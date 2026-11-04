@@ -11,7 +11,7 @@ import { useBrowseViewModel } from '../composables/useBrowseViewModel'
 import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useFindProfileStore } from '@/features/browse/stores/findProfileStore'
 import { isValidLatLng, toLatLng } from '@/features/map/utils/mapUtils'
-import { MAP_DEFAULT_CENTER } from '@shared/maps'
+import { BROWSE_GRID_MIN_ZOOM, MAP_DEFAULT_CENTER } from '@shared/maps'
 import {
   useDetailRouteState,
   detailRoute,
@@ -89,7 +89,8 @@ watch(selectedTagIds, () => {
   findProfileStore.refetchBounds()
 })
 
-const { selectedLayers, lastMapBounds, clusterFeatures } = storeToRefs(findProfileStore)
+const { selectedLayers, lastMapBounds, lastMapZoom, clusterFeatures } =
+  storeToRefs(findProfileStore)
 
 // Placeholder visibility. Flipped by @map:ready from OsmPoiMap once the
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from
@@ -258,6 +259,12 @@ watch(
     gridStore.load({ bounds, tagIds, kinds })
   },
   { immediate: true }
+)
+
+// The grid lists everything in the map area; below a minimum zoom the map
+// offers no way into it, so whole regions can't be listed at once.
+const canOpenGridFromMap = computed(
+  () => lastMapZoom.value !== null && lastMapZoom.value >= BROWSE_GRID_MIN_ZOOM
 )
 
 const gridChipCount = computed(() =>
@@ -477,7 +484,7 @@ onMounted(async () => {
         />
 
         <BrowseGridChip
-          v-if="!isGridOpen"
+          v-if="!isGridOpen && canOpenGridFromMap"
           class="browse-grid-chip-position position-absolute start-50 translate-middle-x"
           :count="gridChipCount"
           :loading="findProfileStore.isLoading"

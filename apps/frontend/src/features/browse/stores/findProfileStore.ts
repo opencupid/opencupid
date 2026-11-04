@@ -13,7 +13,6 @@ import type { MapBounds } from '@/features/map/types/map.types'
 import { boundsContain, padBounds } from '../utils/boundsUtils'
 
 let clusterAbortController: AbortController | null = null
-let lastZoom = 7
 let cachedClusterZoom: number | null = null
 let cachedClusterBounds: MapBounds | null = null
 let cachedClusterTagSig = ''
@@ -50,7 +49,12 @@ function kindsParam(kinds: UserContentKind[]): string {
   return kinds.join(',')
 }
 
-function sameViewport(a: MapBounds | null, aZoom: number, b: MapBounds, bZoom: number): boolean {
+function sameViewport(
+  a: MapBounds | null,
+  aZoom: number | null,
+  b: MapBounds,
+  bZoom: number
+): boolean {
   return (
     aZoom === bZoom &&
     a !== null &&
@@ -72,6 +76,8 @@ function invalidateBoundsCache(): void {
 type FindProfileStoreState = {
   clusterFeatures: MapFeature[]
   lastMapBounds: MapBounds | null
+  /** Zoom the clusters for `lastMapBounds` were fetched at (integer). */
+  lastMapZoom: number | null
   isLoading: boolean
   availableTags: PublicTag[]
   /**
@@ -88,6 +94,7 @@ export const useFindProfileStore = defineStore('findProfile', {
   state: (): FindProfileStoreState => ({
     clusterFeatures: [] as MapFeature[],
     lastMapBounds: null,
+    lastMapZoom: null,
     isLoading: false,
     availableTags: [] as PublicTag[],
     selectedLayers: [...USER_CONTENT_KINDS],
@@ -108,6 +115,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       const controller = new AbortController()
       clusterAbortController = controller
       this.lastMapBounds = bounds
+      this.lastMapZoom = zoom
 
       const tagIds = useSearchStore().selectedTagIds
       const sig = tagSignature(tagIds)
@@ -171,8 +179,7 @@ export const useFindProfileStore = defineStore('findProfile', {
      * clusters (including posts and tags) in a single request.
      */
     async fetchBounds(bounds: MapBounds, zoom: number): Promise<void> {
-      if (sameViewport(this.lastMapBounds, lastZoom, bounds, zoom)) return
-      lastZoom = zoom
+      if (sameViewport(this.lastMapBounds, this.lastMapZoom, bounds, Math.round(zoom))) return
       await this.findClustersForMapBounds(bounds, zoom)
     },
 
@@ -208,8 +215,8 @@ export const useFindProfileStore = defineStore('findProfile', {
 
     async refetchBounds(): Promise<void> {
       invalidateBoundsCache()
-      if (this.lastMapBounds) {
-        await this.findClustersForMapBounds(this.lastMapBounds, lastZoom)
+      if (this.lastMapBounds && this.lastMapZoom !== null) {
+        await this.findClustersForMapBounds(this.lastMapBounds, this.lastMapZoom)
       }
     },
 
@@ -221,6 +228,7 @@ export const useFindProfileStore = defineStore('findProfile', {
       invalidateBoundsCache()
       this.clusterFeatures = []
       this.lastMapBounds = null
+      this.lastMapZoom = null
       this.isLoading = false
       this.availableTags = []
       this.selectedLayers = [...USER_CONTENT_KINDS]

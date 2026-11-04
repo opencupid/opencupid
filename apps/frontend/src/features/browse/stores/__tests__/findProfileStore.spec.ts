@@ -29,6 +29,7 @@ describe('findProfileStore.refetchBounds', () => {
   it('re-fetches clusters when lastMapBounds is set', async () => {
     mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
     store.lastMapBounds = bounds
+    store.lastMapZoom = 9
 
     await store.refetchBounds()
 
@@ -40,7 +41,7 @@ describe('findProfileStore.refetchBounds', () => {
           north: expect.any(Number),
           west: expect.any(Number),
           east: expect.any(Number),
-          zoom: expect.any(Number),
+          zoom: 9,
         }),
       })
     )
@@ -61,6 +62,16 @@ describe('findClustersForMapBounds', () => {
     store = useFindProfileStore()
     store.teardown()
     vi.clearAllMocks()
+  })
+
+  it('records the bounds and the integer zoom it fetched for', async () => {
+    mockGet.mockResolvedValue({ data: { success: true, features: [], tags: [] } })
+    const bounds = { south: 47, north: 48, west: 18, east: 19 }
+
+    await store.fetchBounds(bounds, 10.6)
+
+    expect(store.lastMapBounds).toEqual(bounds)
+    expect(store.lastMapZoom).toBe(11)
   })
 
   it('fetches clusters and tags from the cluster endpoint', async () => {

@@ -8,6 +8,13 @@ export const MAP_MAX_ZOOM = 12
  */
 export const MAP_CLUSTER_RADIUS = 40
 
+/**
+ * Lowest map zoom at which the browse grid can be opened from the map. The
+ * grid lists everything in the map area, so a minimum zoom keeps it from
+ * listing whole regions at once (bulk harvesting).
+ */
+export const BROWSE_GRID_MIN_ZOOM = 11
+
 /** Default zoom level used on map initialization. */
 export const MAP_DEFAULT_ZOOM = 8
 
