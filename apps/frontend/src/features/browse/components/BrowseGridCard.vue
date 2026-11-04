@@ -7,6 +7,7 @@ import ProfileMapCard from './ProfileMapCard.vue'
 import PostMapPopup from '@/features/posts/components/PostMapPopup.vue'
 import UserContentCard from '@/features/userContent/components/UserContentCard.vue'
 import IconPin from '@/assets/icons/interface/pin.svg'
+import IconHeart from '@/assets/icons/interface/heart.svg'
 
 const props = defineProps<{ item: BrowseListItem }>()
 
@@ -18,6 +19,9 @@ const emit = defineEmits<{
 }>()
 
 const { t, locale } = useI18n()
+
+/** A potential dating match: halo and heart, as on the profile's map pin. */
+const isMatch = computed(() => props.item.kind === 'profile' && props.item.highlighted)
 
 const eventStartsAt = computed(() =>
   props.item.kind === 'event'
@@ -38,7 +42,17 @@ const eventStartsAt = computed(() =>
     @mouseenter="emit('hover', true)"
     @mouseleave="emit('hover', false)"
   >
-    <div class="card-frame position-relative overflow-hidden rounded">
+    <div
+      class="card-frame position-relative overflow-hidden rounded"
+      :class="{ 'card-frame--match': isMatch }"
+    >
+      <span
+        v-if="isMatch"
+        class="match-badge position-absolute d-flex rounded-circle"
+        :title="t('profiles.browse.grid.dating_match')"
+      >
+        <IconHeart />
+      </span>
       <ProfileMapCard
         v-if="item.kind === 'profile'"
         :item="item.profile"
@@ -89,7 +103,7 @@ const eventStartsAt = computed(() =>
   max-width: 100%;
   background-color: var(--bs-tertiary-bg);
 
-  > :deep(*:not(.locate-button)) {
+  > :deep(*:not(.locate-button, .match-badge)) {
     height: 100%;
   }
   :deep(.ratio) {
@@ -98,6 +112,28 @@ const eventStartsAt = computed(() =>
   // Text-only content (no image): let the coloured block fill the frame.
   :deep(.popup-content:only-child),
   :deep(.popup-content:only-child > *) {
+    height: 100%;
+  }
+}
+
+.card-frame--match {
+  box-shadow: 0 0 6px 3px rgba(var(--match-rgb), 0.7);
+}
+
+.match-badge {
+  top: 0.4rem;
+  left: 0.4rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0.3rem;
+  z-index: 2;
+  background: white;
+  color: rgb(var(--match-rgb));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+
+  svg {
+    width: 100%;
     height: 100%;
   }
 }

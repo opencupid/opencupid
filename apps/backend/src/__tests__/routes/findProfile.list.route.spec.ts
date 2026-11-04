@@ -138,10 +138,10 @@ describe('GET /list', () => {
   it('hydrates each kind and keeps the nearest-first order of the refs', async () => {
     mockGetOrBuildList.mockResolvedValue({
       refs: [
-        { kind: 'event', id: 'e1', distanceKm: 0.5 },
-        { kind: 'profile', id: 'p1', distanceKm: 1 },
-        { kind: 'community', id: 'c1', distanceKm: 2 },
-        { kind: 'post', id: 'po1', distanceKm: 3 },
+        { kind: 'event', id: 'e1', distanceKm: 0.5, highlighted: false },
+        { kind: 'profile', id: 'p1', distanceKm: 1, highlighted: true },
+        { kind: 'community', id: 'c1', distanceKm: 2, highlighted: false },
+        { kind: 'post', id: 'po1', distanceKm: 3, highlighted: false },
       ],
       total: 4,
     })
@@ -162,6 +162,7 @@ describe('GET /list', () => {
       {
         kind: 'profile',
         distanceKm: 1,
+        highlighted: true,
         profile: { id: 'p1', mapped: 'public-profile', dating: false, locale: 'en' },
       },
       { kind: 'community', distanceKm: 2, community: { id: 'c1', mapped: 'community-detail' } },
