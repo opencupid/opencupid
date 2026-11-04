@@ -1,5 +1,4 @@
 import L, { Map as LMap, Marker as LMarker } from 'leaflet'
-import { OverlappingMarkerSpiderfier } from 'ts-overlapping-marker-spiderfier-leaflet'
 import { nextTick, onMounted, onBeforeUnmount, onActivated, onDeactivated, ref, watch } from 'vue'
 import type { Component, Ref } from 'vue'
 
@@ -51,6 +50,8 @@ type MapEmit = {
   (e: 'bounds:changed', payload: BoundsWithZoom): void
   (e: 'item:select', id: string): void
   (e: 'map:ready', map: LMap): void
+  /** A cluster that does not split any further was clicked. */
+  (e: 'cluster:max-zoom'): void
 }
 
 // ---------------------------------------------------------------------------
@@ -73,14 +74,9 @@ function supportsHover(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// OMS tuning constants
+// Tuning constants
 // ---------------------------------------------------------------------------
 
-const SPIDERFY_COLOCATION_THRESHOLD_M = 10
-const OMS_CIRCLE_FOOT_SEPARATION = 65
-const OMS_SPIRAL_FOOT_SEPARATION = 50
-const OMS_SPIRAL_LENGTH_START = 16
-const OMS_SPIRAL_LENGTH_FACTOR = 12
 const BOUNDS_DEBOUNCE_MS = 500
 const SEARCH_FOCUS_ZOOM = 12
 
@@ -108,7 +104,6 @@ export function useMapController(
   let phase: MapPhase = 'uninitialized'
   const deferred: DeferredWork = {}
   let map: LMap
-  let oms: OverlappingMarkerSpiderfier
   let pois: DiffableLayer<MapPoi>
   let clusters: DiffableLayer<MapCluster>
   let pointLayer: L.LayerGroup
@@ -116,13 +111,6 @@ export function useMapController(
   const iconCache = new Map<string, L.DivIcon>()
   let resizeObserver: ResizeObserver
   let boundsTimer: ReturnType<typeof setTimeout> | null = null
-  // One-shot continuation invoked the next time an items batch arrives.
-  // Used by the max-zoom cluster click to spiderfy as soon as the leaves
-  // land, and only then. A second click overwrites the slot; an items
-  // batch with no matching leaves consumes it silently. Bounding the
-  // intent to the first batch after the click means a stale flag can't
-  // fire a phantom spiderfy minutes later if the user has panned away.
-  let pendingItemsCallback: (() => void) | null = null
   let markerConfig: MarkerConfig | null = null
 
   // ── Lifecycle ───────────────────────────────────────────────────────────
@@ -202,17 +190,6 @@ export function useMapController(
   function initLayers(): void {
     pointLayer = L.layerGroup().addTo(map)
     clusterLayer = L.layerGroup().addTo(map)
-
-    oms = new OverlappingMarkerSpiderfier(map, { keepSpiderfied: true, circleSpiralSwitchover: 5 })
-    oms.circleFootSeparation = OMS_CIRCLE_FOOT_SEPARATION
-    oms.spiralFootSeparation = OMS_SPIRAL_FOOT_SEPARATION
-    oms.spiralLengthStart = OMS_SPIRAL_LENGTH_START
-    oms.spiralLengthFactor = OMS_SPIRAL_LENGTH_FACTOR
-
-    oms.addListener('click', (marker) => {
-      const id = pois.getId(marker as LMarker)
-      if (id !== undefined) emit('item:select', String(id))
-    })
 
     // POI data is treated as immutable per id for the lifetime of a session
     // (the GUI is not expected to reflect mid-session DB changes). No
@@ -315,6 +292,8 @@ export function useMapController(
       keyboard: true,
     })
 
+    m.on('click', () => emit('item:select', String(item.id)))
+
     if (resolvePopup && supportsHover()) {
       const classes = ['item-popup', `item-popup-${item.kind}`]
       if (item.highlighted) classes.push('item-popup-highlighted')
@@ -396,12 +375,11 @@ export function useMapController(
 
     m.on('click', () => {
       if (cluster.expansionZoom >= MAP_MAX_ZOOM) {
-        clusters.update(clusters.allItems().filter((c) => c.id !== cluster.id))
-        const target = L.latLng(cluster.lat, cluster.lon)
-        // Bind the spiderfy intent to this click's closure. The next items
-        // batch consumes it; a second click before that overwrites it.
-        pendingItemsCallback = () => triggerSpiderfy(target)
+        // The backend clusters up to max zoom, so this cluster never splits:
+        // centre on it and let the host open the grid, which lists the area
+        // nearest-first from the map centre, i.e. the cluster's members first.
         map.setView([cluster.lat, cluster.lon], MAP_MAX_ZOOM)
+        emit('cluster:max-zoom')
       } else {
         map.flyTo([cluster.lat, cluster.lon], cluster.expansionZoom, {
           duration: 0.5,
@@ -416,28 +394,11 @@ export function useMapController(
 
   function doUpdateMarkers(items: MapPoi[]): void {
     if (!markerConfig) return
-    const { added, removed } = pois.update(items)
-
-    for (const m of removed) oms.removeMarker(m)
-    for (const m of added) oms.addMarker(m)
+    const { added } = pois.update(items)
     if (added.length) {
       markerElement(props.emphasizedPoiId)?.classList.add(EMPHASIS_CLASS)
       applyPendingPulse()
     }
-
-    if (pendingItemsCallback) {
-      const cb = pendingItemsCallback
-      pendingItemsCallback = null
-      cb()
-    }
-  }
-
-  function triggerSpiderfy(target: L.LatLng): void {
-    const match = [...pois.values()].find(
-      (m) => m.getLatLng().distanceTo(target) < SPIDERFY_COLOCATION_THRESHOLD_M
-    )
-    if (!match) return
-    ;(oms as any).spiderListener(match)
   }
 
   function updateMarkers(items: MapPoi[], config: MarkerConfig): void {

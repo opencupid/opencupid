@@ -14,6 +14,7 @@ const emit = defineEmits<{
   (e: 'item:select', id: string): void
   (e: 'map:ready', map: LMap): void
   (e: 'bounds:changed', payload: BoundsWithZoom): void
+  (e: 'cluster:max-zoom'): void
 }>()
 
 const mapEl = ref<HTMLDivElement | null>(null)

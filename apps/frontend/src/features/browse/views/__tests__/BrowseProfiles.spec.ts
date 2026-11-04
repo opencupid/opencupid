@@ -545,6 +545,21 @@ describe('BrowseProfiles view', () => {
       expect(mockPush).toHaveBeenCalledWith(mockGridRoute)
     })
 
+    it('opens the grid when a cluster that does not split any further is clicked', async () => {
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'OsmPoiMap' }).vm.$emit('cluster:max-zoom')
+
+      expect(mockPush).toHaveBeenCalledWith(mockGridRoute)
+    })
+
+    it('leaves an open grid as it is on a max-zoom cluster click', async () => {
+      mockGridOpen.value = true
+      const wrapper = mountComponent()
+      await wrapper.findComponent({ name: 'OsmPoiMap' }).vm.$emit('cluster:max-zoom')
+
+      expect(mockPush).not.toHaveBeenCalledWith(mockGridRoute)
+    })
+
     it('shows the grid panel instead of the button and nearby strip on the grid route', () => {
       mockGridOpen.value = true
       const wrapper = mountComponent()

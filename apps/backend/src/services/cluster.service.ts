@@ -160,9 +160,11 @@ export class ClusterService {
       }
     }
 
+    // Cluster up to the map's max zoom: points that would overlap there stay
+    // one cluster, whose click opens the browse grid on the frontend.
     const index = new Supercluster<PointProperties, Supercluster.AnyProps>({
       radius: CLUSTER_RADIUS,
-      maxZoom: MAP_MAX_ZOOM - 1,
+      maxZoom: MAP_MAX_ZOOM,
       minPoints: 2,
     })
 

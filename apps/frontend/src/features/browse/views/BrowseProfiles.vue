@@ -276,6 +276,12 @@ function openGrid() {
   router.push(gridRoute())
 }
 
+// A cluster that does not split any further opens the grid, listing its
+// members first; the map has already centred on it.
+function onMaxZoomCluster() {
+  if (!isGridOpen.value) openGrid()
+}
+
 function closeGrid() {
   // Step back when the grid was opened from the map, so the back button
   // doesn't reopen it; otherwise (deep link) replace it with the map.
@@ -456,6 +462,7 @@ onMounted(async () => {
           @item:select="handleMarkerSelect"
           @bounds:changed="onBoundsChanged"
           @map:ready="onMapReady"
+          @cluster:max-zoom="onMaxZoomCluster"
         />
 
         <NearbyFeatures

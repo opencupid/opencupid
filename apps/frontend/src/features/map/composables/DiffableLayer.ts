@@ -25,8 +25,6 @@ export type DiffableLayerFns<T> = { create: (item: T) => LMarker } & (
 export class DiffableLayer<T extends { id: string | number }> {
   private layer: L.LayerGroup
   private markers = new Map<string | number, LMarker>()
-  // Reverse index for O(1) marker → id lookup (e.g. on OMS click).
-  private idsByMarker = new WeakMap<LMarker, string | number>()
   private items = new Map<string | number, T>()
   private fns: DiffableLayerFns<T>
 
@@ -39,8 +37,7 @@ export class DiffableLayer<T extends { id: string | number }> {
    * Reconcile the layer against `incoming`: create markers for new ids,
    * remove markers for ids that have left, and (when fns supplies them)
    * call `apply` for ids whose item changed per `shouldUpdate`. Returns
-   * the marker objects added and removed in this batch so the caller
-   * can register them with downstream consumers (e.g. OMS).
+   * the marker objects added and removed in this batch.
    */
   update(incoming: T[]): { added: LMarker[]; removed: LMarker[] } {
     const incomingMap = new Map<string | number, T>()
@@ -50,7 +47,6 @@ export class DiffableLayer<T extends { id: string | number }> {
     for (const [id, marker] of this.markers) {
       if (!incomingMap.has(id)) {
         toRemove.push(marker)
-        this.idsByMarker.delete(marker)
         this.markers.delete(id)
         this.items.delete(id)
       }
@@ -62,7 +58,6 @@ export class DiffableLayer<T extends { id: string | number }> {
       if (!prev) {
         const marker = this.fns.create(item)
         this.markers.set(id, marker)
-        this.idsByMarker.set(marker, id)
         this.items.set(id, item)
         toAdd.push(marker)
       } else {
@@ -82,8 +77,6 @@ export class DiffableLayer<T extends { id: string | number }> {
   /** Remove all markers from the underlying Leaflet layer and reset internal state. */
   clear(): void {
     this.layer.clearLayers()
-    // WeakMap entries die with their marker keys.
-    this.idsByMarker = new WeakMap()
     this.markers.clear()
     this.items.clear()
   }
@@ -91,11 +84,6 @@ export class DiffableLayer<T extends { id: string | number }> {
   /** Look up a marker by item id; undefined if no marker exists for that id. */
   get(id: string | number): LMarker | undefined {
     return this.markers.get(id)
-  }
-
-  /** O(1) reverse lookup — undefined if the marker isn't part of this layer. */
-  getId(marker: LMarker): string | number | undefined {
-    return this.idsByMarker.get(marker)
   }
 
   /** Iterate every marker currently in the layer (insertion order). */
