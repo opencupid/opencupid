@@ -351,6 +351,7 @@
     }
   },
   "profiles": {
+    "dating_match": "A párkereső preferenciáitok megegyeznek",
     "back_button_title": "Vissza",
     "blocklist": {
       "block_confirm_message": "Nem fogod többé látni.",
@@ -378,7 +379,6 @@
         "open_button_empty": "Lista nézet",
         "results_count": "{count} a közelben · a legközelebbiek elöl",
         "show_filters": "Szűrők megjelenítése",
-        "dating_match": "Lehet, hogy egymást keresitek",
         "show_on_map": "Megjelenítés a térképen",
         "tags_label": "Szűrés címkék szerint",
         "title": "Ez a térképterület",

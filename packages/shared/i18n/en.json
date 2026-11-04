@@ -347,6 +347,7 @@
     }
   },
   "profiles": {
+    "dating_match": "Your dating preferences match",
     "back_button_title": "Back",
     "blocklist": {
       "block_confirm_message": "You won't see them again.",
@@ -374,7 +375,6 @@
         "open_button_empty": "List view",
         "results_count": "{count} nearby · nearest first",
         "show_filters": "Show filters",
-        "dating_match": "Your dating preferences match",
         "show_on_map": "Show on map",
         "tags_label": "Filter by tags",
         "title": "This map area",

@@ -11,9 +11,12 @@ import RelationshipTags from '@/features/shared/profiledisplay/RelationshipTags.
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
+import IconHeartFilled from '@/assets/icons/interface/heart-filled.svg'
 
 const props = defineProps<{
   profile: PublicProfile
+  /** A potential dating match of the viewer: a heart after the name. */
+  isMatch?: boolean
 }>()
 
 const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
@@ -60,6 +63,15 @@ const showPlaceholder = computed(
       <div class="d-flex flex-row align-items-center mt-2">
         <div class="flex-grow-1 d-inline-flex align-items-center">
           <span class="fw-bolder fs-2 me-1">{{ props.profile.publicName }}</span>
+          <span
+            v-if="isMatch"
+            class="match-heart d-inline-flex me-1"
+            role="img"
+            :title="$t('profiles.dating_match')"
+            :aria-label="$t('profiles.dating_match')"
+          >
+            <IconHeartFilled />
+          </span>
           <slot name="name-edit" />
         </div>
         <GenderPronounLabel :profile="props.profile" />
@@ -111,6 +123,15 @@ const showPlaceholder = computed(
 </template>
 
 <style scoped>
+.match-heart {
+  width: 1.4rem;
+  height: 1.4rem;
+  color: rgb(var(--match-rgb));
+}
+.match-heart svg {
+  width: 100%;
+  height: 100%;
+}
 .icons {
   position: absolute;
   top: 0.5rem;

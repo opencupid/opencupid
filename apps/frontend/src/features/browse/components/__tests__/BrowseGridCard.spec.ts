@@ -74,6 +74,7 @@ describe('BrowseGridCard', () => {
     const wrapper = mount(BrowseGridCard, { props: { item: match } })
     expect(wrapper.find('.card-frame').classes()).toContain('card-frame--match')
     expect(wrapper.find('.match-badge .icon-heart').exists()).toBe(true)
+    expect(wrapper.find('.match-badge').attributes('aria-label')).toBe('profiles.dating_match')
   })
 
   it('leaves other profiles unmarked', () => {

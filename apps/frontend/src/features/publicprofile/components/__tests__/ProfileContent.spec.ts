@@ -4,6 +4,9 @@ import { createPinia, setActivePinia } from 'pinia'
 
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 vi.mock('@/assets/icons/interface/hide.svg', () => ({ default: { template: '<svg />' } }))
+vi.mock('@/assets/icons/interface/heart-filled.svg', () => ({
+  default: { template: '<svg class="icon-heart" />' },
+}))
 vi.mock('../ImageCarousel.vue', () => ({
   default: { template: '<div class="carousel-stub" />', props: ['images'] },
 }))
@@ -79,5 +82,30 @@ describe('ProfileContent photo gating', () => {
     const own = mountWith(true, makeProfile('me', 0))
     expect(own.find('.carousel-stub').exists()).toBe(false)
     expect(own.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
+  })
+})
+
+describe('ProfileContent dating match heart', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    useOwnerProfileStore().profile = { id: 'me', hasFace: true } as any
+  })
+
+  const mountWith = (isMatch?: boolean) =>
+    mount(ProfileContent, {
+      props: { profile: makeProfile('other'), isMatch },
+      global: { mocks: { $t: (k: string) => k } },
+    })
+
+  it('shows a labelled heart after the name for a potential match', () => {
+    const heart = mountWith(true).find('.match-heart')
+    expect(heart.find('.icon-heart').exists()).toBe(true)
+    expect(heart.attributes('aria-label')).toBe('profiles.dating_match')
+    expect(heart.attributes('title')).toBe('profiles.dating_match')
+  })
+
+  it('shows no heart otherwise', () => {
+    expect(mountWith(false).find('.match-heart').exists()).toBe(false)
+    expect(mountWith().find('.match-heart').exists()).toBe(false)
   })
 })

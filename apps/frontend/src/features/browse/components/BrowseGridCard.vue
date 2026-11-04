@@ -49,7 +49,9 @@ const eventStartsAt = computed(() =>
       <span
         v-if="isMatch"
         class="match-badge position-absolute d-flex rounded-circle"
-        :title="t('profiles.browse.grid.dating_match')"
+        role="img"
+        :title="t('profiles.dating_match')"
+        :aria-label="t('profiles.dating_match')"
       >
         <IconHeart />
       </span>
@@ -130,7 +132,6 @@ const eventStartsAt = computed(() =>
   background: white;
   color: rgb(var(--match-rgb));
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
 
   svg {
     width: 100%;

@@ -33,7 +33,10 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
         />
       </div>
       <div class="profile-content h-100 overflow-auto hide-scrollbar">
-        <ProfileContent :profile="profile" />
+        <ProfileContent
+          :profile="profile"
+          :is-match="profile.isDatingActive"
+        />
         <ProfileContentList :profile-id="profile.id" />
         <div class="pb-5 spacer" />
       </div>
