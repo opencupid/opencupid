@@ -10,6 +10,7 @@ import {
 } from '../composables/useTrustFlags'
 import { appLocales } from '@shared/i18n/locales'
 import PublicProfileLink from '../components/PublicProfileLink.vue'
+import ProfileImageReview, { type AdminProfileImage } from '../components/ProfileImageReview.vue'
 
 interface AdminProfile {
   id: string
@@ -40,6 +41,8 @@ interface AdminProfileTrustFlag {
 
 interface AdminProfileDetail extends AdminProfile {
   trustFlags: AdminProfileTrustFlag[]
+  hasFace: boolean
+  profileImages: AdminProfileImage[]
 }
 
 interface AdminUserDetail {
@@ -1108,6 +1111,16 @@ onUnmounted(() => {
 
               <template v-if="detailTab === 'profile' && selectedProfile">
                 <dl class="row mb-0">
+                  <template v-if="selectedProfileDetail">
+                    <dt class="col-sm-4">Photos</dt>
+                    <dd class="col-sm-8">
+                      <ProfileImageReview
+                        v-model:has-face="selectedProfileDetail.hasFace"
+                        :profile-id="selectedProfileDetail.id"
+                        :images="selectedProfileDetail.profileImages"
+                      />
+                    </dd>
+                  </template>
                   <dt class="col-sm-4">ID</dt>
                   <dd class="col-sm-8 d-flex align-items-center gap-2">
                     <code>{{ selectedProfile.id }}</code>

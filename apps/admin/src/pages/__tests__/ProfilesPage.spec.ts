@@ -47,6 +47,17 @@ const baseProfile = {
   hasActiveTrustFlag: false,
 }
 
+const baseDetail = {
+  ...baseProfile,
+  hasFace: false,
+  profileImages: [] as {
+    id: string
+    hasFace: boolean
+    position: number
+    variants: { size: string; url: string }[]
+  }[],
+}
+
 const baseUser = {
   id: 'u1',
   email: 'a@b.com',
@@ -101,7 +112,7 @@ describe('ProfilesPage', () => {
       if (typeof path === 'string' && path.startsWith('/admin/users/')) {
         return Promise.resolve({ success: true, user: baseUser })
       }
-      return Promise.resolve({ success: true, profile: { ...baseProfile, trustFlags: [] } })
+      return Promise.resolve({ success: true, profile: { ...baseDetail, trustFlags: [] } })
     })
   })
 
@@ -134,6 +145,30 @@ describe('ProfilesPage', () => {
     expect(wrapper.text()).toContain('No active trust flags')
   })
 
+  it('shows the photo review above the ID row with the profile hasFace state', async () => {
+    apiRequestMock.mockResolvedValue({
+      success: true,
+      profile: {
+        ...baseDetail,
+        hasFace: true,
+        trustFlags: [],
+        profileImages: [
+          { id: 'i1', hasFace: true, position: 0, variants: [{ size: 'thumb', url: 't1' }] },
+        ],
+      },
+    })
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    const labels = wrapper.findAll('.modal dt').map((dt) => dt.text())
+    expect(labels.slice(0, 2)).toEqual(['Photos', 'ID'])
+    expect(wrapper.findAll('[data-testid="profile-image"]')).toHaveLength(1)
+    const box = wrapper.get<HTMLInputElement>('[data-testid="profile-has-face"]')
+    expect(box.element.checked).toBe(true)
+  })
+
   it('Profile button links to the public profile in a new window', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()
@@ -150,7 +185,7 @@ describe('ProfilesPage', () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
-        ...baseProfile,
+        ...baseDetail,
         hasActiveTrustFlag: true,
         trustFlags: [
           {
@@ -210,7 +245,7 @@ describe('ProfilesPage', () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
-        ...baseProfile,
+        ...baseDetail,
         hasActiveTrustFlag: true,
         trustFlags: [
           {
@@ -259,7 +294,7 @@ describe('ProfilesPage', () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
-        ...baseProfile,
+        ...baseDetail,
         hasActiveTrustFlag: true,
         trustFlags: [
           {
@@ -290,7 +325,7 @@ describe('ProfilesPage', () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
-        ...baseProfile,
+        ...baseDetail,
         hasActiveTrustFlag: true,
         trustFlags: [
           {
@@ -316,7 +351,7 @@ describe('ProfilesPage', () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
-        ...baseProfile,
+        ...baseDetail,
         hasActiveTrustFlag: true,
         trustFlags: [
           {
@@ -367,7 +402,7 @@ describe('ProfilesPage', () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
-        ...baseProfile,
+        ...baseDetail,
         hasActiveTrustFlag: true,
         trustFlags: [
           {
@@ -409,7 +444,7 @@ describe('ProfilesPage', () => {
     apiRequestMock.mockResolvedValue({
       success: true,
       profile: {
-        ...baseProfile,
+        ...baseDetail,
         id: 'p-deep',
         publicName: 'Deep',
         hasActiveTrustFlag: false,
@@ -658,7 +693,7 @@ describe('ProfilesPage', () => {
           user: { ...baseUser, id: 'u2', email: 'bob@b.com' },
         })
       }
-      return Promise.resolve({ success: true, profile: { ...baseProfile, trustFlags: [] } })
+      return Promise.resolve({ success: true, profile: { ...baseDetail, trustFlags: [] } })
     })
 
     const wrapper = mount(ProfilesPage)
@@ -718,7 +753,7 @@ describe('ProfilesPage', () => {
           user: { ...baseUser, id: 'u9', email: 'newbie@x.com' },
         })
       }
-      return Promise.resolve({ success: true, profile: { ...baseProfile, trustFlags: [] } })
+      return Promise.resolve({ success: true, profile: { ...baseDetail, trustFlags: [] } })
     })
 
     const wrapper = mount(ProfilesPage)

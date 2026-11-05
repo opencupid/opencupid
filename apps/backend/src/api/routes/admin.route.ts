@@ -24,6 +24,7 @@ import { mapMessageToDTO } from '../mappers/messaging.mappers'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import { ProfileTrustService } from '@/services/profileTrust.service'
 import { ClusterService } from '@/services/cluster.service'
+import { ImageService } from '@/services/image.service'
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
 
@@ -65,6 +66,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // Child plugins inherit the admin-header hook above.
   fastify.register(adminEventRoutes, { prefix: '/events' })
   fastify.register(adminImageRoutes, { prefix: '/images' })
+
+  const imageService = ImageService.getInstance()
 
   /**
    * GET /stats/daily
@@ -1195,7 +1198,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /profiles/:id
-   * Returns detailed profile information including user data and images.
+   * Returns detailed profile information including user data and gallery
+   * images (with variant URLs and per-image hasFace).
    * @param {string} id - Profile ID
    * @returns {{ success, profile }}
    */
@@ -1216,7 +1220,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             },
           },
           profileImages: {
-            select: { image: { select: { id: true, storagePath: true } } },
+            select: { image: { select: { id: true, storagePath: true, hasFace: true } } },
             orderBy: { position: 'asc' },
           },
           trustFlags: {
@@ -1234,13 +1238,48 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         profile: {
           ...profileRest,
           // position = sorted index (ImageAttachment.position is a sparse sequence value)
-          profileImages: profileImages.map((g, position) => ({ ...g.image, position })),
+          profileImages: profileImages.map(({ image }, position) => ({
+            id: image.id,
+            hasFace: image.hasFace,
+            position,
+            variants: imageService.getImageUrls(image),
+          })),
           hasActiveTrustFlag: profile.trustFlags.length > 0,
         },
       })
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin profile detail')
       return sendError(reply, 500, 'Failed to fetch profile')
+    }
+  })
+
+  /**
+   * PATCH /profiles/:id
+   * Updates profile admin fields. hasFace manually overrides face detection
+   * (it is re-derived from the primary image when the gallery changes).
+   * @param {string} id - Profile ID
+   * @body {boolean} hasFace
+   * @returns {{ success, profile: { id, hasFace } }}
+   */
+  fastify.patch('/profiles/:id', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const body = (req.body ?? {}) as { hasFace?: unknown }
+    if (typeof body.hasFace !== 'boolean') {
+      return sendError(reply, 400, 'hasFace must be a boolean')
+    }
+    try {
+      const profile = await prisma.profile.update({
+        where: { id },
+        data: { hasFace: body.hasFace },
+        select: { id: true, hasFace: true },
+      })
+      return reply.code(200).send({ success: true, profile })
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+        return sendError(reply, 404, 'Profile not found')
+      }
+      fastify.log.error({ err }, 'Error updating admin profile')
+      return sendError(reply, 500, 'Failed to update profile')
     }
   })
 
