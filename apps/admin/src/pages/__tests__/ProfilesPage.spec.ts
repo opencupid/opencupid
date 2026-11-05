@@ -169,6 +169,18 @@ describe('ProfilesPage', () => {
     expect(box.element.checked).toBe(true)
   })
 
+  it('omits the phone and gender rows from the profile tab', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    const labels = wrapper.findAll('.modal dt').map((dt) => dt.text())
+    expect(labels).toContain('User Email')
+    expect(labels).not.toContain('User Phone')
+    expect(labels).not.toContain('Gender')
+  })
+
   it('Profile button links to the public profile in a new window', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()
