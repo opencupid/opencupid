@@ -1,5 +1,11 @@
 # frontend
 
+## 0.84.0
+
+### Patch Changes
+
+- d6a7b0a: Share the dev-server media plugin between frontend and admin so admin can load profile photos
+
 ## 0.83.0
 
 ### Minor Changes

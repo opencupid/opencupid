@@ -1,5 +1,15 @@
 # backend
 
+## 0.84.0
+
+### Minor Changes
+
+- d6a7b0a: Admin profile detail: photo review row with hasFace halos, hover previews and a manual profile hasFace override
+
+### Patch Changes
+
+- 67328f1: Admin tag submitter filter: show each submitter's tag count and label submitters without a public name
+
 ## 0.83.0
 
 ### Minor Changes

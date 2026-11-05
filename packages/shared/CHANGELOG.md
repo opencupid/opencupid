@@ -1,5 +1,11 @@
 # @opencupid/shared
 
+## 0.14.2
+
+### Patch Changes
+
+- d6a7b0a: Share the dev-server media plugin between frontend and admin so admin can load profile photos
+
 ## 0.14.1
 
 ### Patch Changes
