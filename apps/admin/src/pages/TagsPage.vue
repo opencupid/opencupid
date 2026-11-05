@@ -30,6 +30,12 @@ interface AdminTag {
 interface TagSubmitter {
   id: string
   profile: { id: string; publicName: string } | null
+  _count: { createdTags: number }
+}
+
+function submitterLabel(submitter: TagSubmitter): string {
+  const name = submitter.profile?.publicName || '(no name)'
+  return `${name} (${submitter._count.createdTags})`
 }
 
 interface TagResponse {
@@ -520,7 +526,7 @@ onUnmounted(() => {
           :key="submitter.id"
           :value="submitter.id"
         >
-          {{ submitter.profile?.publicName ?? submitter.id }}
+          {{ submitterLabel(submitter) }}
         </option>
       </select>
       <button

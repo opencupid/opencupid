@@ -1228,7 +1228,9 @@ describe('GET /tags', () => {
 
 describe('GET /tags/submitters', () => {
   it('returns users with at least one non-deleted tag, with their profile', async () => {
-    const submitters = [{ id: 'u1', profile: { id: 'p1', publicName: 'Alice' } }]
+    const submitters = [
+      { id: 'u1', profile: { id: 'p1', publicName: 'Alice' }, _count: { createdTags: 2 } },
+    ]
     mockPrisma.user.findMany.mockResolvedValue(submitters)
 
     const handler = fastify.routes['GET /tags/submitters']
@@ -1239,6 +1241,9 @@ describe('GET /tags/submitters', () => {
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { createdTags: { some: { isDeleted: false } } },
+        select: expect.objectContaining({
+          _count: { select: { createdTags: { where: { isDeleted: false } } } },
+        }),
       })
     )
   })

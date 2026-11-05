@@ -946,14 +946,19 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /tags/submitters
-   * Returns every user who submitted at least one non-deleted tag, with their profile.
-   * @returns {{ success, submitters: { id, profile: { id, publicName } | null }[] }}
+   * Returns every user who submitted at least one non-deleted tag, with their profile and
+   * the number of non-deleted tags they submitted.
+   * @returns {{ success, submitters: { id, profile: { id, publicName } | null, _count: { createdTags } }[] }}
    */
   fastify.get('/tags/submitters', async (_req, reply) => {
     try {
       const submitters = await prisma.user.findMany({
         where: { createdTags: { some: { isDeleted: false } } },
-        select: { id: true, profile: { select: { id: true, publicName: true } } },
+        select: {
+          id: true,
+          profile: { select: { id: true, publicName: true } },
+          _count: { select: { createdTags: { where: { isDeleted: false } } } },
+        },
         orderBy: { profile: { publicName: 'asc' } },
       })
       return reply.code(200).send({ success: true, submitters })
