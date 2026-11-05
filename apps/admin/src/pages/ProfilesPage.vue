@@ -1148,10 +1148,6 @@ onUnmounted(() => {
                   <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
                   <dt class="col-sm-4">Activity Segment</dt>
                   <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
-                  <dt class="col-sm-4">Created</dt>
-                  <dd class="col-sm-8">
-                    {{ new Date(selectedProfile.createdAt).toLocaleString() }}
-                  </dd>
                 </dl>
 
                 <div class="mt-3">
