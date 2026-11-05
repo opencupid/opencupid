@@ -31,7 +31,10 @@ function makeTag(overrides: Record<string, unknown> = {}) {
   }
 }
 
-const submitters = [{ id: 'u1', profile: { id: 'p1', publicName: 'Alice' } }]
+const submitters = [
+  { id: 'u1', profile: { id: 'p1', publicName: 'Alice' }, _count: { createdTags: 3 } },
+  { id: 'u2', profile: { id: 'p2', publicName: '' }, _count: { createdTags: 1 } },
+]
 
 function setup(tags: ReturnType<typeof makeTag>[]) {
   useApiCall.mockResolvedValue({ success: true, tags, total: tags.length, page: 1, pageSize: 25 })
@@ -121,7 +124,11 @@ describe('TagsPage', () => {
     await flushPromises()
 
     const select = wrapper.get('[data-testid="submitter-filter"]')
-    expect(select.findAll('option').map((o) => o.text())).toEqual(['All Submitters', 'Alice'])
+    expect(select.findAll('option').map((o) => o.text())).toEqual([
+      'All Submitters',
+      'Alice (3)',
+      '(no name) (1)',
+    ])
 
     await select.setValue('u1')
     await flushPromises()
