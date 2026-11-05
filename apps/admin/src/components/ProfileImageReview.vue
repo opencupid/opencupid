@@ -57,7 +57,7 @@ async function toggleHasFace(event: Event) {
     </div>
     <div
       v-else
-      class="d-flex flex-wrap align-items-end gap-2"
+      class="image-review-grid"
     >
       <div
         v-for="(image, index) in images"
@@ -111,8 +111,22 @@ async function toggleHasFace(event: Event) {
 </template>
 
 <style scoped>
+/* Two rows of 40px thumbnails beside a primary photo spanning both rows */
+.image-review-grid {
+  display: grid;
+  grid-template-rows: repeat(2, 40px);
+  grid-auto-columns: 40px;
+  grid-auto-flow: column;
+  gap: 8px;
+}
+
 .image-review-item {
   position: relative;
+}
+
+.image-review-item:first-child {
+  grid-row: span 2;
+  grid-column: span 2;
 }
 
 .image-review-thumb {
@@ -124,8 +138,8 @@ async function toggleHasFace(event: Event) {
 }
 
 .image-review-thumb.is-primary {
-  width: 80px;
-  height: 80px;
+  width: 88px;
+  height: 88px;
 }
 
 /* hasFace halo */
