@@ -15,6 +15,7 @@ const mockPrisma = vi.hoisted(() => {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       groupBy: vi.fn(),
+      update: vi.fn(),
     },
     profileActivitySummary: {
       groupBy: vi.fn(),
@@ -64,6 +65,7 @@ vi.mock('@/lib/prisma', () => ({
 const mockAppConfig = vi.hoisted(() => ({
   DEEPL_API_KEY: 'test-deepl-key',
   ADMIN_PROFILE_ID: 'sys-sender',
+  MEDIA_URL_BASE: 'https://media.example.org',
 }))
 
 vi.mock('@/lib/appconfig', () => ({
@@ -141,6 +143,7 @@ vi.mock('../../api/mappers/messaging.mappers', () => ({
 import adminRoutes from '../../api/routes/admin.route'
 import { MockReply } from '../../test-utils/fastify'
 import { ProfileTrustService } from '../../services/profileTrust.service'
+import { Prisma } from '@prisma/client'
 
 class AdminMockFastify {
   public routes: Record<string, any> = {}
@@ -972,6 +975,30 @@ describe('GET /profiles/:id', () => {
     expect(reply.payload.profile.hasActiveTrustFlag).toBe(true)
   })
 
+  it('maps gallery images to id, hasFace, sorted position and variant URLs', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({
+      id: 'p3',
+      trustFlags: [],
+      profileImages: [
+        { image: { id: 'img1', storagePath: 'ab/p3/img1', hasFace: true } },
+        { image: { id: 'img2', storagePath: 'ab/p3/img2', hasFace: false } },
+      ],
+    })
+    const handler = fastify.routes['GET /profiles/:id']
+    await handler({ params: { id: 'p3' } }, reply)
+
+    const images = reply.payload.profile.profileImages
+    expect(images.map((i: any) => [i.id, i.hasFace, i.position])).toEqual([
+      ['img1', true, 0],
+      ['img2', false, 1],
+    ])
+    expect(images[0]).not.toHaveProperty('storagePath')
+    expect(images[0].variants).toContainEqual({
+      size: 'thumb',
+      url: 'https://media.example.org/images/ab/p3/img1-thumb.webp',
+    })
+  })
+
   it('reports hasActiveTrustFlag=false when no flags', async () => {
     mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p2', profileImages: [], trustFlags: [] })
     const handler = fastify.routes['GET /profiles/:id']
@@ -984,6 +1011,44 @@ describe('GET /profiles/:id', () => {
 
     const handler = fastify.routes['GET /profiles/:id']
     await handler({ params: { id: 'nonexistent' } }, reply)
+
+    expect(reply.statusCode).toBe(404)
+  })
+})
+
+describe('PATCH /profiles/:id', () => {
+  it('overrides hasFace', async () => {
+    mockPrisma.profile.update.mockResolvedValue({ id: 'p1', hasFace: true })
+    const handler = fastify.routes['PATCH /profiles/:id']
+    await handler({ params: { id: 'p1' }, body: { hasFace: true } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.profile).toEqual({ id: 'p1', hasFace: true })
+    expect(mockPrisma.profile.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: { hasFace: true },
+      select: { id: true, hasFace: true },
+    })
+  })
+
+  it('rejects a non-boolean hasFace', async () => {
+    mockPrisma.profile.update.mockClear()
+    const handler = fastify.routes['PATCH /profiles/:id']
+    await handler({ params: { id: 'p1' }, body: { hasFace: 'yes' } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.profile.update).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 for a missing profile', async () => {
+    mockPrisma.profile.update.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('not found', {
+        code: 'P2025',
+        clientVersion: 'test',
+      })
+    )
+    const handler = fastify.routes['PATCH /profiles/:id']
+    await handler({ params: { id: 'missing' }, body: { hasFace: false } }, reply)
 
     expect(reply.statusCode).toBe(404)
   })

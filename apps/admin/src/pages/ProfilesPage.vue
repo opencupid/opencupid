@@ -10,6 +10,7 @@ import {
 } from '../composables/useTrustFlags'
 import { appLocales } from '@shared/i18n/locales'
 import PublicProfileLink from '../components/PublicProfileLink.vue'
+import ProfileImageReview, { type AdminProfileImage } from '../components/ProfileImageReview.vue'
 
 interface AdminProfile {
   id: string
@@ -40,6 +41,8 @@ interface AdminProfileTrustFlag {
 
 interface AdminProfileDetail extends AdminProfile {
   trustFlags: AdminProfileTrustFlag[]
+  hasFace: boolean
+  profileImages: AdminProfileImage[]
 }
 
 interface AdminUserDetail {
@@ -1108,6 +1111,16 @@ onUnmounted(() => {
 
               <template v-if="detailTab === 'profile' && selectedProfile">
                 <dl class="row mb-0">
+                  <template v-if="selectedProfileDetail">
+                    <dt class="col-sm-4">Photos</dt>
+                    <dd class="col-sm-8">
+                      <ProfileImageReview
+                        v-model:has-face="selectedProfileDetail.hasFace"
+                        :profile-id="selectedProfileDetail.id"
+                        :images="selectedProfileDetail.profileImages"
+                      />
+                    </dd>
+                  </template>
                   <dt class="col-sm-4">ID</dt>
                   <dd class="col-sm-8 d-flex align-items-center gap-2">
                     <code>{{ selectedProfile.id }}</code>
@@ -1117,14 +1130,10 @@ onUnmounted(() => {
                   <dd class="col-sm-8">{{ selectedProfile.publicName || '-' }}</dd>
                   <dt class="col-sm-4">User Email</dt>
                   <dd class="col-sm-8">{{ selectedProfile.user?.email ?? '-' }}</dd>
-                  <dt class="col-sm-4">User Phone</dt>
-                  <dd class="col-sm-8">{{ selectedProfile.user?.phonenumber || '-' }}</dd>
                   <dt class="col-sm-4">Country</dt>
                   <dd class="col-sm-8">{{ selectedProfile.country || '-' }}</dd>
                   <dt class="col-sm-4">City</dt>
                   <dd class="col-sm-8">{{ selectedProfile.cityName || '-' }}</dd>
-                  <dt class="col-sm-4">Gender</dt>
-                  <dd class="col-sm-8">{{ selectedProfile.gender || '-' }}</dd>
                   <dt class="col-sm-4">Social Active</dt>
                   <dd class="col-sm-8">{{ selectedProfile.isSocialActive ? 'Yes' : 'No' }}</dd>
                   <dt class="col-sm-4">Dating Active</dt>
@@ -1139,10 +1148,6 @@ onUnmounted(() => {
                   <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
                   <dt class="col-sm-4">Activity Segment</dt>
                   <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
-                  <dt class="col-sm-4">Created</dt>
-                  <dd class="col-sm-8">
-                    {{ new Date(selectedProfile.createdAt).toLocaleString() }}
-                  </dd>
                 </dl>
 
                 <div class="mt-3">

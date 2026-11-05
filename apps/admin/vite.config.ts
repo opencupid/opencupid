@@ -2,7 +2,12 @@ import path from 'path'
 import { defineConfig, type ConfigEnv, type Plugin, type UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { getPackageVersion } from '../../packages/shared/version'
-import { loadProjectEnv, server, devCertPlugin } from '../../packages/shared/vite.common'
+import {
+  loadProjectEnv,
+  server,
+  devCertPlugin,
+  serveMediaPlugin,
+} from '../../packages/shared/vite.common'
 
 /**
  * In development, serve /config.js with the runtime config so the <script>
@@ -37,6 +42,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     plugins: [
       vue(),
       runtimeConfigPlugin(env),
+      serveMediaPlugin(env, __dirname),
       ...(mode === 'development' ? [devCertPlugin()] : []),
     ],
     resolve: {

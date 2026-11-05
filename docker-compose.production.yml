@@ -170,6 +170,12 @@ services:
       traefik.http.routers.media.rule: "Host(`${DOMAIN}`) && PathPrefix(`/user-content`)"
       traefik.http.routers.media.entrypoints: websecure
       traefik.http.routers.media.middlewares: media-jwt,media-strip,media-cache
+      # Admin domain: mTLS authenticates the request, so no media-jwt
+      traefik.http.routers.media-admin.rule: "Host(`${ADMIN_DOMAIN}`) && PathPrefix(`/user-content`)"
+      traefik.http.routers.media-admin.entrypoints: websecure
+      traefik.http.routers.media-admin.tls.options: admin-mtls@file
+      traefik.http.routers.media-admin.tls.certResolver: letsencrypt
+      traefik.http.routers.media-admin.middlewares: media-strip,media-cache
       traefik.http.middlewares.media-strip.stripprefix.prefixes: "/user-content"
       traefik.http.middlewares.media-jwt.plugin.jwt.secret: "${JWT_SECRET}"
       traefik.http.middlewares.media-jwt.plugin.jwt.authCookieName: "__session"

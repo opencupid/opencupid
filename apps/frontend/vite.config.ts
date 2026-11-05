@@ -8,13 +8,13 @@ import { VueMcp } from 'vite-plugin-vue-mcp'
 import Components from 'unplugin-vue-components/vite'
 import { BootstrapVueNextResolver } from 'bootstrap-vue-next'
 import svgLoader from 'vite-svg-loader'
-import serveStatic from 'serve-static'
 import {
   server,
   define,
   runtimeConfigPlugin,
   loadProjectEnv,
   devCertPlugin,
+  serveMediaPlugin,
 } from '../../packages/shared/vite.common'
 
 process.env.DEBUG = 'vite:*' // Add this to force verbose output
@@ -87,15 +87,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       Components({
         resolvers: [BootstrapVueNextResolver()],
       }),
-      {
-        name: 'serve-static-media',
-        configureServer(server) {
-          server.middlewares.use(
-            env.MEDIA_URL_BASE!,
-            serveStatic(path.resolve(__dirname, env.MEDIA_UPLOAD_DIR!))
-          )
-        },
-      },
+      serveMediaPlugin(env, __dirname),
 
       ...(mode === 'development' ? [vueDevTools(), devCertPlugin(), VueMcp()] : []),
       runtimeConfigPlugin(mode),

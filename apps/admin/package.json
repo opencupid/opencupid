@@ -19,10 +19,12 @@
   },
   "devDependencies": {
     "@tsconfig/node24": "24.0.4",
+    "@types/serve-static": "1.15.8",
     "@vitejs/plugin-vue": "6.0.6",
     "@vue/test-utils": "2.4.10",
     "@vue/tsconfig": "0.8.1",
     "jsdom": "28.1.0",
+    "serve-static": "1.16.2",
     "typescript": "5.9.3",
     "vite": "6.3.5",
     "vite-plugin-mkcert": "1.17.10",

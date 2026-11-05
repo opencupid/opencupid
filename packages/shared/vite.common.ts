@@ -2,6 +2,7 @@ import path from 'path'
 import os from 'os'
 import { loadEnv, type Plugin } from 'vite'
 import mkcert from 'vite-plugin-mkcert'
+import serveStatic from 'serve-static'
 import { getPackageVersion } from './version'
 import { findUpSync } from './findUp'
 import { z } from 'zod'
@@ -18,6 +19,23 @@ export const devCertPlugin = () =>
     certFileName: hostname + '-cert.pem',
     autoUpgrade: false,
   })
+
+/**
+ * Dev-server counterpart of the production `media` container: the API returns
+ * image URLs relative to MEDIA_URL_BASE, so each app must serve that path itself.
+ */
+export const serveMediaPlugin = (
+  env: Record<string, string | undefined>,
+  appDir: string
+): Plugin => ({
+  name: 'serve-static-media',
+  configureServer(server) {
+    server.middlewares.use(
+      env.MEDIA_URL_BASE!,
+      serveStatic(path.resolve(appDir, env.MEDIA_UPLOAD_DIR!))
+    )
+  },
+})
 
 export const server = (mode: string, env: Record<string, string | undefined>, appDir: string) => {
   if (mode !== 'development') return {}
