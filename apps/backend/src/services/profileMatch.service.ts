@@ -13,7 +13,7 @@ export type OrderBy =
   | Prisma.ProfileOrderByWithRelationInput
 
 const defaultOrderBy: OrderBy = {
-  updatedAt: 'desc',
+  createdAt: 'desc',
 }
 
 const statusFlags = {
@@ -69,6 +69,9 @@ export class ProfileMatchService {
    * empty-state logic in `useProfilesViewModel.isNoOneAround` relies on the
    * viewer being present in the cluster results to detect "I'm alone on
    * the map" and render the NoResultsCTA.
+   *
+   * Other profiles are listed only if they have a face photo or an intro. The
+   * viewer is exempt, so a profile without content still sees itself.
    */
   async findSocialProfilesWithLocation(
     profileId: string,
@@ -83,6 +86,15 @@ export class ProfileMatchService {
         isSocialActive: true,
         lat: { not: null },
         lon: { not: null },
+        OR: [
+          { id: profileId },
+          { hasFace: true },
+          {
+            localized: {
+              some: { field: { in: ['introSocial', 'introDating'] }, value: { not: '' } },
+            },
+          },
+        ],
         ...tagFilter,
         ...blocklistWhereClause(profileId),
       },

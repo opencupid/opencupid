@@ -84,6 +84,30 @@ describe('ProfileMatchService.findSocialProfilesWithLocation', () => {
     expect(call.where.user).toEqual({ isBlocked: false })
   })
 
+  it('lists only the viewer and profiles with a face photo or an intro', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.where.OR).toEqual([
+      { id: mockProfileId },
+      { hasFace: true },
+      {
+        localized: { some: { field: { in: ['introSocial', 'introDating'] }, value: { not: '' } } },
+      },
+    ])
+  })
+
+  it('orders by newest created first', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.orderBy).toEqual({ createdAt: 'desc' })
+  })
+
   it('limits results to 500', async () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
 

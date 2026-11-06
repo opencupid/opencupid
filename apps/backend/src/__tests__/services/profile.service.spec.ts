@@ -335,16 +335,15 @@ describe('ProfileService.updateScopes', () => {
 })
 
 describe('syncProfileHasFace', () => {
-  it('copies hasFace from the lowest-position profile attachment', async () => {
+  it('writes true when any gallery image has a face', async () => {
     const { syncProfileHasFace } = await import('../../services/profile.service')
-    mockPrisma.imageAttachment.findFirst.mockResolvedValue({ image: { hasFace: true } })
+    mockPrisma.imageAttachment.findFirst.mockResolvedValue({ imageId: 'img2' })
 
     await syncProfileHasFace(mockPrisma, 'p1')
 
     expect(mockPrisma.imageAttachment.findFirst).toHaveBeenCalledWith({
-      where: { profileId: 'p1' },
-      include: { image: { select: { hasFace: true } } },
-      orderBy: { position: 'asc' },
+      where: { profileId: 'p1', image: { hasFace: true } },
+      select: { imageId: true },
     })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
       where: { id: 'p1' },
@@ -352,7 +351,7 @@ describe('syncProfileHasFace', () => {
     })
   })
 
-  it('writes false for an empty gallery', async () => {
+  it('writes false when no gallery image has a face, or the gallery is empty', async () => {
     const { syncProfileHasFace } = await import('../../services/profile.service')
     mockPrisma.imageAttachment.findFirst.mockResolvedValue(null)
 
