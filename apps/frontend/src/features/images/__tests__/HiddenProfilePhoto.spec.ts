@@ -22,7 +22,6 @@ describe('HiddenProfilePhoto', () => {
     expect(root.attributes('title')).toBe('profiles.photo_hidden_no_face')
     expect(wrapper.find('.blurhash-stub').exists()).toBe(true)
     expect(wrapper.find('.icon-hide').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(false)
   })
 
   it('puts the icon top-left by default and bottom-right on request', () => {
@@ -42,17 +41,6 @@ describe('HiddenProfilePhoto', () => {
 
   it('emits load on mount for the blurhash variant', () => {
     const wrapper = mount(HiddenProfilePhoto, { props: { photo: { blurhash: 'L0' } } })
-    expect(wrapper.emitted('load')).toHaveLength(1)
-  })
-
-  it('shows photo-hidden.svg when the profile has no photo', async () => {
-    const wrapper = mount(HiddenProfilePhoto)
-    const img = wrapper.find('img[data-testid="no-profile-photo"]')
-    expect(img.exists()).toBe(true)
-    expect(img.attributes('alt')).toBe('profiles.photo_hidden')
-    expect(wrapper.find('.icon-hide').exists()).toBe(false)
-
-    await img.trigger('load')
     expect(wrapper.emitted('load')).toHaveLength(1)
   })
 })

@@ -72,17 +72,15 @@ describe('ProfileContent photo gating', () => {
     expect(wrapper.find('.carousel-stub').exists()).toBe(true)
   })
 
-  it('shows photo-hidden.svg for a profile without photos when the viewer has no face photo', () => {
-    const wrapper = mountWith(false, makeProfile('other', 0))
-    expect(wrapper.find('.carousel-stub').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
-  })
-
-  it('keeps the photo area for a profile without photos even when photos are visible', () => {
-    const own = mountWith(true, makeProfile('me', 0))
-    expect(own.find('.carousel-stub').exists()).toBe(false)
-    expect(own.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
-  })
+  it.each([true, false])(
+    'shows the empty silhouette for a profile without photos (viewer hasFace=%s)',
+    (hasFace) => {
+      const wrapper = mountWith(hasFace, makeProfile('other', 0))
+      expect(wrapper.find('.carousel-stub').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="empty-profile-photo"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
+    }
+  )
 })
 
 describe('ProfileContent dating match heart', () => {

@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import photoHiddenUrl from '@/assets/images/app/photo-hidden.svg?url'
 import IconHide from '@/assets/icons/interface/hide.svg'
 import BlurhashCanvas from './BlurhashCanvas.vue'
 
 /**
  * Stand-in for a profile photo the viewer may not see (see useProfilePhotoAccess).
- * With a photo: its blurhash with a small crossed-eye icon in a corner (`iconCorner`).
- * Without one: photo-hidden.svg.
+ * Its blurhash with a small crossed-eye icon in a corner (`iconCorner`).
  */
-const props = withDefaults(
+withDefaults(
   defineProps<{
-    photo?: { blurhash?: string | null }
+    photo: { blurhash?: string | null }
     className?: string
     iconCorner?: 'top-left' | 'bottom-right'
   }>(),
@@ -23,16 +21,13 @@ const emit = defineEmits<{ load: [] }>()
 
 const { t } = useI18n()
 
-// The blurhash variant has nothing to download; report it as loaded right away
-// so callers that fade in on load (e.g. ProfileCardComponent) show it.
-onMounted(() => {
-  if (props.photo) emit('load')
-})
+// There is nothing to download; report it as loaded right away so callers that
+// fade in on load (e.g. ProfileCardComponent) show it.
+onMounted(() => emit('load'))
 </script>
 
 <template>
   <div
-    v-if="photo"
     :class="['hidden-profile-photo', className]"
     :title="t('profiles.photo_hidden_no_face')"
     role="img"
@@ -46,15 +41,6 @@ onMounted(() => {
     />
     <IconHide :class="['hidden-profile-photo-icon', `icon-${iconCorner}`]" />
   </div>
-  <img
-    v-else
-    :src="photoHiddenUrl"
-    :alt="t('profiles.photo_hidden')"
-    :title="t('profiles.photo_hidden')"
-    :class="['hidden-profile-photo', className]"
-    data-testid="no-profile-photo"
-    @load="emit('load')"
-  />
 </template>
 
 <style scoped>
