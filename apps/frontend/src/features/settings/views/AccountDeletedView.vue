@@ -38,7 +38,7 @@ async function submit(payload: AccountDeletionFeedbackPayload) {
   const res = await userStore.submitAccountDeletionFeedback(payload)
   submitting.value = false
   if (res.success) {
-    tracker.track('exit-survey-sent', payload)
+    tracker.track('exit-survey-sent', { reason: payload.reason })
     submitted.value = true
     return
   }

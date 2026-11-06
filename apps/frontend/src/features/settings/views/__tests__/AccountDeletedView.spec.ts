@@ -62,7 +62,7 @@ describe('AccountDeletedView', () => {
     expect(mockTrack).toHaveBeenCalledWith('exit-survey-sent', { reason: 'bad_experience' })
   })
 
-  it('tracks an "other" answer with its comment', async () => {
+  it('tracks an "other" answer without its comment', async () => {
     const wrapper = mountView()
 
     await pick(wrapper, 'other')
@@ -70,10 +70,7 @@ describe('AccountDeletedView', () => {
     await wrapper.find('form').trigger('submit')
     await flushPromises()
 
-    expect(mockTrack).toHaveBeenCalledWith('exit-survey-sent', {
-      reason: 'other',
-      comment: 'Too quiet here',
-    })
+    expect(mockTrack).toHaveBeenCalledWith('exit-survey-sent', { reason: 'other' })
   })
 
   it('does not track an answer that failed to send', async () => {
