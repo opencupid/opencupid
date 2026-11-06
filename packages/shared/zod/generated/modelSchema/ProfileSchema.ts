@@ -27,6 +27,10 @@ export const ProfileSchema = z.object({
   isOnboarded: z.boolean(),
   isCallable: z.boolean(),
   hasFace: z.boolean(),
+  /**
+   * Set by the nightly activity job; see syncHiddenFromResults.
+   */
+  isHiddenFromResults: z.boolean(),
   userId: z.string(),
   work: z.string(),
   languages: z.string().array(),

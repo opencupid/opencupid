@@ -68,7 +68,8 @@ export class ProfileMatchService {
    * The viewer's own profile is intentionally NOT excluded — the frontend
    * empty-state logic in `useProfilesViewModel.isNoOneAround` relies on the
    * viewer being present in the cluster results to detect "I'm alone on
-   * the map" and render the NoResultsCTA.
+   * the map" and render the NoResultsCTA. That also applies to a viewer whose
+   * own profile is hidden from results.
    */
   async findSocialProfilesWithLocation(
     profileId: string,
@@ -83,6 +84,7 @@ export class ProfileMatchService {
         isSocialActive: true,
         lat: { not: null },
         lon: { not: null },
+        OR: [{ id: profileId }, { isHiddenFromResults: false }],
         ...tagFilter,
         ...blocklistWhereClause(profileId),
       },
