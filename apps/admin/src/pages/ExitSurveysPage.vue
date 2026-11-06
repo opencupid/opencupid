@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { Pie } from 'vue-chartjs'
+import { ArcElement, Chart as ChartJS, Tooltip, type TooltipItem } from 'chart.js'
 import type { AccountDeletionReasonType } from '@zod/generated/inputTypeSchemas/AccountDeletionReasonSchema'
 import { account_deleted as labels } from '@shared/i18n/en.json'
 import { apiRequest } from '../composables/useApi'
+
+ChartJS.register(ArcElement, Tooltip)
 
 interface ExitSurvey {
   id: string
@@ -18,11 +22,11 @@ interface ExitSurveysResponse {
 }
 
 // The wording members were shown, so the two can't drift apart.
-const reasons: { value: AccountDeletionReasonType; label: string }[] = [
-  { value: 'found_connection', label: labels.reason_found_connection },
-  { value: 'not_a_good_fit', label: labels.reason_not_a_good_fit },
-  { value: 'bad_experience', label: labels.reason_bad_experience },
-  { value: 'other', label: labels.reason_other },
+const reasons: { value: AccountDeletionReasonType; label: string; color: string }[] = [
+  { value: 'found_connection', label: labels.reason_found_connection, color: '#2a78d6' },
+  { value: 'not_a_good_fit', label: labels.reason_not_a_good_fit, color: '#eb6834' },
+  { value: 'bad_experience', label: labels.reason_bad_experience, color: '#1baf7a' },
+  { value: 'other', label: labels.reason_other, color: '#eda100' },
 ]
 const reasonLabel = (value: AccountDeletionReasonType) =>
   reasons.find((r) => r.value === value)?.label
@@ -50,6 +54,37 @@ function share(reason: AccountDeletionReasonType) {
   if (!counts.value || answerCount.value === 0) return '—'
   return `${Math.round((counts.value[reason] / answerCount.value) * 100)}%`
 }
+
+const chartData = computed(() => ({
+  labels: reasons.map((r) => r.label),
+  datasets: [
+    {
+      data: reasons.map((r) => counts.value?.[r.value] ?? 0),
+      backgroundColor: reasons.map((r) => r.color),
+      borderColor: '#fff',
+      borderWidth: 2,
+    },
+  ],
+}))
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    // The summary table next to the chart is its legend.
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: (item: TooltipItem<'pie'>) =>
+          `${item.formattedValue} (${share(reasons[item.dataIndex]!.value)})`,
+      },
+    },
+  },
+}
+
+const chartDescription = computed(() =>
+  reasons.map((r) => `${r.label}: ${share(r.value)}`).join(', ')
+)
 
 async function fetchSurveys(reset = true) {
   if (reset) page.value = 1
@@ -113,28 +148,54 @@ onUnmounted(() => {
       v-if="counts"
       class="table-container p-3 mb-4"
     >
-      <table
-        class="table mb-0"
-        data-testid="summary"
-      >
-        <thead>
-          <tr>
-            <th>Reason</th>
-            <th class="text-end">Answers</th>
-            <th class="text-end">Share</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="reason in reasons"
-            :key="reason.value"
+      <div class="row g-4 align-items-center">
+        <div
+          v-if="answerCount > 0"
+          class="col-md-5"
+        >
+          <div
+            class="reason-chart"
+            role="img"
+            :aria-label="`Answers by reason. ${chartDescription}`"
           >
-            <td>{{ reason.label }}</td>
-            <td class="text-end">{{ counts[reason.value] }}</td>
-            <td class="text-end">{{ share(reason.value) }}</td>
-          </tr>
-        </tbody>
-      </table>
+            <Pie
+              :data="chartData"
+              :options="chartOptions"
+            />
+          </div>
+        </div>
+        <div class="col">
+          <table
+            class="table mb-0"
+            data-testid="summary"
+          >
+            <thead>
+              <tr>
+                <th>Reason</th>
+                <th class="text-end">Answers</th>
+                <th class="text-end">Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="reason in reasons"
+                :key="reason.value"
+              >
+                <td>
+                  <span
+                    class="reason-swatch"
+                    :style="{ backgroundColor: reason.color }"
+                    aria-hidden="true"
+                  />
+                  {{ reason.label }}
+                </td>
+                <td class="text-end">{{ counts[reason.value] }}</td>
+                <td class="text-end">{{ share(reason.value) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="mb-3">
@@ -211,6 +272,18 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.reason-chart {
+  height: 220px;
+}
+
+.reason-swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-right: 0.5rem;
+  border-radius: 2px;
+}
+
 .comment {
   white-space: pre-wrap;
   overflow-wrap: anywhere;

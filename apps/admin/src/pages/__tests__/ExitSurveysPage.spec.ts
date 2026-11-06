@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../composables/useApi', () => ({ apiRequest: vi.fn() }))
 
+// vue-chartjs renders a <canvas> via Chart.js which jsdom can't paint.
+vi.mock('vue-chartjs', () => ({
+  Pie: { name: 'Pie', props: ['data', 'options'], template: '<div data-testid="pie" />' },
+}))
+
 import { apiRequest } from '../../composables/useApi'
 import ExitSurveysPage from '../ExitSurveysPage.vue'
 
@@ -44,6 +49,40 @@ describe('ExitSurveysPage', () => {
     expect(rows[3]).toContain('75%')
   })
 
+  it('charts every reason in a fixed order, described for screen readers', async () => {
+    const wrapper = mount(ExitSurveysPage)
+    await flushPromises()
+
+    const pie = wrapper.findComponent({ name: 'Pie' })
+    const data = pie.props('data') as any
+    expect(data.labels[0]).toBe('I found what I was looking for')
+    expect(data.datasets[0].data).toEqual([1, 0, 0, 3])
+    expect(new Set(data.datasets[0].backgroundColor).size).toBe(4)
+    expect(wrapper.find('[role="img"]').attributes('aria-label')).toContain('Other: 75%')
+  })
+
+  it('keeps the chart and its colours when the list is filtered', async () => {
+    const wrapper = mount(ExitSurveysPage)
+    await flushPromises()
+    const before = wrapper.findComponent({ name: 'Pie' }).props('data')
+    mockApi.mockResolvedValue({ surveys: [other], total: 1, counts })
+
+    await wrapper.find('select').setValue('other')
+    await flushPromises()
+
+    expect(wrapper.findComponent({ name: 'Pie' }).props('data')).toEqual(before)
+  })
+
+  it('shows count and share in the slice tooltip', async () => {
+    const wrapper = mount(ExitSurveysPage)
+    await flushPromises()
+
+    const options = wrapper.findComponent({ name: 'Pie' }).props('options') as any
+    expect(options.plugins.tooltip.callbacks.label({ formattedValue: '3', dataIndex: 3 })).toBe(
+      '3 (75%)'
+    )
+  })
+
   it('lists answers with the member-facing label and comment as plain text', async () => {
     const wrapper = mount(ExitSurveysPage)
     await flushPromises()
@@ -81,6 +120,7 @@ describe('ExitSurveysPage', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('No answers')
+    expect(wrapper.find('[data-testid="pie"]').exists()).toBe(false)
     expect(summaryRows(wrapper)[0]).toContain('—')
   })
 
