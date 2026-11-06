@@ -2,4 +2,4 @@
 '@opencupid/frontend': patch
 ---
 
-Show a plain silhouette for profiles without photos when the viewer is allowed to see photos
+Show a plain silhouette for profiles without photos to all viewers, without the hidden-photo icon or hint

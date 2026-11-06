@@ -31,23 +31,23 @@ const isHidden = computed(() => !canSeePhotosOf(props.profile))
 </script>
 
 <template>
+  <EmptyProfilePhoto
+    v-if="!image"
+    class="img-fluid rounded"
+    @load="emit('load')"
+  />
   <HiddenProfilePhoto
-    v-if="isHidden"
+    v-else-if="isHidden"
     :photo="image"
     className="img-fluid rounded"
     @load="emit('load')"
   />
   <BlurhashImage
-    v-else-if="image"
+    v-else
     class="profile-image rounded"
     :image="image"
     :variant="props.variant"
     imgClass="img-fluid rounded"
-    @load="emit('load')"
-  />
-  <EmptyProfilePhoto
-    v-else
-    class="img-fluid rounded"
     @load="emit('load')"
   />
 </template>

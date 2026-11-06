@@ -69,24 +69,18 @@ describe('ProfileImage', () => {
     expect(wrapper.find('.image-tag').text()).toContain('/mine.jpg')
   })
 
-  it('shows photo-hidden.svg for a profile without photos when the viewer has no face photo', () => {
-    setViewer({ id: 'me', hasFace: false })
-    const wrapper = mount(ProfileImage, {
-      props: { profile: { id: 'other', profileImages: [] } },
-      global: { stubs: { ImageTag } },
-    })
-    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
-  })
-
-  it('shows the empty silhouette for a profile without photos when the viewer has a face photo', () => {
-    const wrapper = mount(ProfileImage, {
-      props: { profile: { id: 'other', profileImages: [] } },
-      global: { stubs: { ImageTag } },
-    })
-    expect(wrapper.find('[data-testid="empty-profile-photo"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(false)
-  })
+  it.each([true, false])(
+    'shows the empty silhouette for a profile without photos (viewer hasFace=%s)',
+    (hasFace) => {
+      setViewer({ id: 'me', hasFace })
+      const wrapper = mount(ProfileImage, {
+        props: { profile: { id: 'other', profileImages: [] } },
+        global: { stubs: { ImageTag } },
+      })
+      expect(wrapper.find('[data-testid="empty-profile-photo"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
+    }
+  )
 
   it.each([true, false])(
     'forwards caller classes to the rendered image (hasFace=%s)',
@@ -122,7 +116,7 @@ describe('ProfileImage', () => {
     await wrapper.setProps({ profile: { id: 'other', profileImages: [] } })
 
     expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
-    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="empty-profile-photo"]').exists()).toBe(true)
   })
 
   const withBlurhash = {

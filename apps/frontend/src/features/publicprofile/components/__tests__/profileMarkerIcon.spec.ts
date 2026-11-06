@@ -8,6 +8,7 @@ vi.mock('@/assets/icons/interface/heart-filled.svg?raw', () => ({
   default: '<svg class="icon-heart"></svg>',
 }))
 
+import photoEmptyUrl from '@/assets/images/app/photo-empty.svg?url'
 import { renderHiddenProfileMarkerHtml, renderProfileMarkerHtml } from '../profileMarkerIcon'
 
 const base = { isSelected: false, isHighlighted: false }
@@ -24,9 +25,9 @@ describe('renderHiddenProfileMarkerHtml', () => {
     expect(html).not.toContain('<svg')
   })
 
-  it('renders photo-hidden.svg for a profile without a photo', () => {
+  it('renders the empty silhouette for a profile without a photo', () => {
     const html = renderHiddenProfileMarkerHtml({ ...base, image: undefined })
-    expect(html).toContain('<img')
+    expect(html).toContain(photoEmptyUrl)
     expect(html).not.toContain('poi-avatar-hidden')
   })
 })

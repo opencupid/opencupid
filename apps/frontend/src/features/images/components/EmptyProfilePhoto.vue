@@ -2,8 +2,8 @@
 import photoEmptyUrl from '@/assets/images/app/photo-empty.svg?url'
 
 /**
- * Silhouette for a profile with no photos, shown to viewers allowed to see photos.
- * Viewers who may not see photos get HiddenProfilePhoto instead.
+ * Silhouette for a profile with no photos. There is nothing to hide, so every
+ * viewer sees the same thing, whatever their photo access.
  */
 const emit = defineEmits<{ load: [] }>()
 </script>
