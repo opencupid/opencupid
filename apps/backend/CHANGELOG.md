@@ -1,5 +1,12 @@
 # backend
 
+## 0.85.0
+
+### Minor Changes
+
+- bc9c39b: Set `Profile.hasFace` when any gallery image has a face, not just the primary.
+- 27eec5b: Hide profiles with no face photo and no intro from the browse map and grid once they have not been seen for 30 days. A nightly job keeps the new `isHiddenFromResults` flag up to date. Includes a schema migration.
+
 ## 0.84.0
 
 ### Minor Changes

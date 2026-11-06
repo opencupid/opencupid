@@ -1,5 +1,11 @@
 # frontend
 
+## 0.85.0
+
+### Patch Changes
+
+- bc9c39b: Set `Profile.hasFace` when any gallery image has a face, not just the primary.
+
 ## 0.84.0
 
 ### Patch Changes
