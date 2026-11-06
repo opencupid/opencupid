@@ -7,6 +7,7 @@ import { getMediaRoot, MEDIA_SUBDIR } from '@/lib/media'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
 import { ValidateLoginTokenResponse } from '@zod/user/auth.dto'
+import type { AccountDeletionFeedbackPayload } from '@zod/user/user.dto'
 import type { UserIdentifier } from '@zod/user/user.dto'
 import { customAlphabet } from 'nanoid'
 import { nolookalikesSafe } from 'nanoid-dictionary'
@@ -218,5 +219,9 @@ export class UserService {
         tokenVersion: { increment: 1 },
       },
     })
+  }
+
+  async saveAccountDeletionFeedback(feedback: AccountDeletionFeedbackPayload): Promise<void> {
+    await prisma.accountDeletionFeedback.create({ data: feedback })
   }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import type { ProfileOptInSettings } from '@zod/profile/profile.dto'
 
@@ -21,6 +22,7 @@ import VersionInfo from './VersionInfo.vue'
 import PwaInstallButton from '@/features/app/components/PwaInstallButton.vue'
 import CloseAccountDialog from './CloseAccountDialog.vue'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const ownerProfileStore = useOwnerProfileStore()
 const userStore = useUserStore()
@@ -61,6 +63,7 @@ async function handleCloseAccount(confirmInput: string) {
   showCloseAccountDialog.value = false
   if (result.success) {
     authStore.logout()
+    router.push({ name: 'AccountDeleted' })
   }
 }
 </script>

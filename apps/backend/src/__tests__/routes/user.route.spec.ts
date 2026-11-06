@@ -34,6 +34,7 @@ beforeEach(async () => {
     getUserById: vi.fn(),
     deactivate: vi.fn(),
     deleteAccount: vi.fn(),
+    saveAccountDeletionFeedback: vi.fn(),
   }
   mockRefreshTokenService = {
     deleteAllForUser: vi.fn(),
@@ -279,5 +280,57 @@ describe('DELETE /me', () => {
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
+  })
+})
+
+describe('POST /deletion-feedback', () => {
+  const post = (body: unknown) =>
+    fastify.routes['POST /deletion-feedback']({ body } as any, reply as any)
+
+  it('stores a preset reason without requiring a session', async () => {
+    await post({ reason: 'technical_issue' })
+
+    expect(mockUserService.saveAccountDeletionFeedback).toHaveBeenCalledWith({
+      reason: 'technical_issue',
+    })
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true })
+  })
+
+  it('stores the trimmed comment for "other"', async () => {
+    await post({ reason: 'other', comment: '  Too quiet  ' })
+
+    expect(mockUserService.saveAccountDeletionFeedback).toHaveBeenCalledWith({
+      reason: 'other',
+      comment: 'Too quiet',
+    })
+  })
+
+  it('drops a comment sent with a preset reason', async () => {
+    await post({ reason: 'bad_experience', comment: 'ignored' })
+
+    expect(mockUserService.saveAccountDeletionFeedback).toHaveBeenCalledWith({
+      reason: 'bad_experience',
+    })
+  })
+
+  it.each([
+    ['an unknown reason', { reason: 'nope' }],
+    ['"other" without a comment', { reason: 'other' }],
+    ['"other" with a blank comment', { reason: 'other', comment: '   ' }],
+    ['an oversized comment', { reason: 'other', comment: 'x'.repeat(2001) }],
+  ])('rejects %s', async (_name, body) => {
+    await post(body)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockUserService.saveAccountDeletionFeedback).not.toHaveBeenCalled()
+  })
+
+  it('returns 500 when saving fails', async () => {
+    mockUserService.saveAccountDeletionFeedback.mockRejectedValue(new Error('db down'))
+
+    await post({ reason: 'not_a_good_fit' })
+
+    expect(reply.statusCode).toBe(500)
   })
 })

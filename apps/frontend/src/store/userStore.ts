@@ -11,11 +11,16 @@ import {
   type StoreError,
 } from '@/store/helpers'
 
-import { type SettingsUser, SettingsUserSchema } from '@zod/user/user.dto'
+import {
+  type AccountDeletionFeedbackPayload,
+  type SettingsUser,
+  SettingsUserSchema,
+} from '@zod/user/user.dto'
 import type {
   GetUserSettingsResponse,
   UpdateUserLanguageResponse,
   DeleteAccountResponse,
+  AccountDeletionFeedbackResponse,
 } from '@zod/apiResponse.dto'
 
 export const useUserStore = defineStore('user', () => {
@@ -51,9 +56,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  async function deleteAccount(
-    confirmIdentifier: string
-  ): Promise<StoreVoidSuccess | StoreError> {
+  async function deleteAccount(confirmIdentifier: string): Promise<StoreVoidSuccess | StoreError> {
     isLoading.value = true
     try {
       await safeApiCall(() =>
@@ -67,7 +70,27 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  return { user, isLoading, fetchUser, updateLanguage, deleteAccount }
+  async function submitAccountDeletionFeedback(
+    payload: AccountDeletionFeedbackPayload
+  ): Promise<StoreVoidSuccess | StoreError> {
+    try {
+      await safeApiCall(() =>
+        api.post<AccountDeletionFeedbackResponse>('/users/deletion-feedback', payload)
+      )
+      return storeSuccess()
+    } catch (error) {
+      return storeError(error, 'Failed to submit feedback')
+    }
+  }
+
+  return {
+    user,
+    isLoading,
+    fetchUser,
+    updateLanguage,
+    deleteAccount,
+    submitAccountDeletionFeedback,
+  }
 })
 
 // Module-level bus listeners (run once when module is imported)

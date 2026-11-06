@@ -22,3 +22,4 @@ export * from './ProfileSessionLogSchema';
 export * from './ProfileActivitySummarySchema';
 export * from './ProfileTrustFlagSchema';
 export * from './MessageTemplateSchema';
+export * from './AccountDeletionFeedbackSchema';

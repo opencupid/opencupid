@@ -218,3 +218,13 @@ describe('UserService.deactivate', () => {
     })
   })
 })
+
+describe('UserService.saveAccountDeletionFeedback', () => {
+  it('stores the answer', async () => {
+    await service.saveAccountDeletionFeedback({ reason: 'other', comment: 'Too quiet' })
+
+    expect(mockPrisma.accountDeletionFeedback.create).toHaveBeenCalledWith({
+      data: { reason: 'other', comment: 'Too quiet' },
+    })
+  })
+})

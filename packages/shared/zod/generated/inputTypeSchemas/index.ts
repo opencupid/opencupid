@@ -23,6 +23,7 @@ export { ProfileSessionLogScalarFieldEnumSchema } from './ProfileSessionLogScala
 export { ProfileActivitySummaryScalarFieldEnumSchema } from './ProfileActivitySummaryScalarFieldEnumSchema';
 export { ProfileTrustFlagScalarFieldEnumSchema } from './ProfileTrustFlagScalarFieldEnumSchema';
 export { MessageTemplateScalarFieldEnumSchema } from './MessageTemplateScalarFieldEnumSchema';
+export { AccountDeletionFeedbackScalarFieldEnumSchema } from './AccountDeletionFeedbackScalarFieldEnumSchema';
 export { SortOrderSchema } from './SortOrderSchema';
 export { QueryModeSchema } from './QueryModeSchema';
 export { NullsOrderSchema } from './NullsOrderSchema';
@@ -38,3 +39,4 @@ export { ConversationStatusSchema } from './ConversationStatusSchema';
 export { AttendanceStatusSchema } from './AttendanceStatusSchema';
 export { TrustReasonSchema } from './TrustReasonSchema';
 export { MessageTemplateTypeSchema } from './MessageTemplateTypeSchema';
+export { AccountDeletionReasonSchema } from './AccountDeletionReasonSchema';
