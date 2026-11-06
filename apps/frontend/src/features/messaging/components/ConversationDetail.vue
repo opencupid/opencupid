@@ -40,7 +40,7 @@ async function handleBlockProfile() {
   <div class="convo-detail shadow-lg h-100 position-relative d-flex flex-column">
     <MessagingNav
       class="messaging-nav w-100"
-      v-if="vm.partner.value"
+      v-if="vm.partner.value || vm.isPartnerDeleted.value"
       :recipient="vm.partner.value"
       :allowCalls="vm.myIsCallable.value"
       :callableDisabled="vm.isDraft.value"

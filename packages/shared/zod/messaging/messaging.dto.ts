@@ -62,6 +62,15 @@ export const MessageProfileRefSchema = z.object({
 })
 export type MessageProfileRef = z.infer<typeof MessageProfileRefSchema>
 
+// Stands in for a conversation partner whose account was deleted.
+export const DELETED_PARTNER_PROFILE: MessageProfileRef = {
+  id: '',
+  publicName: '',
+  profileImages: [],
+}
+export const isDeletedPartner = (profile: MessageProfileRef) =>
+  profile.id === DELETED_PARTNER_PROFILE.id
+
 // this is used in the db layer
 const DbMessageInConversationSchema = MessageSchema.pick({
   id: true,

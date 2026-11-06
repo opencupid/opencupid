@@ -31,37 +31,37 @@ describe('MessageService.sortProfilePair', () => {
 })
 
 describe('MessageService.canSendMessageInConversation', () => {
+  const livePair = { profileAId: 'p1', profileBId: 'other' }
+
   it('allows when no conversation', () => {
     expect(canSendMessageInConversation(null, 'p1')).toBe(true)
   })
 
   it('allows when accepted', () => {
-    const convo: any = { status: 'ACCEPTED', initiatorProfileId: 'p1' }
+    const convo: any = { status: 'ACCEPTED', initiatorProfileId: 'p1', ...livePair }
     expect(canSendMessageInConversation(convo, 'p1')).toBe(true)
   })
 
   it('allows when initiated by other user', () => {
-    const convo: any = { status: 'INITIATED', initiatorProfileId: 'other' }
+    const convo: any = { status: 'INITIATED', initiatorProfileId: 'other', ...livePair }
     expect(canSendMessageInConversation(convo, 'p1')).toBe(true)
   })
 
   it('rejects when initiated by sender', () => {
-    const convo: any = { status: 'INITIATED', initiatorProfileId: 'p1' }
+    const convo: any = { status: 'INITIATED', initiatorProfileId: 'p1', ...livePair }
     expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
   })
 
   it('rejects when blocked', () => {
-    const convo: any = { status: 'BLOCKED', initiatorProfileId: 'x' }
+    const convo: any = { status: 'BLOCKED', initiatorProfileId: 'x', ...livePair }
     expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
   })
 
-  it('rejects when archived (account deleted)', () => {
-    const convo: any = { status: 'ARCHIVED', initiatorProfileId: null }
-    expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
-  })
-
-  it('rejects when initiated but initiatorProfileId is null (deleted account)', () => {
-    const convo: any = { status: 'INITIATED', initiatorProfileId: null }
+  it.each([
+    ['accepted', { status: 'ACCEPTED', initiatorProfileId: 'p1' }],
+    ['initiated by the deleted account', { status: 'INITIATED', initiatorProfileId: null }],
+  ])('rejects when %s and the partner account is deleted', (_name, fields) => {
+    const convo: any = { ...fields, profileAId: 'p1', profileBId: null }
     expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
   })
 })
@@ -171,7 +171,7 @@ describe('MessageService.listConversationsForProfile', () => {
     // Blocklist clause lives inside the multi-participant OR arm's "other
     // participant" sub-clause (the second AND member).
     const multiArm = args.where.conversation.OR[0]
-    expect(multiArm.AND[1].participants.some.profile.blockedProfiles.none.id).toBe('p1')
+    expect(multiArm.AND[1].OR[2].participants.some.profile.blockedProfiles.none.id).toBe('p1')
   })
 
   it('filters by inbox-visible status allowlist + PENDING sender bypass + viewer-participation gate', async () => {
@@ -192,8 +192,10 @@ describe('MessageService.listConversationsForProfile', () => {
     expect(multiArm.status).toEqual({ in: ['INITIATED', 'ACCEPTED', 'ARCHIVED'] })
     // Viewer must be a participant (access-control gate)
     expect(multiArm.AND[0].participants.some.profileId).toBe('p1')
-    // ...AND another non-blocked participant must exist
-    expect(multiArm.AND[1].participants.some.profile.id).toEqual({ not: 'p1' })
+    // ...AND the partner's account is gone, or another non-blocked participant exists
+    expect(multiArm.AND[1].OR[0]).toEqual({ profileAId: null })
+    expect(multiArm.AND[1].OR[1]).toEqual({ profileBId: null })
+    expect(multiArm.AND[1].OR[2].participants.some.profile.id).toEqual({ not: 'p1' })
 
     expect(args.where.conversation.OR[1]).toMatchObject({
       status: 'PENDING',
