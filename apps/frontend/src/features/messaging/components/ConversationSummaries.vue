@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type ConversationSummary, isDeletedPartner } from '@zod/messaging/messaging.dto'
+import { type ConversationSummary } from '@zod/messaging/messaging.dto'
 import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
 import { stripForPreview } from '@/lib/renderMessage'
 import { computed } from 'vue'
@@ -24,10 +24,7 @@ const haveConversations = computed(() => props.conversations.length > 0)
         v-for="convo in conversations"
         :key="convo.conversationId"
         :active="activeConversation?.conversationId === convo.conversationId"
-        :class="{
-          disabled: !convo.canReply && !isDeletedPartner(convo.partnerProfile),
-          admin: convo.isAdminInitiator,
-        }"
+        :class="{ disabled: !convo.canReply, admin: convo.isAdminInitiator }"
         variant="light"
         class="d-flex justify-content-start align-items-center mb-3 p-2 border-0 rounded-3 shadow cursor-pointer user-select-none"
         @click="$emit('convo:select', convo)"
@@ -37,13 +34,7 @@ const haveConversations = computed(() => props.conversations.length > 0)
         </div>
         <!--  extract into slot   -->
         <div class="overflow-hidden flex-grow-1 user-select-none">
-          <div class="text-truncate fw-bold">
-            {{
-              isDeletedPartner(convo.partnerProfile)
-                ? $t('messaging.deleted_account')
-                : convo.partnerProfile.publicName
-            }}
-          </div>
+          <div class="text-truncate fw-bold">{{ convo.partnerProfile.publicName }}</div>
           <small
             class="last-message text-truncate text-nowrap pe-2"
             v-if="convo.lastMessage"
@@ -55,7 +46,7 @@ const haveConversations = computed(() => props.conversations.length > 0)
           >
         </div>
         <div
-          v-if="!convo.isAdminInitiator && !isDeletedPartner(convo.partnerProfile)"
+          v-if="!convo.isAdminInitiator"
           class="flex-shrink-0 me-2"
         >
           <small

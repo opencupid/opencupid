@@ -163,23 +163,6 @@ describe('useConversationDetailViewModel — detail mode', () => {
   })
 })
 
-describe('useConversationDetailViewModel — deleted partner', () => {
-  it('flags the deleted partner and does not fetch a profile for it', async () => {
-    mockRouteName.value = 'Conversation'
-    mockRouteParams.value = { conversationId: 'c1' }
-    mockMessageStore.activeConversation = makePersistedSummary('c1', '')
-
-    const vm = mountVm()
-    await vi.waitFor(() => {
-      expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledWith('c1')
-    })
-
-    expect(vm.isPartnerDeleted.value).toBe(true)
-    expect(vm.partner.value).toBeNull()
-    expect(mockProfileStore.getPublicProfile).not.toHaveBeenCalled()
-  })
-})
-
 describe('useConversationDetailViewModel — draft mode', () => {
   it('resolves by profileId and holds the draft summary locally', async () => {
     mockRouteName.value = 'ConversationNew'

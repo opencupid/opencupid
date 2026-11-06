@@ -257,7 +257,6 @@ describe('messaging mappers', () => {
       expect(summary.partnerProfile.publicName).toBe('')
       expect(summary.partnerProfile.profileImages).toEqual([])
       expect(summary.isCallable).toBe(false)
-      expect(summary.canReply).toBe(false)
     })
   })
 

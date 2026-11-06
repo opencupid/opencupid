@@ -105,10 +105,9 @@ const INBOX_VISIBLE_STATUSES = ['INITIATED', 'ACCEPTED', 'ARCHIVED'] as const
  *
  * Two arms, mutually exclusive by status:
  *
- * 1. Active conversation: status in the allowlist AND the viewer is a
- *    participant AND there exists another participant who hasn't been blocked,
- *    or the partner's account was deleted (their participant row cascades away
- *    and their pair field is NULL). The viewer-participant check is the access-control gate —
+ * 1. Multi-participant active conversation: status in the allowlist AND the
+ *    viewer is a participant AND there exists another participant who hasn't
+ *    been blocked. The viewer-participant check is the access-control gate —
  *    it's redundant for `listConversationsForProfile` (whose outer
  *    `ConversationParticipant.findMany({ profileId })` already requires it)
  *    but load-bearing for `listMessagesForConversation`, which is callable
@@ -130,20 +129,14 @@ function inboxVisibleConversationWhere(viewerProfileId: string): Prisma.Conversa
         AND: [
           { participants: { some: { profileId: viewerProfileId } } },
           {
-            OR: [
-              { profileAId: null },
-              { profileBId: null },
-              {
-                participants: {
-                  some: {
-                    profile: {
-                      id: { not: viewerProfileId },
-                      ...blocklistWhereClause(viewerProfileId),
-                    },
-                  },
+            participants: {
+              some: {
+                profile: {
+                  id: { not: viewerProfileId },
+                  ...blocklistWhereClause(viewerProfileId),
                 },
               },
-            ],
+            },
           },
         ],
       },
@@ -604,26 +597,23 @@ export type SendMessageErrorResponse = {
 Checks if the sender is allowed to reply to a conversation.
 | Condition                                          | Allow?                   |
 | -------------------------------------------------- | ------------------------ |
-| either side's account deleted (pair field is null) | ❌ No                     |
 | status = `ACCEPTED`                                | ✅ Yes                    |
 | status = `INITIATED`, sender ≠ initiator           | ✅ Yes                    |
 | status = `INITIATED`, sender = initiator           | ❌ No (already initiated) |
+| status = `INITIATED`, initiatorProfileId = null     | ❌ No (deleted account)   |
 | status = `BLOCKED` / `ARCHIVED` / anything else    | ❌ No                     |
 */
 export function canSendMessageInConversation(
-  conversation: Pick<
-    Conversation,
-    'status' | 'initiatorProfileId' | 'profileAId' | 'profileBId'
-  > | null,
+  conversation: Pick<Conversation, 'status' | 'initiatorProfileId'> | null,
   senderProfileId: string
 ): boolean {
   if (!conversation) return true // no conversation yet → allowed to start one
 
   return (
-    !!conversation.profileAId &&
-    !!conversation.profileBId &&
-    (conversation.status === 'ACCEPTED' ||
-      (conversation.status === 'INITIATED' && conversation.initiatorProfileId !== senderProfileId))
+    conversation.status === 'ACCEPTED' ||
+    (conversation.status === 'INITIATED' &&
+      conversation.initiatorProfileId != null &&
+      conversation.initiatorProfileId !== senderProfileId)
   )
 }
 

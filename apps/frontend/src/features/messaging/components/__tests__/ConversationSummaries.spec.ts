@@ -37,36 +37,6 @@ function makeConvo(overrides: Partial<ConversationSummary> = {}): ConversationSu
 describe('ConversationSummaries', () => {
   const globalMocks = { global: { mocks: { $t: (k: string) => k } } }
 
-  describe('partner account deleted', () => {
-    const tombstone = () =>
-      mount(ConversationSummaries, {
-        props: {
-          conversations: [
-            makeConvo({
-              canReply: false,
-              partnerProfile: { id: '', publicName: '', profileImages: [] },
-            }),
-          ],
-          activeConversation: null,
-          loading: false,
-        },
-        ...globalMocks,
-      })
-
-    it('shows the deleted-account name and no turn badge', () => {
-      const wrapper = tombstone()
-
-      expect(wrapper.text()).toContain('messaging.deleted_account')
-      expect(wrapper.find('.badge').exists()).toBe(false)
-    })
-
-    it('stays selectable so the history can be read', () => {
-      const wrapper = tombstone()
-
-      expect(wrapper.find('.disabled').exists()).toBe(false)
-    })
-  })
-
   it('shows text message content as preview', () => {
     const wrapper = mount(ConversationSummaries, {
       props: {

@@ -167,18 +167,26 @@ describe('UserService.setLoginToken', () => {
 })
 
 describe('UserService.deleteAccount', () => {
-  it('leaves conversation status untouched for the surviving partner', async () => {
+  it('archives conversations by pair fields before deleting profile', async () => {
     const profileId = 'prof1'
     mockPrisma.profile.findUnique.mockResolvedValue({ id: profileId })
     mockPrisma.likedProfile.deleteMany.mockResolvedValue({})
     mockPrisma.hiddenProfile.deleteMany.mockResolvedValue({})
+    mockPrisma.conversation.updateMany.mockResolvedValue({})
     mockPrisma.profile.delete.mockResolvedValue({})
     mockPrisma.user.delete.mockResolvedValue({})
 
     await service.deleteAccount('user1')
 
-    expect(mockPrisma.conversation.updateMany).not.toHaveBeenCalled()
-    expect(mockPrisma.profile.delete).toHaveBeenCalledWith({ where: { id: profileId } })
+    // Pair fields, not participant rows — PENDING conversations where this
+    // profile is the recipient have no participant row for it.
+    expect(mockPrisma.conversation.updateMany).toHaveBeenCalledWith({
+      where: { OR: [{ profileAId: profileId }, { profileBId: profileId }] },
+      data: { status: 'ARCHIVED' },
+    })
+    expect(mockPrisma.conversation.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      mockPrisma.profile.delete.mock.invocationCallOrder[0]
+    )
     expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user1' } })
   })
 

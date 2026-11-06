@@ -6,8 +6,7 @@ import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
-  // null when the partner's account was deleted
-  recipient: ProfileSummary | null
+  recipient: ProfileSummary
   allowCalls?: boolean
   // Disables the allow-calls toggle when there's no persisted conversation
   // to write the setting against (e.g. draft conversations).
@@ -37,14 +36,6 @@ defineEmits<{
     </div>
 
     <div
-      v-if="!recipient"
-      class="fs-6 user-select-none"
-      data-testid="deleted-recipient"
-    >
-      {{ $t('messaging.deleted_account') }}
-    </div>
-    <div
-      v-else
       @click="$emit('profile:select', recipient)"
       class="d-flex flex-column align-items-center justify-content-center cursor-pointer user-select-none"
     >
@@ -58,7 +49,6 @@ defineEmits<{
 
     <div class="d-flex align-items-center gap-1">
       <BDropdown
-        v-if="recipient"
         variant="link"
         no-caret
         toggle-class="text-decoration-none p-0 text-muted btn btn-secondary-outline action-button"

@@ -6,7 +6,6 @@ import type {
   ConversationOrDraft,
   ConversationSummary,
 } from '@zod/messaging/messaging.dto'
-import { isDeletedPartner } from '@zod/messaging/messaging.dto'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 
 import { useMessageStore } from '../stores/messageStore'
@@ -46,10 +45,6 @@ export function useConversationDetailViewModel() {
     const c = conversation.value
     return c && c.isDraft === false ? c : null
   })
-
-  const isPartnerDeleted = computed(
-    () => !!conversation.value && isDeletedPartner(conversation.value.partnerProfile)
-  )
 
   const canCall = computed(() => {
     const c = persistedConversation.value
@@ -169,7 +164,6 @@ export function useConversationDetailViewModel() {
     conversation,
     persistedConversation,
     partner: conversationPartner,
-    isPartnerDeleted,
     isDraft,
     isLoading: computed(() => messageStore.isLoading),
     canCall,

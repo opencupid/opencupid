@@ -164,11 +164,20 @@ export class UserService {
           where: { OR: [{ fromId: profileId }, { toId: profileId }] },
         })
 
+        // Archive every conversation this profile is part of so it is hidden from
+        // the surviving partner's inbox. Match on the pair fields, not participant
+        // rows: PENDING conversations only have the sender's participant row.
+        // The rows survive (profileAId/profileBId/initiatorProfileId become NULL via
+        // SetNull) so the partner's ConversationParticipant is preserved and
+        // markConversationRead no longer produces a P2025 error.
+        await tx.conversation.updateMany({
+          where: { OR: [{ profileAId: profileId }, { profileBId: profileId }] },
+          data: { status: 'ARCHIVED' },
+        })
+
         // Delete Profile — cascades: LocalizedProfileField, Image/ProfileImage,
         // ConversationParticipant (profileId FK), Message (senderId FK).
-        // profileAId/profileBId/initiatorProfileId on Conversation are set to NULL (SetNull):
-        // the conversation stays in the surviving partner's inbox with a tombstone
-        // in place of this profile.
+        // profileAId/profileBId/initiatorProfileId on Conversation are set to NULL (SetNull).
         await tx.profile.delete({ where: { id: profileId } })
       }
 
