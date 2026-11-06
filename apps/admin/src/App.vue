@@ -122,6 +122,13 @@ watch(
           >
         </li>
         <li class="nav-item">
+          <router-link
+            class="nav-link"
+            to="/exit-surveys"
+            >Exit surveys</router-link
+          >
+        </li>
+        <li class="nav-item">
           <a
             class="nav-link"
             href="/bull-board/"

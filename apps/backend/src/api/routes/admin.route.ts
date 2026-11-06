@@ -3,6 +3,7 @@ import { DeepLClient } from 'deepl-node'
 import slugify from 'slugify'
 import { Prisma } from '@prisma/client'
 import { isSupportedLocale } from '@shared/i18n/locales'
+import { AccountDeletionReasonSchema } from '@zod/generated/inputTypeSchemas/AccountDeletionReasonSchema'
 import {
   TrustReasonSchema,
   type TrustReasonType,
@@ -1322,6 +1323,50 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error listing trust flags')
       return sendError(reply, 500, 'Failed to list trust flags')
+    }
+  })
+
+  /**
+   * GET /exit-surveys
+   * Lists account deletion survey answers, newest first. `counts` covers every
+   * answer per reason regardless of the `reason` filter, so the summary stays put
+   * while the list is filtered.
+   * @query {string} [reason]
+   * @query {number} [page=1]
+   * @query {number} [pageSize=25]
+   */
+  fastify.get('/exit-surveys', async (req, reply) => {
+    try {
+      const q = req.query as Record<string, string | undefined>
+      const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1)
+      const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? '25', 10) || 25))
+
+      const reason = q.reason ? AccountDeletionReasonSchema.safeParse(q.reason) : undefined
+      if (reason && !reason.success) {
+        return sendError(reply, 400, `invalid reason: ${q.reason}`)
+      }
+      const where = reason ? { reason: reason.data } : {}
+
+      const [surveys, total, groups] = await Promise.all([
+        prisma.accountDeletionFeedback.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+        prisma.accountDeletionFeedback.count({ where }),
+        prisma.accountDeletionFeedback.groupBy({ by: ['reason'], _count: { _all: true } }),
+      ])
+      const counts = Object.fromEntries(
+        AccountDeletionReasonSchema.options.map((r) => [
+          r,
+          groups.find((g) => g.reason === r)?._count._all ?? 0,
+        ])
+      )
+      return reply.code(200).send({ success: true, surveys, total, page, pageSize, counts })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error listing exit surveys')
+      return sendError(reply, 500, 'Failed to list exit surveys')
     }
   })
 

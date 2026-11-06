@@ -20,6 +20,11 @@ const mockPrisma = vi.hoisted(() => {
     profileActivitySummary: {
       groupBy: vi.fn(),
     },
+    accountDeletionFeedback: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      groupBy: vi.fn(),
+    },
     profileTrustFlag: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
@@ -1923,6 +1928,74 @@ describe('POST /messages', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload).toMatchObject({ success: true, sent: 0, failed: 1 })
     expect(reply.payload.results).toEqual([{ profileId: 'p1', error: 'INTERNAL_ERROR' }])
+  })
+})
+
+describe('GET /exit-surveys', () => {
+  const answer = {
+    id: 's1',
+    reason: 'other',
+    comment: 'Too quiet',
+    createdAt: new Date('2026-11-01T10:00:00Z'),
+  }
+
+  beforeEach(() => {
+    mockPrisma.accountDeletionFeedback.findMany.mockReset().mockResolvedValue([answer])
+    mockPrisma.accountDeletionFeedback.count.mockReset().mockResolvedValue(1)
+    mockPrisma.accountDeletionFeedback.groupBy.mockReset().mockResolvedValue([
+      { reason: 'other', _count: { _all: 1 } },
+      { reason: 'bad_experience', _count: { _all: 3 } },
+    ])
+  })
+
+  it('lists answers newest first with zero-filled counts per reason', async () => {
+    await fastify.routes['GET /exit-surveys']({ query: {} }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({
+      success: true,
+      surveys: [answer],
+      total: 1,
+      page: 1,
+      pageSize: 25,
+      counts: { found_connection: 0, not_a_good_fit: 0, bad_experience: 3, other: 1 },
+    })
+    expect(mockPrisma.accountDeletionFeedback.findMany).toHaveBeenCalledWith({
+      where: {},
+      orderBy: { createdAt: 'desc' },
+      skip: 0,
+      take: 25,
+    })
+  })
+
+  it('filters the list and total by reason but not the counts', async () => {
+    await fastify.routes['GET /exit-surveys']({ query: { reason: 'other', page: '3' } }, reply)
+
+    expect(mockPrisma.accountDeletionFeedback.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { reason: 'other' }, skip: 50 })
+    )
+    expect(mockPrisma.accountDeletionFeedback.count).toHaveBeenCalledWith({
+      where: { reason: 'other' },
+    })
+    expect(mockPrisma.accountDeletionFeedback.groupBy).toHaveBeenCalledWith({
+      by: ['reason'],
+      _count: { _all: true },
+    })
+  })
+
+  it('rejects an unknown reason', async () => {
+    await fastify.routes['GET /exit-surveys']({ query: { reason: 'nope' } }, reply)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.accountDeletionFeedback.findMany).not.toHaveBeenCalled()
+  })
+
+  it('returns 500 when the query fails', async () => {
+    mockPrisma.accountDeletionFeedback.count.mockRejectedValue(new Error('db down'))
+
+    await fastify.routes['GET /exit-surveys']({ query: {} }, reply)
+
+    expect(reply.statusCode).toBe(500)
   })
 })
 

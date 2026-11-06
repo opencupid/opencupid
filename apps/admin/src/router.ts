@@ -4,6 +4,7 @@ import ProfilesPage from './pages/ProfilesPage.vue'
 import ModerationPage from './pages/ModerationPage.vue'
 import TagsPage from './pages/TagsPage.vue'
 import MessagesPage from './pages/MessagesPage.vue'
+import ExitSurveysPage from './pages/ExitSurveysPage.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -13,5 +14,6 @@ export const router = createRouter({
     { path: '/moderation', name: 'moderation', component: ModerationPage },
     { path: '/tags', name: 'tags', component: TagsPage },
     { path: '/messages', name: 'messages', component: MessagesPage },
+    { path: '/exit-surveys', name: 'exit-surveys', component: ExitSurveysPage },
   ],
 })
