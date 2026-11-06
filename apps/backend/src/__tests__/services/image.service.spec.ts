@@ -179,7 +179,7 @@ describe('listing galleries', () => {
 describe('attachToProfile', () => {
   it('locks the profile gallery, then the image, appends without a position, then syncs hasFace', async () => {
     given(img('a'))
-    mockPrisma.imageAttachment.findFirst.mockResolvedValue({ image: { hasFace: true } })
+    mockPrisma.imageAttachment.findFirst.mockResolvedValue({ imageId: 'img1' })
 
     await service.attachToProfile('a', ME)
 

@@ -56,7 +56,7 @@ export const OwnerScalarsSchema = ProfileSchema.pick({
   ...socialFields,
   ...datingFields,
   ...ownerFields,
-  // Read-only, derived from the top gallery image. Gates whether the owner may
+  // Read-only, true if any gallery image has a face. Gates whether the owner may
   // see other profiles' photos.
   hasFace: true,
 })

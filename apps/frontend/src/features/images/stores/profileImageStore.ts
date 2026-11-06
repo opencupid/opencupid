@@ -13,7 +13,7 @@ import { bus } from '@/lib/bus'
 import type { GalleryStoreResponse } from './galleryStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
-// Profile.hasFace is derived server-side from the top gallery image, so any
+// Profile.hasFace is derived server-side from the gallery images, so any
 // gallery change may flip it.
 const refreshHasFace = () => useOwnerProfileStore().refreshHasFace()
 
