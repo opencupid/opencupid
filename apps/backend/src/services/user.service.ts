@@ -204,14 +204,19 @@ export class UserService {
   }
 
   /**
-   * First step of account closure: mark the user inactive and void any pending
-   * login token, so the account can no longer sign in even if the subsequent
-   * hard delete fails.
+   * First step of account closure: mark the user inactive, void any pending
+   * login token and bump tokenVersion so refreshes fail, so the account can no
+   * longer sign in even if the subsequent hard delete fails.
    */
   async deactivate(userId: string): Promise<void> {
     await prisma.user.update({
       where: { id: userId },
-      data: { isActive: false, loginToken: null, loginTokenExp: null },
+      data: {
+        isActive: false,
+        loginToken: null,
+        loginTokenExp: null,
+        tokenVersion: { increment: 1 },
+      },
     })
   }
 }

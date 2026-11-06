@@ -28,6 +28,7 @@ vi.mock('@/lib/appconfig', () => ({
 beforeEach(async () => {
   fastify = new MockFastify()
   fastify.prisma = { user: { update: vi.fn() } }
+  fastify.deleteUserSessions = vi.fn().mockResolvedValue(undefined)
   reply = new MockReply()
   mockUserService = {
     getUserById: vi.fn(),
@@ -123,14 +124,13 @@ describe('PATCH /me', () => {
 describe('DELETE /me', () => {
   it('deletes account, clears tokens and session, returns 200', async () => {
     const handler = fastify.routes['DELETE /me']
-    const deleteSession = vi.fn().mockResolvedValue(undefined)
     mockUserService.getUserById.mockResolvedValue({ email: 'a@b.com', phonenumber: null })
     mockUserService.deleteAccount.mockResolvedValue(undefined)
     mockRefreshTokenService.deleteAllForUser.mockResolvedValue(undefined)
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: 'a@b.com' },
-      deleteSession,
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(mockUserService.deactivate).toHaveBeenCalledWith('u1')
@@ -139,10 +139,29 @@ describe('DELETE /me', () => {
     )
     expect(mockUserService.deleteAccount).toHaveBeenCalledWith('u1')
     expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('u1')
-    expect(deleteSession).toHaveBeenCalled()
+    expect(fastify.deleteUserSessions).toHaveBeenCalledWith('u1')
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.clearedCookies.some((c) => c.name === '__media_token')).toBe(true)
+  })
+
+  it('closes the live sockets of the deleted profile only', async () => {
+    const handler = fastify.routes['DELETE /me']
+    mockUserService.getUserById.mockResolvedValue({ email: 'a@b.com', phonenumber: null })
+    const own = [{ close: vi.fn() }, { close: vi.fn() }]
+    const other = { close: vi.fn() }
+    fastify.connections = new Map<string, Set<unknown>>([
+      ['p1', new Set(own)],
+      ['p2', new Set([other])],
+    ])
+    const req = {
+      user: { userId: 'u1' },
+      body: { confirmIdentifier: 'a@b.com' },
+      session: { profileId: 'p1' },
+    }
+    await handler(req as any, reply as any)
+    for (const socket of own) expect(socket.close).toHaveBeenCalled()
+    expect(other.close).not.toHaveBeenCalled()
   })
 
   it('accepts case-insensitive confirmation', async () => {
@@ -153,7 +172,7 @@ describe('DELETE /me', () => {
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: '  A@B.COM  ' },
-      deleteSession: vi.fn(),
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
@@ -168,7 +187,7 @@ describe('DELETE /me', () => {
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: '+15551234' },
-      deleteSession: vi.fn(),
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
@@ -176,7 +195,7 @@ describe('DELETE /me', () => {
 
   it('returns 400 if confirmIdentifier is missing', async () => {
     const handler = fastify.routes['DELETE /me']
-    const req = { user: { userId: 'u1' }, body: {}, deleteSession: vi.fn() }
+    const req = { user: { userId: 'u1' }, body: {}, session: { profileId: 'p1' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(400)
     expect(mockUserService.deactivate).not.toHaveBeenCalled()
@@ -189,7 +208,7 @@ describe('DELETE /me', () => {
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: 'wrong@example.com' },
-      deleteSession: vi.fn(),
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(400)
@@ -203,7 +222,7 @@ describe('DELETE /me', () => {
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: 'a@b.com' },
-      deleteSession: vi.fn(),
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(401)
@@ -218,7 +237,7 @@ describe('DELETE /me', () => {
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: 'a@b.com' },
-      deleteSession: vi.fn(),
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(500)
@@ -231,12 +250,11 @@ describe('DELETE /me', () => {
     mockUserService.deactivate.mockResolvedValue(undefined)
     mockUserService.deleteAccount.mockRejectedValue(new Error('db error'))
     mockRefreshTokenService.deleteAllForUser.mockResolvedValue(undefined)
-    const deleteSession = vi.fn().mockResolvedValue(undefined)
     const logError = vi.spyOn(fastify.log, 'error')
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: 'a@b.com' },
-      deleteSession,
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(logError).toHaveBeenCalledWith(
@@ -244,7 +262,7 @@ describe('DELETE /me', () => {
       expect.stringContaining('admin follow-up')
     )
     expect(mockRefreshTokenService.deleteAllForUser).toHaveBeenCalledWith('u1')
-    expect(deleteSession).toHaveBeenCalled()
+    expect(fastify.deleteUserSessions).toHaveBeenCalledWith('u1')
     expect(reply.statusCode).toBe(200)
   })
 
@@ -256,7 +274,7 @@ describe('DELETE /me', () => {
     const req = {
       user: { userId: 'u1' },
       body: { confirmIdentifier: 'a@b.com' },
-      deleteSession: vi.fn(),
+      session: { profileId: 'p1' },
     }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)

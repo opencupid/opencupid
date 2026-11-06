@@ -202,14 +202,19 @@ describe('UserService.deleteAccount', () => {
 })
 
 describe('UserService.deactivate', () => {
-  it('marks the user inactive and voids any pending login token', async () => {
+  it('marks the user inactive, voids any pending login token and revokes refreshes', async () => {
     mockPrisma.user.update.mockResolvedValue({})
 
     await service.deactivate('user1')
 
     expect(mockPrisma.user.update).toHaveBeenCalledWith({
       where: { id: 'user1' },
-      data: { isActive: false, loginToken: null, loginTokenExp: null },
+      data: {
+        isActive: false,
+        loginToken: null,
+        loginTokenExp: null,
+        tokenVersion: { increment: 1 },
+      },
     })
   })
 })

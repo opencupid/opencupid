@@ -114,12 +114,17 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
           'Account deletion failed after deactivation — needs admin follow-up'
         )
       }
-      // Session cleanup is best-effort: the account is already closed, so
-      // cleanup failures must not surface as 500 (which would block the
-      // frontend from running its logout/redirect path).
+      // Log out every device, not just this one (same as an admin block; see
+      // SessionService.deleteAllForUser for the remaining edge cases). Cleanup is
+      // best-effort: the account is already closed, so failures must not surface
+      // as 500 (which would block the frontend from running its logout/redirect
+      // path).
       try {
         await refreshTokenService.deleteAllForUser(req.user.userId)
-        await req.deleteSession()
+        await fastify.deleteUserSessions(req.user.userId)
+        for (const socket of fastify.connections.get(req.session.profileId) ?? []) {
+          socket.close()
+        }
         reply.clearCookie('__media_token', { path: '/user-content/' })
       } catch (error) {
         fastify.log.warn({ err: error }, 'Post-delete session cleanup failed')

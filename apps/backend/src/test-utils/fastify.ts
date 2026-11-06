@@ -15,6 +15,7 @@ export class MockFastify {
   public createSession = (_token: string, _data: SessionData): Promise<void> => Promise.resolve()
   public deleteSession = (_token: string, _userId: string): Promise<void> => Promise.resolve()
   public deleteUserSessions = (_userId: string): Promise<void> => Promise.resolve()
+  public connections = new Map<string, Set<unknown>>()
 
   get(path: string, opts: any | RouteHandler, handler?: RouteHandler) {
     this.routes[`GET ${path}`] = (typeof opts === 'function' ? opts : handler) as RouteHandler
