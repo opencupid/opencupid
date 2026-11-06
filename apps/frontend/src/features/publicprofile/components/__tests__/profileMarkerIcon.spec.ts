@@ -13,6 +13,25 @@ import { renderHiddenProfileMarkerHtml, renderProfileMarkerHtml } from '../profi
 
 const base = { isSelected: false, isHighlighted: false }
 
+describe('renderProfileMarkerHtml', () => {
+  it('renders the empty silhouette for a profile without a photo', () => {
+    const html = renderProfileMarkerHtml({ ...base, image: undefined })
+    expect(html).toContain(`src="${photoEmptyUrl}"`)
+    expect(html).toContain('poi-avatar')
+  })
+
+  it('keeps the post and match badges on a profile without a photo', () => {
+    const html = renderProfileMarkerHtml({
+      ...base,
+      image: undefined,
+      hasPost: true,
+      isHighlighted: true,
+    })
+    expect(html).toContain('post-indicator')
+    expect(html).toContain('match-indicator')
+  })
+})
+
 describe('renderHiddenProfileMarkerHtml', () => {
   it('renders the blurhash without an icon, never the photo URL', () => {
     const html = renderHiddenProfileMarkerHtml({
@@ -27,6 +46,7 @@ describe('renderHiddenProfileMarkerHtml', () => {
 
   it('renders the empty silhouette for a profile without a photo', () => {
     const html = renderHiddenProfileMarkerHtml({ ...base, image: undefined })
+    expect(html).toBe(renderProfileMarkerHtml({ ...base, image: undefined }))
     expect(html).toContain(photoEmptyUrl)
     expect(html).not.toContain('poi-avatar-hidden')
   })
