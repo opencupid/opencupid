@@ -1,5 +1,15 @@
 # frontend
 
+## 0.87.0
+
+### Minor Changes
+
+- c46b36f: Track the account deletion funnel in Umami: open-delete-dialog, confirm-delete and exit-survey-sent (with the chosen reason)
+
+### Patch Changes
+
+- 23f73f8: Fix the exit survey sometimes being skipped after account deletion: a request failing late no longer redirects an already logged-out user to the login page
+
 ## 0.86.0
 
 ### Minor Changes
