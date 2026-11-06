@@ -144,18 +144,20 @@ model User {
 }
 
 model Profile {
-  id             String  @id @default(cuid())
-  publicName     String
-  country        String  @default("")
-  cityName       String  @default("")
-  isSocialActive Boolean @default(false)
-  isDatingActive Boolean @default(false)
-  isActive       Boolean @default(false)
-  isReported     Boolean @default(false)
-  isBlocked      Boolean @default(false)
-  isOnboarded    Boolean @default(false)
-  isCallable     Boolean @default(true)
-  hasFace        Boolean @default(false)
+  id                  String  @id @default(cuid())
+  publicName          String
+  country             String  @default("")
+  cityName            String  @default("")
+  isSocialActive      Boolean @default(false)
+  isDatingActive      Boolean @default(false)
+  isActive            Boolean @default(false)
+  isReported          Boolean @default(false)
+  isBlocked           Boolean @default(false)
+  isOnboarded         Boolean @default(false)
+  isCallable          Boolean @default(true)
+  hasFace             Boolean @default(false)
+  /// Set by the nightly activity job; see syncHiddenFromResults.
+  isHiddenFromResults Boolean @default(false)
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])

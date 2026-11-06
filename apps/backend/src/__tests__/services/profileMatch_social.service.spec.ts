@@ -84,6 +84,15 @@ describe('ProfileMatchService.findSocialProfilesWithLocation', () => {
     expect(call.where.user).toEqual({ isBlocked: false })
   })
 
+  it('excludes profiles hidden from results, except the viewer', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.where.OR).toEqual([{ id: mockProfileId }, { isHiddenFromResults: false }])
+  })
+
   it('limits results to 500', async () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
 
