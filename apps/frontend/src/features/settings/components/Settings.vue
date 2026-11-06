@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useUserStore } from '@/store/userStore'
 import { usePwaInstall } from '@/features/app/composables/usePwaInstall'
+import { tracker } from '@/lib/umami'
 
 import IconLogout from '@/assets/icons/interface/logout.svg'
 import IconGlobe from '@/assets/icons/interface/globe.svg'
@@ -56,7 +57,13 @@ function handleLogout() {
   authStore.logout()
 }
 
+function openCloseAccountDialog() {
+  tracker.track('open-delete-dialog')
+  showCloseAccountDialog.value = true
+}
+
 async function handleCloseAccount(confirmInput: string) {
+  tracker.track('confirm-delete')
   isClosingAccount.value = true
   const result = await userStore.deleteAccount(confirmInput)
   isClosingAccount.value = false
@@ -108,7 +115,7 @@ async function handleCloseAccount(confirmInput: string) {
       <BButton
         variant="outline-danger"
         size="sm"
-        @click="showCloseAccountDialog = true"
+        @click="openCloseAccountDialog"
       >
         {{ $t('settings.close_account_button') }}
       </BButton>

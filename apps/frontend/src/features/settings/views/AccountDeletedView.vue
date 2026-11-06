@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AuthLayout from '@/features/auth/components/AuthLayout.vue'
 import { useUserStore } from '@/store/userStore'
+import { tracker } from '@/lib/umami'
 import {
   ACCOUNT_DELETION_COMMENT_MAX_LENGTH,
   type AccountDeletionFeedbackPayload,
@@ -37,6 +38,7 @@ async function submit(payload: AccountDeletionFeedbackPayload) {
   const res = await userStore.submitAccountDeletionFeedback(payload)
   submitting.value = false
   if (res.success) {
+    tracker.track('exit-survey-sent', payload)
     submitted.value = true
     return
   }
