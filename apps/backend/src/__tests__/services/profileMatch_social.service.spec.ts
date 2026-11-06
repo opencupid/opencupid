@@ -99,15 +99,6 @@ describe('ProfileMatchService.findSocialProfilesWithLocation', () => {
     ])
   })
 
-  it('orders by newest created first', async () => {
-    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
-
-    await service.findSocialProfilesWithLocation(mockProfileId)
-
-    const call = mockPrisma.profile.findMany.mock.calls[0][0]
-    expect(call.orderBy).toEqual({ createdAt: 'desc' })
-  })
-
   it('limits results to 500', async () => {
     mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
 

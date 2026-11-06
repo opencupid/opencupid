@@ -13,7 +13,7 @@ export type OrderBy =
   | Prisma.ProfileOrderByWithRelationInput
 
 const defaultOrderBy: OrderBy = {
-  createdAt: 'desc',
+  updatedAt: 'desc',
 }
 
 const statusFlags = {
