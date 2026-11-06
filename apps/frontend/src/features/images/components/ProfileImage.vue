@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import BlurhashImage from './BlurhashImage.vue'
+import EmptyProfilePhoto from './EmptyProfilePhoto.vue'
 import HiddenProfilePhoto from './HiddenProfilePhoto.vue'
 import { type ImageVariant } from '@zod/image/image.dto'
 import { type VariantName } from './types'
@@ -42,6 +43,11 @@ const isHidden = computed(() => !canSeePhotosOf(props.profile))
     :image="image"
     :variant="props.variant"
     imgClass="img-fluid rounded"
+    @load="emit('load')"
+  />
+  <EmptyProfilePhoto
+    v-else
+    class="img-fluid rounded"
     @load="emit('load')"
   />
 </template>

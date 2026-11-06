@@ -79,12 +79,13 @@ describe('ProfileImage', () => {
     expect(wrapper.find('[data-testid="hidden-profile-photo"]').exists()).toBe(false)
   })
 
-  it('renders nothing for a profile without photos when the viewer has a face photo', () => {
+  it('shows the empty silhouette for a profile without photos when the viewer has a face photo', () => {
     const wrapper = mount(ProfileImage, {
       props: { profile: { id: 'other', profileImages: [] } },
       global: { stubs: { ImageTag } },
     })
-    expect(wrapper.html()).toBe('<!--v-if-->')
+    expect(wrapper.find('[data-testid="empty-profile-photo"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="no-profile-photo"]').exists()).toBe(false)
   })
 
   it.each([true, false])(

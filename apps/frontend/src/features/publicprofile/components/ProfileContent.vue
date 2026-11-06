@@ -4,6 +4,7 @@ import { computed, inject, type Ref } from 'vue'
 import { type OwnerProfile, type PublicProfile } from '@zod/profile/profile.dto'
 
 import ImageCarousel from './ImageCarousel.vue'
+import EmptyProfilePhoto from '@/features/images/components/EmptyProfilePhoto.vue'
 import HiddenProfilePhoto from '@/features/images/components/HiddenProfilePhoto.vue'
 import { useProfilePhotoAccess } from '@/features/images/composables/useProfilePhotoAccess'
 import GenderPronounLabel from '@/features/shared/profiledisplay/GenderPronounLabel.vue'
@@ -25,9 +26,8 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 const { canSeePhotosOf } = useProfilePhotoAccess()
 // The carousel has no height without images, which would collapse the photo
 // area (and the edit button positioned over it) when the gallery is empty.
-const showPlaceholder = computed(
-  () => !canSeePhotosOf(props.profile) || props.profile.profileImages.length === 0
-)
+const isHidden = computed(() => !canSeePhotosOf(props.profile))
+const showPlaceholder = computed(() => isHidden.value || props.profile.profileImages.length === 0)
 </script>
 
 <template>
@@ -38,9 +38,11 @@ const showPlaceholder = computed(
         class="ratio ratio-4x3"
       >
         <HiddenProfilePhoto
+          v-if="isHidden"
           :photo="profile.profileImages[0]"
           icon-corner="bottom-right"
         />
+        <EmptyProfilePhoto v-else />
       </div>
       <ImageCarousel
         v-else
