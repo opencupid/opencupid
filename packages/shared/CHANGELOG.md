@@ -1,5 +1,12 @@
 # @opencupid/shared
 
+## 0.15.0
+
+### Minor Changes
+
+- 5f64646: Add Close Account feature — users can permanently delete their account from the Settings page (#807)
+- 466d99a: Show a confirmation screen with a short exit survey after an account is deleted
+
 ## 0.14.2
 
 ### Patch Changes

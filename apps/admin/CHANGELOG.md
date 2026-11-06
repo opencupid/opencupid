@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.86.0
+
+### Minor Changes
+
+- 00c903d: Add an Exit surveys page to the admin app with a per-reason pie chart and summary, and a filterable list of answers
+
 ## 0.85.1
 
 ## 0.85.0
