@@ -8,6 +8,9 @@ vi.mock('@/store/userStore', () => ({
   useUserStore: () => ({ submitAccountDeletionFeedback: mockSubmit }),
 }))
 
+const mockTrack = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/umami', () => ({ tracker: { track: mockTrack } }))
+
 import AccountDeletedView from '../AccountDeletedView.vue'
 
 function mountView() {
@@ -45,10 +48,41 @@ const pick = (wrapper: ReturnType<typeof mountView>, reason: string) =>
 
 beforeEach(() => {
   mockSubmit.mockReset()
+  mockTrack.mockReset()
   mockSubmit.mockResolvedValue({ success: true })
 })
 
 describe('AccountDeletedView', () => {
+  it('tracks a sent answer with its reason', async () => {
+    const wrapper = mountView()
+
+    await pick(wrapper, 'bad_experience')
+    await flushPromises()
+
+    expect(mockTrack).toHaveBeenCalledWith('exit-survey-sent', { reason: 'bad_experience' })
+  })
+
+  it('tracks an "other" answer without its comment', async () => {
+    const wrapper = mountView()
+
+    await pick(wrapper, 'other')
+    await wrapper.find('textarea').setValue('Too quiet here')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(mockTrack).toHaveBeenCalledWith('exit-survey-sent', { reason: 'other' })
+  })
+
+  it('does not track an answer that failed to send', async () => {
+    mockSubmit.mockResolvedValue({ success: false })
+    const wrapper = mountView()
+
+    await pick(wrapper, 'bad_experience')
+    await flushPromises()
+
+    expect(mockTrack).not.toHaveBeenCalled()
+  })
+
   it('shows the confirmation message and all four choices, with no textarea', () => {
     const wrapper = mountView()
 
