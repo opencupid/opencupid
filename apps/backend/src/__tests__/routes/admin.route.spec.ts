@@ -1958,7 +1958,7 @@ describe('GET /exit-surveys', () => {
       total: 1,
       page: 1,
       pageSize: 25,
-      counts: { found_connection: 0, not_a_good_fit: 0, bad_experience: 3, other: 1 },
+      counts: { technical_issue: 0, not_a_good_fit: 0, bad_experience: 3, other: 1 },
     })
     expect(mockPrisma.accountDeletionFeedback.findMany).toHaveBeenCalledWith({
       where: {},

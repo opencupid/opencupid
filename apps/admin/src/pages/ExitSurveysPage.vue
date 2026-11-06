@@ -23,7 +23,7 @@ interface ExitSurveysResponse {
 
 // The wording members were shown, so the two can't drift apart.
 const reasons: { value: AccountDeletionReasonType; label: string; color: string }[] = [
-  { value: 'found_connection', label: labels.reason_found_connection, color: '#2a78d6' },
+  { value: 'technical_issue', label: labels.reason_technical_issue, color: '#2a78d6' },
   { value: 'not_a_good_fit', label: labels.reason_not_a_good_fit, color: '#eb6834' },
   { value: 'bad_experience', label: labels.reason_bad_experience, color: '#1baf7a' },
   { value: 'other', label: labels.reason_other, color: '#eda100' },

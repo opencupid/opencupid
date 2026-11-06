@@ -13,10 +13,10 @@ import ExitSurveysPage from '../ExitSurveysPage.vue'
 
 const mockApi = apiRequest as unknown as ReturnType<typeof vi.fn>
 
-const counts = { found_connection: 1, not_a_good_fit: 0, bad_experience: 0, other: 3 }
+const counts = { technical_issue: 1, not_a_good_fit: 0, bad_experience: 0, other: 3 }
 const preset = {
   id: 's1',
-  reason: 'found_connection',
+  reason: 'technical_issue',
   comment: null,
   createdAt: '2026-11-02T10:00:00Z',
 }
@@ -42,7 +42,7 @@ describe('ExitSurveysPage', () => {
 
     expect(wrapper.text()).toContain('4 answers')
     const rows = summaryRows(wrapper)
-    expect(rows[0]).toContain('I found what I was looking for')
+    expect(rows[0]).toContain('Technical issue')
     expect(rows[0]).toContain('25%')
     expect(rows[1]).toContain('0%')
     expect(rows[3]).toContain('Other')
@@ -55,7 +55,7 @@ describe('ExitSurveysPage', () => {
 
     const pie = wrapper.findComponent({ name: 'Pie' })
     const data = pie.props('data') as any
-    expect(data.labels[0]).toBe('I found what I was looking for')
+    expect(data.labels[0]).toBe('Technical issue')
     expect(data.datasets[0].data).toEqual([1, 0, 0, 3])
     expect(new Set(data.datasets[0].backgroundColor).size).toBe(4)
     expect(wrapper.find('[role="img"]').attributes('aria-label')).toContain('Other: 75%')
@@ -89,7 +89,7 @@ describe('ExitSurveysPage', () => {
 
     const rows = wrapper.findAll('[data-testid="answers"] tbody tr')
     expect(rows).toHaveLength(2)
-    expect(rows[0]!.text()).toContain('I found what I was looking for')
+    expect(rows[0]!.text()).toContain('Technical issue')
     expect(rows[0]!.text()).toContain('—')
     expect(rows[1]!.find('.comment').text()).toBe('<b>Too quiet</b>')
     expect(rows[1]!.find('.comment b').exists()).toBe(false)
@@ -114,7 +114,7 @@ describe('ExitSurveysPage', () => {
     mockApi.mockResolvedValue({
       surveys: [],
       total: 0,
-      counts: { found_connection: 0, not_a_good_fit: 0, bad_experience: 0, other: 0 },
+      counts: { technical_issue: 0, not_a_good_fit: 0, bad_experience: 0, other: 0 },
     })
     const wrapper = mount(ExitSurveysPage)
     await flushPromises()
