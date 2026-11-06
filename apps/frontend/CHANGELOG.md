@@ -1,5 +1,11 @@
 # frontend
 
+## 0.85.1
+
+### Patch Changes
+
+- 69c7371: Show a plain silhouette for profiles without photos to all viewers, without the hidden-photo icon or hint
+
 ## 0.85.0
 
 ### Patch Changes
