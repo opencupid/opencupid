@@ -12,7 +12,11 @@ import {
 } from '@/store/helpers'
 
 import { type SettingsUser, SettingsUserSchema } from '@zod/user/user.dto'
-import type { GetUserSettingsResponse, UpdateUserLanguageResponse } from '@zod/apiResponse.dto'
+import type {
+  GetUserSettingsResponse,
+  UpdateUserLanguageResponse,
+  DeleteAccountResponse,
+} from '@zod/apiResponse.dto'
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<SettingsUser | null>(null)
@@ -47,7 +51,23 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  return { user, isLoading, fetchUser, updateLanguage }
+  async function deleteAccount(
+    confirmIdentifier: string
+  ): Promise<StoreVoidSuccess | StoreError> {
+    isLoading.value = true
+    try {
+      await safeApiCall(() =>
+        api.delete<DeleteAccountResponse>('/users/me', { data: { confirmIdentifier } })
+      )
+      return storeSuccess()
+    } catch (error) {
+      return storeError(error, 'Failed to delete account')
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return { user, isLoading, fetchUser, updateLanguage, deleteAccount }
 })
 
 // Module-level bus listeners (run once when module is imported)
