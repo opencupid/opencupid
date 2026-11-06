@@ -545,3 +545,19 @@ model MessageTemplate {
 
   @@unique([type, locale])
 }
+
+enum AccountDeletionReason {
+  found_connection
+  not_a_good_fit
+  bad_experience
+  other
+}
+
+// Exit survey answer. Submitted after the account is gone, so deliberately not
+// linked to any user or profile.
+model AccountDeletionFeedback {
+  id        String                @id @default(cuid())
+  reason    AccountDeletionReason
+  comment   String?
+  createdAt DateTime              @default(now())
+}

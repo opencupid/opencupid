@@ -1,6 +1,11 @@
 // TODO: review usage; copied for both db and dto layers
 import { z } from 'zod'
-import { ProfileSchema, UserRoleSchema, UserSchema } from '../generated'
+import {
+  AccountDeletionReasonSchema,
+  ProfileSchema,
+  UserRoleSchema,
+  UserSchema,
+} from '../generated'
 import { fallbackLocale, normalizeLocale } from '../../i18n/locales'
 
 // These schemas run in both runtimes and cannot read FALLBACK_LOCALE, so a
@@ -86,3 +91,16 @@ export const DeleteAccountPayloadSchema = z.object({
   confirmIdentifier: z.string().min(1),
 })
 export type DeleteAccountPayload = z.infer<typeof DeleteAccountPayloadSchema>
+
+export const ACCOUNT_DELETION_COMMENT_MAX_LENGTH = 2000
+
+// Exit survey submitted after account deletion. A free-text comment belongs
+// with the "other" reason only, where it is mandatory.
+export const AccountDeletionFeedbackPayloadSchema = z.discriminatedUnion('reason', [
+  z.object({ reason: AccountDeletionReasonSchema.exclude(['other']) }),
+  z.object({
+    reason: z.literal(AccountDeletionReasonSchema.enum.other),
+    comment: z.string().trim().min(1).max(ACCOUNT_DELETION_COMMENT_MAX_LENGTH),
+  }),
+])
+export type AccountDeletionFeedbackPayload = z.infer<typeof AccountDeletionFeedbackPayloadSchema>

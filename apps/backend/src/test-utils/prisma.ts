@@ -2,6 +2,9 @@ import { vi } from 'vitest'
 
 export function createMockPrisma() {
   const mock: any = {
+    accountDeletionFeedback: {
+      create: vi.fn(),
+    },
     user: {
       findUnique: vi.fn(),
       update: vi.fn(),

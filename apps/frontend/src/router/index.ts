@@ -25,6 +25,7 @@ const AppShellLayout = () => import('@/features/app/views/AppShellLayout.vue')
 const AppShell = () => import('@/features/browse/views/BrowseProfiles.vue')
 const OnboardingView = () => import('@/features/onboarding/views/Onboarding.vue')
 const UnsubscribeView = () => import('@/features/unsubscribe/views/UnsubscribeView.vue')
+const AccountDeletedView = () => import('@/features/settings/views/AccountDeletedView.vue')
 
 // All browse-area routes render AppShell. KeepAlive (include: ['AppShell'])
 // in AppShellLayout keeps it mounted across navigations. AppShell reads the
@@ -53,6 +54,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/unsubscribe/:token',
     name: 'Unsubscribe',
     component: UnsubscribeView,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: '/account-deleted',
+    name: 'AccountDeleted',
+    component: AccountDeletedView,
     meta: { requiresAuth: false },
   },
 

@@ -7,6 +7,7 @@ const { mockApi, mockSafeApiCall, mockBus } = vi.hoisted(() => {
     mockApi: {
       get: vi.fn(),
       patch: vi.fn(),
+      post: vi.fn(),
       defaults: { headers: { common: {} as Record<string, string> } },
     },
     mockSafeApiCall: vi.fn((fn: () => Promise<unknown>) => fn()),
@@ -183,6 +184,32 @@ describe('userStore', () => {
       await handler({ language: 'de' })
 
       expect(mockApi.patch).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('submitAccountDeletionFeedback', () => {
+    it('posts the answer and reports success', async () => {
+      mockApi.post.mockResolvedValue({ data: { success: true } })
+
+      const res = await useUserStore().submitAccountDeletionFeedback({
+        reason: 'found_connection',
+      })
+
+      expect(mockApi.post).toHaveBeenCalledWith('/users/deletion-feedback', {
+        reason: 'found_connection',
+      })
+      expect(res.success).toBe(true)
+    })
+
+    it('reports failure', async () => {
+      mockApi.post.mockRejectedValue(new Error('nope'))
+
+      const res = await useUserStore().submitAccountDeletionFeedback({
+        reason: 'other',
+        comment: 'Too quiet',
+      })
+
+      expect(res.success).toBe(false)
     })
   })
 })

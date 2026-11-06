@@ -1,16 +1,22 @@
 import { FastifyPluginAsync } from 'fastify'
 import { UserService } from '@/services/user.service'
 import { RefreshTokenService } from '@/services/refresh-token.service'
-import { sendError, sendUnauthorizedError } from '../helpers'
+import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { validateBody } from '@/utils/zodValidate'
 
-import type { GetUserSettingsResponse, DeleteAccountResponse } from '@zod/apiResponse.dto'
+import type {
+  GetUserSettingsResponse,
+  DeleteAccountResponse,
+  AccountDeletionFeedbackResponse,
+} from '@zod/apiResponse.dto'
 import {
   SettingsUserSchema,
   UpdateUserLanguagePayloadSchema,
   type UpdateUserLanguagePayload,
   DeleteAccountPayloadSchema,
   type DeleteAccountPayload,
+  AccountDeletionFeedbackPayloadSchema,
+  type AccountDeletionFeedbackPayload,
 } from '@zod/user/user.dto'
 
 const userRoutes: FastifyPluginAsync = async (fastify) => {
@@ -130,6 +136,35 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.log.warn({ err: error }, 'Post-delete session cleanup failed')
       }
       const response: DeleteAccountResponse = { success: true }
+      return reply.code(200).send(response)
+    }
+  )
+
+  /**
+   * POST /deletion-feedback
+   * Stores an exit survey answer. Unauthenticated because the session is gone by
+   * the time the survey is shown; the answer is not linked to anyone.
+   */
+  fastify.post(
+    '/deletion-feedback',
+    {
+      config: rateLimitConfig(fastify, '1 hour', 5),
+    },
+    async (req, reply) => {
+      const body = validateBody<AccountDeletionFeedbackPayload>(
+        AccountDeletionFeedbackPayloadSchema,
+        req,
+        reply
+      )
+      if (!body) return
+
+      try {
+        await userService.saveAccountDeletionFeedback(body)
+      } catch (error) {
+        fastify.log.error({ err: error }, 'Error saving account deletion feedback')
+        return sendError(reply, 500, 'Failed to save feedback')
+      }
+      const response: AccountDeletionFeedbackResponse = { success: true }
       return reply.code(200).send(response)
     }
   )
