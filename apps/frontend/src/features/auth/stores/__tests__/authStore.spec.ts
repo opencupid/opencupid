@@ -293,6 +293,23 @@ describe('authStore localStorage auth flow', () => {
     bus.off('auth:logged-out', loggedOutSpy)
   })
 
+  it('a late auth:logout after the user is already logged out does not re-emit auth:logged-out', async () => {
+    const { bus } = await import('@/lib/bus')
+    const store = useAuthStore()
+    store.userId = 'u1'
+
+    const loggedOutSpy = vi.fn()
+    bus.on('auth:logged-out', loggedOutSpy)
+
+    bus.emit('auth:logout')
+    // e.g. a request that was in flight when the session died fails its refresh
+    bus.emit('auth:logout')
+
+    expect(loggedOutSpy).toHaveBeenCalledTimes(1)
+
+    bus.off('auth:logged-out', loggedOutSpy)
+  })
+
   it('auth:logout clears both host-only and domain-scoped session cookie shapes', async () => {
     const { bus } = await import('@/lib/bus')
     const removeSpy = vi.spyOn(Cookies.prototype, 'remove')

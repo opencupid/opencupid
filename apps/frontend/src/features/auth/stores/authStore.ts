@@ -230,6 +230,10 @@ export const useAuthStore = defineStore('auth', {
 // sees isLoggedIn=false when it navigates to Login.
 bus.on('auth:logout', () => {
   const store = useAuthStore()
+  // A request in flight when the session died can fail its refresh after the user
+  // is already logged out. That must not redirect them to Login again, away from
+  // wherever they were sent (e.g. the exit survey after closing their account).
+  if (!store.isLoggedIn) return
   store.userId = null
   store.email = null
   store.loginUser = null
