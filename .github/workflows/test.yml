@@ -1,9 +1,6 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
 
 jobs:
@@ -50,12 +47,10 @@ jobs:
         run: pnpm --filter frontend exec vitest run
 
       - name: Type check
-        if: github.event_name == 'pull_request'
         run: pnpm type-check
 
       - name: Build frontend
         run: pnpm --filter frontend exec pnpm build-only
 
       - name: Check for existence of a changeset
-        if: github.event_name == 'pull_request'
         run: pnpm changeset status --since="origin/${{ github.base_ref }}"
