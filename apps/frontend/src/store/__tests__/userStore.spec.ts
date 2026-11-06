@@ -192,11 +192,11 @@ describe('userStore', () => {
       mockApi.post.mockResolvedValue({ data: { success: true } })
 
       const res = await useUserStore().submitAccountDeletionFeedback({
-        reason: 'found_connection',
+        reason: 'technical_issue',
       })
 
       expect(mockApi.post).toHaveBeenCalledWith('/users/deletion-feedback', {
-        reason: 'found_connection',
+        reason: 'technical_issue',
       })
       expect(res.success).toBe(true)
     })

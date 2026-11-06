@@ -58,7 +58,7 @@ describe('AccountDeletedView', () => {
     expect(wrapper.find('button').exists()).toBe(false)
   })
 
-  it.each(['found_connection', 'not_a_good_fit', 'bad_experience'])(
+  it.each(['technical_issue', 'not_a_good_fit', 'bad_experience'])(
     'submits %s immediately and shows the thank-you message',
     async (reason) => {
       const wrapper = mountView()

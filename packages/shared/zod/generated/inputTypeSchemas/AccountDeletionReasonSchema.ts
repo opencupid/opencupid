@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const AccountDeletionReasonSchema = z.enum(['found_connection','not_a_good_fit','bad_experience','other']);
+export const AccountDeletionReasonSchema = z.enum(['technical_issue','not_a_good_fit','bad_experience','other']);
 
 export type AccountDeletionReasonType = `${z.infer<typeof AccountDeletionReasonSchema>}`
 

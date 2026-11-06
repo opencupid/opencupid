@@ -3,9 +3,9 @@
     "comment_label": "Tell us more",
     "message": "Your account has been deleted. Would you mind telling us why you decided to leave this community?",
     "reason_bad_experience": "I had a bad experience here",
-    "reason_found_connection": "I found what I was looking for",
     "reason_not_a_good_fit": "This community isn't a good fit for me",
     "reason_other": "Other",
+    "reason_technical_issue": "Technical issue",
     "submit_button": "Submit",
     "submit_error": "Something went wrong. Please try again.",
     "thank_you": "Thank you for your feedback!"

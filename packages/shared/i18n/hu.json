@@ -3,9 +3,9 @@
     "comment_label": "Mesélj róla bővebben",
     "message": "A fiókodat töröltük. Elmondanád, miért döntöttél úgy, hogy elhagyod ezt a közösséget?",
     "reason_bad_experience": "Rossz tapasztalatom volt itt",
-    "reason_found_connection": "Megtaláltam, amit kerestem",
     "reason_not_a_good_fit": "Ez a közösség nem nekem való",
     "reason_other": "Egyéb",
+    "reason_technical_issue": "Technikai problémáim adódtak az oldallal",
     "submit_button": "Küldés",
     "submit_error": "Valami hiba történt. Kérjük, próbáld újra.",
     "thank_you": "Köszönjük a visszajelzésedet!"

@@ -547,7 +547,7 @@ model MessageTemplate {
 }
 
 enum AccountDeletionReason {
-  found_connection
+  technical_issue
   not_a_good_fit
   bad_experience
   other

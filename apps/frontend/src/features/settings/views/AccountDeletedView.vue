@@ -13,7 +13,7 @@ const userStore = useUserStore()
 
 const reasons = computed<{ value: AccountDeletionFeedbackPayload['reason']; label: string }[]>(
   () => [
-    { value: 'found_connection', label: t('account_deleted.reason_found_connection') },
+    { value: 'technical_issue', label: t('account_deleted.reason_technical_issue') },
     { value: 'not_a_good_fit', label: t('account_deleted.reason_not_a_good_fit') },
     { value: 'bad_experience', label: t('account_deleted.reason_bad_experience') },
     { value: 'other', label: t('account_deleted.reason_other') },

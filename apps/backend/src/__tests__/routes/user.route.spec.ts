@@ -288,10 +288,10 @@ describe('POST /deletion-feedback', () => {
     fastify.routes['POST /deletion-feedback']({ body } as any, reply as any)
 
   it('stores a preset reason without requiring a session', async () => {
-    await post({ reason: 'found_connection' })
+    await post({ reason: 'technical_issue' })
 
     expect(mockUserService.saveAccountDeletionFeedback).toHaveBeenCalledWith({
-      reason: 'found_connection',
+      reason: 'technical_issue',
     })
     expect(reply.statusCode).toBe(200)
     expect(reply.payload).toEqual({ success: true })
