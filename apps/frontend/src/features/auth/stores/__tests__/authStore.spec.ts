@@ -143,13 +143,22 @@ describe('authStore initialize', () => {
 
   it('clears malformed JWT on initialize', () => {
     setSessionCookie('not-a-valid-jwt')
+    const removeSpy = vi.spyOn(Cookies.prototype, 'remove')
 
     const store = useAuthStore()
     store.initialize()
 
     expect(store.isLoggedIn).toBe(false)
     expect(store.isInitialized).toBe(true)
-    expect(getSessionCookie()).toBeUndefined()
+    // jsdom serves from localhost, so it cannot hold the domain-scoped cookie
+    // the store removes; assert the removal targets the production shape.
+    expect(removeSpy).toHaveBeenCalledWith(SESSION_COOKIE, {
+      path: '/',
+      sameSite: 'lax',
+      domain: '.example.org',
+    })
+
+    removeSpy.mockRestore()
   })
 })
 
@@ -310,7 +319,7 @@ describe('authStore localStorage auth flow', () => {
     bus.off('auth:logged-out', loggedOutSpy)
   })
 
-  it('auth:logout clears both host-only and domain-scoped session cookie shapes', async () => {
+  it('auth:logout clears the domain-scoped session cookie', async () => {
     const { bus } = await import('@/lib/bus')
     const removeSpy = vi.spyOn(Cookies.prototype, 'remove')
     const store = useAuthStore()
@@ -319,12 +328,8 @@ describe('authStore localStorage auth flow', () => {
     bus.emit('auth:logout')
 
     const sessionRemoves = removeSpy.mock.calls.filter(([name]) => name === SESSION_COOKIE)
-    // Phase 1 silent migration: delete both pre- and post-migration shapes
-    // because universal-cookie only wipes the slot whose attributes match.
-    expect(sessionRemoves).toContainEqual([SESSION_COOKIE, { path: '/' }])
-    expect(sessionRemoves).toContainEqual([
-      SESSION_COOKIE,
-      { path: '/', sameSite: 'lax', domain: '.example.org' },
+    expect(sessionRemoves).toEqual([
+      [SESSION_COOKIE, { path: '/', sameSite: 'lax', domain: '.example.org' }],
     ])
 
     removeSpy.mockRestore()

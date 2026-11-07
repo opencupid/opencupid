@@ -36,7 +36,7 @@ function normalizeDomain(domain: string): string {
  * `nodeEnv` / `domain` are passed in so this module stays free of runtime
  * config imports — packages/shared must not depend on apps/*.
  */
-export function canScopeToDomain(nodeEnv: string, domain: string): boolean {
+function canScopeToDomain(nodeEnv: string, domain: string): boolean {
   // Vite dev server serves from `localhost` regardless of the DOMAIN env
   // value, so dev must stay host-only.
   if (nodeEnv === 'development') return false
@@ -53,9 +53,7 @@ export function canScopeToDomain(nodeEnv: string, domain: string): boolean {
 /**
  * Compose the session cookie's options for the caller's environment. Attaches
  * `Domain=.<apex>` when `canScopeToDomain` approves, otherwise returns host-
- * only options. Callers that also need to gate on the same decision (e.g. a
- * legacy-host-only clearCookie during the migration) call `canScopeToDomain`
- * directly with the same inputs.
+ * only options.
  */
 export function resolveSessionCookie(nodeEnv: string, domain: string) {
   if (!canScopeToDomain(nodeEnv, domain)) return { ...SESSION_COOKIE_OPTS }

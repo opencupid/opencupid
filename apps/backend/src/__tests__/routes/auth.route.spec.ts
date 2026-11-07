@@ -141,13 +141,7 @@ describe('GET /verify-token', () => {
       httpOnly: true,
       sameSite: 'lax',
     })
-    // Dev mode: the new-shape cookie is already host-only, so emitting a
-    // legacy host-only clearCookie would target the same (name, Domain, Path)
-    // slot as the just-set cookie and wipe it. The migration helper must
-    // skip the legacy clear in this case.
-    const clearedNames = reply.clearedCookies.map((c: any) => c.name)
-    expect(clearedNames).not.toContain('__session')
-    expect(clearedNames).not.toContain('__refresh')
+    expect(reply.clearedCookies).toEqual([])
   })
 
   it('sets Domain=.<DOMAIN> on session + refresh cookies in production', async () => {
@@ -182,11 +176,7 @@ describe('GET /verify-token', () => {
       // subdomain (apex + app. + api. etc.).
       expect(session.opts.domain).toBe('.fallback.example')
       expect(refresh.opts.domain).toBe('.fallback.example')
-      // The legacy-shape delete must NOT carry the Domain attribute — it
-      // targets the pre-migration host-only slot, which the browser keys
-      // separately from the domain-scoped slot.
-      const clearedSession = reply.clearedCookies.find((c: any) => c.name === '__session')!
-      expect(clearedSession.opts).toEqual({ path: '/' })
+      expect(reply.clearedCookies).toEqual([])
     } finally {
       appConfig.NODE_ENV = origNodeEnv
     }
