@@ -4,7 +4,6 @@ import { bus } from './bus'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { VersionResponse } from '@zod/apiResponse.dto'
 import { SESSION_COOKIE, resolveSessionCookie } from '@shared/session'
-import { clearLegacyCookie } from '@/lib/session-legacy'
 
 const baseURL = __APP_CONFIG__?.API_BASE_URL
 
@@ -253,14 +252,12 @@ api.interceptors.response.use(
         refreshSubscribers = []
 
         // Clear session cookie so next page load doesn't re-enter the refresh
-        // loop. Remove the active shape; `clearLegacyCookie` additionally
-        // zaps the pre-migration host-only slot when it's a distinct slot.
+        // loop.
         const jar = new Cookies()
         jar.remove(
           SESSION_COOKIE,
           resolveSessionCookie(__APP_CONFIG__.NODE_ENV, __APP_CONFIG__.DOMAIN)
         )
-        clearLegacyCookie(jar, SESSION_COOKIE)
         // auth:logout handler in authStore clears state synchronously and then
         // emits auth:logged-out — the single place that drives navigation to Login.
         bus.emit('auth:logout')

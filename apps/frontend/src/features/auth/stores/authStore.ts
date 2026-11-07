@@ -18,21 +18,18 @@ type AuthStoreResponse<T> =
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 
 import { SESSION_COOKIE, resolveSessionCookie } from '@shared/session'
-import { clearLegacyCookie } from '@/lib/session-legacy'
 
 const cookies = new Cookies()
 
 /**
  * Remove the currently-active cookie shape (host-only in dev, domain-scoped
- * in prod), then delegate the legacy host-only delete to `clearLegacyCookie`
- * which no-ops when the active shape is already host-only.
+ * in prod).
  */
 function removeSessionCookie() {
   cookies.remove(
     SESSION_COOKIE,
     resolveSessionCookie(__APP_CONFIG__.NODE_ENV, __APP_CONFIG__.DOMAIN)
   )
-  clearLegacyCookie(cookies, SESSION_COOKIE)
 }
 
 /**

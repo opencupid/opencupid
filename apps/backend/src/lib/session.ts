@@ -3,9 +3,8 @@
  * Centralizes every Fastify `setCookie`/`clearCookie` call that touches these
  * names so the cookie shape is decided in exactly one place per operation.
  *
- * Platform-agnostic primitives (cookie names, max-ages, `resolveSessionCookie`,
- * `canScopeToDomain`) live in `@shared/session`; migration-only helpers live
- * alongside in `./session-legacy` and get deleted post-sunset.
+ * Platform-agnostic primitives (cookie names, max-ages, `resolveSessionCookie`)
+ * live in `@shared/session`.
  */
 import { FastifyReply, FastifyRequest } from 'fastify'
 import '@fastify/cookie'
@@ -19,7 +18,6 @@ import {
   ORIGIN_MAX_AGE,
   resolveSessionCookie,
 } from '@shared/session'
-import { clearLegacyCookie } from './session-legacy'
 import { appConfig } from '@/lib/appconfig'
 
 function currentSessionCookieOpts() {
@@ -41,7 +39,6 @@ export function setSessionCookie(reply: FastifyReply, jwt: string) {
     secure: appConfig.NODE_ENV !== 'development',
     maxAge: SESSION_MAX_AGE,
   })
-  clearLegacyCookie(reply, SESSION_COOKIE)
 }
 
 export function setRefreshCookie(reply: FastifyReply, token: string) {
@@ -51,17 +48,14 @@ export function setRefreshCookie(reply: FastifyReply, token: string) {
     secure: appConfig.NODE_ENV !== 'development',
     maxAge: REFRESH_MAX_AGE,
   })
-  clearLegacyCookie(reply, REFRESH_COOKIE)
 }
 
 export function clearSessionCookie(reply: FastifyReply) {
   reply.clearCookie(SESSION_COOKIE, currentSessionCookieOpts())
-  clearLegacyCookie(reply, SESSION_COOKIE)
 }
 
 export function clearRefreshCookie(reply: FastifyReply) {
   reply.clearCookie(REFRESH_COOKIE, currentSessionCookieOpts())
-  clearLegacyCookie(reply, REFRESH_COOKIE)
 }
 
 /**
