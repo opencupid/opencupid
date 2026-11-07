@@ -41,6 +41,20 @@ vi.mock('@/lib/appconfig', () => ({
     IMAGE_MAX_SIZE: 1000,
     FRONTEND_URL: 'http://test',
     DOMAIN: 'fallback.example',
+    BRANDS: [
+      {
+        domain: 'fallback.example',
+        siteName: 'Fallback',
+        frontendUrl: 'https://fallback.example',
+        emailFrom: 'hello@fallback.example',
+      },
+      {
+        domain: 'other.example',
+        siteName: 'Other',
+        frontendUrl: 'https://other.example',
+        emailFrom: 'hello@other.example',
+      },
+    ],
     DEV_AUTH_BYPASS_ENABLED: true,
   },
 }))
@@ -298,7 +312,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: true,
     })
     const req = {
-      hostname: 'test.local',
+      hostname: 'fallback.example',
       body: {
         email: 'newuser@example.com',
         captchaSolution: 'ok',
@@ -322,6 +336,34 @@ describe('POST /send-magic-link', () => {
     expect(reply.payload.user.email).toBe('newuser@example.com')
   })
 
+  it("records the brand of the request host as a new user's originDomain", async () => {
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: { id: 'user7', email: 'n@example.com', language: 'en' },
+      isNewUser: true,
+    })
+    const req = {
+      hostname: 'www.other.example',
+      body: { email: 'n@example.com', captchaSolution: 'ok', language: 'en' },
+    }
+    await handler(req as any, reply as any)
+    expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
+      expect.any(Object),
+      'abc123',
+      'en',
+      'other.example'
+    )
+  })
+
+  it('rejects a magic-link request on a host no brand serves', async () => {
+    const req = {
+      hostname: 'nowhere.example',
+      body: { email: 'n@example.com', captchaSolution: 'ok', language: 'en' },
+    }
+    await expect(handler(req as any, reply as any)).rejects.toMatchObject({ statusCode: 421 })
+    expect(mockUserService.setLoginToken).not.toHaveBeenCalled()
+    expect(notifier.notifyUser).not.toHaveBeenCalled()
+  })
+
   it('sends token via email for existing user and returns login status', async () => {
     mockUserService.setLoginToken.mockResolvedValue({
       user: {
@@ -334,7 +376,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
-      hostname: 'test.local',
+      hostname: 'fallback.example',
       body: {
         email: 'existing@example.com',
         captchaSolution: 'ok',
@@ -371,6 +413,7 @@ describe('POST /send-magic-link', () => {
         isNewUser: false,
       })
       const req = {
+        hostname: 'fallback.example',
         body: {
           email: 'crossbrand@example.com',
           captchaSolution: 'ok',
@@ -412,6 +455,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
+      hostname: 'fallback.example',
       body: {
         email: 'match@example.com',
         captchaSolution: 'ok',
@@ -443,6 +487,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
+      hostname: 'fallback.example',
       body: {
         email: 'empty@example.com',
         captchaSolution: 'ok',
@@ -469,6 +514,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: true,
     })
     const req = {
+      hostname: 'fallback.example',
       body: {
         email: 'brand-new@example.com',
         captchaSolution: 'ok',
