@@ -56,8 +56,8 @@ export const configSchema = z
     SITE_NAME: z.string().default('OpenCupid'),
 
     // Multi-brand deployments: every brand this database serves, as a JSON array.
-    // Outbound email is branded per recipient (User.originDomain), so every
-    // process — including the shared worker — needs the full list. Unset on
+    // Requests are branded by their host and outbound email by the recipient's
+    // User.originDomain, so every process needs the full list. Unset on
     // single-brand deployments; the one brand is then built from DOMAIN,
     // SITE_NAME, FRONTEND_URL, EMAIL_FROM and EMAIL_REPLY_TO (see lib/brand.ts).
     BRANDS: z
@@ -94,13 +94,6 @@ export const configSchema = z
     const domains = cfg.BRANDS.map((b) => b.domain)
     if (new Set(domains).size !== domains.length) {
       ctx.addIssue({ code: 'custom', path: ['BRANDS'], message: 'BRANDS has duplicate domains' })
-    }
-    if (!domains.includes(cfg.DOMAIN)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['BRANDS'],
-        message: `BRANDS must include this process's DOMAIN (${cfg.DOMAIN})`,
-      })
     }
   })
 
