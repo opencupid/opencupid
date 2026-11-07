@@ -19,9 +19,14 @@ import {
   resolveSessionCookie,
 } from '@shared/session'
 import { appConfig } from '@/lib/appconfig'
+import { brandForHost } from '@/lib/brand'
 
-function currentSessionCookieOpts() {
-  return resolveSessionCookie(appConfig.NODE_ENV, appConfig.DOMAIN)
+/**
+ * Session cookies are scoped to the domain of the brand the request was made
+ * to, so one process can serve every brand.
+ */
+function sessionCookieOpts(reply: FastifyReply) {
+  return resolveSessionCookie(appConfig.NODE_ENV, brandForHost(reply.request.hostname).domain)
 }
 
 export function getSessionCookie(req: FastifyRequest): string | undefined {
@@ -34,7 +39,7 @@ export function getRefreshCookie(req: FastifyRequest): string | undefined {
 
 export function setSessionCookie(reply: FastifyReply, jwt: string) {
   reply.setCookie(SESSION_COOKIE, jwt, {
-    ...currentSessionCookieOpts(),
+    ...sessionCookieOpts(reply),
     httpOnly: false,
     secure: appConfig.NODE_ENV !== 'development',
     maxAge: SESSION_MAX_AGE,
@@ -43,7 +48,7 @@ export function setSessionCookie(reply: FastifyReply, jwt: string) {
 
 export function setRefreshCookie(reply: FastifyReply, token: string) {
   reply.setCookie(REFRESH_COOKIE, token, {
-    ...currentSessionCookieOpts(),
+    ...sessionCookieOpts(reply),
     httpOnly: true,
     secure: appConfig.NODE_ENV !== 'development',
     maxAge: REFRESH_MAX_AGE,
@@ -51,11 +56,11 @@ export function setRefreshCookie(reply: FastifyReply, token: string) {
 }
 
 export function clearSessionCookie(reply: FastifyReply) {
-  reply.clearCookie(SESSION_COOKIE, currentSessionCookieOpts())
+  reply.clearCookie(SESSION_COOKIE, sessionCookieOpts(reply))
 }
 
 export function clearRefreshCookie(reply: FastifyReply) {
-  reply.clearCookie(REFRESH_COOKIE, currentSessionCookieOpts())
+  reply.clearCookie(REFRESH_COOKIE, sessionCookieOpts(reply))
 }
 
 /**

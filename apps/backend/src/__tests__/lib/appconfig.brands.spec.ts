@@ -46,4 +46,15 @@ describe('appconfig BRANDS', () => {
   it("rejects a list that doesn't include this process's DOMAIN", () => {
     expect(parse(JSON.stringify([brandB])).success).toBe(false)
   })
+
+  it('normalizes brand domains and DOMAIN to bare lowercase hosts', () => {
+    const res = configSchema.safeParse({
+      ...baseEnv,
+      DOMAIN: ' .A.Test ',
+      BRANDS: JSON.stringify([{ ...brandA, domain: '.A.test' }]),
+    })
+    expect(res.success).toBe(true)
+    expect(res.data?.DOMAIN).toBe('a.test')
+    expect(res.data?.BRANDS?.[0]?.domain).toBe('a.test')
+  })
 })
