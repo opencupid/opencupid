@@ -3,8 +3,15 @@ import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
 import { findUpSync } from '@shared/findUp'
 
+// A bare lowercase domain: requests are matched to a brand by comparing it
+// against the request host, so `.Example.org ` must not survive config parsing.
+const DomainSchema = z
+  .string()
+  .transform((d) => d.trim().replace(/^\.+/, '').toLowerCase())
+  .pipe(z.string().min(1))
+
 const BrandConfigSchema = z.object({
-  domain: z.string().min(1),
+  domain: DomainSchema,
   siteName: z.string().min(1),
   frontendUrl: z.string().url(),
   emailFrom: z.string().min(1),
@@ -51,7 +58,7 @@ export const configSchema = z
 
     ADMIN_PROFILE_ID: z.string().optional(),
 
-    DOMAIN: z.string().min(1),
+    DOMAIN: DomainSchema,
 
     SITE_NAME: z.string().default('OpenCupid'),
 
