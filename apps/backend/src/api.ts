@@ -37,6 +37,7 @@ async function main() {
     return payload
   })
 
+  app.register(import('./plugins/brand-host'))
   app.register(import('@fastify/cookie'))
   app.register(import('./plugins/websockets'))
   app.register(import('./plugins/prisma'))
