@@ -1,12 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-const { mockAppConfig, mockLoggerWarn } = vi.hoisted(() => ({
+const { mockAppConfig } = vi.hoisted(() => ({
   mockAppConfig: {} as Record<string, unknown>,
-  mockLoggerWarn: vi.fn(),
 }))
 
 vi.mock('@/lib/appconfig', () => ({ appConfig: mockAppConfig }))
-vi.mock('@/lib/logger', () => ({ logger: { warn: mockLoggerWarn } }))
 
 const singleBrandEnv = {
   DOMAIN: 'solo.test',
@@ -38,43 +36,34 @@ async function loadBrand(config: Record<string, unknown>) {
 }
 
 describe('brand registry', () => {
-  beforeEach(() => mockLoggerWarn.mockReset())
-
   it('builds a single brand from process env when BRANDS is unset', async () => {
-    const { currentBrand, brandFor } = await loadBrand(singleBrandEnv)
-    const expected = {
+    const { brandFor } = await loadBrand(singleBrandEnv)
+    expect(brandFor('solo.test')).toEqual({
       domain: 'solo.test',
       siteName: 'Solo',
       frontendUrl: 'https://solo.test',
       emailFrom: 'Solo <hello@solo.test>',
       emailReplyTo: 'support@solo.test',
-    }
-    expect(currentBrand()).toEqual(expected)
-    expect(brandFor('solo.test')).toEqual(expected)
-  })
-
-  it('resolves the recipient brand from BRANDS regardless of the process brand', async () => {
-    const { currentBrand, brandFor } = await loadBrand({
-      ...singleBrandEnv,
-      DOMAIN: 'komaterkep.test',
-      BRANDS: [gaians, komaterkep],
     })
-    expect(currentBrand()).toEqual(komaterkep)
-    expect(brandFor('gaians.test')).toEqual(gaians)
-    expect(mockLoggerWarn).not.toHaveBeenCalled()
   })
 
-  it('falls back to the process brand and warns for an unknown domain', async () => {
+  it('resolves the recipient brand from BRANDS regardless of the process DOMAIN', async () => {
     const { brandFor } = await loadBrand({
       ...singleBrandEnv,
       DOMAIN: 'komaterkep.test',
       BRANDS: [gaians, komaterkep],
     })
-    expect(brandFor('nowhere.test')).toEqual(komaterkep)
-    expect(mockLoggerWarn).toHaveBeenCalledWith(
-      expect.objectContaining({ domain: 'nowhere.test' }),
-      expect.any(String)
-    )
+    expect(brandFor('gaians.test')).toEqual(gaians)
+    expect(brandFor('komaterkep.test')).toEqual(komaterkep)
+  })
+
+  it('throws for a domain no brand has', async () => {
+    const { brandFor } = await loadBrand({
+      ...singleBrandEnv,
+      DOMAIN: 'komaterkep.test',
+      BRANDS: [gaians, komaterkep],
+    })
+    expect(() => brandFor('nowhere.test')).toThrow('No brand for domain nowhere.test')
   })
 })
 

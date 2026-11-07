@@ -2,14 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotifierService } from '../../services/notifier.service'
 
 let mockPrisma: any
-const { mockGetFixedT, mockDispatchEmail, mockLoggerWarn } = vi.hoisted(() => ({
+const { mockGetFixedT, mockDispatchEmail } = vi.hoisted(() => ({
   mockGetFixedT: vi.fn(),
   mockDispatchEmail: vi.fn(),
-  mockLoggerWarn: vi.fn(),
 }))
 
-const { processBrand, otherBrand } = vi.hoisted(() => ({
-  processBrand: {
+const { defaultBrand, otherBrand } = vi.hoisted(() => ({
+  defaultBrand: {
     domain: 'frontend.test',
     siteName: 'OpenCupid',
     frontendUrl: 'https://frontend.test',
@@ -22,10 +21,6 @@ const { processBrand, otherBrand } = vi.hoisted(() => ({
     emailFrom: 'OtherSite <hello@other.test>',
     emailReplyTo: 'support@other.test',
   },
-}))
-
-vi.mock('@/lib/logger', () => ({
-  logger: { warn: mockLoggerWarn },
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -52,7 +47,7 @@ vi.mock('@/lib/appconfig', () => ({
     FRONTEND_URL: 'https://frontend.test',
     DOMAIN: 'frontend.test',
     UNSUBSCRIBE_SECRET: 'test-unsubscribe-secret',
-    BRANDS: [processBrand, otherBrand],
+    BRANDS: [defaultBrand, otherBrand],
   },
 }))
 
@@ -69,7 +64,6 @@ describe('NotifierService', () => {
 
     mockGetFixedT.mockReset()
     mockDispatchEmail.mockReset()
-    mockLoggerWarn.mockReset()
     mockGetFixedT.mockReturnValue((key: string) => `${key}-translated`)
   })
 
@@ -143,7 +137,7 @@ describe('NotifierService', () => {
       // Drives <html lang> on the rendered document — the recipient's language,
       // not the sending container's.
       language: 'de',
-      brand: processBrand,
+      brand: defaultBrand,
       templateProps: expect.objectContaining({
         siteName: 'OpenCupid',
         publicName: 'Alice',
@@ -280,7 +274,7 @@ describe('NotifierService', () => {
       expect.objectContaining({
         to: 'user2@example.com',
         subject: 'emails.welcome.subject-translated',
-        brand: processBrand,
+        brand: defaultBrand,
         templateProps: expect.objectContaining({
           publicName: '',
           callToActionLabel: 'emails.welcome.callToActionLabel-translated',
@@ -353,10 +347,9 @@ describe('NotifierService', () => {
     expect(payload.headers['List-Unsubscribe']).toMatch(
       /^<https:\/\/other\.test\/api\/unsubscribe\//
     )
-    expect(mockLoggerWarn).not.toHaveBeenCalled()
   })
 
-  it('falls back to the process brand and warns for an unknown originDomain', async () => {
+  it('refuses to send to a user whose originDomain is no brand', async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 'user-unknown',
       email: 'unknown@example.com',
@@ -367,14 +360,9 @@ describe('NotifierService', () => {
     })
 
     const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
-    await service.notifyUser('user-unknown', 'login_link', { path: '/magic-link?token=abc' })
-
-    const [payload] = mockDispatchEmail.mock.calls[0]
-    expect(payload.brand).toEqual(processBrand)
-    expect(payload.templateProps.callToActionUrl).toBe('https://frontend.test/magic-link?token=abc')
-    expect(mockLoggerWarn).toHaveBeenCalledWith(
-      expect.objectContaining({ domain: 'unknown.test' }),
-      expect.any(String)
-    )
+    await expect(
+      service.notifyUser('user-unknown', 'login_link', { path: '/magic-link?token=abc' })
+    ).rejects.toThrow('No brand for domain unknown.test')
+    expect(mockDispatchEmail).not.toHaveBeenCalled()
   })
 })
