@@ -183,12 +183,12 @@ describe('DashboardPage', () => {
     expect(routerPush).toHaveBeenCalledWith({ name: 'profiles' })
   })
 
-  it('navigates to the Profiles list when the Daily Active KPI is clicked', async () => {
+  it('navigates to the Activity page when the Daily Active KPI is clicked', async () => {
     const wrapper = mount(DashboardPage)
     await flushPromises()
 
     await wrapper.find('[data-test="kpi-daily-active"]').trigger('click')
 
-    expect(routerPush).toHaveBeenCalledWith({ name: 'profiles' })
+    expect(routerPush).toHaveBeenCalledWith({ name: 'activity' })
   })
 })

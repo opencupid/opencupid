@@ -5,12 +5,14 @@ import ModerationPage from './pages/ModerationPage.vue'
 import TagsPage from './pages/TagsPage.vue'
 import MessagesPage from './pages/MessagesPage.vue'
 import ExitSurveysPage from './pages/ExitSurveysPage.vue'
+import ActivityPage from './pages/ActivityPage.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'dashboard', component: DashboardPage },
     { path: '/profiles', name: 'profiles', component: ProfilesPage },
+    { path: '/activity', name: 'activity', component: ActivityPage },
     { path: '/moderation', name: 'moderation', component: ModerationPage },
     { path: '/tags', name: 'tags', component: TagsPage },
     { path: '/messages', name: 'messages', component: MessagesPage },
