@@ -17,13 +17,22 @@ vi.mock('@/lib/appconfig', () => ({
 import brandHostPlugin from '../../plugins/brand-host'
 
 let fastify: FastifyInstance
-const handler = vi.fn(async () => ({ ok: true }))
+const refresh = vi.fn(async () => ({ ok: true }))
+const adminKpis = vi.fn(async () => ({ ok: true }))
 
 beforeEach(async () => {
-  handler.mockClear()
+  refresh.mockClear()
+  adminKpis.mockClear()
   fastify = Fastify()
-  await fastify.register(brandHostPlugin)
-  fastify.post('/api/auth/refresh', handler)
+  // Mirrors the app: the plugin is registered inside the auth routes' scope.
+  await fastify.register(
+    async (auth) => {
+      await auth.register(brandHostPlugin)
+      auth.post('/refresh', refresh)
+    },
+    { prefix: '/api/auth' }
+  )
+  fastify.get('/api/admin/kpis', adminKpis)
   await fastify.ready()
 })
 
@@ -39,7 +48,7 @@ describe('brand-host plugin', () => {
       headers: { host: 'www.gaians.test' },
     })
     expect(res.statusCode).toBe(200)
-    expect(handler).toHaveBeenCalled()
+    expect(refresh).toHaveBeenCalled()
   })
 
   it('rejects a host no brand serves with 421 before the handler runs', async () => {
@@ -49,6 +58,16 @@ describe('brand-host plugin', () => {
       headers: { host: 'nowhere.test' },
     })
     expect(res.statusCode).toBe(421)
-    expect(handler).not.toHaveBeenCalled()
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it('leaves routes outside its scope reachable by an internal hostname', async () => {
+    const res = await fastify.inject({
+      method: 'GET',
+      url: '/api/admin/kpis',
+      headers: { host: 'backend:3000' },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(adminKpis).toHaveBeenCalled()
   })
 })
