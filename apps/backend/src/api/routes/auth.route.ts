@@ -7,6 +7,7 @@ import { createNewUserSession, getExistingUserSession } from '@/services/auth-se
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
+import { brandForHost } from '@/lib/brand'
 import brandHostPlugin from '@/plugins/brand-host'
 import '@fastify/cookie'
 
@@ -251,14 +252,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       const token = userService.generateLoginToken()
 
-      // Per-brand-stack deployment: each API container's env DOMAIN is the
-      // brand it serves. Read it directly instead of req.hostname — vite's
-      // dev proxy rewrites Host (changeOrigin: true) which would clobber it.
+      // A new user belongs to the brand they signed up on. In dev the vite
+      // proxy rewrites Host to localhost (changeOrigin), which is the dev brand.
       const { user, isNewUser } = await userService.setLoginToken(
         { email },
         token,
         language,
-        appConfig.DOMAIN
+        brandForHost(req.hostname).domain
       )
 
       const userReturned: LoginUser = {
