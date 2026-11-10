@@ -109,3 +109,14 @@ describe('brandForHost', () => {
     }
   })
 })
+
+describe('frontendOrigins', () => {
+  it('lists the origin of every brand frontend', async () => {
+    const { frontendOrigins } = await loadBrand({
+      ...singleBrandEnv,
+      DOMAIN: 'gaians.test',
+      BRANDS: [gaians, { ...komaterkep, frontendUrl: 'https://komaterkep.test:8443/app/' }],
+    })
+    expect(frontendOrigins()).toEqual(['https://gaians.test', 'https://komaterkep.test:8443'])
+  })
+})
