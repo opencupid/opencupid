@@ -129,6 +129,7 @@ beforeEach(async () => {
     listMessagesForConversation: vi.fn(),
     listConversationsForProfile: vi.fn(),
     getInboxConversationSummary: vi.fn(),
+    hasUnreadConversations: vi.fn().mockResolvedValue(false),
     markConversationRead: vi.fn(),
     getConversationSummary: vi.fn(),
     resolveConversation: vi.fn(),
@@ -228,6 +229,19 @@ describe('POST /conversations/:id/mark-read', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.conversation.id).toBe('summary')
+    expect(reply.payload.hasUnread).toBe(false)
+  })
+
+  it('reports whether other conversations are still unread', async () => {
+    const handler = fastify.routes['POST /conversations/:id/mark-read']
+    mockMessageService.getConversationSummary.mockResolvedValue({})
+    mockMessageService.hasUnreadConversations.mockResolvedValue(true)
+    await handler(
+      { session: { profileId: 'p1' }, params: { id: 'ck1234567890abcd12345678' } } as any,
+      reply as any
+    )
+    expect(mockMessageService.hasUnreadConversations).toHaveBeenCalledWith('p1')
+    expect(reply.payload.hasUnread).toBe(true)
   })
 })
 
@@ -253,6 +267,20 @@ describe('GET /conversations', () => {
     expect(reply.payload.conversations).toHaveLength(2)
     expect(reply.payload.nextCursor).toBeNull()
     expect(reply.payload.hasMore).toBe(false)
+    expect(reply.payload.hasUnread).toBe(false)
+  })
+
+  it('reports the inbox-wide unread flag alongside the page', async () => {
+    const handler = fastify.routes['GET /conversations']
+    mockMessageService.listConversationsForProfile.mockResolvedValue({
+      conversations: [],
+      nextCursor: null,
+      hasMore: false,
+    })
+    mockMessageService.hasUnreadConversations.mockResolvedValue(true)
+    await handler({ session: { profileId: 'p1' } } as any, reply as any)
+    expect(mockMessageService.hasUnreadConversations).toHaveBeenCalledWith('p1')
+    expect(reply.payload.hasUnread).toBe(true)
   })
 
   it('round-trips the cursor between response and query', async () => {

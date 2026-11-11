@@ -15,6 +15,7 @@ import type {
   ConversationByProfileResponse,
   ConversationsResponse,
   ConversationResponse,
+  MarkConversationReadResponse,
   SendMessageResponse,
 } from '@zod/apiResponse.dto'
 import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@/store/helpers'
@@ -69,7 +70,8 @@ export const useMessageStore = defineStore('message', {
         : await this.fetchConversation(message.conversationId)
       if (convo) {
         this.bumpConversation(convo)
-        this.updateUnreadFlag()
+        // Missed-call notices are broadcast to their sender as well.
+        if (message.senderId !== convo.profileId) this.hasUnreadMessages = true
       }
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
@@ -111,16 +113,6 @@ export const useMessageStore = defineStore('message', {
       if (index !== -1) {
         this.conversations[index] = convo
       }
-    },
-
-    // Check last read timestamp against last message and update unread flag
-    updateUnreadFlag() {
-      this.hasUnreadMessages = this.conversations
-        .filter((c) => c.lastMessage?.isMine !== true)
-        .some((c) => {
-          const lastMessage = c.lastMessage?.createdAt || new Date(0) // Fallback to epoch if no last message
-          return c.lastReadAt ? c.lastReadAt < lastMessage : true
-        })
     },
 
     async fetchMessages(
@@ -247,7 +239,7 @@ export const useMessageStore = defineStore('message', {
           this.conversations = res.data.conversations
           this.conversationCursor = res.data.nextCursor
           this.hasMoreConversations = res.data.hasMore
-          this.updateUnreadFlag()
+          this.hasUnreadMessages = res.data.hasUnread
           this.initialized = true
         }
       } catch (error: any) {
@@ -286,7 +278,7 @@ export const useMessageStore = defineStore('message', {
           )
           this.conversationCursor = res.data.nextCursor
           this.hasMoreConversations = res.data.hasMore
-          this.updateUnreadFlag()
+          this.hasUnreadMessages = res.data.hasUnread
         }
       } catch (error: any) {
         this.error = storeError(error)
@@ -310,12 +302,12 @@ export const useMessageStore = defineStore('message', {
     async markAsRead(convoId: string) {
       try {
         const updateConvo = await safeApiCall(() =>
-          api.post<ConversationResponse>(`/messages/conversations/${convoId}/mark-read`)
+          api.post<MarkConversationReadResponse>(`/messages/conversations/${convoId}/mark-read`)
         )
         if (updateConvo.data.success) {
           const updatedConvo: ConversationSummary = updateConvo.data.conversation
           this.updateConvo(updatedConvo)
-          this.updateUnreadFlag()
+          this.hasUnreadMessages = updateConvo.data.hasUnread
         }
       } catch (error: any) {
         console.error('Failed to mark conversation as read:', error)

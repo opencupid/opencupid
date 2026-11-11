@@ -834,3 +834,80 @@ describe('conversation list pagination', () => {
     expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
   })
 })
+
+describe('unread flag', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  const page = (hasUnread: boolean) => ({
+    data: { success: true, conversations: [], nextCursor: null, hasMore: false, hasUnread },
+  })
+
+  it('takes the inbox-wide flag from the server, whatever the loaded page contains', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockResolvedValue(page(true))
+    await store.fetchConversations()
+    expect(store.hasUnreadMessages).toBe(true)
+
+    mockApi.get.mockResolvedValue(page(false))
+    await store.fetchConversations()
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+
+  it('refreshes the flag when a further page is loaded', async () => {
+    const store = useMessageStore()
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    mockApi.get.mockResolvedValue(page(true))
+
+    await store.fetchMoreConversations()
+
+    expect(store.hasUnreadMessages).toBe(true)
+  })
+
+  it('markAsRead keeps the flag while other conversations are unread, clears it otherwise', async () => {
+    const store = useMessageStore()
+    store.hasUnreadMessages = true
+    const response = (hasUnread: boolean) => ({
+      data: { success: true, conversation: makeConvo('c1', 'Alice'), hasUnread },
+    })
+
+    mockApi.post.mockResolvedValue(response(true))
+    await store.markAsRead('c1')
+    expect(store.hasUnreadMessages).toBe(true)
+
+    mockApi.post.mockResolvedValue(response(false))
+    await store.markAsRead('c1')
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+
+  it('an incoming message from the partner sets the flag', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.suppressMessageNotifications = true
+
+    await store.handleIncomingMessage({
+      id: 'm1',
+      conversationId: 'c1',
+      senderId: 'partner-c1',
+    } as MessageDTO)
+
+    expect(store.hasUnreadMessages).toBe(true)
+  })
+
+  it('a broadcast of my own message (missed-call notice) does not set the flag', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.suppressMessageNotifications = true
+
+    await store.handleIncomingMessage({
+      id: 'm1',
+      conversationId: 'c1',
+      senderId: 'profile-1',
+    } as MessageDTO)
+
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+})

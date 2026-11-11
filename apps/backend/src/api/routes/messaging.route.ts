@@ -20,6 +20,7 @@ import type {
   MessagesResponse,
   ConversationsResponse,
   ConversationResponse,
+  MarkConversationReadResponse,
   ConversationByProfileResponse,
   SendMessageResponse,
 } from '@zod/apiResponse.dto'
@@ -290,7 +291,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    * Returns one page of conversations for the authenticated profile, most recently
    * active first, with latest message summaries.
    * @query {string} [cursor] - nextCursor of the previous page
-   * @returns {ConversationsResponse} { conversations, nextCursor, hasMore }
+   * @returns {ConversationsResponse} { conversations, nextCursor, hasMore, hasUnread }
    */
   fastify.get('/conversations', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
@@ -300,7 +301,10 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     if (!query.success) return sendError(reply, 400, 'Invalid query parameters')
 
     try {
-      const page = await messageService.listConversationsForProfile(profileId, query.data.cursor)
+      const [page, hasUnread] = await Promise.all([
+        messageService.listConversationsForProfile(profileId, query.data.cursor),
+        messageService.hasUnreadConversations(profileId),
+      ])
       const response: ConversationsResponse = {
         success: true,
         conversations: page.conversations.map((p) =>
@@ -310,6 +314,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           ? `${page.nextCursor.updatedAt.toISOString()}_${page.nextCursor.conversationId}`
           : null,
         hasMore: page.hasMore,
+        hasUnread,
       }
       return reply.code(200).send(response)
     } catch (error) {
@@ -415,7 +420,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /conversations/:id/mark-read
    * Marks all messages in a conversation as read for the current profile.
    * @param {string} id - Conversation ID (CUID)
-   * @returns {ConversationResponse} Updated conversation summary
+   * @returns {MarkConversationReadResponse} Updated conversation summary and inbox-wide unread flag
    */
   fastify.post(
     '/conversations/:id/mark-read',
@@ -433,9 +438,10 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         const updated = await messageService.getConversationSummary(conversationId, profileId)
         if (!updated) return sendError(reply, 404, 'Conversation not found')
 
-        const response: ConversationResponse = {
+        const response: MarkConversationReadResponse = {
           success: true,
           conversation: mapConversationParticipantToSummary(updated, profileId),
+          hasUnread: await messageService.hasUnreadConversations(profileId),
         }
         return reply.code(200).send(response)
       } catch (error) {

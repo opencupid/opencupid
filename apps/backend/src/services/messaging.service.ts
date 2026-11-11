@@ -243,6 +243,42 @@ export class MessageService {
   }
 
   /**
+   * Whether the profile has any inbox-visible conversation whose latest message
+   * came from someone else after the profile last read it. Covers the whole
+   * inbox, independent of which pages of the conversation list were loaded.
+   */
+  async hasUnreadConversations(profileId: string): Promise<boolean> {
+    // Prisma cannot compare lastReadAt against a related row's createdAt, so the
+    // unread candidates come from SQL...
+    const candidates = await prisma.$queryRaw<{ conversationId: string }[]>`
+      SELECT cp."conversationId"
+      FROM "ConversationParticipant" cp
+      JOIN LATERAL (
+        SELECT m."senderId", m."createdAt"
+        FROM "Message" m
+        WHERE m."conversationId" = cp."conversationId"
+        ORDER BY m."createdAt" DESC
+        LIMIT 1
+      ) latest ON TRUE
+      WHERE cp."profileId" = ${profileId}
+        AND latest."senderId" <> ${profileId}
+        AND (cp."lastReadAt" IS NULL OR cp."lastReadAt" < latest."createdAt")
+    `
+    if (candidates.length === 0) return false
+
+    // ...and visibility stays with the one predicate that defines it.
+    const visible = await prisma.conversationParticipant.findFirst({
+      where: {
+        profileId,
+        conversationId: { in: candidates.map((c) => c.conversationId) },
+        conversation: inboxVisibleConversationWhere(profileId),
+      },
+      select: { id: true },
+    })
+    return visible !== null
+  }
+
+  /**
    * Lists all messages for a given conversation.
    * @param conversationId - The ID of the conversation to list messages for.
    * @returns An array of messages in the conversation, including sender profile images.

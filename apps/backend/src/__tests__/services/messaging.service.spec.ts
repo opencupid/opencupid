@@ -255,6 +255,34 @@ describe('MessageService.listConversationsForProfile', () => {
   })
 })
 
+describe('MessageService.hasUnreadConversations', () => {
+  beforeEach(() => {
+    mockPrisma.$queryRaw = vi.fn()
+  })
+
+  it('is false without a visibility lookup when nothing is unread', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([])
+    expect(await service.hasUnreadConversations('p1')).toBe(false)
+    expect(mockPrisma.conversationParticipant.findFirst).not.toHaveBeenCalled()
+  })
+
+  it('is true when an unread candidate is visible in the inbox', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ conversationId: 'c1' }, { conversationId: 'c2' }])
+    mockPrisma.conversationParticipant.findFirst.mockResolvedValue({ id: 'cp1' })
+    expect(await service.hasUnreadConversations('p1')).toBe(true)
+    const args = mockPrisma.conversationParticipant.findFirst.mock.calls[0][0]
+    expect(args.where.profileId).toBe('p1')
+    expect(args.where.conversationId).toEqual({ in: ['c1', 'c2'] })
+    expect(args.where.conversation.OR).toHaveLength(2)
+  })
+
+  it('is false when every unread candidate is hidden from the inbox (e.g. blocked)', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ conversationId: 'c1' }])
+    mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null)
+    expect(await service.hasUnreadConversations('p1')).toBe(false)
+  })
+})
+
 describe('MessageService.getInboxConversationSummary', () => {
   it('scopes the lookup to the viewer and the inbox visibility predicate', async () => {
     mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null)
