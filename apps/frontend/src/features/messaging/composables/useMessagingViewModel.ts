@@ -74,6 +74,13 @@ export function useMessagingViewModel() {
     conversations: computed(() => messageStore.conversations),
     activeConversation: computed(() => messageStore.activeConversation),
     isLoading: computed(() => messageStore.isLoading),
+    isLoadingMoreConversations: computed(() => messageStore.isLoadingMoreConversations),
+    canLoadMoreConversations: computed(
+      () =>
+        messageStore.hasMoreConversations &&
+        !messageStore.isLoading &&
+        !messageStore.isLoadingMoreConversations
+    ),
 
     // Computed
     haveConversations,
@@ -84,6 +91,7 @@ export function useMessagingViewModel() {
     handleSelectConvo,
     handleMatchSelect,
     fetchConversations: () => messageStore.fetchConversations(),
+    fetchMoreConversations: () => messageStore.fetchMoreConversations(),
 
     // Lifecycle
     initialize,

@@ -205,7 +205,68 @@ describe('MessageService.listConversationsForProfile', () => {
     mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
     await service.listConversationsForProfile('p1')
     const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
-    expect(args.orderBy).toEqual({ conversation: { updatedAt: 'desc' } })
+    expect(args.orderBy).toEqual([
+      { conversation: { updatedAt: 'desc' } },
+      { conversationId: 'desc' },
+    ])
+  })
+
+  const participantRows = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({
+      conversationId: `c${i}`,
+      conversation: { updatedAt: new Date(2026, 0, 1, 0, 0, count - i) },
+    }))
+
+  it('returns a full first page with a cursor pointing at its last row', async () => {
+    const rows = participantRows(21)
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue(rows)
+    const page = await service.listConversationsForProfile('p1')
+    const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
+    expect(args.take).toBe(21)
+    expect(args.where.OR).toBeUndefined()
+    expect(page.conversations).toEqual(rows.slice(0, 20))
+    expect(page.hasMore).toBe(true)
+    expect(page.nextCursor).toEqual({
+      updatedAt: rows[19].conversation.updatedAt,
+      conversationId: 'c19',
+    })
+  })
+
+  it('reports no further page when the result fits in one page', async () => {
+    const rows = participantRows(20)
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue(rows)
+    const page = await service.listConversationsForProfile('p1')
+    expect(page.conversations).toHaveLength(20)
+    expect(page.hasMore).toBe(false)
+    expect(page.nextCursor).toBeNull()
+  })
+
+  it('continues strictly after the cursor position, keeping the visibility filter', async () => {
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
+    const updatedAt = new Date('2026-01-02T03:04:05.678Z')
+    await service.listConversationsForProfile('p1', { updatedAt, conversationId: 'c19' })
+    const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
+    expect(args.where.OR).toEqual([
+      { conversation: { updatedAt: { lt: updatedAt } } },
+      { conversation: { updatedAt }, conversationId: { lt: 'c19' } },
+    ])
+    expect(args.where.profileId).toBe('p1')
+    expect(args.where.conversation.OR).toHaveLength(2)
+  })
+})
+
+describe('MessageService.getInboxConversationSummary', () => {
+  it('scopes the lookup to the viewer and the inbox visibility predicate', async () => {
+    mockPrisma.conversationParticipant.findFirst.mockResolvedValue(null)
+    await service.getInboxConversationSummary('c1', 'p1')
+    const args = mockPrisma.conversationParticipant.findFirst.mock.calls[0][0]
+    expect(args.where.conversationId).toBe('c1')
+    expect(args.where.profileId).toBe('p1')
+    expect(args.where.conversation.OR).toHaveLength(2)
+    expect(args.where.conversation.OR[1]).toMatchObject({
+      status: 'PENDING',
+      initiatorProfileId: 'p1',
+    })
   })
 })
 

@@ -74,7 +74,11 @@ export type MessagesResponse = ApiSuccess<{
   nextCursor: string | null
   hasMore: boolean
 }>
-export type ConversationsResponse = ApiSuccess<{ conversations: ConversationSummary[] }>
+export type ConversationsResponse = ApiSuccess<{
+  conversations: ConversationSummary[]
+  nextCursor: string | null
+  hasMore: boolean
+}>
 export type ConversationResponse = ApiSuccess<{ conversation: ConversationSummary }>
 export type ConversationByProfileResponse = ApiSuccess<{ conversation: ConversationOrDraft }>
 

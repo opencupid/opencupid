@@ -50,6 +50,20 @@ const MessageListQuerySchema = z.object({
   take: z.coerce.number().int().min(1).max(50).optional(),
 })
 
+// Opaque to clients: `<conversation.updatedAt ISO>_<conversationId>`, as issued
+// in ConversationsResponse.nextCursor.
+const ConversationListQuerySchema = z.object({
+  cursor: z
+    .string()
+    .transform((value) => value.split('_'))
+    .pipe(z.tuple([z.iso.datetime(), z.string().cuid()]))
+    .transform(([updatedAt, conversationId]) => ({
+      updatedAt: new Date(updatedAt),
+      conversationId,
+    }))
+    .optional(),
+})
+
 // HTTP status policy for MessagingError codes lives at the route layer, not
 // the service. Keeping it exhaustive (Record<...>) makes adding a new code a
 // compile error until the mapping is provided.
@@ -273,21 +287,62 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /conversations
-   * Returns all conversations for the authenticated profile with latest message summaries.
-   * @returns {ConversationsResponse}
+   * Returns one page of conversations for the authenticated profile, most recently
+   * active first, with latest message summaries.
+   * @query {string} [cursor] - nextCursor of the previous page
+   * @returns {ConversationsResponse} { conversations, nextCursor, hasMore }
    */
   fastify.get('/conversations', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const profileId = req.session.profileId
     if (!profileId) return sendError(reply, 404, 'Profile not found.')
 
+    const query = ConversationListQuerySchema.safeParse(req.query ?? {})
+    if (!query.success) return sendError(reply, 400, 'Invalid query parameters')
+
     try {
-      const raw = await messageService.listConversationsForProfile(profileId)
-      const conversations = raw.map((p) => mapConversationParticipantToSummary(p, profileId))
-      const response: ConversationsResponse = { success: true, conversations }
+      const page = await messageService.listConversationsForProfile(profileId, query.data.cursor)
+      const response: ConversationsResponse = {
+        success: true,
+        conversations: page.conversations.map((p) =>
+          mapConversationParticipantToSummary(p, profileId)
+        ),
+        nextCursor: page.nextCursor
+          ? `${page.nextCursor.updatedAt.toISOString()}_${page.nextCursor.conversationId}`
+          : null,
+        hasMore: page.hasMore,
+      }
       return reply.code(200).send(response)
     } catch (error) {
       fastify.log.error(error)
       return sendError(reply, 500, 'Failed to fetch conversations')
+    }
+  })
+
+  /**
+   * GET /conversations/:id
+   * Returns the summary of a single conversation visible in the viewer's inbox.
+   * @param {string} id - Conversation ID (CUID)
+   * @returns {ConversationResponse}
+   */
+  fastify.get('/conversations/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+    const profileId = req.session.profileId
+    if (!profileId) return sendError(reply, 404, 'Profile not found.')
+
+    const id = IdLookupParamsSchema.safeParse(req.params)
+    if (!id.success) return sendError(reply, 404, 'Conversation not found')
+
+    try {
+      const conversation = await messageService.getInboxConversationSummary(id.data.id, profileId)
+      if (!conversation) return sendError(reply, 404, 'Conversation not found')
+
+      const response: ConversationResponse = {
+        success: true,
+        conversation: mapConversationParticipantToSummary(conversation, profileId),
+      }
+      return reply.code(200).send(response)
+    } catch (error) {
+      fastify.log.error(error)
+      return sendError(reply, 500, 'Failed to fetch conversation')
     }
   })
 

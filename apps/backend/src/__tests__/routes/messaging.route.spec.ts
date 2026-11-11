@@ -128,6 +128,7 @@ beforeEach(async () => {
   mockMessageService = {
     listMessagesForConversation: vi.fn(),
     listConversationsForProfile: vi.fn(),
+    getInboxConversationSummary: vi.fn(),
     markConversationRead: vi.fn(),
     getConversationSummary: vi.fn(),
     resolveConversation: vi.fn(),
@@ -238,20 +239,98 @@ describe('GET /conversations', () => {
     expect(reply.payload.message).toMatch('Profile not found')
   })
 
-  it('returns conversation summaries', async () => {
+  it('returns the first page of conversation summaries', async () => {
     const handler = fastify.routes['GET /conversations']
-    mockMessageService.listConversationsForProfile.mockResolvedValue([{ id: 'cp1' }, { id: 'cp2' }])
+    mockMessageService.listConversationsForProfile.mockResolvedValue({
+      conversations: [{ id: 'cp1' }, { id: 'cp2' }],
+      nextCursor: null,
+      hasMore: false,
+    })
     await handler({ session: { profileId: 'p1' } } as any, reply as any)
-    expect(mockMessageService.listConversationsForProfile).toHaveBeenCalledWith('p1')
+    expect(mockMessageService.listConversationsForProfile).toHaveBeenCalledWith('p1', undefined)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.conversations).toHaveLength(2)
+    expect(reply.payload.nextCursor).toBeNull()
+    expect(reply.payload.hasMore).toBe(false)
   })
+
+  it('round-trips the cursor between response and query', async () => {
+    const handler = fastify.routes['GET /conversations']
+    const cursor = {
+      updatedAt: new Date('2026-01-02T03:04:05.678Z'),
+      conversationId: 'ck1234567890abcd12345678',
+    }
+    mockMessageService.listConversationsForProfile.mockResolvedValue({
+      conversations: [{ id: 'cp1' }],
+      nextCursor: cursor,
+      hasMore: true,
+    })
+    await handler({ session: { profileId: 'p1' } } as any, reply as any)
+    expect(reply.payload.hasMore).toBe(true)
+    expect(reply.payload.nextCursor).toBe('2026-01-02T03:04:05.678Z_ck1234567890abcd12345678')
+
+    await handler(
+      { session: { profileId: 'p1' }, query: { cursor: reply.payload.nextCursor } } as any,
+      new MockReply() as any
+    )
+    expect(mockMessageService.listConversationsForProfile).toHaveBeenLastCalledWith('p1', cursor)
+  })
+
+  it.each(['garbage', 'not-a-date_ck1234567890abcd12345678', '2026-01-02T03:04:05.678Z_nope'])(
+    'returns 400 for malformed cursor %s',
+    async (cursor) => {
+      const handler = fastify.routes['GET /conversations']
+      await handler({ session: { profileId: 'p1' }, query: { cursor } } as any, reply as any)
+      expect(reply.statusCode).toBe(400)
+      expect(mockMessageService.listConversationsForProfile).not.toHaveBeenCalled()
+    }
+  )
 
   it('returns 500 when service throws', async () => {
     const handler = fastify.routes['GET /conversations']
     mockMessageService.listConversationsForProfile.mockRejectedValue(new Error('db down'))
     await handler({ session: { profileId: 'p1' } } as any, reply as any)
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('GET /conversations/:id', () => {
+  const id = 'ck1234567890abcd12345678'
+
+  it('returns 404 when session missing', async () => {
+    const handler = fastify.routes['GET /conversations/:id']
+    await handler({ session: {}, params: { id } } as any, reply as any)
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns 404 for an invalid id', async () => {
+    const handler = fastify.routes['GET /conversations/:id']
+    await handler({ session: { profileId: 'p1' }, params: { id: 'bad' } } as any, reply as any)
+    expect(reply.statusCode).toBe(404)
+    expect(mockMessageService.getInboxConversationSummary).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the conversation is not visible to the viewer', async () => {
+    const handler = fastify.routes['GET /conversations/:id']
+    mockMessageService.getInboxConversationSummary.mockResolvedValue(null)
+    await handler({ session: { profileId: 'p1' }, params: { id } } as any, reply as any)
+    expect(mockMessageService.getInboxConversationSummary).toHaveBeenCalledWith(id, 'p1')
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns the conversation summary', async () => {
+    const handler = fastify.routes['GET /conversations/:id']
+    mockMessageService.getInboxConversationSummary.mockResolvedValue({ id: 'cp1' })
+    await handler({ session: { profileId: 'p1' }, params: { id } } as any, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.conversation.id).toBe('summary')
+  })
+
+  it('returns 500 when service throws', async () => {
+    const handler = fastify.routes['GET /conversations/:id']
+    mockMessageService.getInboxConversationSummary.mockRejectedValue(new Error('db down'))
+    await handler({ session: { profileId: 'p1' }, params: { id } } as any, reply as any)
     expect(reply.statusCode).toBe(500)
   })
 })

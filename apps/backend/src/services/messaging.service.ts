@@ -145,6 +145,10 @@ function inboxVisibleConversationWhere(viewerProfileId: string): Prisma.Conversa
   }
 }
 
+export const CONVERSATION_PAGE_SIZE = 20
+
+export type ConversationCursor = { updatedAt: Date; conversationId: string }
+
 export class MessageService {
   private static instance: MessageService
 
@@ -177,24 +181,65 @@ export class MessageService {
   }
 
   /**
-   * Lists all conversations for a given profile, including unread message counts.
-   * @param profileId - The ID of the profile to list conversations for.
-   * @returns An array of conversation summaries with unread message counts.
+   * Retrieves a conversation summary by id, gated by inbox visibility — for
+   * lookups driven by a client-supplied conversationId.
    */
-  async listConversationsForProfile(profileId: string) {
-    return await prisma.conversationParticipant.findMany({
+  async getInboxConversationSummary(
+    conversationId: string,
+    profileId: string
+  ): Promise<ConversationParticipantWithConversationSummary | null> {
+    return await prisma.conversationParticipant.findFirst({
       where: {
+        conversationId,
         profileId,
         conversation: inboxVisibleConversationWhere(profileId),
       },
+      include: conversationSummaryInclude,
+    })
+  }
+
+  /**
+   * Lists one page of conversations for a given profile, most recently active first.
+   *
+   * Keyset-paginated on (conversation.updatedAt, conversationId) rather than a
+   * row cursor: conversations jump to the top whenever a message arrives, and a
+   * value cursor keeps the next page anchored where the previous one ended even
+   * if the last row has since moved.
+   * @param profileId - The ID of the profile to list conversations for.
+   * @param cursor - Position of the last conversation of the previous page.
+   */
+  async listConversationsForProfile(profileId: string, cursor?: ConversationCursor) {
+    const rows = await prisma.conversationParticipant.findMany({
+      where: {
+        profileId,
+        conversation: inboxVisibleConversationWhere(profileId),
+        ...(cursor
+          ? {
+              OR: [
+                { conversation: { updatedAt: { lt: cursor.updatedAt } } },
+                {
+                  conversation: { updatedAt: cursor.updatedAt },
+                  conversationId: { lt: cursor.conversationId },
+                },
+              ],
+            }
+          : {}),
+      },
 
       include: conversationSummaryInclude,
-      orderBy: {
-        conversation: {
-          updatedAt: 'desc',
-        },
-      },
+      orderBy: [{ conversation: { updatedAt: 'desc' } }, { conversationId: 'desc' }],
+      take: CONVERSATION_PAGE_SIZE + 1,
     })
+
+    const hasMore = rows.length > CONVERSATION_PAGE_SIZE
+    const conversations = hasMore ? rows.slice(0, CONVERSATION_PAGE_SIZE) : rows
+    const last = conversations[conversations.length - 1]
+    const nextCursor: ConversationCursor | null =
+      hasMore && last
+        ? { updatedAt: last.conversation.updatedAt, conversationId: last.conversationId }
+        : null
+
+    return { conversations, nextCursor, hasMore }
   }
 
   /**

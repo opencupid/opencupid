@@ -701,3 +701,136 @@ describe('resolveConversationByProfile', () => {
     expect(res.success).toBe(false)
   })
 })
+
+describe('conversation list pagination', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('fetchConversations loads the first page and stores the cursor', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockResolvedValue({
+      data: {
+        success: true,
+        conversations: [makeConvo('c1', 'Alice')],
+        nextCursor: 'cursor-1',
+        hasMore: true,
+      },
+    })
+
+    await store.fetchConversations()
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations')
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+    expect(store.conversationCursor).toBe('cursor-1')
+    expect(store.hasMoreConversations).toBe(true)
+  })
+
+  it('fetchMoreConversations appends the next page, skipping already loaded conversations', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    mockApi.get.mockResolvedValue({
+      data: {
+        success: true,
+        conversations: [makeConvo('c2', 'Bob'), makeConvo('c3', 'Carol')],
+        nextCursor: null,
+        hasMore: false,
+      },
+    })
+
+    await store.fetchMoreConversations()
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations', {
+      params: { cursor: 'cursor-1' },
+    })
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1', 'c2', 'c3'])
+    expect(store.conversationCursor).toBeNull()
+    expect(store.hasMoreConversations).toBe(false)
+    expect(store.isLoadingMoreConversations).toBe(false)
+  })
+
+  it('fetchMoreConversations does nothing when there is no further page', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+
+    await store.fetchMoreConversations()
+
+    expect(mockApi.get).not.toHaveBeenCalled()
+  })
+
+  it('fetchMoreConversations does not start a second request while one is in flight', async () => {
+    const store = useMessageStore()
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    let resolve!: (value: unknown) => void
+    mockApi.get.mockReturnValue(new Promise((r) => (resolve = r)))
+
+    const first = store.fetchMoreConversations()
+    await store.fetchMoreConversations()
+    resolve({ data: { success: true, conversations: [], nextCursor: null, hasMore: false } })
+    await first
+
+    expect(mockApi.get).toHaveBeenCalledTimes(1)
+  })
+
+  it('fetchMoreConversations keeps the loaded pages when the request fails', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    mockApi.get.mockRejectedValue(new Error('network'))
+
+    await store.fetchMoreConversations()
+
+    expect(store.conversations).toHaveLength(1)
+    expect(store.conversationCursor).toBe('cursor-1')
+    expect(store.error).not.toBeNull()
+    expect(store.isLoadingMoreConversations).toBe(false)
+  })
+
+  it('setActiveConversationById fetches a conversation that is beyond the loaded pages', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.initialized = true
+    mockApi.get.mockImplementation(async (url: string) =>
+      url === '/messages/conversations/c99'
+        ? { data: { success: true, conversation: makeConvo('c99', 'Zed') } }
+        : { data: { success: true, messages: [], nextCursor: null, hasMore: false } }
+    )
+
+    await store.setActiveConversationById('c99')
+
+    expect(store.activeConversation?.conversationId).toBe('c99')
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+  })
+
+  it('handleIncomingMessage fetches an unloaded conversation and puts it on top without reloading the list', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.suppressMessageNotifications = true
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: makeConvo('c99', 'Zed') },
+    })
+
+    await store.handleIncomingMessage({ id: 'm1', conversationId: 'c99' } as MessageDTO)
+
+    expect(mockApi.get).toHaveBeenCalledTimes(1)
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations/c99')
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c99', 'c1', 'c2'])
+  })
+
+  it('markAsRead does not insert a conversation that is not in the loaded pages', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    mockApi.post.mockResolvedValue({
+      data: { success: true, conversation: makeConvo('c99', 'Zed') },
+    })
+
+    await store.markAsRead('c99')
+
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+  })
+})
