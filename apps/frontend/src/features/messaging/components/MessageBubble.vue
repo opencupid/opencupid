@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
+import { type PublicImage } from '@zod/image/image.dto'
 import VoiceMessage from './VoiceMessage.vue'
 import ImageTag from '@/features/images/components/ImageTag.vue'
 import LocalizedTimeAgo from '@/features/shared/components/LocalizedTimeAgo.vue'
@@ -8,6 +9,10 @@ import { renderMessage } from '@/lib/renderMessage'
 
 const props = defineProps<{
   message: MessageDTO
+}>()
+
+const emit = defineEmits<{
+  (e: 'image-click', image: PublicImage): void
 }>()
 
 const hasImages = computed(() => (props.message.images?.length ?? 0) > 0)
@@ -46,6 +51,7 @@ const isVoice = computed(
           variant="card"
           loading="lazy"
           className="message-image"
+          @click="emit('image-click', img)"
         />
       </div>
 
@@ -98,5 +104,6 @@ const isVoice = computed(
   object-fit: contain;
   object-position: left center;
   border-radius: 0.5rem;
+  cursor: pointer;
 }
 </style>

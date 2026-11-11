@@ -5,10 +5,10 @@ import { Carousel, Slide, Navigation, Pagination } from 'vue3-carousel'
 import 'vue3-carousel/dist/carousel.css'
 
 import type { OwnerImage, PublicImage } from '@zod/image/image.dto'
-import IconCross from '@/assets/icons/interface/cross.svg'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import ChevronRightIcon from '@/assets/icons/arrows/arrow-single-right.svg'
 import BlurhashImage from '@/features/images/components/BlurhashImage.vue'
+import FullscreenImageModal from '@/features/images/components/FullscreenImageModal.vue'
 
 const props = defineProps<{
   images: ReadonlyArray<OwnerImage | PublicImage>
@@ -74,24 +74,10 @@ watch(
       </template>
     </Carousel>
 
-    <BModal
+    <FullscreenImageModal
       v-model="showFullscreen"
-      centered
-      modal-class="carousel-modal"
-      :no-close-on-backdrop="false"
-      :no-footer="true"
-      :no-header="false"
-      :no-title="true"
-      :title-visually-hidden="true"
-      :body-scrolling="false"
-      :fullscreen="true"
-      :lazy="true"
-      no-animation
       :teleport-disabled="true"
     >
-      <template #header-close>
-        <IconCross class="svg-icon" />
-      </template>
       <Carousel
         v-model="inlineSlide"
         v-bind="carouselProps"
@@ -122,19 +108,12 @@ watch(
           <Pagination />
         </template>
       </Carousel>
-    </BModal>
+    </FullscreenImageModal>
   </div>
 </template>
 
 <style lang="scss">
-.modal.carousel-modal {
-  .fitted-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center;
-  }
-
+.modal.fullscreen-image-modal {
   .carousel__slide {
     height: 100%;
   }
@@ -142,49 +121,6 @@ watch(
   .carousel__track {
     height: 100%;
   }
-
-  .modal-content {
-    background-color: transparent;
-    border: none;
-    box-shadow: none;
-  }
-
-  .modal-header {
-    border: none;
-    padding: 0.5rem;
-    background-color: transparent;
-    position: absolute;
-    z-index: 10;
-    width: 100%;
-
-    button {
-      margin-top: 3em;
-      margin-right: 0;
-    }
-  }
-
-  .modal-body {
-    padding: 0;
-    border: none;
-  }
-
-  .btn {
-    padding: 0.5rem 0.75rem;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    border-radius: 50%;
-    position: absolute;
-    right: 1rem;
-    border: none;
-  }
-
-  .modal-title {
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 0.5rem;
-  }
-
-  background-color: transparent;
 }
 
 .image-carousel {
@@ -208,7 +144,7 @@ watch(
 }
 
 .image-carousel,
-.modal.carousel-modal {
+.modal.fullscreen-image-modal {
   .carousel__prev,
   .carousel__next {
     background-color: rgba(0, 0, 0, 0.5);

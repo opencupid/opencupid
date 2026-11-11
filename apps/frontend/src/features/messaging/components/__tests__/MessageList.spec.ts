@@ -9,6 +9,20 @@ vi.mock('@/features/shared/components/LocalizedTimeAgo.vue', () => ({
   },
 }))
 
+vi.mock('@/features/images/components/BlurhashImage.vue', () => ({
+  default: {
+    name: 'BlurhashImage',
+    props: ['image', 'variant', 'imgClass'],
+    template: '<div class="blurhash-image-stub" />',
+  },
+}))
+
+const BModal = {
+  name: 'BModal',
+  props: ['modelValue'],
+  template: '<div v-if="modelValue" class="modal-stub"><slot /></div>',
+}
+
 import MessageList from '../MessageList.vue'
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 
@@ -96,5 +110,49 @@ describe('MessageList', () => {
     })
 
     expect(wrapper.text()).toContain('messaging.loading_older_messages')
+  })
+
+  describe('fullscreen photo viewer', () => {
+    const image = {
+      mimeType: 'image/jpeg',
+      altText: '',
+      blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
+      position: 0,
+      variants: [
+        { size: 'card' as const, url: '/a-card.webp' },
+        { size: 'full' as const, url: '/a-full.webp' },
+      ],
+    }
+
+    const mountWithImage = () =>
+      mount(MessageList, {
+        props: {
+          messages: [makeMessage({ content: '', images: [image] })],
+          hasMore: false,
+          isLoadingMore: false,
+        },
+        global: { stubs: { BModal } },
+      })
+
+    it('is closed until a photo is clicked', () => {
+      const wrapper = mountWithImage()
+      expect(wrapper.find('.modal-stub').exists()).toBe(false)
+    })
+
+    it('shows the full variant through BlurhashImage when a photo is clicked', async () => {
+      const wrapper = mountWithImage()
+      await wrapper.find('img.message-image').trigger('click')
+
+      const full = wrapper.findComponent({ name: 'BlurhashImage' })
+      expect(full.props('variant')).toBe('full')
+      expect(full.props('image')).toEqual(image)
+    })
+
+    it('closes when the fullscreen photo is clicked', async () => {
+      const wrapper = mountWithImage()
+      await wrapper.find('img.message-image').trigger('click')
+      await wrapper.find('.fullscreen-message-image').trigger('click')
+      expect(wrapper.find('.modal-stub').exists()).toBe(false)
+    })
   })
 })

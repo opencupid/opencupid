@@ -120,6 +120,15 @@ describe('MessageBubble', () => {
     expect(wrapper.find('.message-text').exists()).toBe(false)
   })
 
+  it('emits image-click with the clicked image', async () => {
+    const images = [imageFixture('/a.jpg', 0), imageFixture('/b.jpg', 1)]
+    const wrapper = mount(MessageBubble, {
+      props: { message: { ...baseMessage, messageType: 'image', images } as MessageDTO },
+    })
+    await wrapper.findAll('.image-stub')[1]!.trigger('click')
+    expect(wrapper.emitted('image-click')).toEqual([[images[1]]])
+  })
+
   it('renders both image and caption when content is present alongside images', () => {
     const wrapper = mount(MessageBubble, {
       props: {
