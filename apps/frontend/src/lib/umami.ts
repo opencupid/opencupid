@@ -1,4 +1,5 @@
 import { bus } from '@/lib/bus'
+import type { OutageCause } from '@/lib/connectivity'
 
 interface UmamiInstance {
   identify: (id?: string | Record<string, unknown>, data?: Record<string, unknown>) => void
@@ -63,5 +64,36 @@ if (enabled) {
 
   bus.on('auth:logged-out', () => {
     resetUmamiIdentity()
+  })
+
+  // Outage tracking: one `outage-api` and/or `outage-network` event per outage,
+  // however often the diagnosed cause flips in between. An `outage-network`
+  // event cannot leave the device while its connection is down, so it is held
+  // back until the connection is known to work again.
+  const counted = new Set<OutageCause>()
+  let networkOutageUnsent = false
+
+  const sendNetworkOutage = () => {
+    if (!networkOutageUnsent) return
+    networkOutageUnsent = false
+    tracker.track('outage-network')
+  }
+
+  bus.on('api:offline', ({ cause }) => {
+    const isNew = !counted.has(cause)
+    counted.add(cause)
+
+    if (cause === 'network') {
+      if (isNew) networkOutageUnsent = true
+      return
+    }
+    // Diagnosed as `api`: the device is connected.
+    sendNetworkOutage()
+    if (isNew) tracker.track('outage-api')
+  })
+
+  bus.on('api:online', () => {
+    sendNetworkOutage()
+    counted.clear()
   })
 }
