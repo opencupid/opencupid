@@ -513,6 +513,10 @@
     "locale_selector": {
       "help_wanted_translating": "Help wanted translating"
     },
+    "network_offline": {
+      "description": "We can't reach the internet from your device. Check your connection, we'll pick up where you left off as soon as it's back.",
+      "title": "You seem to be offline."
+    },
     "share_dialog": {
       "button_copied": "Copied",
       "button_copy": "Copy",

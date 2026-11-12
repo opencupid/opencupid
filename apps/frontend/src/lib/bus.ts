@@ -1,6 +1,7 @@
 import mitt from 'mitt'
 import type { WSEvents } from '@/types/wsBusEvents'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
+import type { OutageCause } from './connectivity'
 
 type AppEvents = {
   'auth:login': { userId: string }
@@ -9,7 +10,7 @@ type AppEvents = {
   'auth:token-refreshed': { token: string }
   'notification:new_message': MessageDTO
   'language:changed': { language: string }
-  'api:offline': void
+  'api:offline': { cause: OutageCause }
   'api:online': void
   'api:rate_limit': void
   'app:hidden': void

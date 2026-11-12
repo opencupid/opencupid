@@ -14,6 +14,7 @@ import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type InteractionEdge } from '@zod/interaction/interaction.dto'
 
 import ApiErrorOverlay from './ApiErrorOverlay.vue'
+import NetworkOfflineOverlay from './NetworkOfflineOverlay.vue'
 import LikeReceivedToast from './LikeReceivedToast.vue'
 import MatchReceivedToast from './MatchReceivedToast.vue'
 import MessageReceivedToast from './MessageReceivedToast.vue'
@@ -21,13 +22,14 @@ import IncomingCallToast from '@/features/videocall/components/IncomingCallToast
 
 import { useI18n } from 'vue-i18n'
 import { useCallStore } from '@/features/videocall/stores/callStore'
+import type { OutageCause } from '@/lib/connectivity'
 
 const toast = useToast()
 const { t } = useI18n()
 const callStore = useCallStore()
 
-// API status overlay
-const showApiOfflineOverlay = ref(false)
+// Which outage overlay to show: ours (`api`) or the user's connection (`network`)
+const outageCause = ref<OutageCause | null>(null)
 
 function toastId() {
   return new Date().getUTCMilliseconds()
@@ -116,20 +118,12 @@ function handleIncomingCall(payload: {
   )
 }
 
-function handleApiOffline() {
-  showApiOfflineOverlay.value = true
-  // toast.error('Connection lost. Trying to reconnect...', {
-  //   timeout: false,
-  //   id: 'api-offline'
-  // })
+function handleApiOffline({ cause }: { cause: OutageCause }) {
+  outageCause.value = cause
 }
 
 function handleApiOnline() {
-  showApiOfflineOverlay.value = false
-  // toast.dismiss('api-offline')
-  // toast.success('Connection restored!', {
-  //   timeout: 3000
-  // })
+  outageCause.value = null
 }
 
 function handleRateLimit() {
@@ -161,8 +155,12 @@ onUnmounted(() => {
   <slot> </slot>
 
   <ApiErrorOverlay
-    :show="showApiOfflineOverlay"
+    :show="outageCause === 'api'"
     class="api-offline-overlay"
+  />
+  <NetworkOfflineOverlay
+    :show="outageCause === 'network'"
+    class="network-offline-overlay"
   />
 </template>
 <style scoped></style>
