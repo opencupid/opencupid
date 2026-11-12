@@ -211,4 +211,81 @@ describe('umami', () => {
       expect(identify).toHaveBeenCalledWith({ user: null })
     })
   })
+
+  describe('outage tracking', () => {
+    async function setup() {
+      setConfig(ENABLED)
+      const { initUmami } = await import('../umami')
+      const track = vi.fn()
+
+      initUmami()
+      ;(window as any).umami = { identify: vi.fn(), track }
+      fireScriptLoad()
+      await Promise.resolve()
+
+      const emit = async (event: 'api:offline' | 'api:online', payload?: unknown) => {
+        busHandlers[event]?.(payload)
+        await Promise.resolve()
+      }
+      return { track, emit }
+    }
+
+    it('sends outage-api as soon as an API outage is diagnosed', async () => {
+      const { track, emit } = await setup()
+
+      await emit('api:offline', { cause: 'api' })
+
+      expect(track).toHaveBeenCalledExactlyOnceWith('outage-api', undefined)
+    })
+
+    it('holds outage-network back until the connection has recovered', async () => {
+      const { track, emit } = await setup()
+
+      await emit('api:offline', { cause: 'network' })
+      expect(track).not.toHaveBeenCalled()
+
+      await emit('api:online')
+      expect(track).toHaveBeenCalledExactlyOnceWith('outage-network', undefined)
+    })
+
+    it('sends the held outage-network once the cause turns into an API outage', async () => {
+      const { track, emit } = await setup()
+
+      await emit('api:offline', { cause: 'network' })
+      await emit('api:offline', { cause: 'api' })
+
+      expect(track.mock.calls).toEqual([
+        ['outage-network', undefined],
+        ['outage-api', undefined],
+      ])
+
+      await emit('api:online')
+      expect(track).toHaveBeenCalledTimes(2)
+    })
+
+    it('counts each cause once per outage even when the diagnosis flips back and forth', async () => {
+      const { track, emit } = await setup()
+
+      await emit('api:offline', { cause: 'api' })
+      await emit('api:offline', { cause: 'network' })
+      await emit('api:offline', { cause: 'api' })
+      await emit('api:offline', { cause: 'network' })
+      await emit('api:online')
+
+      expect(track.mock.calls).toEqual([
+        ['outage-api', undefined],
+        ['outage-network', undefined],
+      ])
+    })
+
+    it('counts a new outage after recovery', async () => {
+      const { track, emit } = await setup()
+
+      await emit('api:offline', { cause: 'api' })
+      await emit('api:online')
+      await emit('api:offline', { cause: 'api' })
+
+      expect(track).toHaveBeenCalledTimes(2)
+    })
+  })
 })

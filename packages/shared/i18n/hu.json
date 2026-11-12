@@ -517,6 +517,10 @@
     "locale_selector": {
       "help_wanted_translating": "Segíts a fordításban"
     },
+    "network_offline": {
+      "description": "Ellenőrizd a hálózati kapcsolatot, amint visszatér, ott folytatjuk, ahol abbahagytad.",
+      "title": "Úgy tűnik, nincs internetkapcsolatod."
+    },
     "share_dialog": {
       "button_copied": "Másolva",
       "button_copy": "Másolás",
