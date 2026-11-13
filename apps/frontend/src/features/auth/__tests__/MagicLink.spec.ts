@@ -51,7 +51,8 @@ const mountMagicLink = () =>
   mount(MagicLink, {
     global: {
       mocks: {
-        $t: (key: string) => key,
+        $t: (key: string, params?: Record<string, unknown>) =>
+          params ? `${key} ${JSON.stringify(params)}` : key,
       },
     },
   })
@@ -73,6 +74,7 @@ describe('MagicLink', () => {
     track.mockReset()
     bootstrapReady.mockReset()
     bootstrapReady.mockResolvedValue(undefined)
+    localStorage.clear()
   })
 
   it('redirects to /browse on valid magic-link token', async () => {
@@ -96,6 +98,31 @@ describe('MagicLink', () => {
 
     expect(wrapper.text()).toContain('auth.token_check_email')
     expect(wrapper.text()).toContain('auth.token_check_junk')
+  })
+
+  it('shows the email address as entered in the check-email message', async () => {
+    localStorage.setItem('authId', 'Entered@Example.com')
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain(
+      `auth.token_check_email ${JSON.stringify({ email: 'Entered@Example.com' })}`
+    )
+  })
+
+  it('navigates back to login when "incorrect email?" link is clicked', async () => {
+    localStorage.setItem('authId', 'test@example.com')
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    const link = wrapper.get('[data-testid="incorrect-email-link"]')
+    expect(link.text()).toBe('auth.token_incorrect_email')
+    expect(link.classes()).toContain('small')
+    await link.trigger('click')
+
+    expect(push).toHaveBeenCalledWith({ name: 'Login' })
   })
 
   it('shows only error and back button on failed magic link, hiding title and hint', async () => {

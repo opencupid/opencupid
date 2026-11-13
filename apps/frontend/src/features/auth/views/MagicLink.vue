@@ -30,6 +30,7 @@ const route = useRoute()
 const isCheckingMagicLinkToken = ref(Boolean(route.query.token))
 const authStore = useAuthStore()
 const { t } = useI18n()
+const enteredEmail = localStorage.getItem('authId')
 
 const TokenParamSchema = z.object({
   token: z.string().min(6).max(6),
@@ -132,9 +133,17 @@ function handleBackButton() {
             </div>
           </div>
           <p class="text-muted fs-6">
-            {{ $t('auth.token_check_email') }}<br />
+            {{ $t('auth.token_check_email', { email: enteredEmail }) }}<br />
             {{ $t('auth.token_check_junk') }}
           </p>
+          <a
+            href="#"
+            class="small"
+            data-testid="incorrect-email-link"
+            @click.prevent="handleBackButton"
+          >
+            {{ $t('auth.token_incorrect_email') }}
+          </a>
         </template>
         <div
           v-if="error"
