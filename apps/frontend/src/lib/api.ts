@@ -263,7 +263,7 @@ api.interceptors.response.use(
         clearLegacyCookie(jar, SESSION_COOKIE)
         // auth:logout handler in authStore clears state synchronously and then
         // emits auth:logged-out — the single place that drives navigation to Login.
-        bus.emit('auth:logout')
+        bus.emit('auth:logout', { expired: true })
 
         return Promise.reject(refreshError)
       }

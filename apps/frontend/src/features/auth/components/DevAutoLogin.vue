@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/lib/api'
 import { useAuthStore } from '../stores/authStore'
+import { loginRedirect, DEFAULT_LANDING } from '@/router/loginRedirect'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const isLoading = ref(false)
 const error = ref('')
@@ -26,7 +28,7 @@ async function handleContinue() {
 
     const res = await authStore.verifyToken(data.token)
     if (res.success) {
-      await router.push('/browse')
+      await router.push(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
     } else {
       error.value = res.message ?? 'Token verification failed'
     }

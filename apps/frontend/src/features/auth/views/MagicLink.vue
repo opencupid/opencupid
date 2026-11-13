@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '../stores/authStore'
 import { bootstrapReady } from '@/lib/auth'
 import { tracker } from '@/lib/umami'
+import { loginRedirect, DEFAULT_LANDING } from '@/router/loginRedirect'
 import AuthLayout from '../components/AuthLayout.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
@@ -67,7 +68,7 @@ onMounted(async () => {
         isCheckingMagicLinkToken.value = false
         return
       }
-      await router.push('/browse')
+      await router.push(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
       return
     }
     tracker.track('auth-token-failed', { code: res.code })

@@ -215,6 +215,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
    * @body {string} email - Email address (send email link)
    * @body {string} captchaSolution - ALTCHA captcha solution
    * @body {string} [language] - Preferred language code
+   * @body {string} [redirect] - In-app path to land on after login
    * @returns {SendMagicLinkResponse} User info + status ('login' | 'register')
    */
   fastify.post(
@@ -230,7 +231,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ code: 'AUTH_MISSING_FIELD' })
       }
 
-      const { email, captchaSolution, language } = params.data
+      const { email, captchaSolution, language, redirect } = params.data
 
       try {
         const captchaOk = await captchaService.validate(captchaSolution)
@@ -270,8 +271,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       // existing users to new brand domains expires.
       setOriginCookie(reply, user.originDomain)
 
+      // `redirect` rides along in the emailed link so the deep link survives
+      // the link being opened in another tab, browser or device.
+      const query = new URLSearchParams({ token, ...(redirect && { redirect }) })
       await notifierService.notifyUser(user.id, 'login_link', {
-        path: `/magic-link?token=${token}`,
+        path: `/magic-link?${query}`,
       })
 
       const response: SendMagicLinkResponse = {

@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
+import { loginRoute } from './loginRedirect'
 
 import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 // LoginView stays eager so the form renders on first paint without a chunk
@@ -133,7 +134,7 @@ router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
   if (to.meta.requiresAuth && !authStore.isLoggedIn) {
-    return { name: 'Login' }
+    return loginRoute(to)
   }
 
   if (!to.meta.requiresAuth && authStore.isLoggedIn && to.name !== 'Unsubscribe') {
@@ -149,8 +150,8 @@ router.afterEach((to, from) => {
 
 export { getPreviousUrl } from './history'
 
-bus.on('auth:logged-out', () => {
-  router.push({ name: 'Login' })
+bus.on('auth:logged-out', ({ expired }) => {
+  router.push(expired ? loginRoute(router.currentRoute.value) : { name: 'Login' })
 })
 
 export default router

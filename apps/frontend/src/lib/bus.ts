@@ -4,8 +4,10 @@ import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
 type AppEvents = {
   'auth:login': { userId: string }
-  'auth:logout': void
-  'auth:logged-out': void
+  // `expired` is set when the session died (refresh failed), as opposed to
+  // the user logging out — only then is the current page worth returning to.
+  'auth:logout': { expired: true } | undefined
+  'auth:logged-out': { expired: boolean }
   'auth:token-refreshed': { token: string }
   'notification:new_message': MessageDTO
   'language:changed': { language: string }
