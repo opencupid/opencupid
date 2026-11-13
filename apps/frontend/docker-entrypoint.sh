@@ -1,9 +1,6 @@
 #!/bin/sh
 set -eu
 
-# The manifest's short_name (home-screen label) defaults to the full site name.
-export SITE_SHORT_NAME="${SITE_SHORT_NAME:-${SITE_NAME:-}}"
-
 # 1. Substitute placeholders in index.html
 envsubst < /var/www/index.html > /var/www/index.html.tmp
 mv /var/www/index.html.tmp /var/www/index.html
