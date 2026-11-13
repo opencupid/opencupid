@@ -15,11 +15,11 @@ describe('syncHiddenFromResults', () => {
     mockExecuteRaw.mockResolvedValue(3 as never)
   })
 
-  it('treats profiles as unseen 30 days before now', async () => {
+  it('treats profiles as unseen 5 days before now', async () => {
     await syncHiddenFromResults(new Date('2026-11-07T03:00:00Z'))
 
     const [, unseenSince] = mockExecuteRaw.mock.calls[0]
-    expect(unseenSince).toEqual(new Date('2026-10-08T03:00:00Z'))
+    expect(unseenSince).toEqual(new Date('2026-11-02T03:00:00Z'))
   })
 
   it('checks the face, intro and last-seen conditions', async () => {
