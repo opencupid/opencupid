@@ -1,5 +1,6 @@
 {
   "name": "${SITE_NAME}",
+  "short_name": "${SITE_SHORT_NAME}",
   "start_url": "/home",
   "scope": "/",
   "launch_handler": {
