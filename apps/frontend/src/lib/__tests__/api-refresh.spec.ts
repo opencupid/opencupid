@@ -75,8 +75,8 @@ describe('api refresh interceptor', () => {
     )
     // api.ts emits only auth:logout; the authStore handler is the single
     // place that re-emits auth:logged-out after synchronous teardown.
-    expect(mockEmit).toHaveBeenCalledWith('auth:logout')
-    expect(mockEmit).not.toHaveBeenCalledWith('auth:logged-out')
+    expect(mockEmit).toHaveBeenCalledWith('auth:logout', { expired: true })
+    expect(mockEmit.mock.calls.map(([event]) => event)).not.toContain('auth:logged-out')
 
     postSpy.mockRestore()
   })

@@ -361,6 +361,39 @@ describe('POST /send-magic-link', () => {
     expect(reply.payload.user.email).toBe('existing@example.com')
   })
 
+  it('carries the redirect deep link in the magic-link path', async () => {
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: { id: 'user4', email: 'existing@example.com', language: 'en' },
+      isNewUser: false,
+    })
+    const req = {
+      body: {
+        email: 'existing@example.com',
+        captchaSolution: 'x',
+        language: 'en',
+        redirect: '/inbox/abc?tab=1',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(notifier.notifyUser).toHaveBeenCalledWith('user4', 'login_link', {
+      path: '/magic-link?token=abc123&redirect=%2Finbox%2Fabc%3Ftab%3D1',
+    })
+  })
+
+  it('returns 400 when redirect is not an in-app path', async () => {
+    const req = {
+      body: {
+        email: 'existing@example.com',
+        captchaSolution: 'x',
+        language: 'en',
+        redirect: '//evil.example',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(notifier.notifyUser).not.toHaveBeenCalled()
+  })
+
   // The magic-link email itself is branded by the notifier from originDomain;
   // the route only passes the path.
   it('sets __o cookie for cross-brand login and passes a brand-neutral magic-link path', async () => {
