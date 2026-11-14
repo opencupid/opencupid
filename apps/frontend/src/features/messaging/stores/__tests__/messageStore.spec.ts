@@ -791,6 +791,43 @@ describe('conversation list pagination', () => {
     expect(store.isLoadingMoreConversations).toBe(false)
   })
 
+  it('fetchMoreConversations discards a page that was in flight when the list was refreshed', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.conversationCursor = 'cursor-2'
+    store.hasMoreConversations = true
+    let resolveStale!: (value: unknown) => void
+    mockApi.get.mockReturnValueOnce(new Promise((r) => (resolveStale = r)))
+    const stale = store.fetchMoreConversations()
+
+    // Returning to the inbox reloads the first page while page 3 is in flight.
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        conversations: [makeConvo('c1', 'Alice')],
+        nextCursor: 'cursor-1',
+        hasMore: true,
+        hasUnread: false,
+      },
+    })
+    await store.fetchConversations()
+
+    resolveStale({
+      data: {
+        success: true,
+        conversations: [makeConvo('c3', 'Carol')],
+        nextCursor: 'cursor-3',
+        hasMore: true,
+        hasUnread: false,
+      },
+    })
+    await stale
+
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+    expect(store.conversationCursor).toBe('cursor-1')
+    expect(store.isLoadingMoreConversations).toBe(false)
+  })
+
   it('setActiveConversationById fetches a conversation that is beyond the loaded pages', async () => {
     const store = useMessageStore()
     store.conversations = [makeConvo('c1', 'Alice')]
@@ -881,6 +918,27 @@ describe('unread flag', () => {
     mockApi.post.mockResolvedValue(response(false))
     await store.markAsRead('c1')
     expect(store.hasUnreadMessages).toBe(false)
+  })
+
+  it('a server snapshot taken before an incoming message does not clear the flag', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.suppressMessageNotifications = true
+    let resolveMarkRead!: (value: unknown) => void
+    mockApi.post.mockReturnValue(new Promise((r) => (resolveMarkRead = r)))
+    const markRead = store.markAsRead('c1')
+
+    await store.handleIncomingMessage({
+      id: 'm1',
+      conversationId: 'c2',
+      senderId: 'partner-c2',
+    } as MessageDTO)
+    resolveMarkRead({
+      data: { success: true, conversation: makeConvo('c1', 'Alice'), hasUnread: false },
+    })
+    await markRead
+
+    expect(store.hasUnreadMessages).toBe(true)
   })
 
   it('an incoming message from the partner sets the flag', async () => {

@@ -25,6 +25,9 @@ type MessageStoreState = {
   messages: MessageDTO[]
   activeConversation: ConversationSummary | null
   hasUnreadMessages: boolean
+  // Bumped whenever an incoming message makes the inbox unread, so a server
+  // snapshot requested before that message is not allowed to clear the flag.
+  unreadRevision: number
   suppressMessageNotifications: boolean
   isSending: boolean
   initialized: boolean
@@ -44,6 +47,7 @@ export const useMessageStore = defineStore('message', {
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
     hasUnreadMessages: false,
+    unreadRevision: 0,
     initialized: false,
     suppressMessageNotifications: false,
     isSending: false,
@@ -71,7 +75,10 @@ export const useMessageStore = defineStore('message', {
       if (convo) {
         this.bumpConversation(convo)
         // Missed-call notices are broadcast to their sender as well.
-        if (message.senderId !== convo.profileId) this.hasUnreadMessages = true
+        if (message.senderId !== convo.profileId) {
+          this.hasUnreadMessages = true
+          this.unreadRevision++
+        }
       }
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
@@ -113,6 +120,12 @@ export const useMessageStore = defineStore('message', {
       if (index !== -1) {
         this.conversations[index] = convo
       }
+    },
+
+    // Applies the inbox-wide unread flag from a response whose request was sent
+    // at `revision`.
+    applyServerUnread(hasUnread: boolean, revision: number) {
+      if (revision === this.unreadRevision) this.hasUnreadMessages = hasUnread
     },
 
     async fetchMessages(
@@ -232,6 +245,7 @@ export const useMessageStore = defineStore('message', {
       try {
         this.isLoading = true
         this.error = null
+        const unreadRevision = this.unreadRevision
         const res = await safeApiCall(() =>
           api.get<ConversationsResponse>('/messages/conversations')
         )
@@ -239,7 +253,7 @@ export const useMessageStore = defineStore('message', {
           this.conversations = res.data.conversations
           this.conversationCursor = res.data.nextCursor
           this.hasMoreConversations = res.data.hasMore
-          this.hasUnreadMessages = res.data.hasUnread
+          this.applyServerUnread(res.data.hasUnread, unreadRevision)
           this.initialized = true
         }
       } catch (error: any) {
@@ -262,13 +276,17 @@ export const useMessageStore = defineStore('message', {
       ) {
         return
       }
+      const cursor = this.conversationCursor
+      const unreadRevision = this.unreadRevision
       try {
         this.isLoadingMoreConversations = true
         this.error = null
-        const cursor = this.conversationCursor
         const res = await safeApiCall(() =>
           api.get<ConversationsResponse>('/messages/conversations', { params: { cursor } })
         )
+        // The list was refreshed or reset while this page was in flight: the
+        // page no longer continues from where the list now ends.
+        if (cursor !== this.conversationCursor) return
         if (res.data.success) {
           // A conversation bumped to the top since the previous page was
           // loaded can show up again further down.
@@ -278,10 +296,10 @@ export const useMessageStore = defineStore('message', {
           )
           this.conversationCursor = res.data.nextCursor
           this.hasMoreConversations = res.data.hasMore
-          this.hasUnreadMessages = res.data.hasUnread
+          this.applyServerUnread(res.data.hasUnread, unreadRevision)
         }
       } catch (error: any) {
-        this.error = storeError(error)
+        if (cursor === this.conversationCursor) this.error = storeError(error)
       } finally {
         this.isLoadingMoreConversations = false
       }
@@ -300,6 +318,7 @@ export const useMessageStore = defineStore('message', {
     },
 
     async markAsRead(convoId: string) {
+      const unreadRevision = this.unreadRevision
       try {
         const updateConvo = await safeApiCall(() =>
           api.post<MarkConversationReadResponse>(`/messages/conversations/${convoId}/mark-read`)
@@ -307,7 +326,7 @@ export const useMessageStore = defineStore('message', {
         if (updateConvo.data.success) {
           const updatedConvo: ConversationSummary = updateConvo.data.conversation
           this.updateConvo(updatedConvo)
-          this.hasUnreadMessages = updateConvo.data.hasUnread
+          this.applyServerUnread(updateConvo.data.hasUnread, unreadRevision)
         }
       } catch (error: any) {
         console.error('Failed to mark conversation as read:', error)
