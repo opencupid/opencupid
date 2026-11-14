@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
-import { nextTick, ref, watch } from 'vue'
+import { type PublicImage } from '@zod/image/image.dto'
+import { nextTick, ref, shallowRef, watch } from 'vue'
 import MessageBubble from './MessageBubble.vue'
+import BlurhashImage from '@/features/images/components/BlurhashImage.vue'
+import FullscreenImageModal from '@/features/images/components/FullscreenImageModal.vue'
 
 const props = defineProps<{
   messages: MessageDTO[]
@@ -12,6 +15,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'load-older'): void
 }>()
+
+const fullscreenImage = shallowRef<PublicImage | null>(null)
+const showFullscreen = shallowRef(false)
+
+const openFullscreen = (image: PublicImage) => {
+  fullscreenImage.value = image
+  showFullscreen.value = true
+}
 
 const messageListRef = ref<HTMLElement | null>(null)
 const previousMessageCount = ref(0)
@@ -93,6 +104,21 @@ const handleScroll = () => {
       :key="msg.id"
       :message="msg"
       class="mb-2 me-2 animate__animated animate__zoomIn"
+      @image-click="openFullscreen"
     />
+
+    <FullscreenImageModal v-model="showFullscreen">
+      <div
+        v-if="fullscreenImage"
+        class="fullscreen-message-image h-100 bg-black"
+        @click="showFullscreen = false"
+      >
+        <BlurhashImage
+          :image="fullscreenImage"
+          variant="full"
+          imgClass="fitted-image"
+        />
+      </div>
+    </FullscreenImageModal>
   </div>
 </template>
