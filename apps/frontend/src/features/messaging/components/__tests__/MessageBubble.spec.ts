@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { config, mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/lib/renderMessage', () => ({
@@ -32,6 +32,8 @@ vi.mock('@/features/images/components/ImageTag.vue', () => ({
 
 import MessageBubble from '../MessageBubble.vue'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
+
+config.global.mocks = { $t: (key: string) => key }
 
 const baseMessage = {
   id: '1',
@@ -125,7 +127,9 @@ describe('MessageBubble', () => {
     const wrapper = mount(MessageBubble, {
       props: { message: { ...baseMessage, messageType: 'image', images } as MessageDTO },
     })
-    await wrapper.findAll('.image-stub')[1]!.trigger('click')
+    const buttons = wrapper.findAll('button.message-image-button')
+    expect(buttons[1]!.attributes('aria-label')).toBe('messaging.open_photo')
+    await buttons[1]!.trigger('click')
     expect(wrapper.emitted('image-click')).toEqual([[images[1]]])
   })
 

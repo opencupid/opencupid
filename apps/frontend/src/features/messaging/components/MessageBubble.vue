@@ -44,15 +44,21 @@ const isVoice = computed(
         class="message-images d-flex flex-column gap-1"
         :class="{ 'mb-1': hasText }"
       >
-        <ImageTag
+        <button
           v-for="img in message.images"
           :key="img.position"
-          :image="img"
-          variant="card"
-          loading="lazy"
-          className="message-image"
+          type="button"
+          class="message-image-button"
+          :aria-label="$t('messaging.open_photo')"
           @click="emit('image-click', img)"
-        />
+        >
+          <ImageTag
+            :image="img"
+            variant="card"
+            loading="lazy"
+            className="message-image"
+          />
+        </button>
       </div>
 
       <!-- Text message / caption -->
@@ -104,6 +110,13 @@ const isVoice = computed(
   object-fit: contain;
   object-position: left center;
   border-radius: 0.5rem;
-  cursor: pointer;
+}
+
+.message-image-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
 }
 </style>

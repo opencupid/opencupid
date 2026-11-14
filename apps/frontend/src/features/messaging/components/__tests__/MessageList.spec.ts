@@ -131,7 +131,7 @@ describe('MessageList', () => {
           hasMore: false,
           isLoadingMore: false,
         },
-        global: { stubs: { BModal } },
+        global: { stubs: { BModal }, mocks: { $t: (k: string) => k } },
       })
 
     it('is closed until a photo is clicked', () => {
@@ -141,7 +141,7 @@ describe('MessageList', () => {
 
     it('shows the full variant through BlurhashImage when a photo is clicked', async () => {
       const wrapper = mountWithImage()
-      await wrapper.find('img.message-image').trigger('click')
+      await wrapper.find('button.message-image-button').trigger('click')
 
       const full = wrapper.findComponent({ name: 'BlurhashImage' })
       expect(full.props('variant')).toBe('full')
@@ -150,7 +150,7 @@ describe('MessageList', () => {
 
     it('closes when the fullscreen photo is clicked', async () => {
       const wrapper = mountWithImage()
-      await wrapper.find('img.message-image').trigger('click')
+      await wrapper.find('button.message-image-button').trigger('click')
       await wrapper.find('.fullscreen-message-image').trigger('click')
       expect(wrapper.find('.modal-stub').exists()).toBe(false)
     })
