@@ -952,6 +952,105 @@ describe('GET /profiles', () => {
   })
 })
 
+describe('GET /activity', () => {
+  it('lists seen profiles by last seen, with sent/received/like counts', async () => {
+    const lastSeenAt = new Date('2026-11-09T12:00:00Z')
+    mockPrisma.profile.findMany.mockResolvedValue([
+      {
+        id: 'p1',
+        publicName: 'Alice',
+        hasFace: true,
+        isDatingActive: false,
+        activitySummary: { lastSeenAt },
+        _count: { Message: 4, likesSent: 2 },
+      },
+      {
+        id: 'p2',
+        publicName: 'Bob',
+        hasFace: false,
+        isDatingActive: true,
+        activitySummary: { lastSeenAt },
+        _count: { Message: 0, likesSent: 0 },
+      },
+    ])
+    mockPrisma.profile.count.mockResolvedValue(2)
+    mockPrisma.$queryRaw.mockResolvedValue([{ profileId: 'p1', count: BigInt(7) }])
+
+    const handler = fastify.routes['GET /activity']
+    await handler({ query: { page: '2', pageSize: '10' } }, reply)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { activitySummary: { isNot: null } },
+        orderBy: { activitySummary: { lastSeenAt: 'desc' } },
+        skip: 10,
+        take: 10,
+      })
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toMatchObject({ success: true, total: 2, page: 2, pageSize: 10 })
+    expect(reply.payload.profiles).toEqual([
+      {
+        id: 'p1',
+        publicName: 'Alice',
+        hasFace: true,
+        isDatingActive: false,
+        lastSeenAt,
+        messagesSent: 4,
+        messagesReceived: 7,
+        likesSent: 2,
+      },
+      {
+        id: 'p2',
+        publicName: 'Bob',
+        hasFace: false,
+        isDatingActive: true,
+        lastSeenAt,
+        messagesSent: 0,
+        messagesReceived: 0,
+        likesSent: 0,
+      },
+    ])
+  })
+
+  it('excludes system sender messages from received counts', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([
+      {
+        id: 'p1',
+        activitySummary: { lastSeenAt: new Date() },
+        _count: { Message: 0, likesSent: 0 },
+      },
+    ])
+    mockPrisma.profile.count.mockResolvedValue(1)
+    mockPrisma.$queryRaw.mockResolvedValue([])
+
+    await fastify.routes['GET /activity']({ query: {} }, reply)
+
+    const fragments = adminSenderExclusionFragments()
+    expect(fragments).toHaveLength(1)
+    expect(fragments[0].values).toEqual(['sys-sender'])
+  })
+
+  it('skips the received query when the page is empty', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    await fastify.routes['GET /activity']({ query: {} }, reply)
+
+    expect(mockPrisma.$queryRaw).not.toHaveBeenCalled()
+    expect(reply.payload.profiles).toEqual([])
+  })
+
+  it('returns 500 on database error', async () => {
+    mockPrisma.profile.findMany.mockRejectedValue(new Error('db down'))
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    await fastify.routes['GET /activity']({ query: {} }, reply)
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
 describe('GET /profiles/:id', () => {
   it('returns profile detail with trustFlags and hasActiveTrustFlag derived', async () => {
     const mockProfile = {

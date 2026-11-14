@@ -21,6 +21,9 @@ const router = useRouter()
 function goToProfiles() {
   router.push({ name: 'profiles' })
 }
+function goToActivity() {
+  router.push({ name: 'activity' })
+}
 
 type DrillDownMetric = 'interactions' | 'messages'
 const drillDown = ref<{ metric: DrillDownMetric; title: string } | null>(null)
@@ -154,9 +157,9 @@ onMounted(async () => {
         color="#198754"
         clickable
         data-test="kpi-daily-active"
-        @click="goToProfiles"
-        @keydown.enter="goToProfiles"
-        @keydown.space.prevent="goToProfiles"
+        @click="goToActivity"
+        @keydown.enter="goToActivity"
+        @keydown.space.prevent="goToActivity"
       />
       <KpiCard
         title="Blocked Users"
