@@ -15,6 +15,7 @@ import type {
   ConversationByProfileResponse,
   ConversationsResponse,
   ConversationResponse,
+  MarkConversationReadResponse,
   SendMessageResponse,
 } from '@zod/apiResponse.dto'
 import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@/store/helpers'
@@ -24,6 +25,9 @@ type MessageStoreState = {
   messages: MessageDTO[]
   activeConversation: ConversationSummary | null
   hasUnreadMessages: boolean
+  // Bumped whenever an incoming message makes the inbox unread, so a server
+  // snapshot requested before that message is not allowed to clear the flag.
+  unreadRevision: number
   suppressMessageNotifications: boolean
   isSending: boolean
   initialized: boolean
@@ -32,6 +36,9 @@ type MessageStoreState = {
   messageCursor: string | null
   hasMoreMessages: boolean
   isLoadingMoreMessages: boolean
+  conversationCursor: string | null
+  hasMoreConversations: boolean
+  isLoadingMoreConversations: boolean
 }
 
 export const useMessageStore = defineStore('message', {
@@ -40,6 +47,7 @@ export const useMessageStore = defineStore('message', {
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
     hasUnreadMessages: false,
+    unreadRevision: 0,
     initialized: false,
     suppressMessageNotifications: false,
     isSending: false,
@@ -48,29 +56,29 @@ export const useMessageStore = defineStore('message', {
     messageCursor: null,
     hasMoreMessages: false,
     isLoadingMoreMessages: false,
+    conversationCursor: null,
+    hasMoreConversations: false,
+    isLoadingMoreConversations: false,
   }),
 
   actions: {
     async handleIncomingMessage(message: MessageDTO) {
       // Update conversation summary (and bump it to top)
-      const convoIndex = this.conversations.findIndex(
-        (c) => c.conversationId === message.conversationId
-      )
-
-      if (convoIndex === -1) {
-        await this.fetchConversations() // Fetch conversations if not found
-      } else {
-        const convo = this.conversations[convoIndex]!
-        // Update last message and unread count
-        // When we receive a message, it means the conversation is now in ACCEPTED state
-        // and we can reply (fixes bug where both "My turn" and "Their turn" badges show)
-        const updatedConvo: ConversationSummary = {
-          ...convo,
-          lastMessage: message,
-          canReply: true,
+      const known = this.conversations.find((c) => c.conversationId === message.conversationId)
+      // When we receive a message, it means the conversation is now in ACCEPTED state
+      // and we can reply (fixes bug where both "My turn" and "Their turn" badges show).
+      // A conversation outside the loaded pages is fetched on its own, so the
+      // pages already scrolled through stay in place.
+      const convo: ConversationSummary | null = known
+        ? { ...known, lastMessage: message, canReply: true }
+        : await this.fetchConversation(message.conversationId)
+      if (convo) {
+        this.bumpConversation(convo)
+        // Missed-call notices are broadcast to their sender as well.
+        if (message.senderId !== convo.profileId) {
+          this.hasUnreadMessages = true
+          this.unreadRevision++
         }
-        this.bumpConversation(updatedConvo)
-        this.updateUnreadFlag()
       }
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
@@ -105,24 +113,19 @@ export const useMessageStore = defineStore('message', {
       return storeSuccess(message)
     },
 
-    // Update a conversation in the list
+    // Update a conversation in the list. One outside the loaded pages is left
+    // out: it will arrive in its sorted position when its page is fetched.
     updateConvo(convo: ConversationSummary) {
       const index = this.conversations.findIndex((c) => c.conversationId === convo.conversationId)
       if (index !== -1) {
         this.conversations[index] = convo
-      } else {
-        this.conversations.unshift(convo)
       }
     },
 
-    // Check last read timestamp against last message and update unread flag
-    updateUnreadFlag() {
-      this.hasUnreadMessages = this.conversations
-        .filter((c) => c.lastMessage?.isMine !== true)
-        .some((c) => {
-          const lastMessage = c.lastMessage?.createdAt || new Date(0) // Fallback to epoch if no last message
-          return c.lastReadAt ? c.lastReadAt < lastMessage : true
-        })
+    // Applies the inbox-wide unread flag from a response whose request was sent
+    // at `revision`.
+    applyServerUnread(hasUnread: boolean, revision: number) {
+      if (revision === this.unreadRevision) this.hasUnreadMessages = hasUnread
     },
 
     async fetchMessages(
@@ -237,36 +240,93 @@ export const useMessageStore = defineStore('message', {
       }
     },
 
+    // Fetches the first page, replacing whatever was loaded before.
     async fetchConversations(): Promise<ConversationSummary[]> {
       try {
         this.isLoading = true
         this.error = null
+        const unreadRevision = this.unreadRevision
         const res = await safeApiCall(() =>
           api.get<ConversationsResponse>('/messages/conversations')
         )
         if (res.data.success) {
           this.conversations = res.data.conversations
-          this.updateUnreadFlag()
+          this.conversationCursor = res.data.nextCursor
+          this.hasMoreConversations = res.data.hasMore
+          this.applyServerUnread(res.data.hasUnread, unreadRevision)
           this.initialized = true
         }
       } catch (error: any) {
         this.error = storeError(error)
         this.conversations = []
+        this.conversationCursor = null
+        this.hasMoreConversations = false
       } finally {
         this.isLoading = false // Reset loading state
       }
       return this.conversations
     },
 
+    async fetchMoreConversations(): Promise<void> {
+      if (
+        !this.hasMoreConversations ||
+        !this.conversationCursor ||
+        this.isLoading ||
+        this.isLoadingMoreConversations
+      ) {
+        return
+      }
+      const cursor = this.conversationCursor
+      const unreadRevision = this.unreadRevision
+      try {
+        this.isLoadingMoreConversations = true
+        this.error = null
+        const res = await safeApiCall(() =>
+          api.get<ConversationsResponse>('/messages/conversations', { params: { cursor } })
+        )
+        // The list was refreshed or reset while this page was in flight: the
+        // page no longer continues from where the list now ends.
+        if (cursor !== this.conversationCursor) return
+        if (res.data.success) {
+          // A conversation bumped to the top since the previous page was
+          // loaded can show up again further down.
+          const loadedIds = new Set(this.conversations.map((c) => c.conversationId))
+          this.conversations.push(
+            ...res.data.conversations.filter((c) => !loadedIds.has(c.conversationId))
+          )
+          this.conversationCursor = res.data.nextCursor
+          this.hasMoreConversations = res.data.hasMore
+          this.applyServerUnread(res.data.hasUnread, unreadRevision)
+        }
+      } catch (error: any) {
+        if (cursor === this.conversationCursor) this.error = storeError(error)
+      } finally {
+        this.isLoadingMoreConversations = false
+      }
+    },
+
+    async fetchConversation(conversationId: string): Promise<ConversationSummary | null> {
+      try {
+        const res = await safeApiCall(() =>
+          api.get<ConversationResponse>(`/messages/conversations/${conversationId}`)
+        )
+        return res.data.success ? res.data.conversation : null
+      } catch (error: any) {
+        this.error = storeError(error)
+        return null
+      }
+    },
+
     async markAsRead(convoId: string) {
+      const unreadRevision = this.unreadRevision
       try {
         const updateConvo = await safeApiCall(() =>
-          api.post<ConversationResponse>(`/messages/conversations/${convoId}/mark-read`)
+          api.post<MarkConversationReadResponse>(`/messages/conversations/${convoId}/mark-read`)
         )
         if (updateConvo.data.success) {
           const updatedConvo: ConversationSummary = updateConvo.data.conversation
           this.updateConvo(updatedConvo)
-          this.updateUnreadFlag()
+          this.applyServerUnread(updateConvo.data.hasUnread, unreadRevision)
         }
       } catch (error: any) {
         console.error('Failed to mark conversation as read:', error)
@@ -350,7 +410,10 @@ export const useMessageStore = defineStore('message', {
       if (!this.initialized) {
         await this.fetchConversations()
       }
-      const convo = this.conversations.find((c) => c.conversationId === conversationId)
+      // The list only holds the pages loaded so far; a deep link can point past them.
+      const convo =
+        this.conversations.find((c) => c.conversationId === conversationId) ??
+        (await this.fetchConversation(conversationId))
       if (convo) {
         await this.setActiveConversation(convo)
       } else {

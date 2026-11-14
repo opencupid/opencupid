@@ -14,16 +14,21 @@ vi.mock('@/lib/bootstrap', () => ({
   useBootstrap: () => ({ bootstrap: vi.fn() }),
 }))
 
+const mockMessageStore = vi.hoisted(() => ({
+  initialized: true,
+  suppressMessageNotifications: false,
+  conversations: [],
+  activeConversation: null,
+  isLoading: false,
+  hasMoreConversations: false,
+  isLoadingMoreConversations: false,
+  fetchConversations: vi.fn(),
+  fetchMoreConversations: vi.fn(),
+  markAsRead: vi.fn(),
+}))
+
 vi.mock('@/features/messaging/stores/messageStore', () => ({
-  useMessageStore: () => ({
-    initialized: true,
-    suppressMessageNotifications: false,
-    conversations: [],
-    activeConversation: null,
-    isLoading: false,
-    fetchConversations: vi.fn(),
-    markAsRead: vi.fn(),
-  }),
+  useMessageStore: () => mockMessageStore,
 }))
 
 vi.mock('@/features/interaction/composables/useInteractionsViewModel', () => ({
@@ -112,5 +117,34 @@ describe('useMessagingViewModel – handleMatchSelect', () => {
     // Match click no longer eagerly fetches the profile — that happens in
     // useConversationDetailViewModel after the route transition.
     expect(mockFetchProfile).not.toHaveBeenCalled()
+  })
+})
+
+describe('useMessagingViewModel – conversation paging', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    mockMessageStore.hasMoreConversations = false
+    mockMessageStore.isLoading = false
+    mockMessageStore.isLoadingMoreConversations = false
+    mockMessageStore.fetchMoreConversations.mockReset()
+  })
+
+  it('can load more only when a further page exists and nothing is loading', () => {
+    expect(mountVm().canLoadMoreConversations.value).toBe(false)
+
+    mockMessageStore.hasMoreConversations = true
+    expect(mountVm().canLoadMoreConversations.value).toBe(true)
+
+    mockMessageStore.isLoadingMoreConversations = true
+    expect(mountVm().canLoadMoreConversations.value).toBe(false)
+
+    mockMessageStore.isLoadingMoreConversations = false
+    mockMessageStore.isLoading = true
+    expect(mountVm().canLoadMoreConversations.value).toBe(false)
+  })
+
+  it('fetchMoreConversations delegates to the store', async () => {
+    await mountVm().fetchMoreConversations()
+    expect(mockMessageStore.fetchMoreConversations).toHaveBeenCalledTimes(1)
   })
 })

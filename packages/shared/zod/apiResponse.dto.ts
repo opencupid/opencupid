@@ -74,8 +74,18 @@ export type MessagesResponse = ApiSuccess<{
   nextCursor: string | null
   hasMore: boolean
 }>
-export type ConversationsResponse = ApiSuccess<{ conversations: ConversationSummary[] }>
+export type ConversationsResponse = ApiSuccess<{
+  conversations: ConversationSummary[]
+  nextCursor: string | null
+  hasMore: boolean
+  // Across the whole inbox, not just the returned page.
+  hasUnread: boolean
+}>
 export type ConversationResponse = ApiSuccess<{ conversation: ConversationSummary }>
+export type MarkConversationReadResponse = ApiSuccess<{
+  conversation: ConversationSummary
+  hasUnread: boolean
+}>
 export type ConversationByProfileResponse = ApiSuccess<{ conversation: ConversationOrDraft }>
 
 export type SendMessageResponse = ApiSuccess<{
