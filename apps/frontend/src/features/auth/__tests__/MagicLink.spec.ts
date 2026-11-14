@@ -116,6 +116,23 @@ describe('MagicLink', () => {
     }
   )
 
+  it('keeps the deep link when going back to Login after a failed magic link', async () => {
+    route.query = { token: '123456', redirect: '/inbox/abc' }
+    const authStore = useAuthStore()
+    vi.spyOn(authStore, 'verifyToken').mockResolvedValue({
+      success: false,
+      code: 'AUTH_EXPIRED_TOKEN',
+      message: 'expired',
+      restart: 'otp',
+    })
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+    await wrapper.get('.back-button a').trigger('click')
+
+    expect(push).toHaveBeenCalledWith({ name: 'Login', query: { redirect: '/inbox/abc' } })
+  })
+
   it('shows check-email message when no token in query', async () => {
     const authStore = useAuthStore()
     authStore.loginUser = emailLoginUser

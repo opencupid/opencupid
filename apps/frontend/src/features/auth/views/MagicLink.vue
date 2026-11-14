@@ -94,7 +94,8 @@ onMounted(async () => {
 function handleBackButton() {
   error.value = ''
   isLoading.value = false
-  router.push({ name: 'Login' })
+  // Keep the deep link so the replacement magic link still carries it.
+  router.push({ name: 'Login', query: { redirect: loginRedirect(router, route.query.redirect) } })
 }
 </script>
 

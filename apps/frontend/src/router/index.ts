@@ -150,7 +150,11 @@ router.afterEach((to, from) => {
 
 export { getPreviousUrl } from './history'
 
-bus.on('auth:logged-out', ({ expired }) => {
+bus.on('auth:logged-out', async ({ expired }) => {
+  // On a cold start with a stale session the refresh can fail while the
+  // initial navigation is still loading its lazy route components. Wait for
+  // it to land so currentRoute is the page the user was heading to.
+  await router.isReady()
   router.push(expired ? loginRoute(router.currentRoute.value) : { name: 'Login' })
 })
 
