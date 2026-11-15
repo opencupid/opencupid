@@ -4,6 +4,7 @@ export function createMockPrisma() {
   const mock: any = {
     accountDeletionFeedback: {
       create: vi.fn(),
+      updateMany: vi.fn(),
     },
     user: {
       findUnique: vi.fn(),
