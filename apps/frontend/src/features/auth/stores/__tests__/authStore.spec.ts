@@ -288,7 +288,23 @@ describe('authStore localStorage auth flow', () => {
     bus.emit('auth:logout')
 
     expect(loggedOutSpy).toHaveBeenCalledTimes(1)
+    expect(loggedOutSpy).toHaveBeenCalledWith({ expired: false })
     expect(store.userId).toBeNull()
+
+    bus.off('auth:logged-out', loggedOutSpy)
+  })
+
+  it('auth:logged-out reports an expired session when auth:logout says so', async () => {
+    const { bus } = await import('@/lib/bus')
+    const store = useAuthStore()
+    store.userId = 'u1'
+
+    const loggedOutSpy = vi.fn()
+    bus.on('auth:logged-out', loggedOutSpy)
+
+    bus.emit('auth:logout', { expired: true })
+
+    expect(loggedOutSpy).toHaveBeenCalledWith({ expired: true })
 
     bus.off('auth:logged-out', loggedOutSpy)
   })

@@ -228,7 +228,7 @@ export const useAuthStore = defineStore('auth', {
 // api.ts refresh-failure path which emits auth:logout directly.
 // Must complete before auth:logged-out is emitted so the router guard
 // sees isLoggedIn=false when it navigates to Login.
-bus.on('auth:logout', () => {
+bus.on('auth:logout', (event) => {
   const store = useAuthStore()
   // A request in flight when the session died can fail its refresh after the user
   // is already logged out. That must not redirect them to Login again, away from
@@ -241,7 +241,7 @@ bus.on('auth:logout', () => {
   // doesn't leave the user appearing logged in on next page load.
   removeSessionCookie()
   localStorage.removeItem('authId')
-  bus.emit('auth:logged-out')
+  bus.emit('auth:logged-out', { expired: event?.expired === true })
 })
 
 bus.on('auth:token-refreshed', ({ token }) => {

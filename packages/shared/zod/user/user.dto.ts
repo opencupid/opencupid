@@ -23,9 +23,19 @@ export const UserIdentifierSchema = z.object({
 })
 export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
+/**
+ * In-app path to land on after login (the deep link the user was heading to
+ * when they were sent to the login page). Same-origin absolute paths only.
+ */
+export const LoginRedirectSchema = z
+  .string()
+  .max(512)
+  .regex(/^\/(?![/\\])/, 'Must be an in-app path')
+
 export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
   captchaSolution: z.string().min(1, 'Captcha solution is required'),
   language: z.string().transform((lang) => normalizeLocale(lang, fallbackLocale)),
+  redirect: LoginRedirectSchema.optional(),
 })
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 
