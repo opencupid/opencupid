@@ -158,4 +158,5 @@ export type BrowseBoundsResponse = ApiSuccess<{
 
 // User responses
 export type DeleteAccountResponse = ApiSuccess<{}>
-export type AccountDeletionFeedbackResponse = ApiSuccess<{}>
+export type AccountDeletionFeedbackResponse = ApiSuccess<{ id: string }>
+export type AccountDeletionFeedbackCommentResponse = ApiSuccess<{}>

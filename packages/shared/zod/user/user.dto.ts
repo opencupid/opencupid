@@ -104,13 +104,21 @@ export type DeleteAccountPayload = z.infer<typeof DeleteAccountPayloadSchema>
 
 export const ACCOUNT_DELETION_COMMENT_MAX_LENGTH = 2000
 
-// Exit survey submitted after account deletion. A free-text comment belongs
-// with the "other" reason only, where it is mandatory.
+// Optional follow-up comment added to an exit survey answer that was stored
+// without one.
+export const AccountDeletionFeedbackCommentPayloadSchema = z.object({
+  comment: z.string().trim().min(1).max(ACCOUNT_DELETION_COMMENT_MAX_LENGTH),
+})
+export type AccountDeletionFeedbackCommentPayload = z.infer<
+  typeof AccountDeletionFeedbackCommentPayloadSchema
+>
+
+// Exit survey submitted after account deletion. "other" must come with a
+// comment; the preset reasons are stored bare and may get one as a follow-up.
 export const AccountDeletionFeedbackPayloadSchema = z.discriminatedUnion('reason', [
   z.object({ reason: AccountDeletionReasonSchema.exclude(['other']) }),
-  z.object({
+  AccountDeletionFeedbackCommentPayloadSchema.extend({
     reason: z.literal(AccountDeletionReasonSchema.enum.other),
-    comment: z.string().trim().min(1).max(ACCOUNT_DELETION_COMMENT_MAX_LENGTH),
   }),
 ])
 export type AccountDeletionFeedbackPayload = z.infer<typeof AccountDeletionFeedbackPayloadSchema>
