@@ -1,5 +1,12 @@
 # backend
 
+## 0.89.0
+
+### Minor Changes
+
+- 94199ad: Exit survey: after picking a preset reason, the thank-you message comes with an optional comment box (asking what went wrong for technical issues) whose text is added to the stored answer
+- 8ecb3c1: Return users to the page they were heading to after logging in: the deep link is carried through the magic link, both when arriving logged out and when the session expires mid-use
+
 ## 0.88.0
 
 ### Minor Changes

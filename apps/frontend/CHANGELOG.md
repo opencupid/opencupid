@@ -1,5 +1,14 @@
 # frontend
 
+## 0.89.0
+
+### Minor Changes
+
+- 0e21325: Tell a lost internet connection apart from an API outage: the "It's not you, it's us" overlay now only appears when the API is down while the user is connected, and a separate "You seem to be offline" overlay covers connection problems at the user's end. Gateway 502/503/504 answers are now recognised as an API outage. Both conditions are reported to Umami as `outage-api` and `outage-network` events.
+- 94199ad: Exit survey: after picking a preset reason, the thank-you message comes with an optional comment box (asking what went wrong for technical issues) whose text is added to the stored answer
+- 8ecb3c1: Return users to the page they were heading to after logging in: the deep link is carried through the magic link, both when arriving logged out and when the session expires mid-use
+- c1d464f: Paste images from the clipboard into a conversation to send them as photo attachments
+
 ## 0.88.0
 
 ### Minor Changes
