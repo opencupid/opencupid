@@ -4,6 +4,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { appConfig } from '@/lib/appconfig'
 import { logger } from '@/lib/logger'
+import { frontendOrigins } from '@/lib/brand'
 import './lib/i18n' // Initialize i18next with translations
 
 import { checkUserContentRoot } from '@/lib/media'
@@ -24,7 +25,7 @@ async function main() {
 
   // Register CORS plugin
   app.register(cors, {
-    origin: appConfig.NODE_ENV === 'production' ? [appConfig.FRONTEND_URL] : true,
+    origin: appConfig.NODE_ENV === 'production' ? frontendOrigins() : true,
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'PATCH'],

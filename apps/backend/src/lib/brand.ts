@@ -36,6 +36,11 @@ export function currentBrand(): Brand {
   return registry.find((b) => b.domain === appConfig.DOMAIN)!
 }
 
+/** The browser origin of every brand's frontend, for CORS. */
+export function frontendOrigins(): string[] {
+  return registry.map((b) => new URL(b.frontendUrl).origin)
+}
+
 /** Thrown when a request arrives on a host that belongs to no brand. */
 export class UnknownHostError extends Error {
   readonly statusCode = 421
