@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.88.0
+
+### Minor Changes
+
+- b9ab0d5: Add an Activity page to the admin app listing profiles by last seen, with messages sent/received, likes sent, face and dating flags; the Daily Active KPI now links to it
+
 ## 0.87.0
 
 ## 0.86.0

@@ -50,7 +50,7 @@ describe('api cancellation handling', () => {
       CanceledError
     )
 
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
   })
 
   it('safeApiCall rethrows CanceledError without retrying or driving the offline state', async () => {
@@ -66,6 +66,6 @@ describe('api cancellation handling', () => {
 
     // Crucially: not retried (would loop forever) and not classified as offline.
     expect(calls).toBe(1)
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
   })
 })

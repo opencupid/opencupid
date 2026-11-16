@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { type UserIdentifyPayload } from '@zod/user/user.dto'
 
 import { useI18nStore } from '@/store/i18nStore'
 import { useAuthStore } from '../stores/authStore'
 import { tracker } from '@/lib/umami'
+import { loginRedirect } from '@/router/loginRedirect'
 import LoginForm from '../components/LoginForm.vue'
 import LocaleSelector from '../../shared/ui/LocaleSelector.vue'
 
@@ -19,22 +20,27 @@ const error = ref('' as string)
 const isLoading = ref(false)
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const i18nStore = useI18nStore()
 const { t } = useI18n()
 
 // Method to handle sending login link
 async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
+  // Deep link the user was heading to — sent along so the emailed magic
+  // link carries it, and kept in the URL for the dev auto-login shortcut.
+  const redirect = loginRedirect(router, route.query.redirect)
   const payload = {
     ...authIdCaptcha,
     language: i18nStore.getLanguage() || 'en',
+    redirect,
   }
   try {
     error.value = ''
     isLoading.value = true
     const res = await authStore.sendMagicLink(payload)
     if (res.success) {
-      router.push({ name: 'MagicLink' })
+      router.push({ name: 'MagicLink', query: { redirect } })
     } else {
       tracker.track('auth-magic-link-failed', { code: res.code })
       error.value = res.message || t('auth.unknown_error')

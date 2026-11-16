@@ -26,6 +26,26 @@ describe('UserIdentifyPayloadSchema', () => {
     const result = UserIdentifyPayloadSchema.parse({ ...base, language: '' })
     expect(result.language).toBe('en')
   })
+
+  it('accepts an in-app redirect path', () => {
+    const result = UserIdentifyPayloadSchema.parse({
+      ...base,
+      language: 'en',
+      redirect: '/inbox/abc?tab=1',
+    })
+    expect(result.redirect).toBe('/inbox/abc?tab=1')
+  })
+
+  it.each([
+    '//evil.example',
+    '/\\evil.example',
+    'https://evil.example',
+    'inbox',
+    '/' + 'a'.repeat(512),
+  ])('rejects redirect %s', (redirect) => {
+    const result = UserIdentifyPayloadSchema.safeParse({ ...base, language: 'en', redirect })
+    expect(result.success).toBe(false)
+  })
 })
 
 describe('UpdateUserLanguagePayloadSchema', () => {
