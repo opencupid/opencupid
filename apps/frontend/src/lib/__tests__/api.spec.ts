@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest'
 import { AxiosHeaders } from 'axios'
-import { getVersionInfo, api, ERROR_CODES } from '../api'
+import { CanceledError } from 'axios'
+import { getVersionInfo, api, isOutageError, ERROR_CODES } from '../api'
 import packageJson from '../../../package.json'
 
 // Mock the bus module — needs working on/emit so api.ts can register listeners
@@ -22,6 +23,9 @@ const { mockEmit, bus: mockBus } = vi.hoisted(() => {
 vi.mock('../bus', () => ({ bus: mockBus }))
 vi.mock('../visibility', () => ({}))
 
+const { mockDiagnoseOutage } = vi.hoisted(() => ({ mockDiagnoseOutage: vi.fn() }))
+vi.mock('../connectivity', () => ({ diagnoseOutage: mockDiagnoseOutage }))
+
 // Mock __APP_CONFIG__ - this will be overridden in specific tests
 vi.stubGlobal('__APP_CONFIG__', {
   API_BASE_URL: 'http://localhost:3000',
@@ -36,6 +40,7 @@ describe('api error handling', () => {
     vi.clearAllMocks()
     vi.restoreAllMocks()
     vi.useFakeTimers()
+    mockDiagnoseOutage.mockResolvedValue('network')
     originalAdapter = api.defaults.adapter
   })
 
@@ -66,30 +71,24 @@ describe('api error handling', () => {
     vi.useRealTimers()
   })
 
-  it('detects network errors correctly', () => {
-    // Test the network error detection logic
-    const testCases: { code?: string; response?: unknown; expected: boolean }[] = [
-      ...ERROR_CODES.map((code) => ({ code, expected: true })),
-      { response: null, expected: true }, // no response = network error
-      { code: 'ERR_BAD_RESPONSE', response: { status: 500 }, expected: false },
-      { code: 'SOME_OTHER_ERROR', response: { status: 500 }, expected: false },
+  it('isOutageError recognises failures that mean the API is unreachable', () => {
+    const cases: { error: any; expected: boolean }[] = [
+      ...ERROR_CODES.map((code) => ({ error: { code }, expected: true })),
+      { error: { response: undefined }, expected: true }, // no response at all
+      // Gateway answering for a dead backend (non-API body)
+      { error: { response: { status: 502, data: 'Bad Gateway' } }, expected: true },
+      { error: { response: { status: 503, data: 'no available server' } }, expected: true },
+      { error: { response: { status: 504, data: 'Gateway Timeout' } }, expected: true },
+      // The backend's own 5xx replies carry the API envelope
+      { error: { response: { status: 503, data: { success: false } } }, expected: false },
+      { error: { response: { status: 502, data: { success: false } } }, expected: false },
+      { error: { code: 'ERR_BAD_RESPONSE', response: { status: 500 } }, expected: false },
+      { error: { response: { status: 404, data: 'Not Found' } }, expected: false },
+      { error: new CanceledError('cancelled'), expected: false },
     ]
 
-    testCases.forEach(({ code, response, expected }) => {
-      const error = { code, response }
-      const isNetworkError = !error.response || ERROR_CODES.includes(error.code ?? '')
-
-      expect(isNetworkError).toBe(expected)
-    })
-  })
-
-  it('handles various network error codes', () => {
-    for (const code of ERROR_CODES) {
-      const mockError: { code: string; response?: unknown } = { code }
-
-      const isNetworkError = !mockError.response || ERROR_CODES.includes(mockError.code)
-
-      expect(isNetworkError).toBe(true)
+    for (const { error, expected } of cases) {
+      expect(isOutageError(error), JSON.stringify(error)).toBe(expected)
     }
   })
 
@@ -154,11 +153,12 @@ describe('api error handling', () => {
     }
 
     // Not emitted immediately
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
 
     // Emitted after the debounce period
     vi.advanceTimersByTime(3000)
-    expect(mockEmit).toHaveBeenCalledWith('api:offline')
+    await vi.advanceTimersByTimeAsync(0) // let the outage diagnosis settle
+    expect(mockEmit).toHaveBeenCalledWith('api:offline', { cause: 'network' })
   })
 
   it('cancels offline transition when a successful response arrives during debounce', async () => {
@@ -194,7 +194,7 @@ describe('api error handling', () => {
 
     vi.advanceTimersByTime(3000)
 
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
   })
 
   it('suppresses offline detection when tab is hidden (SUSPENDED state)', async () => {
@@ -218,7 +218,7 @@ describe('api error handling', () => {
     vi.advanceTimersByTime(5000)
 
     // Should NOT have emitted api:offline while suspended
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
   })
 
   it('cancels pending debounce when tab goes hidden', async () => {
@@ -242,7 +242,7 @@ describe('api error handling', () => {
 
     vi.advanceTimersByTime(5000)
 
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
   })
 
   it('enters RESUMING state on app:visible and suppresses errors during grace period', async () => {
@@ -267,7 +267,7 @@ describe('api error handling', () => {
     }
 
     vi.advanceTimersByTime(3000)
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
   })
 
   it('transitions from RESUMING to ONLINE on success response', async () => {
@@ -288,7 +288,8 @@ describe('api error handling', () => {
     }
     vi.advanceTimersByTime(3000) // fire debounce → OFFLINE
 
-    expect(mockEmit).toHaveBeenCalledWith('api:offline')
+    await vi.advanceTimersByTimeAsync(0) // let the outage diagnosis settle
+    expect(mockEmit).toHaveBeenCalledWith('api:offline', { cause: 'network' })
     mockEmit.mockClear()
 
     // Suspend and resume
@@ -328,7 +329,8 @@ describe('api error handling', () => {
     }
     vi.advanceTimersByTime(3000) // debounce → OFFLINE
 
-    expect(mockEmit).toHaveBeenCalledWith('api:offline')
+    await vi.advanceTimersByTimeAsync(0) // let the outage diagnosis settle
+    expect(mockEmit).toHaveBeenCalledWith('api:offline', { cause: 'network' })
     mockEmit.mockClear()
 
     // Suspend and resume (health check will fail too)
@@ -343,7 +345,8 @@ describe('api error handling', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     // Should re-emit api:offline since we were offline before
-    expect(mockEmit).toHaveBeenCalledWith('api:offline')
+    await vi.advanceTimersByTimeAsync(0) // let the outage diagnosis settle
+    expect(mockEmit).toHaveBeenCalledWith('api:offline', { cause: 'network' })
   })
 
   it('drains waitForRecovery when transitioning from DEBOUNCING to ONLINE', async () => {
@@ -379,7 +382,7 @@ describe('api error handling', () => {
     await api.get('/test')
 
     expect(mockEmit).not.toHaveBeenCalledWith('api:online')
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
   })
 
   it('does not emit api:online on RESUMING→ONLINE when was not offline before suspend', async () => {
@@ -425,6 +428,78 @@ describe('api error handling', () => {
     vi.advanceTimersByTime(5000)
     await vi.advanceTimersByTimeAsync(0)
 
-    expect(mockEmit).not.toHaveBeenCalledWith('api:offline')
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
+  })
+
+  const gatewayError = (config: any) => ({
+    code: 'ERR_BAD_RESPONSE',
+    config: { ...config, headers: config.headers || new AxiosHeaders() },
+    response: { status: 502, data: 'Bad Gateway', headers: {}, config },
+    isAxiosError: true,
+  })
+
+  it('treats a gateway error as an outage and diagnoses it from that response', async () => {
+    mockDiagnoseOutage.mockResolvedValue('api')
+    api.defaults.adapter = vi
+      .fn()
+      .mockImplementation((config) => Promise.reject(gatewayError(config)))
+
+    await api.get('/test').catch(() => {})
+    await vi.advanceTimersByTimeAsync(3000)
+
+    expect(mockDiagnoseOutage).toHaveBeenCalledWith(
+      expect.objectContaining({ response: expect.objectContaining({ status: 502 }) })
+    )
+    expect(mockEmit).toHaveBeenCalledWith('api:offline', { cause: 'api' })
+  })
+
+  it('re-emits api:offline when a retry changes the diagnosed cause', async () => {
+    api.defaults.adapter = vi.fn().mockRejectedValue({
+      code: 'ERR_NETWORK',
+      config: { headers: new AxiosHeaders() },
+      isAxiosError: true,
+    })
+
+    await api.get('/test').catch(() => {})
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(mockEmit).toHaveBeenCalledWith('api:offline', { cause: 'network' })
+    mockEmit.mockClear()
+
+    // Same verdict on the next retry — nothing new to report
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(mockEmit).not.toHaveBeenCalledWith('api:offline', expect.anything())
+
+    // The user's connection is back but the API still is not
+    mockDiagnoseOutage.mockResolvedValue('api')
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(mockEmit).toHaveBeenCalledWith('api:offline', { cause: 'api' })
+  })
+
+  it('re-checks immediately when the browser reports a network change while offline', async () => {
+    const adapter = vi.fn().mockRejectedValue({
+      code: 'ERR_NETWORK',
+      config: { headers: new AxiosHeaders() },
+      isAxiosError: true,
+    })
+    api.defaults.adapter = adapter
+
+    await api.get('/test').catch(() => {})
+    await vi.advanceTimersByTimeAsync(3000)
+    adapter.mockClear()
+
+    window.dispatchEvent(new Event('online'))
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(adapter).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores browser network events while online', async () => {
+    const adapter = vi.fn()
+    api.defaults.adapter = adapter
+
+    window.dispatchEvent(new Event('online'))
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(adapter).not.toHaveBeenCalled()
   })
 })

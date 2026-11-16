@@ -37,6 +37,12 @@ vi.mock('../ApiErrorOverlay.vue', () => ({
     template: '<div v-if="show" class="api-offline-overlay">overlay</div>',
   },
 }))
+vi.mock('../NetworkOfflineOverlay.vue', () => ({
+  default: {
+    props: ['show'],
+    template: '<div v-if="show" class="network-offline-overlay">overlay</div>',
+  },
+}))
 vi.mock('../LikeReceivedToast.vue', () => ({ default: 'LikeToast' }))
 vi.mock('../MatchReceivedToast.vue', () => ({ default: 'MatchToast' }))
 
@@ -87,31 +93,55 @@ describe('AppNotifier', () => {
     expect(close).toHaveBeenCalled()
   })
 
-  it('shows overlay when API goes offline', async () => {
+  it('shows the API error overlay when the API is down but the user is connected', async () => {
     const wrapper = mount(AppNotifier)
-    bus.emit('api:offline')
+    bus.emit('api:offline', { cause: 'api' })
 
     await nextTick()
 
-    const overlay = wrapper.find('.api-offline-overlay')
-    expect(overlay.exists()).toBe(true)
+    expect(wrapper.find('.api-offline-overlay').exists()).toBe(true)
+    expect(wrapper.find('.network-offline-overlay').exists()).toBe(false)
     expect(toast.error).not.toHaveBeenCalled()
   })
 
-  it('hides overlay when API comes back online', async () => {
+  it("shows the network overlay when the user's connection is down", async () => {
+    const wrapper = mount(AppNotifier)
+    bus.emit('api:offline', { cause: 'network' })
+
+    await nextTick()
+
+    expect(wrapper.find('.network-offline-overlay').exists()).toBe(true)
+    expect(wrapper.find('.api-offline-overlay').exists()).toBe(false)
+  })
+
+  it('swaps overlays when the diagnosed cause changes', async () => {
     const wrapper = mount(AppNotifier)
 
-    bus.emit('api:offline')
+    bus.emit('api:offline', { cause: 'network' })
     await nextTick()
+    bus.emit('api:offline', { cause: 'api' })
+    await nextTick()
+
     expect(wrapper.find('.api-offline-overlay').exists()).toBe(true)
-
-    bus.emit('api:online')
-    await nextTick()
-
-    expect(wrapper.find('.api-offline-overlay').exists()).toBe(false)
-    expect(toast.dismiss).not.toHaveBeenCalled()
-    expect(toast.success).not.toHaveBeenCalled()
+    expect(wrapper.find('.network-offline-overlay').exists()).toBe(false)
   })
+
+  it.each(['api', 'network'] as const)(
+    'hides the %s overlay when the API comes back online',
+    async (cause) => {
+      const wrapper = mount(AppNotifier)
+
+      bus.emit('api:offline', { cause })
+      await nextTick()
+      expect(wrapper.find(`.${cause}-offline-overlay`).exists()).toBe(true)
+
+      bus.emit('api:online', undefined)
+      await nextTick()
+
+      expect(wrapper.find('.api-offline-overlay').exists()).toBe(false)
+      expect(wrapper.find('.network-offline-overlay').exists()).toBe(false)
+    }
+  )
 
   it('plays notification sound when message received', () => {
     mount(AppNotifier)

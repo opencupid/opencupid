@@ -1,6 +1,7 @@
 import axios, { CanceledError } from 'axios'
 import Cookies from 'universal-cookie'
 import { bus } from './bus'
+import { diagnoseOutage, type OutageCause } from './connectivity'
 import { VersionSchema, type VersionDTO } from '@zod/dto/version.dto'
 import type { VersionResponse } from '@zod/apiResponse.dto'
 import { SESSION_COOKIE, resolveSessionCookie } from '@shared/session'
@@ -28,6 +29,26 @@ export const ERROR_CODES = [
   'ERR_NETWORK',
 ]
 
+// Statuses a reverse proxy answers with when the backend behind it is down.
+const GATEWAY_STATUSES = [502, 503, 504]
+
+/**
+ * True when the failure means the API as a whole is unreachable: either no
+ * response arrived at all, or the gateway answered on behalf of a dead
+ * backend. The backend's own 502/503 replies carry the API's JSON envelope
+ * and are ordinary request errors.
+ * CanceledError (AbortController) is intentional, not connectivity loss.
+ */
+export function isOutageError(error: any): boolean {
+  if (error instanceof CanceledError) return false
+  if (!error.response) return true
+  if (ERROR_CODES.includes(error.code)) return true
+  return (
+    GATEWAY_STATUSES.includes(error.response.status) &&
+    typeof error.response.data?.success !== 'boolean'
+  )
+}
+
 import './visibility'
 
 /*
@@ -49,7 +70,9 @@ import './visibility'
        │          ▼                      │
        │   ┌─────────────┐  success      │
        │   │   OFFLINE   │──response────►│
-       │   │ (retrying)  │               │
+       │   │ (retrying,  │               │
+       │   │  diagnosing │               │
+       │   │  the cause) │               │
        │   └──────┬──────┘               │
        │          │                      │
   tab hidden      │ tab hidden           │
@@ -75,6 +98,10 @@ import './visibility'
       (detection re-enabled,
        next error starts
        normal DEBOUNCING)
+
+  While OFFLINE the outage is diagnosed (see ./connectivity) as either
+  `network` (the user's connection) or `api` (our end). `api:offline` carries
+  that cause and is re-emitted whenever a later check changes the verdict.
 */
 
 // ── State machine ─────────────────────────────────────────────────────
@@ -85,6 +112,8 @@ let debounceTimerId: ReturnType<typeof setTimeout> | null = null
 let retryTimerId: ReturnType<typeof setTimeout> | null = null
 let graceTimerId: ReturnType<typeof setTimeout> | null = null
 let wasOfflineBeforeSuspend = false
+let lastError: { response?: unknown } | undefined
+let outageCause: OutageCause | null = null
 let waitForRecovery: (() => void)[] = []
 
 export const isApiOnline = () =>
@@ -110,15 +139,38 @@ function clearAllTimers() {
   }
 }
 
+async function reportOutage() {
+  const cause = await diagnoseOutage(lastError)
+  if (state !== 'OFFLINE' || cause === outageCause) return
+  outageCause = cause
+  bus.emit('api:offline', { cause })
+}
+
+/** Checks whether the API is back; a success flips the state via the interceptor. */
+async function checkApi() {
+  try {
+    await getVersionInfo({ timeout: 5000 })
+  } catch {
+    if (state === 'OFFLINE') {
+      void reportOutage()
+      startRetryMechanism()
+    }
+  }
+}
+
 function startRetryMechanism() {
   if (retryTimerId) clearTimeout(retryTimerId)
-  retryTimerId = setTimeout(async () => {
-    try {
-      await getVersionInfo({ timeout: 5000 })
-    } catch {
-      if (state === 'OFFLINE') startRetryMechanism()
-    }
-  }, 10000)
+  retryTimerId = setTimeout(checkApi, 10000)
+}
+
+// The browser noticed the network interface going up or down — re-check right
+// away instead of waiting for the next scheduled retry.
+if (typeof window !== 'undefined') {
+  const recheck = () => {
+    if (state === 'OFFLINE') void checkApi()
+  }
+  window.addEventListener('online', recheck)
+  window.addEventListener('offline', recheck)
 }
 
 function transitionTo(newState: OfflineState) {
@@ -128,6 +180,7 @@ function transitionTo(newState: OfflineState) {
   switch (newState) {
     case 'ONLINE':
       clearAllTimers()
+      outageCause = null
       if (prev === 'OFFLINE' || (prev === 'RESUMING' && wasOfflineBeforeSuspend)) {
         bus.emit('api:online')
       }
@@ -143,7 +196,8 @@ function transitionTo(newState: OfflineState) {
       break
 
     case 'OFFLINE':
-      bus.emit('api:offline')
+      outageCause = null
+      void reportOutage()
       startRetryMechanism()
       break
 
@@ -269,15 +323,13 @@ api.interceptors.response.use(
       }
     }
 
-    // Network error handling — visibility-aware state machine.
-    // CanceledError (AbortController) is intentional, not connectivity loss.
-    const isNetworkError =
-      !(error instanceof CanceledError) && (!error.response || ERROR_CODES.includes(error.code))
+    // Outage handling — visibility-aware state machine.
+    if (!(error instanceof CanceledError)) lastError = error
 
-    if (isNetworkError && state === 'ONLINE') {
+    if (isOutageError(error) && state === 'ONLINE') {
       transitionTo('DEBOUNCING')
     }
-    // In SUSPENDED or RESUMING: swallow network errors (expected during tab transitions)
+    // In SUSPENDED or RESUMING: swallow outage errors (expected during tab transitions)
     // In DEBOUNCING or OFFLINE: already handling, no-op
 
     return Promise.reject(error)
@@ -297,9 +349,7 @@ export async function safeApiCall<T>(fn: () => Promise<T>): Promise<T> {
     // state machine or auto-retrying the (intentionally cancelled) request.
     if (err instanceof CanceledError) throw err
 
-    const isNetworkError = !err.response || ERROR_CODES.includes(err.code)
-
-    if (isNetworkError) {
+    if (isOutageError(err)) {
       if (state === 'ONLINE') {
         transitionTo('DEBOUNCING')
       }
