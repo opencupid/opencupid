@@ -706,6 +706,68 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   /**
+   * GET /activity
+   * Lists profiles that have been seen, most recently seen first, with their
+   * messaging and like counts. Messages from the system sender
+   * (ADMIN_PROFILE_ID) are not counted as received.
+   * @query {number} page - Page number (default: 1)
+   * @query {number} pageSize - Items per page (default: 25, max: 100)
+   * @returns {{ success, profiles, total, page, pageSize }}
+   */
+  fastify.get('/activity', async (req, reply) => {
+    try {
+      const q = req.query as Record<string, string | undefined>
+      const page = Math.max(1, parseInt(q.page ?? '1', 10) || 1)
+      const pageSize = Math.min(100, Math.max(1, parseInt(q.pageSize ?? '25', 10) || 25))
+      const where = { activitySummary: { isNot: null } }
+
+      const [rows, total] = await Promise.all([
+        prisma.profile.findMany({
+          where,
+          orderBy: { activitySummary: { lastSeenAt: 'desc' } },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+          select: {
+            id: true,
+            publicName: true,
+            hasFace: true,
+            isDatingActive: true,
+            activitySummary: { select: { lastSeenAt: true } },
+            _count: { select: { Message: true, likesSent: true } },
+          },
+        }),
+        prisma.profile.count({ where }),
+      ])
+
+      const receivedRows = rows.length
+        ? await prisma.$queryRaw<{ profileId: string; count: bigint }[]>`
+            SELECT cp."profileId", COUNT(m.id)::bigint AS count
+            FROM "ConversationParticipant" cp
+            JOIN "Message" m
+              ON m."conversationId" = cp."conversationId" AND m."senderId" <> cp."profileId"
+            WHERE cp."profileId" IN (${Prisma.join(rows.map((r) => r.id))})
+            ${excludeAdminProfile(Prisma.sql`m."senderId"`)}
+            GROUP BY cp."profileId"
+          `
+        : []
+      const received = new Map(receivedRows.map((r) => [r.profileId, Number(r.count)]))
+
+      const profiles = rows.map(({ _count, activitySummary, ...rest }) => ({
+        ...rest,
+        lastSeenAt: activitySummary!.lastSeenAt,
+        messagesSent: _count.Message,
+        messagesReceived: received.get(rest.id) ?? 0,
+        likesSent: _count.likesSent,
+      }))
+
+      return reply.code(200).send({ success: true, profiles, total, page, pageSize })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching profile activity')
+      return sendError(reply, 500, 'Failed to fetch profile activity')
+    }
+  })
+
+  /**
    * POST /messages
    * Sends an in-app message from the configured system sender
    * (ADMIN_PROFILE_ID) to a list of recipient profiles.

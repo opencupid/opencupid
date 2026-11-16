@@ -26,6 +26,14 @@ const comment = ref('')
 const submitting = ref(false)
 const submitted = ref(false)
 const failed = ref(false)
+// Stored answer that can still take an optional comment.
+const answerId = ref<string | null>(null)
+
+const commentPlaceholder = computed(() =>
+  selected.value === 'technical_issue'
+    ? t('account_deleted.comment_technical_issue')
+    : t('account_deleted.comment_label')
+)
 
 // Every choice but "other" submits as soon as it is picked.
 watch(selected, (reason) => {
@@ -40,6 +48,7 @@ async function submit(payload: AccountDeletionFeedbackPayload) {
   if (res.success) {
     tracker.track('exit-survey-sent', { reason: payload.reason })
     submitted.value = true
+    if (payload.reason !== 'other') answerId.value = res.id
     return
   }
   failed.value = true
@@ -47,9 +56,16 @@ async function submit(payload: AccountDeletionFeedbackPayload) {
   if (payload.reason !== 'other') selected.value = null
 }
 
-function submitComment() {
+async function submitComment() {
   if (submitting.value || !comment.value.trim()) return
-  submit({ reason: 'other', comment: comment.value })
+  if (!answerId.value) return submit({ reason: 'other', comment: comment.value })
+
+  submitting.value = true
+  failed.value = false
+  const res = await userStore.addAccountDeletionFeedbackComment(answerId.value, comment.value)
+  submitting.value = false
+  if (res.success) answerId.value = null
+  else failed.value = true
 }
 </script>
 
@@ -65,31 +81,33 @@ function submitComment() {
       </p>
 
       <form
-        v-else
+        v-if="!submitted || answerId"
         @submit.prevent="submitComment"
       >
-        <p class="mb-4">{{ t('account_deleted.message') }}</p>
+        <template v-if="!submitted">
+          <p class="mb-4">{{ t('account_deleted.message') }}</p>
 
-        <BFormRadio
-          v-for="reason in reasons"
-          :id="`account-deleted-reason-${reason.value}`"
-          :key="reason.value"
-          v-model="selected"
-          name="account-deleted-reason"
-          class="mb-2"
-          :value="reason.value"
-          :disabled="submitting"
-        >
-          {{ reason.label }}
-        </BFormRadio>
+          <BFormRadio
+            v-for="reason in reasons"
+            :id="`account-deleted-reason-${reason.value}`"
+            :key="reason.value"
+            v-model="selected"
+            name="account-deleted-reason"
+            class="mb-2"
+            :value="reason.value"
+            :disabled="submitting"
+          >
+            {{ reason.label }}
+          </BFormRadio>
+        </template>
 
-        <template v-if="selected === 'other'">
+        <template v-if="selected === 'other' || answerId">
           <BFormTextarea
             v-model="comment"
             class="mt-3"
             rows="4"
-            :aria-label="t('account_deleted.comment_label')"
-            :placeholder="t('account_deleted.comment_label')"
+            :aria-label="commentPlaceholder"
+            :placeholder="commentPlaceholder"
             :maxlength="ACCOUNT_DELETION_COMMENT_MAX_LENGTH"
             :disabled="submitting"
           />

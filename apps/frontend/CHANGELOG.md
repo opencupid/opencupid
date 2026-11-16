@@ -1,5 +1,17 @@
 # frontend
 
+## 0.88.0
+
+### Minor Changes
+
+- e446b1b: Open photo attachments full screen from the conversation message list
+- 0a87f88: Load the conversation list 20 at a time with infinite scrolling instead of fetching every conversation up front
+
+### Patch Changes
+
+- 0a87f88: Compute the unread-messages indicator on the server so it covers conversations beyond the loaded pages of the inbox
+- edd968d: Re-encode PWA manifest icons as 8-bit PNGs so the installed Android app shows the logo on its splash screen; document SITE_SHORT_NAME and default it to SITE_NAME
+
 ## 0.87.0
 
 ### Minor Changes
