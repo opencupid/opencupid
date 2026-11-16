@@ -36,6 +36,27 @@ export function currentBrand(): Brand {
   return registry.find((b) => b.domain === appConfig.DOMAIN)!
 }
 
+/** Thrown when a request arrives on a host that belongs to no brand. */
+export class UnknownHostError extends Error {
+  readonly statusCode = 421
+  constructor(readonly hostname: string) {
+    super(`No brand serves host ${hostname}`)
+    this.name = 'UnknownHostError'
+  }
+}
+
+/**
+ * The brand a request was made to, by its host: the brand whose domain is the
+ * host itself or one of its parents (www., app., admin. etc.). A host no brand
+ * serves is rejected rather than answered as some default brand.
+ */
+export function brandForHost(hostname: string): Brand {
+  const host = hostname.toLowerCase()
+  const brand = registry.find((b) => host === b.domain || host.endsWith(`.${b.domain}`))
+  if (!brand) throw new UnknownHostError(hostname)
+  return brand
+}
+
 /**
  * The brand a recipient belongs to, by their User.originDomain. Content sent to
  * a user must carry their brand, not the sending process's: one database and

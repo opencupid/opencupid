@@ -35,6 +35,7 @@ export class MockFastify {
 }
 
 export class MockReply {
+  request = { hostname: 'localhost' }
   statusCode = 200
   payload: any
   headers: Record<string, string> = {}

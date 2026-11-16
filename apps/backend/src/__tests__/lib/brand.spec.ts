@@ -77,3 +77,35 @@ describe('brand registry', () => {
     )
   })
 })
+
+describe('brandForHost', () => {
+  it('resolves the brand whose domain is the host or a parent of it', async () => {
+    const { brandForHost } = await loadBrand({
+      ...singleBrandEnv,
+      DOMAIN: 'komaterkep.test',
+      BRANDS: [gaians, komaterkep],
+    })
+    expect(brandForHost('gaians.test')).toEqual(gaians)
+    expect(brandForHost('admin.gaians.test')).toEqual(gaians)
+    expect(brandForHost('WWW.Komaterkep.test')).toEqual(komaterkep)
+  })
+
+  it('rejects a host no brand serves with a 421', async () => {
+    const { brandForHost, UnknownHostError } = await loadBrand({
+      ...singleBrandEnv,
+      BRANDS: [gaians, komaterkep],
+      DOMAIN: 'gaians.test',
+    })
+    for (const host of ['nowhere.test', 'evilgaians.test', 'localhost']) {
+      const err = (() => {
+        try {
+          brandForHost(host)
+        } catch (e) {
+          return e
+        }
+      })()
+      expect(err).toBeInstanceOf(UnknownHostError)
+      expect(err).toMatchObject({ statusCode: 421, hostname: host })
+    }
+  })
+})

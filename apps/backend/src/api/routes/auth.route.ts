@@ -7,6 +7,7 @@ import { createNewUserSession, getExistingUserSession } from '@/services/auth-se
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
+import brandHostPlugin from '@/plugins/brand-host'
 import '@fastify/cookie'
 
 import {
@@ -34,6 +35,12 @@ import {
 const WS_TICKET_TTL = 30 // seconds
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
+  // Auth routes spend login and refresh tokens and then set brand-scoped
+  // cookies, so a host no brand serves is rejected before any of them runs.
+  // Scoped to these routes: internal callers (the admin MCP) reach the rest of
+  // the API by container hostname.
+  await fastify.register(brandHostPlugin)
+
   const userService = UserService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
   const refreshTokenService = new RefreshTokenService(fastify.redis)

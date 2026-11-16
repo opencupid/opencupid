@@ -51,6 +51,7 @@ beforeEach(async () => {
     set: vi.fn().mockResolvedValue('OK'),
   }
   reply = new MockReply()
+  reply.request.hostname = 'fallback.example'
   mockUserService = {
     validateLoginToken: vi.fn(),
     setLoginToken: vi.fn(),
