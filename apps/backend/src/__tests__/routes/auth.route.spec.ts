@@ -406,6 +406,7 @@ describe('POST /send-magic-link', () => {
         language: 'en',
         redirect: '/inbox/abc?tab=1',
       },
+      hostname: 'fallback.example',
     }
     await handler(req as any, reply as any)
     expect(notifier.notifyUser).toHaveBeenCalledWith('user4', 'login_link', {
