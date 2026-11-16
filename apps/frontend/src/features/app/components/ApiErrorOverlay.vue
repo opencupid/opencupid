@@ -17,7 +17,7 @@ const { t } = useI18n()
     :z-index="1200"
     spinner-variant="danger"
     spinner-type="grow"
-    variant="warning"
+    variant="light"
     :opacity="0.9"
   >
     <template #overlay>
