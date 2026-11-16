@@ -9,6 +9,7 @@ import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
 import { brandForHost } from '@/lib/brand'
 import brandHostPlugin from '@/plugins/brand-host'
+import { normalizeLocale } from '@shared/i18n/locales'
 import '@fastify/cookie'
 
 import {
@@ -255,11 +256,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       // A new user belongs to the brand they signed up on. In dev the vite
       // proxy rewrites Host to localhost (changeOrigin), which is the dev brand.
+      // A language without translations becomes that brand's fallback locale.
+      const brand = brandForHost(req.hostname)
       const { user, isNewUser } = await userService.setLoginToken(
         { email },
         token,
-        language,
-        brandForHost(req.hostname).domain
+        normalizeLocale(language, brand.fallbackLocale),
+        brand.domain
       )
 
       const userReturned: LoginUser = {

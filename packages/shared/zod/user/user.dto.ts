@@ -8,8 +8,9 @@ import {
 } from '../generated'
 import { fallbackLocale, normalizeLocale } from '../../i18n/locales'
 
-// These schemas run in both runtimes and cannot read FALLBACK_LOCALE, so a
-// stored language falls back to the built-in locale rather than the configured one.
+// These schemas run in both runtimes and know no brand, so a language normalized
+// here falls back to the built-in locale. Signup normalizes against the brand's
+// fallback locale in the route instead (see /auth/send-magic-link).
 
 export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
@@ -34,7 +35,7 @@ export const LoginRedirectSchema = z
 
 export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
   captchaSolution: z.string().min(1, 'Captcha solution is required'),
-  language: z.string().transform((lang) => normalizeLocale(lang, fallbackLocale)),
+  language: z.string(),
   redirect: LoginRedirectSchema.optional(),
 })
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>

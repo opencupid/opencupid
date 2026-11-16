@@ -45,12 +45,14 @@ vi.mock('@/lib/appconfig', () => ({
         siteName: 'Fallback',
         frontendUrl: 'https://fallback.example',
         emailFrom: 'hello@fallback.example',
+        fallbackLocale: 'en',
       },
       {
         domain: 'other.example',
         siteName: 'Other',
         frontendUrl: 'https://other.example',
         emailFrom: 'hello@other.example',
+        fallbackLocale: 'hu',
       },
     ],
     DEV_AUTH_BYPASS_ENABLED: true,
@@ -351,6 +353,31 @@ describe('POST /send-magic-link', () => {
       'other.example'
     )
   })
+
+  it.each([
+    ['fallback.example', 'zz', 'en'],
+    ['other.example', 'zz', 'hu'],
+    ['other.example', '', 'hu'],
+    ['other.example', 'constructor', 'hu'],
+    ['other.example', 'en-GB', 'en'],
+    ['fallback.example', 'hu-HU', 'hu'],
+  ])(
+    "on %s, stores language '%s' as '%s' (the brand's fallback when unsupported)",
+    async (hostname, language, stored) => {
+      mockUserService.setLoginToken.mockResolvedValue({
+        user: { id: 'user8', email: 'n@example.com', language: stored },
+        isNewUser: true,
+      })
+      const req = { hostname, body: { email: 'n@example.com', captchaSolution: 'ok', language } }
+      await handler(req as any, reply as any)
+      expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
+        expect.any(Object),
+        'abc123',
+        stored,
+        hostname
+      )
+    }
+  )
 
   it('rejects a magic-link request on a host no brand serves', async () => {
     const req = {

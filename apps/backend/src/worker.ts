@@ -3,7 +3,6 @@ import Sentry from '@/lib/sentry' // keep this at the top
 import Fastify from 'fastify'
 import { appConfig } from '@/lib/appconfig'
 import { logger } from '@/lib/logger'
-import './lib/i18n' // Initialize i18next with translations (onboarding-reminder renders emails here)
 
 import { registerWorkers } from './registerWorkers'
 import { registerDistillJob } from './queues/activityQueue'

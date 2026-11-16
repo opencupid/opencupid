@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import type { User } from '@prisma/client'
-import i18next from 'i18next'
+import type { TFunction } from 'i18next'
 import { brandFor, type Brand } from '@/lib/brand'
+import { tFor } from '@/lib/i18n'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
 import { hashEmail, signUnsubscribeToken } from './email/unsubscribeToken'
@@ -140,7 +141,7 @@ export class NotifierService {
   ): EmailPayload {
     const brand = brandFor(user.originDomain)
     const { siteName } = brand
-    const t = i18next.getFixedT(user.language)
+    const t = tFor(brand, user.language)
 
     const suppressible = SUPPRESSIBLE_TYPES.has(emailType)
     const unsubscribe = suppressible ? this.buildUnsubscribe(brand, user, t) : undefined
@@ -181,7 +182,7 @@ export class NotifierService {
   private derivedContentVars<T extends NotificationType>(
     emailType: T,
     args: NotificationParams[T],
-    t: ReturnType<typeof i18next.getFixedT>
+    t: TFunction
   ): Record<string, string> {
     if (emailType !== 'new_message') return {}
     const { preview } = args as NotificationParams['new_message']
@@ -196,7 +197,7 @@ export class NotifierService {
   private buildUnsubscribe(
     brand: Brand,
     user: NotifiableUser,
-    t: ReturnType<typeof i18next.getFixedT>
+    t: TFunction
   ): { pageUrl: string; apiUrl: string; label: string } {
     const token = signUnsubscribeToken({
       userId: user.id,
