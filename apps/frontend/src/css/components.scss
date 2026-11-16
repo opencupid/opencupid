@@ -186,8 +186,13 @@ main {
   @include btn-colored-push($dating);
 }
 
+// Potential-match surfaces: the dating red at low opacity (--dating-tint),
+// layered over the mode's own background so the result is opaque in light
+// and dark alike without a hand-picked colour per mode. !important as on
+// Bootstrap's own bg-* utilities, so it also holds on buttons.
 .dating {
-  background-color: $dating-light;
+  background-color: var(--bs-body-bg) !important;
+  background-image: linear-gradient(var(--dating-tint), var(--dating-tint)) !important;
 }
 
 // List group checkbox/radio lists

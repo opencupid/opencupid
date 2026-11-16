@@ -51,6 +51,8 @@
   --overlay-card: rgba(80, 80, 80, 0.75);
   // Potential dating match: halo and heart on map pins and grid cards
   --match-rgb: 217, 83, 79;
+  // Potential dating match: wash over profile panels, match rows and cards
+  --dating-tint: rgba(var(--bs-dating-rgb), 0.12);
 }
 
 [data-bs-theme='dark'] {
@@ -69,8 +71,6 @@
   --bs-light: #{$night-600};
   --bs-light-rgb: #{to-rgb($night-600)};
 
-  --bs-dating-light: #{$dating-light-dark};
-  --bs-dating-light-rgb: #{to-rgb($dating-light-dark)};
   --bs-event-light: #{$event-light-dark};
   --bs-event-light-rgb: #{to-rgb($event-light-dark)};
   --bs-community-light: #{$community-light-dark};

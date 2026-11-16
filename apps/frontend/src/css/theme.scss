@@ -66,6 +66,10 @@ $theme-colors: (
 //
 // $dating and $tag pre-date the system and are grandfathered to avoid
 // reskinning shipped surfaces. $post is paper, not an accent.
+//
+// $dating has no `-light` variant: its panels use --dating-tint (main.scss),
+// the accent at low opacity over the mode's background, which needs no
+// per-mode colour.
 
 // $sand-lightest is referenced by both the -light derivations and the
 // component overrides below; declared here so the order works.
@@ -79,7 +83,6 @@ $dating: #873131; // hsl(2, 64%, 58%) — grandfathered Bootswatch red
 $tag: #877131; // hsl(43, 89%, 38%) — grandfathered goldenrod
 $post: #fff4a3; // sticky-note yellow
 
-$dating-light: mix($sand-lightest, $dating, $accent-light-mix);
 $event-light: mix($sand-lightest, $event, $accent-light-mix);
 $community-light: mix($sand-lightest, $community, $accent-light-mix);
 $post-light: #fff4a3; // exception - keep post original color for background, it's light enough
@@ -88,7 +91,6 @@ $theme-colors: map-merge(
   $theme-colors,
   (
     'dating': $dating,
-    'dating-light': $dating-light,
     'event': $event,
     'event-light': $event-light,
     'community': $community,
@@ -127,7 +129,6 @@ $border-color-dark: $night-500;
 
 // Accent `-light` panel tints, re-derived against the dark raised surface.
 $accent-dark-mix: 80%;
-$dating-light-dark: mix($night-700, $dating, $accent-dark-mix);
 $event-light-dark: mix($night-700, $event, $accent-dark-mix);
 $community-light-dark: mix($night-700, $community, $accent-dark-mix);
 // Sticky notes dim to a khaki paper so they don't glare, and so body text
