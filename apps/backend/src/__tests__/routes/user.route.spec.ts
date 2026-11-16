@@ -34,7 +34,8 @@ beforeEach(async () => {
     getUserById: vi.fn(),
     deactivate: vi.fn(),
     deleteAccount: vi.fn(),
-    saveAccountDeletionFeedback: vi.fn(),
+    saveAccountDeletionFeedback: vi.fn().mockResolvedValue('fb1'),
+    addAccountDeletionFeedbackComment: vi.fn().mockResolvedValue(true),
   }
   mockRefreshTokenService = {
     deleteAllForUser: vi.fn(),
@@ -294,7 +295,7 @@ describe('POST /deletion-feedback', () => {
       reason: 'technical_issue',
     })
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload).toEqual({ success: true })
+    expect(reply.payload).toEqual({ success: true, id: 'fb1' })
   })
 
   it('stores the trimmed comment for "other"', async () => {
@@ -330,6 +331,52 @@ describe('POST /deletion-feedback', () => {
     mockUserService.saveAccountDeletionFeedback.mockRejectedValue(new Error('db down'))
 
     await post({ reason: 'not_a_good_fit' })
+
+    expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('PATCH /deletion-feedback/:id', () => {
+  const patch = (body: unknown) =>
+    fastify.routes['PATCH /deletion-feedback/:id'](
+      { params: { id: 'fb1' }, body } as any,
+      reply as any
+    )
+
+  it('adds the trimmed comment to the answer without requiring a session', async () => {
+    await patch({ comment: '  Upload kept failing  ' })
+
+    expect(mockUserService.addAccountDeletionFeedbackComment).toHaveBeenCalledWith(
+      'fb1',
+      'Upload kept failing'
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true })
+  })
+
+  it.each([
+    ['a missing comment', {}],
+    ['a blank comment', { comment: '   ' }],
+    ['an oversized comment', { comment: 'x'.repeat(2001) }],
+  ])('rejects %s', async (_name, body) => {
+    await patch(body)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockUserService.addAccountDeletionFeedbackComment).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when no commentless answer matches', async () => {
+    mockUserService.addAccountDeletionFeedbackComment.mockResolvedValue(false)
+
+    await patch({ comment: 'Too late' })
+
+    expect(reply.statusCode).toBe(404)
+  })
+
+  it('returns 500 when saving fails', async () => {
+    mockUserService.addAccountDeletionFeedbackComment.mockRejectedValue(new Error('db down'))
+
+    await patch({ comment: 'Upload kept failing' })
 
     expect(reply.statusCode).toBe(500)
   })

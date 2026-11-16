@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { logger } from '@/lib/logger'
 
-const HIDE_AFTER_DAYS_UNSEEN = 30
+const HIDE_AFTER_DAYS_UNSEEN = 5
 
 /**
  * Recalculates Profile.isHiddenFromResults in both directions. A profile is

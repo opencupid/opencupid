@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { config, mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/lib/renderMessage', () => ({
@@ -32,6 +32,8 @@ vi.mock('@/features/images/components/ImageTag.vue', () => ({
 
 import MessageBubble from '../MessageBubble.vue'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
+
+config.global.mocks = { $t: (key: string) => key }
 
 const baseMessage = {
   id: '1',
@@ -118,6 +120,17 @@ describe('MessageBubble', () => {
     expect(imgs[0]!.attributes('data-variant')).toBe('card')
     // No text body when content is empty
     expect(wrapper.find('.message-text').exists()).toBe(false)
+  })
+
+  it('emits image-click with the clicked image', async () => {
+    const images = [imageFixture('/a.jpg', 0), imageFixture('/b.jpg', 1)]
+    const wrapper = mount(MessageBubble, {
+      props: { message: { ...baseMessage, messageType: 'image', images } as MessageDTO },
+    })
+    const buttons = wrapper.findAll('button.message-image-button')
+    expect(buttons[1]!.attributes('aria-label')).toBe('messaging.open_photo')
+    await buttons[1]!.trigger('click')
+    expect(wrapper.emitted('image-click')).toEqual([[images[1]]])
   })
 
   it('renders both image and caption when content is present alongside images', () => {

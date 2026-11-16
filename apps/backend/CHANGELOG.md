@@ -1,5 +1,17 @@
 # backend
 
+## 0.88.0
+
+### Minor Changes
+
+- 0a87f88: Load the conversation list 20 at a time with infinite scrolling instead of fetching every conversation up front
+- b9ab0d5: Add an Activity page to the admin app listing profiles by last seen, with messages sent/received, likes sent, face and dating flags; the Daily Active KPI now links to it
+
+### Patch Changes
+
+- 88aa677: Hide profiles with no face photo and no intro from browse after 5 days unseen instead of 30.
+- 0a87f88: Compute the unread-messages indicator on the server so it covers conversations beyond the loaded pages of the inbox
+
 ## 0.87.0
 
 ## 0.86.0

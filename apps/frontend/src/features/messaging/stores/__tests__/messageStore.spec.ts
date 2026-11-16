@@ -701,3 +701,271 @@ describe('resolveConversationByProfile', () => {
     expect(res.success).toBe(false)
   })
 })
+
+describe('conversation list pagination', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('fetchConversations loads the first page and stores the cursor', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockResolvedValue({
+      data: {
+        success: true,
+        conversations: [makeConvo('c1', 'Alice')],
+        nextCursor: 'cursor-1',
+        hasMore: true,
+      },
+    })
+
+    await store.fetchConversations()
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations')
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+    expect(store.conversationCursor).toBe('cursor-1')
+    expect(store.hasMoreConversations).toBe(true)
+  })
+
+  it('fetchMoreConversations appends the next page, skipping already loaded conversations', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    mockApi.get.mockResolvedValue({
+      data: {
+        success: true,
+        conversations: [makeConvo('c2', 'Bob'), makeConvo('c3', 'Carol')],
+        nextCursor: null,
+        hasMore: false,
+      },
+    })
+
+    await store.fetchMoreConversations()
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations', {
+      params: { cursor: 'cursor-1' },
+    })
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1', 'c2', 'c3'])
+    expect(store.conversationCursor).toBeNull()
+    expect(store.hasMoreConversations).toBe(false)
+    expect(store.isLoadingMoreConversations).toBe(false)
+  })
+
+  it('fetchMoreConversations does nothing when there is no further page', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+
+    await store.fetchMoreConversations()
+
+    expect(mockApi.get).not.toHaveBeenCalled()
+  })
+
+  it('fetchMoreConversations does not start a second request while one is in flight', async () => {
+    const store = useMessageStore()
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    let resolve!: (value: unknown) => void
+    mockApi.get.mockReturnValue(new Promise((r) => (resolve = r)))
+
+    const first = store.fetchMoreConversations()
+    await store.fetchMoreConversations()
+    resolve({ data: { success: true, conversations: [], nextCursor: null, hasMore: false } })
+    await first
+
+    expect(mockApi.get).toHaveBeenCalledTimes(1)
+  })
+
+  it('fetchMoreConversations keeps the loaded pages when the request fails', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    mockApi.get.mockRejectedValue(new Error('network'))
+
+    await store.fetchMoreConversations()
+
+    expect(store.conversations).toHaveLength(1)
+    expect(store.conversationCursor).toBe('cursor-1')
+    expect(store.error).not.toBeNull()
+    expect(store.isLoadingMoreConversations).toBe(false)
+  })
+
+  it('fetchMoreConversations discards a page that was in flight when the list was refreshed', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.conversationCursor = 'cursor-2'
+    store.hasMoreConversations = true
+    let resolveStale!: (value: unknown) => void
+    mockApi.get.mockReturnValueOnce(new Promise((r) => (resolveStale = r)))
+    const stale = store.fetchMoreConversations()
+
+    // Returning to the inbox reloads the first page while page 3 is in flight.
+    mockApi.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        conversations: [makeConvo('c1', 'Alice')],
+        nextCursor: 'cursor-1',
+        hasMore: true,
+        hasUnread: false,
+      },
+    })
+    await store.fetchConversations()
+
+    resolveStale({
+      data: {
+        success: true,
+        conversations: [makeConvo('c3', 'Carol')],
+        nextCursor: 'cursor-3',
+        hasMore: true,
+        hasUnread: false,
+      },
+    })
+    await stale
+
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+    expect(store.conversationCursor).toBe('cursor-1')
+    expect(store.isLoadingMoreConversations).toBe(false)
+  })
+
+  it('setActiveConversationById fetches a conversation that is beyond the loaded pages', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.initialized = true
+    mockApi.get.mockImplementation(async (url: string) =>
+      url === '/messages/conversations/c99'
+        ? { data: { success: true, conversation: makeConvo('c99', 'Zed') } }
+        : { data: { success: true, messages: [], nextCursor: null, hasMore: false } }
+    )
+
+    await store.setActiveConversationById('c99')
+
+    expect(store.activeConversation?.conversationId).toBe('c99')
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+  })
+
+  it('handleIncomingMessage fetches an unloaded conversation and puts it on top without reloading the list', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.suppressMessageNotifications = true
+    mockApi.get.mockResolvedValue({
+      data: { success: true, conversation: makeConvo('c99', 'Zed') },
+    })
+
+    await store.handleIncomingMessage({ id: 'm1', conversationId: 'c99' } as MessageDTO)
+
+    expect(mockApi.get).toHaveBeenCalledTimes(1)
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations/c99')
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c99', 'c1', 'c2'])
+  })
+
+  it('markAsRead does not insert a conversation that is not in the loaded pages', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    mockApi.post.mockResolvedValue({
+      data: { success: true, conversation: makeConvo('c99', 'Zed') },
+    })
+
+    await store.markAsRead('c99')
+
+    expect(store.conversations.map((c) => c.conversationId)).toEqual(['c1'])
+  })
+})
+
+describe('unread flag', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  const page = (hasUnread: boolean) => ({
+    data: { success: true, conversations: [], nextCursor: null, hasMore: false, hasUnread },
+  })
+
+  it('takes the inbox-wide flag from the server, whatever the loaded page contains', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockResolvedValue(page(true))
+    await store.fetchConversations()
+    expect(store.hasUnreadMessages).toBe(true)
+
+    mockApi.get.mockResolvedValue(page(false))
+    await store.fetchConversations()
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+
+  it('refreshes the flag when a further page is loaded', async () => {
+    const store = useMessageStore()
+    store.conversationCursor = 'cursor-1'
+    store.hasMoreConversations = true
+    mockApi.get.mockResolvedValue(page(true))
+
+    await store.fetchMoreConversations()
+
+    expect(store.hasUnreadMessages).toBe(true)
+  })
+
+  it('markAsRead keeps the flag while other conversations are unread, clears it otherwise', async () => {
+    const store = useMessageStore()
+    store.hasUnreadMessages = true
+    const response = (hasUnread: boolean) => ({
+      data: { success: true, conversation: makeConvo('c1', 'Alice'), hasUnread },
+    })
+
+    mockApi.post.mockResolvedValue(response(true))
+    await store.markAsRead('c1')
+    expect(store.hasUnreadMessages).toBe(true)
+
+    mockApi.post.mockResolvedValue(response(false))
+    await store.markAsRead('c1')
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+
+  it('a server snapshot taken before an incoming message does not clear the flag', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice'), makeConvo('c2', 'Bob')]
+    store.suppressMessageNotifications = true
+    let resolveMarkRead!: (value: unknown) => void
+    mockApi.post.mockReturnValue(new Promise((r) => (resolveMarkRead = r)))
+    const markRead = store.markAsRead('c1')
+
+    await store.handleIncomingMessage({
+      id: 'm1',
+      conversationId: 'c2',
+      senderId: 'partner-c2',
+    } as MessageDTO)
+    resolveMarkRead({
+      data: { success: true, conversation: makeConvo('c1', 'Alice'), hasUnread: false },
+    })
+    await markRead
+
+    expect(store.hasUnreadMessages).toBe(true)
+  })
+
+  it('an incoming message from the partner sets the flag', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.suppressMessageNotifications = true
+
+    await store.handleIncomingMessage({
+      id: 'm1',
+      conversationId: 'c1',
+      senderId: 'partner-c1',
+    } as MessageDTO)
+
+    expect(store.hasUnreadMessages).toBe(true)
+  })
+
+  it('a broadcast of my own message (missed-call notice) does not set the flag', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('c1', 'Alice')]
+    store.suppressMessageNotifications = true
+
+    await store.handleIncomingMessage({
+      id: 'm1',
+      conversationId: 'c1',
+      senderId: 'profile-1',
+    } as MessageDTO)
+
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+})

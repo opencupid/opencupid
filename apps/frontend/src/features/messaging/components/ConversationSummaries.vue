@@ -8,6 +8,7 @@ const props = defineProps<{
   conversations: ConversationSummary[]
   activeConversation: ConversationSummary | null
   loading: boolean
+  loadingMore?: boolean
 }>()
 
 defineEmits<{
@@ -64,6 +65,16 @@ const haveConversations = computed(() => props.conversations.length > 0)
         </div>
       </BListGroupItem>
     </BListGroup>
+    <div
+      v-if="loadingMore"
+      class="text-center py-2"
+      data-testid="conversations-loading-more"
+    >
+      <BSpinner
+        small
+        variant="secondary"
+      />
+    </div>
   </div>
 </template>
 
