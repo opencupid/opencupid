@@ -43,11 +43,8 @@ vi.mock('i18next', () => ({
 
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
-    SITE_NAME: 'OpenCupid',
-    FRONTEND_URL: 'https://frontend.test',
-    DOMAIN: 'frontend.test',
     UNSUBSCRIBE_SECRET: 'test-unsubscribe-secret',
-    BRANDS: [defaultBrand, otherBrand],
+    brands: [defaultBrand, otherBrand],
   },
 }))
 

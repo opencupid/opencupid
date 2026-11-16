@@ -3,7 +3,7 @@ import Fastify, { type FastifyInstance } from 'fastify'
 
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
-    BRANDS: [
+    brands: [
       {
         domain: 'gaians.test',
         siteName: 'Gaians',

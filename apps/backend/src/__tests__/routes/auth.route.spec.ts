@@ -39,9 +39,7 @@ vi.mock('@/lib/appconfig', () => ({
     NODE_ENV: 'development',
     ALTCHA_HMAC_KEY: 'x',
     IMAGE_MAX_SIZE: 1000,
-    FRONTEND_URL: 'http://test',
-    DOMAIN: 'fallback.example',
-    BRANDS: [
+    brands: [
       {
         domain: 'fallback.example',
         siteName: 'Fallback',

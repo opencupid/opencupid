@@ -4,8 +4,7 @@ import { MockReply } from '../../test-utils/fastify'
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     NODE_ENV: 'production',
-    DOMAIN: 'gaians.test',
-    BRANDS: [
+    brands: [
       {
         domain: 'gaians.test',
         siteName: 'Gaians',

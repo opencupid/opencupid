@@ -1,31 +1,13 @@
-import { appConfig } from './appconfig'
+import { appConfig, type Brand } from './appconfig'
+
+export type { Brand }
 
 /**
- * Brand identity carried on outbound content (email payloads, future: SMS,
- * push, analytics). Lives in lib/ rather than services/email/ so non-email
- * consumers can import it without reaching into an email-specific module.
+ * Every brand served by this database (appconfig's loadBrands: one per file in
+ * BRANDS_DIR, or a single brand from the process env). Brand identity is
+ * carried on outbound content (email payloads, future: SMS, push, analytics).
  */
-export type Brand = {
-  siteName: string
-  frontendUrl: string
-  domain: string
-  emailFrom: string
-  emailReplyTo?: string
-}
-
-/**
- * Every brand served by this database. Multi-brand deployments list them in
- * BRANDS; single-brand deployments get one brand built from the process env.
- */
-const registry: Brand[] = appConfig.BRANDS ?? [
-  {
-    siteName: appConfig.SITE_NAME,
-    frontendUrl: appConfig.FRONTEND_URL,
-    domain: appConfig.DOMAIN,
-    emailFrom: appConfig.EMAIL_FROM,
-    emailReplyTo: appConfig.EMAIL_REPLY_TO,
-  },
-]
+const registry: Brand[] = appConfig.brands
 
 /** The browser origin of every brand's frontend, for CORS. */
 export function frontendOrigins(): string[] {
