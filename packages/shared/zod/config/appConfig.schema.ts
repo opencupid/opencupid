@@ -17,6 +17,7 @@ export const appConfigSchema = z.object({
   JITSI_DOMAIN: z.string().default(''),
   VOICE_MESSAGE_MAX_DURATION: z.string().default('120'),
   MAP_TILE_URL: z.string().default(''),
+  MAP_TILE_URL_DARK: z.string().default(''),
   MAP_ATTRIBUTION: z.string().default(''),
   GEOCODING_ALLOWED_COUNTRIES: z.string().default(''),
   OPENREPLAY_PROJECT_KEY: z.string().default(''),

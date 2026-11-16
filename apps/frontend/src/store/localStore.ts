@@ -8,7 +8,6 @@ export type SendMode = 'enter' | 'click'
 export interface LocalState {
   messageDrafts: Record<string, string>
   language: string | null
-  theme: string
   currentScope: ProfileScope | null
   sendMode: SendMode
 }
@@ -17,13 +16,11 @@ export const useLocalStore = defineStore('local', {
   state: (): LocalState => ({
     messageDrafts: {},
     language: null,
-    theme: 'light',
     currentScope: null,
     sendMode: 'click',
   }),
   getters: {
     getLanguage: (state) => state.language,
-    getTheme: (state) => state.theme,
     getCurrentScope: (state) => state.currentScope,
     getMessageDraft: (state) => (id: string) => state.messageDrafts[id] || '',
     getSendMode: (state) => state.sendMode,
@@ -45,8 +42,6 @@ export const useLocalStore = defineStore('local', {
 
       const lang = localStorage.getItem('language')
       if (lang) this.language = lang
-      const theme = localStorage.getItem('theme')
-      if (theme) this.theme = theme
       const scope = localStorage.getItem('currentScope')
       if (scope) this.currentScope = scope as ProfileScope
       const sendMode = localStorage.getItem('sendMode')
@@ -57,7 +52,6 @@ export const useLocalStore = defineStore('local', {
     async cleanUp() {
       this.messageDrafts = {}
       this.language = null
-      this.theme = 'light'
       this.currentScope = null
       this.sendMode = 'click'
       localStorage.clear()
@@ -65,10 +59,6 @@ export const useLocalStore = defineStore('local', {
     setLanguage(lang: string) {
       this.language = lang
       localStorage.setItem('language', lang)
-    },
-    setTheme(theme: string) {
-      this.theme = theme
-      localStorage.setItem('theme', theme)
     },
     setCurrentScope(scope: ProfileScope | null) {
       this.currentScope = scope

@@ -485,6 +485,8 @@
     "close_account_dialog_message": "This will permanently delete your account and all of your data. This action cannot be undone.",
     "close_account_dialog_title": "Close account",
     "close_account_ok_button": "Delete my account",
+    "color_mode_dark": "Switch to dark mode",
+    "color_mode_light": "Switch to light mode",
     "email_notifications_opt_in": "Email",
     "newsletter_opt_in": "Email newsletter",
     "newsletter_opt_in_hint": "Community updates, new features, that kind of stuff. You can unsubscribe any time.",

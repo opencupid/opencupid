@@ -373,3 +373,24 @@ main {
 .offcanvas {
   visibility: visible;
 }
+
+// ─── Dark mode ───────────────────────────────────────────────────────
+[data-bs-theme='dark'] {
+  // Follows --bs-light, which becomes a dark paper tone (see main.scss).
+  .btn-light {
+    @include button-variant($night-600, $night-600);
+  }
+
+  // Accents as foreground colours — see $theme-colors-on-dark.
+  @each $name, $color in $theme-colors-on-dark {
+    .text-#{$name},
+    .link-#{$name} {
+      --bs-#{$name}-rgb: #{to-rgb($color)};
+    }
+
+    .btn-outline-#{$name} {
+      --bs-btn-color: #{$color};
+      --bs-btn-border-color: #{$color};
+    }
+  }
+}

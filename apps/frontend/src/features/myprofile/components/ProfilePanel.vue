@@ -13,6 +13,7 @@ import DatingWizard from './DatingWizard.vue'
 import Settings from '@/features/settings/components/Settings.vue'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
 import PostsOrchestrator from '@/features/posts/components/PostsOrchestrator.vue'
+import ColorModeToggle from '@/features/app/components/ColorModeToggle.vue'
 
 import IconSetting2 from '@/assets/icons/interface/setting-2.svg'
 
@@ -59,7 +60,7 @@ function handleClose() {
       <span class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
         <span
           v-if="ownerProfileStore.profile?.profileImages?.length"
-          class="owner-profile-avatar flex-shrink-0 overflow-hidden "
+          class="owner-profile-avatar flex-shrink-0 overflow-hidden"
         >
           <ProfileImage
             :profile="ownerProfileStore.profile"
@@ -74,6 +75,7 @@ function handleClose() {
           {{ ownerProfileStore.profile?.publicName }}
         </span>
       </span>
+      <ColorModeToggle class="ms-2" />
       <BButton
         variant="link-secondary"
         class="p-0 ms-2 flex-shrink-0"

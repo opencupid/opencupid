@@ -7,6 +7,7 @@ import { useCountries } from './features/shared/composables/useCountries'
 import { useLanguages } from './features/shared/composables/useLanguages'
 import { useUpdateChecker } from './features/app/composables/useUpdateChecker'
 import { useAuthStore } from './features/auth/stores/authStore'
+import { useAppColorMode } from './features/app/composables/useAppColorMode'
 
 // All three authenticated-only surfaces (AppNotifier, FaviconNotification,
 // VideoCallSurface) are bundled together via AuthenticatedSurface so the
@@ -29,6 +30,10 @@ useCountries().initialize(i18nStore.currentLanguage)
 useLanguages().initialize(i18nStore.currentLanguage)
 
 useUpdateChecker()
+
+// Keeps data-bs-theme in sync with the stored choice or, absent one, with the
+// browser's preference — including when that preference changes mid-session.
+useAppColorMode()
 
 const { isLoggedIn } = storeToRefs(useAuthStore())
 </script>

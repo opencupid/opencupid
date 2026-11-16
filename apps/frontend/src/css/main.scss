@@ -18,7 +18,22 @@
 
 // Design tokens
 :root {
-  // ─── Elevation aliases ────────────────────────────────────────────
+  // ─── Surfaces ─────────────────────────────────────────────────────
+  // Consumed by the Bootstrap component overrides in theme.scss; the dark
+  // values are set in the [data-bs-theme='dark'] block below.
+  --surface-bg: #{$sand-lightest};
+  --surface-muted-bg: #{$gray-200};
+  --surface-muted-bg-rgb: #{to-rgb($gray-200)};
+  --surface-border: #{$gray-300};
+  --surface-border-rgb: #{to-rgb($gray-300)};
+  // Brightest surface in light mode, deepest in dark: inputs and chips.
+  --surface-inset-bg: #{$white};
+
+  // ─── Elevation ────────────────────────────────────────────────────
+  // Open Props switches these two on prefers-color-scheme; pinned here (and
+  // in the dark block) so shadows follow the app's colour mode instead.
+  --shadow-color: 220 3% 15%;
+  --shadow-strength: 1%;
   --shadow-xs: var(--shadow-1);
   --shadow-sm: var(--shadow-2);
   --shadow-md: var(--shadow-3);
@@ -36,6 +51,32 @@
   --overlay-card: rgba(80, 80, 80, 0.75);
   // Potential dating match: halo and heart on map pins and grid cards
   --match-rgb: 217, 83, 79;
+}
+
+[data-bs-theme='dark'] {
+  --surface-bg: #{$night-700};
+  --surface-muted-bg: #{$night-600};
+  --surface-muted-bg-rgb: #{to-rgb($night-600)};
+  --surface-border: #{$night-500};
+  --surface-border-rgb: #{to-rgb($night-500)};
+  --surface-inset-bg: #{$night-900};
+
+  --shadow-color: 220 40% 2%;
+  --shadow-strength: 25%;
+
+  // `light` is used as a paper-toned surface (bg-light, btn-light), so it
+  // follows the mode instead of staying a bright slab on a dark page.
+  --bs-light: #{$night-600};
+  --bs-light-rgb: #{to-rgb($night-600)};
+
+  --bs-dating-light: #{$dating-light-dark};
+  --bs-dating-light-rgb: #{to-rgb($dating-light-dark)};
+  --bs-event-light: #{$event-light-dark};
+  --bs-event-light-rgb: #{to-rgb($event-light-dark)};
+  --bs-community-light: #{$community-light-dark};
+  --bs-community-light-rgb: #{to-rgb($community-light-dark)};
+  --bs-post-light: #{$post-light-dark};
+  --bs-post-light-rgb: #{to-rgb($post-light-dark)};
 }
 
 @import './layout.scss';

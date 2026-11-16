@@ -13,7 +13,9 @@ body {
 
 body {
   overflow: hidden;
-  background-image: linear-gradient(170deg, #dbc49c 0%, #e8d5b5 40%, #faf4ea 100%) !important;
+  // --page-gradient is declared per colour mode in index.html, where it is
+  // needed before this stylesheet loads.
+  background-image: var(--page-gradient) !important;
   background-attachment: fixed;
 }
 
@@ -81,7 +83,7 @@ nav.navbar + main {
 
 .offcanvas.owner-drawer {
   width: 100vw;
-  
+
   @include media-breakpoint-up(md) {
     width: 75vw;
   }

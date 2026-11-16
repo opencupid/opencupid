@@ -553,7 +553,7 @@ onMounted(async () => {
     inset: 0 0 auto;
     height: 3.5rem;
     z-index: -1;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+    background: linear-gradient(to bottom, var(--surface-inset-bg), transparent);
   }
 }
 

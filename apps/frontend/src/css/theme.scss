@@ -109,34 +109,73 @@ $aspect-ratios: map-merge(
 // Enable negative margins for Bootstrap
 $enable-negative-margins: true;
 
-// ─── Sandstone-inspired component overrides ─────────────────────────
+// ─── Dark mode palette ──────────────────────────────────────────────
+// Warm near-blacks mirroring the Sandstone light scale, so dark mode keeps
+// the same surface hierarchy: page < raised surface, with inputs recessed.
+$night-900: #171512; // recessed: form inputs (≙ white)
+$night-800: #211f1b; // page background (≙ $gray-200)
+$night-700: #2b2824; // raised surfaces: dropdowns, modals (≙ $sand-lightest)
+$night-600: #38342e; // muted fills, hover states (≙ $gray-200 fills)
+$night-500: #4b463e; // borders (≙ $gray-300)
+$night-text: #e6dfd3; // warm off-white text (≙ $gray-800)
 
-$card-border-color: rgba($gray-300, 0.75);
-$card-cap-bg: rgba($gray-200, 0.25);
-$dropdown-bg: $sand-lightest;
+$body-bg-dark: $night-800;
+$body-color-dark: $night-text;
+$body-secondary-bg-dark: $night-600;
+$body-tertiary-bg-dark: $night-700;
+$border-color-dark: $night-500;
+
+// Accent `-light` panel tints, re-derived against the dark raised surface.
+$accent-dark-mix: 80%;
+$dating-light-dark: mix($night-700, $dating, $accent-dark-mix);
+$event-light-dark: mix($night-700, $event, $accent-dark-mix);
+$community-light-dark: mix($night-700, $community, $accent-dark-mix);
+// Sticky notes dim to a khaki paper so they don't glare, and so body text
+// (light in dark mode) stays readable on them.
+$post-light-dark: mix($night-700, $post, 72%);
+
+// The accents are tuned as fills (L 36%), which is too dim for text and
+// outlines on a dark surface. These lifted variants replace them wherever
+// an accent is used as a foreground colour in dark mode.
+$accent-on-dark-lift: 28%;
+$theme-colors-on-dark: (
+  'primary': lighten(map-get($theme-colors, 'primary'), $accent-on-dark-lift),
+  'dating': lighten($dating, $accent-on-dark-lift),
+  'event': lighten($event, $accent-on-dark-lift),
+  'community': lighten($community, $accent-on-dark-lift),
+  'tag': lighten($tag, $accent-on-dark-lift),
+);
+
+// ─── Sandstone-inspired component overrides ─────────────────────────
+// Surface colours are CSS custom properties (declared per colour mode in
+// main.scss) rather than Sass colours, so every component follows the
+// active mode without per-component dark overrides.
+
+$card-border-color: rgba(var(--surface-border-rgb), 0.75);
+$card-cap-bg: rgba(var(--surface-muted-bg-rgb), 0.25);
+$dropdown-bg: var(--surface-bg);
 $dropdown-link-color: $gray-600;
-$dropdown-link-hover-bg: $gray-200;
-$dropdown-link-active-bg: $gray-200;
-$dropdown-link-active-color: $gray-800;
-$modal-content-bg: $sand-lightest;
-$modal-content-border-color: $gray-300;
-$list-group-border-color: $gray-300;
-$list-group-hover-bg: $gray-200;
-$list-group-active-bg: $gray-200;
-$list-group-active-border-color: $gray-300;
-$nav-link-disabled-color: $gray-300;
+$dropdown-link-hover-bg: var(--surface-muted-bg);
+$dropdown-link-active-bg: var(--surface-muted-bg);
+$dropdown-link-active-color: var(--bs-body-color);
+$modal-content-bg: var(--surface-bg);
+$modal-content-border-color: var(--surface-border);
+$list-group-border-color: var(--surface-border);
+$list-group-hover-bg: var(--surface-muted-bg);
+$list-group-active-bg: var(--surface-muted-bg);
+$list-group-active-border-color: var(--surface-border);
+$nav-link-disabled-color: var(--surface-border);
 $modal-backdrop-opacity: 0.8;
-$modal-backdrop-bg: $sand-lightest;
+$modal-backdrop-bg: var(--surface-bg);
 $light-bg-subtle: $sand-lightest;
 $min-contrast-ratio: 2;
 
 // ─── Form control backgrounds ───────────────────────────────────────
-// Per-surface knobs for each form input type. Defaults align with the
-// Sandstone interactive-surface tone ($sand-lightest), matching dropdowns
-// and modals. Override individually to vary a single surface (e.g. give
-// selects a different shade) without affecting the others.
-$input-bg: white;
-$input-focus-bg: white;
-$input-disabled-bg: $gray-200;
-$form-select-bg: white;
-$form-check-input-bg: white;
+// Per-surface knobs for each form input type. Override individually to
+// vary a single surface (e.g. give selects a different shade) without
+// affecting the others.
+$input-bg: var(--surface-inset-bg);
+$input-focus-bg: var(--surface-inset-bg);
+$input-disabled-bg: var(--surface-muted-bg);
+$form-select-bg: var(--surface-inset-bg);
+$form-check-input-bg: var(--surface-inset-bg);

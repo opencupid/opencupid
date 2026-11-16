@@ -12,6 +12,11 @@ vi.mock('@vueuse/core', async (importOriginal) => {
   }
 })
 
+const colorMode = ref<'light' | 'dark'>('light')
+vi.mock('@/features/app/composables/useAppColorMode', () => ({
+  useAppColorMode: () => colorMode,
+}))
+
 // Mock d3-cloud — jsdom has no canvas, so we simulate the layout synchronously
 let endCallback: ((words: any[]) => void) | null = null
 vi.mock('d3-cloud', () => {
@@ -91,6 +96,25 @@ describe('TagCloud', () => {
     expect(names).toContain('Hiking')
     expect(names).toContain('Art')
     expect(names).toContain('Music')
+  })
+
+  it('recolours the words for dark mode', async () => {
+    const tagStore = useTagsStore()
+    tagStore.popularTags = mockTags
+    tagStore.fetchPopularTags = vi.fn().mockImplementation(async () => {
+      tagStore.popularTags = mockTags
+    })
+    colorMode.value = 'light'
+
+    const wrapper = mount(TagCloud)
+    await flushPromises()
+    const lightFill = wrapper.find('.tag-cloud-word').attributes('fill')
+
+    colorMode.value = 'dark'
+    await flushPromises()
+
+    expect(wrapper.find('.tag-cloud-word').attributes('fill')).not.toBe(lightFill)
+    colorMode.value = 'light'
   })
 
   it('renders nothing when tags are empty', async () => {

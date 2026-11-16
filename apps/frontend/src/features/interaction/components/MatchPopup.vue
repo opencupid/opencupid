@@ -122,6 +122,6 @@ const handleSubmitted = () => {
   transition: background-color 300ms ease-in-out;
 }
 .match-popup-content.sent {
-  background-color: white;
+  background-color: var(--surface-inset-bg);
 }
 </style>
