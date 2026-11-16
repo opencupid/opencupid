@@ -54,6 +54,32 @@ source .env
 # on first request to each domain.
 ```
 
+## Multi-brand deployments
+
+Several brands (sites with their own domain, name and look) can share one database. A single `backend` and a single `worker` serve all of them; only the frontend runs once per brand.
+
+**Configuration**
+
+- Set `BRANDS` in the `.env` used by the backend and the worker. It lists every brand as JSON (see `.env.example`). The backend and worker get only this `.env`, without per-brand overrides.
+- Each frontend gets `.env` plus its own brand file (`DOMAIN`, `FRONTEND_URL`, `SITE_NAME`, `WS_BASE_URL`, `FALLBACK_LOCALE`, analytics, …).
+- Route `/api` and `/ws` for every brand host to the one backend, for example ``(Host(`a.example.org`) || Host(`b.example.org`)) && PathPrefix(`/api`)``. Keep each frontend's ``Host(`…`)`` router on its own brand.
+
+**How the backend uses the request host**
+
+- Each request is matched to a brand by its host: the brand's domain itself or any subdomain of it (`www.`, `admin.`). Session cookies are scoped to that brand's domain, and a new user is recorded with that brand (`User.originDomain`).
+- Login, refresh and the other `/api/auth` routes answer **421** on a host that no brand serves. The proxy must therefore pass the browser's `Host` through, and must not trust a client-supplied `X-Forwarded-Host` (Traefik's default).
+- Internal callers that reach the backend by container name (`http://backend:3000/api/admin`, as the admin MCP and import jobs do) are unaffected, because they don't use `/api/auth`. Point them at the backend's service name.
+- Emails go out under the recipient's brand (`User.originDomain`). Every `originDomain` in the database must be a domain in `BRANDS`. A user whose domain isn't listed gets no notification emails (the error is logged) and can't request a login link. Before removing a brand from `BRANDS`, move its users to another brand.
+- CORS allows every brand's `frontendUrl` origin.
+
+**Moving from one backend per brand**
+
+1. Deploy the new backend image first, with the old one-backend-per-brand services left as they are. Each backend still has the full `BRANDS`, so they keep working.
+2. Then merge them into one `backend` service with the combined routes, and give it and the worker the plain `.env`. Update everything that addressed the old service names (`depends_on`, URLs like `http://backend-<brand>:3000`).
+3. Live updates (new messages, likes, call signalling) between users on different brands start working only after step 2. Each backend process holds its own WebSocket connections.
+
+**Local development:** set `DOMAIN=localhost`. The Vite dev proxy rewrites `Host` to `localhost`, so any other value gets a 421 on login.
+
 ## Management commands
 
 All management commands are defined as pnpm scripts in `apps/backend/package.json` and run inside containers via `docker compose exec`.
