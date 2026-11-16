@@ -8,6 +8,7 @@ import type {
   GetUserSettingsResponse,
   DeleteAccountResponse,
   AccountDeletionFeedbackResponse,
+  AccountDeletionFeedbackCommentResponse,
 } from '@zod/apiResponse.dto'
 import {
   SettingsUserSchema,
@@ -17,6 +18,8 @@ import {
   type DeleteAccountPayload,
   AccountDeletionFeedbackPayloadSchema,
   type AccountDeletionFeedbackPayload,
+  AccountDeletionFeedbackCommentPayloadSchema,
+  type AccountDeletionFeedbackCommentPayload,
 } from '@zod/user/user.dto'
 
 const userRoutes: FastifyPluginAsync = async (fastify) => {
@@ -143,7 +146,8 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /deletion-feedback
    * Stores an exit survey answer. Unauthenticated because the session is gone by
-   * the time the survey is shown; the answer is not linked to anyone.
+   * the time the survey is shown; the answer is not linked to anyone. Returns
+   * the answer's id so a comment can be added to it afterwards.
    */
   fastify.post(
     '/deletion-feedback',
@@ -158,13 +162,46 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
       )
       if (!body) return
 
+      let id: string
       try {
-        await userService.saveAccountDeletionFeedback(body)
+        id = await userService.saveAccountDeletionFeedback(body)
       } catch (error) {
         fastify.log.error({ err: error }, 'Error saving account deletion feedback')
         return sendError(reply, 500, 'Failed to save feedback')
       }
-      const response: AccountDeletionFeedbackResponse = { success: true }
+      const response: AccountDeletionFeedbackResponse = { success: true, id }
+      return reply.code(200).send(response)
+    }
+  )
+
+  /**
+   * PATCH /deletion-feedback/:id
+   * Adds the optional follow-up comment to an exit survey answer stored without
+   * one. Unauthenticated like the survey itself: the id returned on creation is
+   * the only handle, and a comment can be set once.
+   */
+  fastify.patch(
+    '/deletion-feedback/:id',
+    {
+      config: rateLimitConfig(fastify, '1 hour', 5),
+    },
+    async (req, reply) => {
+      const body = validateBody<AccountDeletionFeedbackCommentPayload>(
+        AccountDeletionFeedbackCommentPayloadSchema,
+        req,
+        reply
+      )
+      if (!body) return
+
+      const { id } = req.params as { id: string }
+      try {
+        const updated = await userService.addAccountDeletionFeedbackComment(id, body.comment)
+        if (!updated) return sendError(reply, 404, 'Feedback not found')
+      } catch (error) {
+        fastify.log.error({ err: error }, 'Error saving account deletion feedback comment')
+        return sendError(reply, 500, 'Failed to save feedback')
+      }
+      const response: AccountDeletionFeedbackCommentResponse = { success: true }
       return reply.code(200).send(response)
     }
   )

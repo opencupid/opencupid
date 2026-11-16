@@ -11,7 +11,8 @@ import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
 import { useRouter } from 'vue-router'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useInfiniteScroll } from '@vueuse/core'
 import type { ReceivedLike } from '@zod/interaction/interaction.dto'
 
 defineOptions({ name: 'Messaging' })
@@ -35,6 +36,9 @@ const {
   isInitialized,
   initialize,
   fetchConversations,
+  fetchMoreConversations,
+  canLoadMoreConversations,
+  isLoadingMoreConversations,
   handleMatchSelect,
   handleProfileSelect,
   matches,
@@ -50,6 +54,13 @@ async function onReceivedLikeSelect(like: ReceivedLike) {
   const profile = await handleProfileSelect(like.profile.id)
   if (profile) panel.show(PublicProfileView, { profileId: profile.id })
 }
+
+// Conversations are paged in as the list nears its end.
+const scrollEl = ref<HTMLElement | null>(null)
+useInfiniteScroll(scrollEl, fetchMoreConversations, {
+  distance: 300,
+  canLoadMore: () => canLoadMoreConversations.value,
+})
 
 onMounted(async () => {
   await initialize()
@@ -86,6 +97,7 @@ function handleSelectConvo(convo: ConversationSummary) {
     </div>
     <div
       v-else
+      ref="scrollEl"
       class="flex-grow-1 overflow-auto hide-scrollbar p-2"
     >
       <div class="mb-3">
@@ -102,6 +114,7 @@ function handleSelectConvo(convo: ConversationSummary) {
       <div v-if="haveConversations">
         <ConversationSummaries
           :loading="isLoading"
+          :loading-more="isLoadingMoreConversations"
           :conversations="conversations"
           :activeConversation="activeConversation"
           @convo:select="handleSelectConvo"

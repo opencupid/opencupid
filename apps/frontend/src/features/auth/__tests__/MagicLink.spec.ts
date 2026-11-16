@@ -17,6 +17,10 @@ afterAll(() => {
 })
 
 const push = vi.fn()
+const resolve = vi.fn((path: string) => ({
+  fullPath: path,
+  meta: { requiresAuth: !path.startsWith('/auth') },
+}))
 const route = {
   query: {} as Record<string, unknown>,
 }
@@ -33,7 +37,7 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('vue-router', () => ({
   useRoute: () => route,
-  useRouter: () => ({ push }),
+  useRouter: () => ({ push, resolve }),
 }))
 
 vi.mock('vue-i18n', () => ({
@@ -85,6 +89,48 @@ describe('MagicLink', () => {
     await flushPromises()
 
     expect(push).toHaveBeenCalledWith('/browse')
+  })
+
+  it('redirects to the deep link carried by the magic link', async () => {
+    route.query = { token: '123456', redirect: '/inbox/abc' }
+    const authStore = useAuthStore()
+    vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
+
+    mountMagicLink()
+    await flushPromises()
+
+    expect(push).toHaveBeenCalledWith('/inbox/abc')
+  })
+
+  it.each(['//evil.example', 'https://evil.example', '/auth'])(
+    'ignores redirect %s and lands on /browse',
+    async (redirect) => {
+      route.query = { token: '123456', redirect }
+      const authStore = useAuthStore()
+      vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
+
+      mountMagicLink()
+      await flushPromises()
+
+      expect(push).toHaveBeenCalledWith('/browse')
+    }
+  )
+
+  it('keeps the deep link when going back to Login after a failed magic link', async () => {
+    route.query = { token: '123456', redirect: '/inbox/abc' }
+    const authStore = useAuthStore()
+    vi.spyOn(authStore, 'verifyToken').mockResolvedValue({
+      success: false,
+      code: 'AUTH_EXPIRED_TOKEN',
+      message: 'expired',
+      restart: 'otp',
+    })
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+    await wrapper.get('.back-button a').trigger('click')
+
+    expect(push).toHaveBeenCalledWith({ name: 'Login', query: { redirect: '/inbox/abc' } })
   })
 
   it('shows check-email message when no token in query', async () => {

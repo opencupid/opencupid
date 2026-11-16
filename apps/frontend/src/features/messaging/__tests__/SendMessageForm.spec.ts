@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { ref } from 'vue'
@@ -13,6 +13,17 @@ vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({
 vi.mock('@/assets/icons/interface/call.svg', () => ({
   default: { template: '<span data-testid="icon-call" />' },
 }))
+vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+
+const toastError = vi.fn()
+vi.mock('vue-toastification', () => ({ useToast: () => ({ error: toastError }) }))
+
+const apiPost = vi.fn()
+vi.mock('@/lib/api', () => ({
+  api: { post: (...args: unknown[]) => apiPost(...args) },
+  safeApiCall: (fn: () => unknown) => fn(),
+}))
+
 vi.mock('extendable-media-recorder', () => ({
   MediaRecorder: vi.fn(),
   register: vi.fn(),
@@ -24,6 +35,7 @@ vi.mock('extendable-media-recorder-wav-encoder', () => ({
 
 import SendMessageForm from '../components/SendMessageForm.vue'
 import { useLocalStore } from '@/store/localStore'
+import { useMessageStore } from '../stores/messageStore'
 
 // VoiceRecorder stub that exposes reset() like the real component
 const VoiceRecorderStub = {
@@ -304,6 +316,104 @@ describe('SendMessageForm', () => {
 
     expect(radioButtons[0]!.attributes('checked')).toBeDefined()
     expect(radioButtons[1]!.attributes('checked')).toBeUndefined()
+  })
+
+  describe('pasting images', () => {
+    const TextareaStub = {
+      name: 'BFormTextarea',
+      template: '<textarea />',
+    }
+
+    const uploadedImage = {
+      id: 'ck2j6z1x30000a1b2c3d4e5f6',
+      mimeType: 'image/jpeg',
+      altText: '',
+      blurhash: null,
+      variants: [],
+      position: 0,
+    }
+
+    function mountPasteForm() {
+      const wrapper = mount(SendMessageForm, {
+        props: { recipientProfile: mockRecipient, conversationId: 'conv-1' },
+        global: {
+          stubs: {
+            BFormTextarea: TextareaStub,
+            BButton: true,
+            BModal: true,
+            TagList: true,
+            LanguageList: true,
+            VoiceRecorder: VoiceRecorderStub,
+            VoiceMessage: true,
+            SendModeSelector: true,
+            ImageUpload: ImageUploadStub,
+          },
+          mocks: { $t: (key: string) => key },
+        },
+      })
+      const sendMessage = vi
+        .spyOn(useMessageStore(), 'sendMessage')
+        .mockResolvedValue({ success: true, data: { id: 'msg-1' } } as never)
+      return { wrapper, sendMessage }
+    }
+
+    async function paste(wrapper: ReturnType<typeof mount>, files: File[]) {
+      const event = new Event('paste', { bubbles: true, cancelable: true })
+      Object.defineProperty(event, 'clipboardData', { value: { files } })
+      wrapper.find('textarea').element.dispatchEvent(event)
+      await flushPromises()
+      return event
+    }
+
+    beforeEach(() => {
+      apiPost.mockReset()
+      toastError.mockReset()
+    })
+
+    it('uploads a pasted image and sends it as an attachment', async () => {
+      apiPost.mockResolvedValue({ data: { success: true, image: uploadedImage } })
+      const { wrapper, sendMessage } = mountPasteForm()
+      const file = new File(['x'], 'shot.png', { type: 'image/png' })
+
+      const event = await paste(wrapper, [file])
+
+      expect(event.defaultPrevented).toBe(true)
+      expect(apiPost).toHaveBeenCalledTimes(1)
+      expect(apiPost.mock.calls[0]![0]).toBe('/image')
+      expect((apiPost.mock.calls[0]![1] as FormData).get('file')).toBe(file)
+      expect(sendMessage).toHaveBeenCalledWith(mockRecipient.id, '', ['ck2j6z1x30000a1b2c3d4e5f6'])
+      expect(wrapper.emitted('message:sent')).toHaveLength(1)
+    })
+
+    it('leaves a text-only paste to the browser', async () => {
+      const { wrapper, sendMessage } = mountPasteForm()
+
+      const event = await paste(wrapper, [])
+
+      expect(event.defaultPrevented).toBe(false)
+      expect(apiPost).not.toHaveBeenCalled()
+      expect(sendMessage).not.toHaveBeenCalled()
+    })
+
+    it('ignores pasted files that are not supported images', async () => {
+      const { wrapper, sendMessage } = mountPasteForm()
+
+      const event = await paste(wrapper, [new File(['x'], 'doc.pdf', { type: 'application/pdf' })])
+
+      expect(event.defaultPrevented).toBe(false)
+      expect(apiPost).not.toHaveBeenCalled()
+      expect(sendMessage).not.toHaveBeenCalled()
+    })
+
+    it('shows an error toast and sends nothing when the upload fails', async () => {
+      apiPost.mockRejectedValue(new Error('boom'))
+      const { wrapper, sendMessage } = mountPasteForm()
+
+      await paste(wrapper, [new File(['x'], 'shot.png', { type: 'image/png' })])
+
+      expect(toastError).toHaveBeenCalledTimes(1)
+      expect(sendMessage).not.toHaveBeenCalled()
+    })
   })
 
   function mountFormWithLanguages(recipientLanguages: string[], viewerLanguages: string[]) {
