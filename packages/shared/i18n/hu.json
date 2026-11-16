@@ -1,7 +1,7 @@
 {
   "account_deleted": {
     "comment_label": "Mesélj róla bővebben",
-    "comment_technical_issue": "Mi nem működött? Hálásak vagyunk a visszajelzésedért, mert így tudunk javítani.",
+    "comment_technical_issue": "Mi nem működött? Hálásak vagyunk a visszajelzésedért, mert így tudunk javítani az oldalon.",
     "message": "A fiókodat töröltük. Elmondanád, miért döntöttél úgy, hogy elhagyod ezt a közösséget?",
     "reason_bad_experience": "Rossz tapasztalatom volt itt",
     "reason_not_a_good_fit": "Ez a közösség nem nekem való",
