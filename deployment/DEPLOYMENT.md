@@ -60,7 +60,7 @@ Several brands (sites with their own domain, name and look) can share one databa
 
 **Configuration**
 
-- Give each brand a file `brands/<name>.env` with its keys: `DOMAIN`, `SITE_NAME`, `FRONTEND_URL`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (optional), and whatever its frontend needs (`SITE_SHORT_NAME`, `WS_BASE_URL`, `FALLBACK_LOCALE`, analytics, …). See `.env.example` for an example.
+- Give each brand a file `brands/<name>.env` with its keys: `DOMAIN`, `SITE_NAME`, `FRONTEND_URL`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (optional), `FALLBACK_LOCALE` (optional, `en` or `hu`; the brand's email and new-user language fallback and the site's default UI language), and whatever its frontend needs (`SITE_SHORT_NAME`, `WS_BASE_URL`, analytics, …). See `.env.example` for an example.
 - Each frontend gets `.env` plus its brand's file as `env_file`.
 - Mount the `brands/` directory read-only into the backend and the worker, and set `BRANDS_DIR` to the mount point. They get `.env` without any brand file: the backend reads every brand from the directory. A missing key or invalid value in any brand file stops both at startup, with the file and key in the error.
 - Route `/api` and `/ws` for every brand host to the one backend, for example ``(Host(`a.example.org`) || Host(`b.example.org`)) && PathPrefix(`/api`)``. Keep each frontend's ``Host(`…`)`` router on its own brand.

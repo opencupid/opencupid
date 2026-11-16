@@ -2,10 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NotifierService } from '../../services/notifier.service'
 
 let mockPrisma: any
-const { mockGetFixedT, mockDispatchEmail } = vi.hoisted(() => ({
-  mockGetFixedT: vi.fn(),
-  mockDispatchEmail: vi.fn(),
-}))
+const { mockGetFixedT, mockTFor, mockDispatchEmail } = vi.hoisted(() => {
+  const mockGetFixedT = vi.fn()
+  return {
+    mockGetFixedT,
+    // tFor(brand, language): the brand only picks the fallback locale
+    mockTFor: vi.fn((_brand: unknown, language: string) => mockGetFixedT(language)),
+    mockDispatchEmail: vi.fn(),
+  }
+})
 
 const { defaultBrand, otherBrand } = vi.hoisted(() => ({
   defaultBrand: {
@@ -13,6 +18,7 @@ const { defaultBrand, otherBrand } = vi.hoisted(() => ({
     siteName: 'OpenCupid',
     frontendUrl: 'https://frontend.test',
     emailFrom: 'OpenCupid <hello@frontend.test>',
+    fallbackLocale: 'en',
   },
   otherBrand: {
     domain: 'other.test',
@@ -20,6 +26,7 @@ const { defaultBrand, otherBrand } = vi.hoisted(() => ({
     frontendUrl: 'https://other.test',
     emailFrom: 'OtherSite <hello@other.test>',
     emailReplyTo: 'support@other.test',
+    fallbackLocale: 'hu',
   },
 }))
 
@@ -35,11 +42,7 @@ vi.mock('@/queues/emailDispatcher', () => ({
   },
 }))
 
-vi.mock('i18next', () => ({
-  default: {
-    getFixedT: mockGetFixedT,
-  },
-}))
+vi.mock('@/lib/i18n', () => ({ tFor: mockTFor }))
 
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
@@ -60,6 +63,7 @@ describe('NotifierService', () => {
     }
 
     mockGetFixedT.mockReset()
+    mockTFor.mockClear()
     mockDispatchEmail.mockReset()
     mockGetFixedT.mockReturnValue((key: string) => `${key}-translated`)
   })
@@ -337,6 +341,7 @@ describe('NotifierService', () => {
     await service.notifyProfile('profile-other', 'new_like', { path: '/browse' })
 
     const [payload] = mockDispatchEmail.mock.calls[0]
+    expect(mockTFor).toHaveBeenCalledWith(otherBrand, 'en')
     expect(payload.brand).toEqual(otherBrand)
     expect(payload.templateProps.siteName).toBe('OtherSite')
     expect(payload.templateProps.callToActionUrl).toBe('https://other.test/browse')

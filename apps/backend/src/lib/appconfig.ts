@@ -4,6 +4,7 @@ import { z } from 'zod'
 import dotenv from 'dotenv'
 import dotenvExpand from 'dotenv-expand'
 import { findUpSync } from '@shared/findUp'
+import { appLocales, isSupportedLocale } from '@shared/i18n/locales'
 
 // A bare lowercase domain: requests are matched to a brand by comparing it
 // against the request host, so `.Example.org ` must not survive config parsing.
@@ -19,6 +20,8 @@ export type Brand = {
   domain: string
   emailFrom: string
   emailReplyTo?: string
+  /** Locale for strings missing in a recipient's language. */
+  fallbackLocale: string
 }
 
 /**
@@ -36,6 +39,14 @@ export const BrandEnvSchema = z
       .string()
       .optional()
       .transform((v) => v || undefined),
+    // Strict: a locale without translations stops the process rather than
+    // silently rendering this brand's email in another language.
+    FALLBACK_LOCALE: z
+      .string()
+      .default('en')
+      .refine(isSupportedLocale, {
+        message: `must be one of ${Object.keys(appLocales).join(', ')}`,
+      }),
   })
   .transform(
     (env): Brand => ({
@@ -44,6 +55,7 @@ export const BrandEnvSchema = z
       frontendUrl: env.FRONTEND_URL,
       emailFrom: env.EMAIL_FROM,
       ...(env.EMAIL_REPLY_TO && { emailReplyTo: env.EMAIL_REPLY_TO }),
+      fallbackLocale: env.FALLBACK_LOCALE,
     })
   )
 
@@ -138,10 +150,6 @@ export const configSchema = z.object({
     .string()
     .optional()
     .transform((v) => v || undefined),
-
-  // Not validated here: normalizeLocale() bounds it at each use site, so an
-  // unusable value degrades instead of refusing to boot.
-  FALLBACK_LOCALE: z.string().default('en'),
 
   JITSI_DOMAIN: z.string().default('meet.jit.si'),
 

@@ -44,12 +44,14 @@ describe('loadBrands from BRANDS_DIR', () => {
         frontendUrl: 'https://a.test',
         emailFrom: 'Site A <hello@a.test>',
         emailReplyTo: 'help@a.test',
+        fallbackLocale: 'en',
       },
       {
         domain: 'b.test',
         siteName: 'B',
         frontendUrl: 'https://b.test',
         emailFrom: 'B <hello@b.test>',
+        fallbackLocale: 'en',
       },
     ])
   })
@@ -111,11 +113,35 @@ describe('loadBrands without BRANDS_DIR (single brand)', () => {
         siteName: 'OpenCupid',
         frontendUrl: 'https://solo.test',
         emailFrom: 'Solo <hello@solo.test>',
+        fallbackLocale: 'en',
       },
     ])
   })
 
   it('names the environment as the source of an error', () => {
     expect(() => loadBrands({ ...env, DOMAIN: '' }, undefined)).toThrow(/the environment.*DOMAIN/)
+  })
+})
+
+describe('brand FALLBACK_LOCALE', () => {
+  const env = {
+    DOMAIN: 'solo.test',
+    FRONTEND_URL: 'https://solo.test',
+    EMAIL_FROM: 'Solo <hello@solo.test>',
+  }
+
+  it('defaults to en', () => {
+    expect(loadBrands(env, undefined)[0].fallbackLocale).toBe('en')
+  })
+
+  it('takes a supported locale per brand file', () => {
+    write('a.env', `${fileA}\nFALLBACK_LOCALE=hu`)
+    write('b.env', `${fileB}\nFALLBACK_LOCALE=en`)
+    expect(loadBrands({}, dir).map((b) => b.fallbackLocale)).toEqual(['hu', 'en'])
+  })
+
+  it.each(['de', 'hu-HU', '', 'constructor'])('rejects %j, naming file and key', (locale) => {
+    write('a.env', `${fileA}\nFALLBACK_LOCALE=${locale}`)
+    expect(() => loadBrands({}, dir)).toThrow(/a\.env.*FALLBACK_LOCALE.*one of en, hu/)
   })
 })

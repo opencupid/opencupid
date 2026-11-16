@@ -5,4 +5,5 @@ export const brandStub: Brand = {
   frontendUrl: 'https://example.com',
   domain: 'example.com',
   emailFrom: 'TestSite <hello@example.com>',
+  fallbackLocale: 'en',
 }
