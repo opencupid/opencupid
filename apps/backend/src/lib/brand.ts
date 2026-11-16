@@ -1,5 +1,4 @@
 import { appConfig } from './appconfig'
-import { logger } from './logger'
 
 /**
  * Brand identity carried on outbound content (email payloads, future: SMS,
@@ -27,14 +26,6 @@ const registry: Brand[] = appConfig.BRANDS ?? [
     emailReplyTo: appConfig.EMAIL_REPLY_TO,
   },
 ]
-
-/**
- * The brand this process serves (its DOMAIN). appconfig guarantees BRANDS
- * contains it, so the lookup cannot miss.
- */
-export function currentBrand(): Brand {
-  return registry.find((b) => b.domain === appConfig.DOMAIN)!
-}
 
 /** The browser origin of every brand's frontend, for CORS. */
 export function frontendOrigins(): string[] {
@@ -65,11 +56,11 @@ export function brandForHost(hostname: string): Brand {
 /**
  * The brand a recipient belongs to, by their User.originDomain. Content sent to
  * a user must carry their brand, not the sending process's: one database and
- * one worker serve every brand.
+ * one worker serve every brand. Every originDomain is recorded from a brand
+ * (brandForHost), so a miss means the brand list and the data disagree.
  */
 export function brandFor(domain: string): Brand {
   const brand = registry.find((b) => b.domain === domain)
-  if (brand) return brand
-  logger.warn({ domain, fallback: appConfig.DOMAIN }, 'unknown brand domain, using process brand')
-  return currentBrand()
+  if (!brand) throw new Error(`No brand for domain ${domain}`)
+  return brand
 }
