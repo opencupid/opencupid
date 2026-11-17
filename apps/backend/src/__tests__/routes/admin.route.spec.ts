@@ -441,6 +441,47 @@ describe('GET /stats/breakdown', () => {
     }
   })
 
+  it('returns a signups series counted from User.createdAt when metric=signups', async () => {
+    mockPrisma.$queryRaw.mockResolvedValueOnce([])
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { metric: 'signups', range: '7d' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.metric).toBe('signups')
+    expect(reply.payload.series.map((s: any) => s.key)).toEqual(['signups'])
+    expect(reply.payload.series[0].data).toHaveLength(7)
+    expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(mockPrisma.$queryRaw.mock.calls[0][0].join('')).toContain('FROM "User"')
+  })
+
+  it('returns distinct active profiles from the session log when metric=active', async () => {
+    mockPrisma.$queryRaw.mockResolvedValueOnce([])
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { metric: 'active', range: '24h' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.metric).toBe('active')
+    expect(reply.payload.series.map((s: any) => s.key)).toEqual(['active'])
+    expect(reply.payload.series[0].data).toHaveLength(24)
+    const sql = mockPrisma.$queryRaw.mock.calls[0][0].join('')
+    expect(sql).toContain('COUNT(DISTINCT "profileId")')
+    expect(sql).toContain('FROM "ProfileSessionLog"')
+  })
+
+  it('falls back to interactions for an unknown metric', async () => {
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+
+    const handler = fastify.routes['GET /stats/breakdown']
+    await handler({ query: { metric: 'bogus' } }, reply)
+
+    expect(reply.payload.metric).toBe('interactions')
+  })
+
   it('excludes ADMIN_PROFILE_ID from the messages series when configured', async () => {
     mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
     mockPrisma.$queryRaw

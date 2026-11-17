@@ -18,11 +18,6 @@ vi.mock('vue-chartjs', () => ({
   Bar: { name: 'Bar', template: '<div data-test="bar-chart" />' },
 }))
 
-const routerPush = vi.fn()
-vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: routerPush }),
-}))
-
 import DashboardPage from '../DashboardPage.vue'
 
 const stats = {
@@ -174,21 +169,20 @@ describe('DashboardPage', () => {
     expect(breakdownCall).toBeTruthy()
   })
 
-  it('navigates to the Profiles list when the Signups KPI is clicked', async () => {
+  it.each([
+    ['kpi-signups', 'signups', 'Signups'],
+    ['kpi-daily-active', 'active', 'Daily Active'],
+  ])('opens the drill-down modal when the %s KPI is clicked', async (testId, metric, title) => {
     const wrapper = mount(DashboardPage)
     await flushPromises()
 
-    await wrapper.find('[data-test="kpi-signups"]').trigger('click')
-
-    expect(routerPush).toHaveBeenCalledWith({ name: 'profiles' })
-  })
-
-  it('navigates to Profiles sorted by last active when the Daily Active KPI is clicked', async () => {
-    const wrapper = mount(DashboardPage)
+    await wrapper.find(`[data-test="${testId}"]`).trigger('click')
     await flushPromises()
 
-    await wrapper.find('[data-test="kpi-daily-active"]').trigger('click')
-
-    expect(routerPush).toHaveBeenCalledWith({ name: 'profiles', query: { sort: 'lastActive' } })
+    expect(wrapper.find('.modal .modal-title').text()).toBe(title)
+    const breakdownCall = useApiCall.mock.calls.find(
+      (c: any[]) => c[0] === '/admin/stats/breakdown' && c[1]?.params?.metric === metric
+    )
+    expect(breakdownCall).toBeTruthy()
   })
 })
