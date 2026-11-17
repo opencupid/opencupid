@@ -170,7 +170,7 @@ describe('MagicLink', () => {
     ['AUTH_INVALID_TOKEN', 'auth.token_invalid'],
     ['AUTH_INVALID_INPUT', 'auth.token_different_device'],
     ['AUTH_INTERNAL_ERROR', 'auth.token_unknown_error'],
-  ] as const)('tracks auth-token-failed with code %s', async (code, errorKey) => {
+  ] as const)('tracks auth-token-failed:%s', async (code, errorKey) => {
     route.query = { token: '123456' }
     const authStore = useAuthStore()
     authStore.loginUser = emailLoginUser
@@ -184,11 +184,11 @@ describe('MagicLink', () => {
     const wrapper = mountMagicLink()
     await flushPromises()
 
-    expect(track).toHaveBeenCalledWith('auth-token-failed', { code })
+    expect(track).toHaveBeenCalledWith(`auth-token-failed:${code}`)
     expect(wrapper.text()).toContain(errorKey)
   })
 
-  it('tracks auth-token-failed with AUTH_MALFORMED_LINK on malformed token param', async () => {
+  it('tracks auth-token-failed:AUTH_MALFORMED_LINK on malformed token param', async () => {
     route.query = { token: '12' }
     const authStore = useAuthStore()
     authStore.loginUser = emailLoginUser
@@ -198,7 +198,7 @@ describe('MagicLink', () => {
     await flushPromises()
 
     expect(verifyToken).not.toHaveBeenCalled()
-    expect(track).toHaveBeenCalledWith('auth-token-failed', { code: 'AUTH_MALFORMED_LINK' })
+    expect(track).toHaveBeenCalledWith('auth-token-failed:AUTH_MALFORMED_LINK')
     expect(wrapper.text()).toContain('auth.token_invalid_link')
   })
 
