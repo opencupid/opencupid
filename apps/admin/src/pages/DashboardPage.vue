@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useApi } from '../composables/useApi'
 import { Pie } from 'vue-chartjs'
 import {
@@ -13,21 +12,12 @@ import {
   ArcElement,
 } from 'chart.js'
 import KpiCard from '../components/KpiCard.vue'
-import DashboardDrillDownModal from '../components/DashboardDrillDownModal.vue'
+import DashboardDrillDownModal, { type Metric } from '../components/DashboardDrillDownModal.vue'
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend, ArcElement)
 
-const router = useRouter()
-function goToProfiles() {
-  router.push({ name: 'profiles' })
-}
-function goToActivity() {
-  router.push({ name: 'activity' })
-}
-
-type DrillDownMetric = 'interactions' | 'messages'
-const drillDown = ref<{ metric: DrillDownMetric; title: string } | null>(null)
-function openDrillDown(metric: DrillDownMetric, title: string) {
+const drillDown = ref<{ metric: Metric; title: string } | null>(null)
+function openDrillDown(metric: Metric, title: string) {
   drillDown.value = { metric, title }
 }
 
@@ -145,9 +135,9 @@ onMounted(async () => {
         color="#0d6efd"
         clickable
         data-test="kpi-signups"
-        @click="goToProfiles"
-        @keydown.enter="goToProfiles"
-        @keydown.space.prevent="goToProfiles"
+        @click="openDrillDown('signups', 'Signups')"
+        @keydown.enter="openDrillDown('signups', 'Signups')"
+        @keydown.space.prevent="openDrillDown('signups', 'Signups')"
       />
       <KpiCard
         title="Daily Active"
@@ -157,9 +147,9 @@ onMounted(async () => {
         color="#198754"
         clickable
         data-test="kpi-daily-active"
-        @click="goToActivity"
-        @keydown.enter="goToActivity"
-        @keydown.space.prevent="goToActivity"
+        @click="openDrillDown('active', 'Daily Active')"
+        @keydown.enter="openDrillDown('active', 'Daily Active')"
+        @keydown.space.prevent="openDrillDown('active', 'Daily Active')"
       />
       <KpiCard
         title="Blocked Users"
