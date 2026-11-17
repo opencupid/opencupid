@@ -101,11 +101,13 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           GROUP BY DATE("createdAt")
           ORDER BY date
         `,
+        // A profile counts once on every day it started a session, as in the
+        // 'active' breakdown below.
         prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE("lastSeenAt")::text AS date, COUNT(*)::bigint AS count
-          FROM "ProfileActivitySummary"
-          WHERE "lastSeenAt" >= ${since}::date
-          GROUP BY DATE("lastSeenAt")
+          SELECT DATE("startedAt")::text AS date, COUNT(DISTINCT "profileId")::bigint AS count
+          FROM "ProfileSessionLog"
+          WHERE "startedAt" >= ${since}::date
+          GROUP BY DATE("startedAt")
           ORDER BY date
         `,
         // Approximation: User has no blockedAt timestamp, so use updatedAt
