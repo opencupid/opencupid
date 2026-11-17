@@ -686,6 +686,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             isBlocked: true,
             isOnboarded: true,
             gender: true,
+            hasFace: true,
             createdAt: true,
             userId: true,
             user: { select: { email: true, phonenumber: true } },
@@ -1327,6 +1328,59 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin profile detail')
       return sendError(reply, 500, 'Failed to fetch profile')
+    }
+  })
+
+  /**
+   * GET /profiles/:id/activity
+   * Interaction counts for one profile. Messages from the system sender
+   * (ADMIN_PROFILE_ID) are not counted as received.
+   * @param {string} id - Profile ID
+   * @returns {{ success, activity: { conversations: { participating, initiated },
+   *   messages: { sent, received }, likes: { sent, received }, matches } }}
+   */
+  fastify.get('/profiles/:id/activity', async (req, reply) => {
+    try {
+      const { id } = req.params as { id: string }
+      const excludedSenders = [id, appConfig.ADMIN_PROFILE_ID].filter(Boolean) as string[]
+
+      const [
+        participating,
+        initiated,
+        messagesSent,
+        messagesReceived,
+        likesSent,
+        likesReceived,
+        matches,
+      ] = await Promise.all([
+        prisma.conversationParticipant.count({ where: { profileId: id } }),
+        prisma.conversation.count({ where: { initiatorProfileId: id } }),
+        prisma.message.count({ where: { senderId: id } }),
+        prisma.message.count({
+          where: {
+            senderId: { notIn: excludedSenders },
+            conversation: { participants: { some: { profileId: id } } },
+          },
+        }),
+        prisma.likedProfile.count({ where: { fromId: id } }),
+        prisma.likedProfile.count({ where: { toId: id } }),
+        prisma.likedProfile.count({
+          where: { fromId: id, to: { likesSent: { some: { toId: id } } } },
+        }),
+      ])
+
+      return reply.code(200).send({
+        success: true,
+        activity: {
+          conversations: { participating, initiated },
+          messages: { sent: messagesSent, received: messagesReceived },
+          likes: { sent: likesSent, received: likesReceived },
+          matches,
+        },
+      })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching admin profile activity')
+      return sendError(reply, 500, 'Failed to fetch profile activity')
     }
   })
 

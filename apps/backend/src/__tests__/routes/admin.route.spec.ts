@@ -36,6 +36,16 @@ const mockPrisma = vi.hoisted(() => {
     },
     conversation: {
       findMany: vi.fn().mockResolvedValue([]),
+      count: vi.fn(),
+    },
+    conversationParticipant: {
+      count: vi.fn(),
+    },
+    message: {
+      count: vi.fn(),
+    },
+    likedProfile: {
+      count: vi.fn(),
     },
     tag: {
       findMany: vi.fn(),
@@ -961,6 +971,7 @@ describe('GET /profiles', () => {
 
     const args = mockPrisma.profile.findMany.mock.calls[0][0]
     expect(args.select.activitySummary).toEqual({ select: { segment: true, lastSeenAt: true } })
+    expect(args.select.hasFace).toBe(true)
   })
 
   it('search OR clause includes id, publicName, cityName, country, userId, user email and phone', async () => {
@@ -989,6 +1000,79 @@ describe('GET /profiles', () => {
         },
       })
     )
+  })
+})
+
+describe('GET /profiles/:id/activity', () => {
+  beforeEach(() => {
+    mockPrisma.conversationParticipant.count.mockResolvedValue(5)
+    mockPrisma.conversation.count.mockResolvedValue(2)
+    mockPrisma.message.count.mockResolvedValueOnce(40).mockResolvedValueOnce(31)
+    mockPrisma.likedProfile.count
+      .mockResolvedValueOnce(12)
+      .mockResolvedValueOnce(9)
+      .mockResolvedValueOnce(3)
+  })
+
+  it('returns conversation, message, like and match counts', async () => {
+    const handler = fastify.routes['GET /profiles/:id/activity']
+    await handler({ params: { id: 'p1' } }, reply)
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({
+      success: true,
+      activity: {
+        conversations: { participating: 5, initiated: 2 },
+        messages: { sent: 40, received: 31 },
+        likes: { sent: 12, received: 9 },
+        matches: 3,
+      },
+    })
+  })
+
+  it('counts each figure with the expected filter', async () => {
+    const handler = fastify.routes['GET /profiles/:id/activity']
+    await handler({ params: { id: 'p1' } }, reply)
+
+    expect(mockPrisma.conversationParticipant.count).toHaveBeenCalledWith({
+      where: { profileId: 'p1' },
+    })
+    expect(mockPrisma.conversation.count).toHaveBeenCalledWith({
+      where: { initiatorProfileId: 'p1' },
+    })
+    expect(mockPrisma.message.count.mock.calls).toEqual([
+      [{ where: { senderId: 'p1' } }],
+      [
+        {
+          where: {
+            senderId: { notIn: ['p1', 'sys-sender'] },
+            conversation: { participants: { some: { profileId: 'p1' } } },
+          },
+        },
+      ],
+    ])
+    expect(mockPrisma.likedProfile.count.mock.calls).toEqual([
+      [{ where: { fromId: 'p1' } }],
+      [{ where: { toId: 'p1' } }],
+      [{ where: { fromId: 'p1', to: { likesSent: { some: { toId: 'p1' } } } } }],
+    ])
+  })
+
+  it('does not exclude a system sender when ADMIN_PROFILE_ID is not configured', async () => {
+    mockAppConfig.ADMIN_PROFILE_ID = undefined as any
+    const handler = fastify.routes['GET /profiles/:id/activity']
+    await handler({ params: { id: 'p1' } }, reply)
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
+
+    expect(mockPrisma.message.count.mock.calls[1][0].where.senderId).toEqual({ notIn: ['p1'] })
+  })
+
+  it('returns 500 when a count fails', async () => {
+    mockPrisma.likedProfile.count.mockReset().mockRejectedValue(new Error('DB error'))
+    const handler = fastify.routes['GET /profiles/:id/activity']
+    await handler({ params: { id: 'p1' } }, reply)
+
+    expect(reply.statusCode).toBe(500)
   })
 })
 

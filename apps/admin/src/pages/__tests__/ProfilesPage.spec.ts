@@ -40,6 +40,7 @@ const baseProfile = {
   isBlocked: false,
   isOnboarded: true,
   gender: 'F',
+  hasFace: false,
   createdAt: '2026-01-01T00:00:00Z',
   userId: 'u1',
   user: { email: 'a@b.com', phonenumber: null },
@@ -49,7 +50,6 @@ const baseProfile = {
 
 const baseDetail = {
   ...baseProfile,
-  hasFace: false,
   profileImages: [] as {
     id: string
     hasFace: boolean
@@ -180,6 +180,49 @@ describe('ProfilesPage', () => {
     expect(link.text()).toBe('Profile')
     expect(link.attributes('href')).toMatch(/\/profile\/p1$/)
     expect(first.findAll('button').filter((b) => b.text() === 'View')).toHaveLength(0)
+  })
+
+  it('shows the face icon after the name only for profiles with hasFace', async () => {
+    useApiCall.mockImplementation((path: string) => {
+      if (path === '/admin/profiles/countries') {
+        return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
+      }
+      return Promise.resolve(
+        listResponse([
+          { ...baseProfile, hasFace: true },
+          { ...baseProfile, id: 'p2' },
+        ])
+      )
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+
+    const [withFace, withoutFace] = wrapper.findAll('tbody tr')
+    expect(withFace.findAll('td')[1].find('[data-testid="has-face-icon"]').exists()).toBe(true)
+    expect(withoutFace.find('[data-testid="has-face-icon"]').exists()).toBe(false)
+  })
+
+  it('updates the row face icon when hasFace is toggled in the detail modal', async () => {
+    apiRequestMock.mockImplementation((path: string, opts?: { method?: string }) =>
+      opts?.method === 'PATCH'
+        ? Promise.resolve({ success: true, profile: { id: 'p1', hasFace: true } })
+        : Promise.resolve({ success: true, profile: { ...baseDetail, trustFlags: [] } })
+    )
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('tbody [data-testid="has-face-icon"]').exists()).toBe(false)
+    await wrapper.find('[data-testid="profile-has-face"]').setValue(true)
+    await flushPromises()
+
+    expect(wrapper.find('tbody [data-testid="has-face-icon"]').exists()).toBe(true)
   })
 
   it('requests profiles sorted by date created, then by last active when chosen', async () => {
@@ -543,7 +586,7 @@ describe('ProfilesPage', () => {
     expect(wrapper.text()).toContain('Deep')
   })
 
-  it('detail modal has Profile and User tabs; User tab lazily loads user detail', async () => {
+  it('detail modal has Profile, Activity and User tabs; User tab lazily loads user detail', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()
     await wrapper.find('tbody tr').trigger('click')
@@ -553,7 +596,7 @@ describe('ProfilesPage', () => {
     expect(apiRequestMock).not.toHaveBeenCalledWith('/admin/users/u1')
 
     const tabs = wrapper.findAll('.nav-tabs .nav-link')
-    expect(tabs.map((t) => t.text())).toEqual(['Profile', 'User'])
+    expect(tabs.map((t) => t.text())).toEqual(['Profile', 'Activity', 'User'])
 
     await tabs.filter((t) => t.text() === 'User')[0].trigger('click')
     await flushPromises()
@@ -562,6 +605,66 @@ describe('ProfilesPage', () => {
     expect(wrapper.text()).toContain('a@b.com')
     expect((wrapper.find('#editUserOrigin').element as HTMLSelectElement).value).toBe('example.org')
     expect(wrapper.find('#editUserActive').exists()).toBe(true)
+  })
+
+  it('Activity tab lazily loads and lists interaction counts', async () => {
+    const activity = {
+      conversations: { participating: 5, initiated: 2 },
+      messages: { sent: 40, received: 31 },
+      likes: { sent: 12, received: 9 },
+      matches: 3,
+    }
+    apiRequestMock.mockImplementation((path: string) => {
+      if (path === '/admin/profiles/p1/activity') {
+        return Promise.resolve({ success: true, activity })
+      }
+      return Promise.resolve({ success: true, profile: { ...baseDetail, trustFlags: [] } })
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    expect(apiRequestMock).not.toHaveBeenCalledWith('/admin/profiles/p1/activity')
+
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'Activity')[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(apiRequestMock).toHaveBeenCalledWith('/admin/profiles/p1/activity')
+    const list = wrapper.find('[data-testid="profile-activity"]')
+    const terms = list.findAll('dt').map((dt) => dt.text())
+    const values = list.findAll('dd').map((dd) => dd.text())
+    expect(terms).toEqual(['Conversations', 'Messages', 'Likes', 'Matches'])
+    expect(values).toEqual([
+      '5 / 2 participating / initiated',
+      '40 / 31 sent / received',
+      '12 / 9 sent / received',
+      '3',
+    ])
+  })
+
+  it('Activity tab shows an error when the activity fetch fails', async () => {
+    apiRequestMock.mockImplementation((path: string) =>
+      path === '/admin/profiles/p1/activity'
+        ? Promise.reject(new Error('boom'))
+        : Promise.resolve({ success: true, profile: { ...baseDetail, trustFlags: [] } })
+    )
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+    await wrapper
+      .findAll('.nav-tabs .nav-link')
+      .filter((t) => t.text() === 'Activity')[0]
+      .trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('.modal .alert-danger').text()).toBe('boom')
   })
 
   it('saving from the User tab patches /admin/users/:id', async () => {
