@@ -6,6 +6,7 @@ import { RefreshTokenService } from '@/services/refresh-token.service'
 import { createNewUserSession, getExistingUserSession } from '@/services/auth-session'
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { CaptchaService } from '@/services/captcha.service'
+import { trackMagicLinkVerify } from '@/services/magicLinkTelemetry.service'
 import { appConfig } from '@/lib/appconfig'
 import { brandForHost } from '@/lib/brand'
 import brandHostPlugin from '@/plugins/brand-host'
@@ -69,6 +70,20 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
         const { token } = params.data
         const result = await userService.validateLoginToken(token)
+
+        // Diagnostics for link checkers using up tokens; not awaited.
+        const client = { ip: req.ip, userAgent: req.headers['user-agent'] ?? '' }
+        void trackMagicLinkVerify(fastify.redis, brandForHost(req.hostname), {
+          token,
+          client,
+          outcome: result.success
+            ? 'consumed'
+            : result.code === 'AUTH_EXPIRED_TOKEN'
+              ? 'expired'
+              : 'invalid',
+          ...(result.success && result.tokenIssuedAt && { tokenIssuedAt: result.tokenIssuedAt }),
+        })
+
         if (!result.success) {
           return reply.code(422).send({ code: result.code, message: result.message })
         }

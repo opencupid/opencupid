@@ -34,6 +34,21 @@ vi.mock('../../services/captcha.service', () => ({
 vi.mock('../../services/notifier.service', () => ({
   notifierService: { notifyUser: vi.fn() },
 }))
+const mockTrackMagicLinkVerify = vi.fn()
+vi.mock('../../services/magicLinkTelemetry.service', () => ({
+  trackMagicLinkVerify: (...args: unknown[]) => mockTrackMagicLinkVerify(...args),
+}))
+
+/** A verify-token request as Fastify delivers it on a brand host. */
+function verifyReq(token: string) {
+  return {
+    query: { token },
+    hostname: 'fallback.example',
+    ip: '81.0.0.1',
+    headers: { 'user-agent': 'Mozilla/5.0 Test' },
+  }
+}
+
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
     NODE_ENV: 'development',
@@ -99,7 +114,7 @@ describe('GET /verify-token', () => {
       message: 'Invalid token',
       success: false,
     })
-    const req = { query: { token: 'abc123' } }
+    const req = verifyReq('abc123')
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(422)
     expect(reply.payload.code).toBe('AUTH_INVALID_TOKEN')
@@ -133,7 +148,7 @@ describe('GET /verify-token', () => {
       },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
-    const req = { query: { token: 'abc123' } }
+    const req = verifyReq('abc123')
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -183,7 +198,7 @@ describe('GET /verify-token', () => {
         },
       })
       fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
-      await handler({ query: { token: 'abc123' } } as any, reply as any)
+      await handler(verifyReq('abc123') as any, reply as any)
 
       const session = reply.cookies.find((c: any) => c.name === '__session')!
       const refresh = reply.cookies.find((c: any) => c.name === '__refresh')!
@@ -225,7 +240,7 @@ describe('GET /verify-token', () => {
       },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
-    const req = { query: { token: 'abc123' } }
+    const req = verifyReq('abc123')
     await handler(req as any, reply as any)
     expect(mockCreateNewUserSession).toHaveBeenCalledWith(user)
     expect(reply.statusCode).toBe(200)
@@ -239,10 +254,68 @@ describe('GET /verify-token', () => {
     mockUserService.validateLoginToken.mockImplementation(() => {
       throw new Error('fail')
     })
-    const req = { query: { token: 'abc123' } }
+    const req = verifyReq('abc123')
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(500)
     expect(reply.payload.code).toBe('AUTH_INTERNAL_ERROR')
+  })
+
+  describe('link-checker telemetry', () => {
+    const client = { ip: '81.0.0.1', userAgent: 'Mozilla/5.0 Test' }
+    const brand = expect.objectContaining({ domain: 'fallback.example' })
+
+    it.each([
+      ['AUTH_INVALID_TOKEN', 'invalid'],
+      ['AUTH_EXPIRED_TOKEN', 'expired'],
+    ])('reports %s as %s, with the caller', async (code, outcome) => {
+      const handler = fastify.routes['GET /verify-token']
+      mockUserService.validateLoginToken.mockResolvedValue({ code, message: 'x', success: false })
+      await handler(verifyReq('abc123') as any, reply as any)
+
+      expect(reply.statusCode).toBe(422)
+      expect(mockTrackMagicLinkVerify).toHaveBeenCalledWith(fastify.redis, brand, {
+        token: 'abc123',
+        client,
+        outcome,
+      })
+    })
+
+    it('reports a successful verify as consumed, with the issue time', async () => {
+      const handler = fastify.routes['GET /verify-token']
+      const issued = new Date('2026-11-17T10:00:00Z')
+      mockUserService.validateLoginToken.mockResolvedValue({
+        success: true,
+        user: { id: 'u1', tokenVersion: 0, roles: [], language: 'en' },
+        isNewUser: false,
+        tokenIssuedAt: issued,
+      })
+      mockGetExistingUserSession.mockResolvedValue({
+        profileId: 'p1',
+        sessionData: { userId: 'u1', profileId: 'p1', tokenVersion: 0, lang: 'en', roles: [] },
+      })
+      fastify.jwt = { sign: vi.fn().mockReturnValue('jwt') }
+      await handler(verifyReq('abc123') as any, reply as any)
+
+      expect(reply.statusCode).toBe(200)
+      expect(mockTrackMagicLinkVerify).toHaveBeenCalledWith(fastify.redis, brand, {
+        token: 'abc123',
+        client,
+        outcome: 'consumed',
+        tokenIssuedAt: issued,
+      })
+    })
+
+    it('does not delay or break the response when telemetry fails', async () => {
+      const handler = fastify.routes['GET /verify-token']
+      mockTrackMagicLinkVerify.mockReturnValueOnce(new Promise(() => {})) // never settles
+      mockUserService.validateLoginToken.mockResolvedValue({
+        code: 'AUTH_INVALID_TOKEN',
+        message: 'x',
+        success: false,
+      })
+      await handler(verifyReq('abc123') as any, reply as any)
+      expect(reply.statusCode).toBe(422)
+    })
   })
 })
 

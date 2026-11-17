@@ -13,6 +13,7 @@ const fileA = [
   'EMAIL_REPLY_TO=help@a.test',
   // frontend-only keys are ignored by the backend
   'CSP_ALLOWED_DOMAINS="https://x.test"',
+  // read by the backend only together with UMAMI_URL
   'UMAMI_WEBSITE_ID=abc',
 ].join('\n')
 const fileB = [
@@ -143,5 +144,26 @@ describe('brand FALLBACK_LOCALE', () => {
   it.each(['de', 'hu-HU', '', 'constructor'])('rejects %j, naming file and key', (locale) => {
     write('a.env', `${fileA}\nFALLBACK_LOCALE=${locale}`)
     expect(() => loadBrands({}, dir)).toThrow(/a\.env.*FALLBACK_LOCALE.*one of en, hu/)
+  })
+})
+
+describe('brand UMAMI_URL / UMAMI_WEBSITE_ID', () => {
+  it('enables Umami per brand when both are set, without a trailing slash', () => {
+    write('a.env', `${fileA}\nUMAMI_URL=https://u.a.test/`)
+    write('b.env', fileB)
+    const [a, b] = loadBrands({}, dir)
+    expect(a.umami).toEqual({ url: 'https://u.a.test', websiteId: 'abc' })
+    expect(b.umami).toBeUndefined()
+  })
+
+  it('leaves Umami off when only one of the two is set', () => {
+    write('a.env', fileA) // UMAMI_WEBSITE_ID only
+    write('b.env', `${fileB}\nUMAMI_URL=https://u.b.test`)
+    expect(loadBrands({}, dir).map((b) => b.umami)).toEqual([undefined, undefined])
+  })
+
+  it('rejects a UMAMI_URL that is not a URL, naming file and key', () => {
+    write('a.env', `${fileA}\nUMAMI_URL=u.a.test`)
+    expect(() => loadBrands({}, dir)).toThrow(/a\.env.*UMAMI_URL/)
   })
 })

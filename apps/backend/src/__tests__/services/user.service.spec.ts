@@ -76,6 +76,14 @@ describe('UserService.validateLoginToken', () => {
     expect(res.success && res.isNewUser).toBe(true)
     expect(mockPrisma.user.update).toHaveBeenCalled()
   })
+
+  it('returns when the token was issued, from its expiry', async () => {
+    const exp = new Date(Date.now() + 5 * 60_000)
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', loginTokenExp: exp })
+    mockPrisma.user.update.mockResolvedValue({ id: 'u1' })
+    const res = await service.validateLoginToken('abc123')
+    expect(res.success && res.tokenIssuedAt).toEqual(new Date(exp.getTime() - 15 * 60_000))
+  })
 })
 
 describe('UserService.findByAuthId', () => {

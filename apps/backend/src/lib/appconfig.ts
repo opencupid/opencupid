@@ -22,6 +22,8 @@ export type Brand = {
   emailReplyTo?: string
   /** Locale for strings missing in a recipient's language. */
   fallbackLocale: string
+  /** This brand's Umami site, when analytics is on (the frontend reads the same keys). */
+  umami?: { url: string; websiteId: string }
 }
 
 /**
@@ -47,6 +49,9 @@ export const BrandEnvSchema = z
       .refine(isSupportedLocale, {
         message: `must be one of ${Object.keys(appLocales).join(', ')}`,
       }),
+    // Analytics is on when both are set, as in the frontend.
+    UMAMI_URL: z.union([z.literal(''), z.string().url()]).default(''),
+    UMAMI_WEBSITE_ID: z.string().default(''),
   })
   .transform(
     (env): Brand => ({
@@ -56,6 +61,10 @@ export const BrandEnvSchema = z
       emailFrom: env.EMAIL_FROM,
       ...(env.EMAIL_REPLY_TO && { emailReplyTo: env.EMAIL_REPLY_TO }),
       fallbackLocale: env.FALLBACK_LOCALE,
+      ...(env.UMAMI_URL &&
+        env.UMAMI_WEBSITE_ID && {
+          umami: { url: env.UMAMI_URL.replace(/\/+$/, ''), websiteId: env.UMAMI_WEBSITE_ID },
+        }),
     })
   )
 

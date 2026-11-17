@@ -101,6 +101,7 @@
     "concurrently": "9.2.1",
     "eslint": "10.3.0",
     "globals": "17.6.0",
+    "isbot": "5.1.32",
     "mime-types": "3.0.2",
     "nyc": "18.0.0",
     "pino-pretty": "13.1.3",

@@ -12,8 +12,10 @@ import type { UserIdentifier } from '@zod/user/user.dto'
 import { customAlphabet } from 'nanoid'
 import { nolookalikesSafe } from 'nanoid-dictionary'
 
+const LOGIN_TOKEN_TTL_MS = 1000 * 60 * 15 // 15 minutes
+
 function getTokenExpiration() {
-  return new Date(Date.now() + 1000 * 60 * 15) // 15 minutes
+  return new Date(Date.now() + LOGIN_TOKEN_TTL_MS)
 }
 
 export class UserService {
@@ -57,7 +59,14 @@ export class UserService {
       },
     })
 
-    return { user: userUpdated, isNewUser, success: true }
+    return {
+      user: userUpdated,
+      isNewUser,
+      success: true,
+      ...(user.loginTokenExp && {
+        tokenIssuedAt: new Date(user.loginTokenExp.getTime() - LOGIN_TOKEN_TTL_MS),
+      }),
+    }
   }
 
   async setLoginToken(

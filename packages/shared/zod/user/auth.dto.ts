@@ -17,6 +17,8 @@ export type ValidateLoginTokenSuccess = {
   success: true
   user: User
   isNewUser: boolean
+  /** When the token was emailed; absent for tokens without an expiry. */
+  tokenIssuedAt?: Date
 }
 
 export type ValidateLoginTokenError = ApiError & { code: AuthErrorCodes }
