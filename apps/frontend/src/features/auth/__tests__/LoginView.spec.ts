@@ -75,7 +75,7 @@ describe('LoginView', () => {
       },
     })
 
-  it('tracks auth-magic-link-failed when sending the magic link fails', async () => {
+  it('tracks auth-magic-link-failed:<code> when sending the magic link fails', async () => {
     sendMagicLink.mockResolvedValue({
       success: false,
       code: 'AUTH_RATE_LIMITED',
@@ -87,7 +87,7 @@ describe('LoginView', () => {
     await wrapper.get('[data-test="submit"]').trigger('click')
     await flushPromises()
 
-    expect(track).toHaveBeenCalledWith('auth-magic-link-failed', { code: 'AUTH_RATE_LIMITED' })
+    expect(track).toHaveBeenCalledWith('auth-magic-link-failed:AUTH_RATE_LIMITED')
     expect(push).not.toHaveBeenCalled()
   })
 

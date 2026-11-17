@@ -1,5 +1,6 @@
 import { UserRole } from '@prisma/client'
 import type { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
+import { RateLimitError } from '../plugins/rate-limiter'
 // --- Helper to send uniform error responses ---
 export function sendError(
   reply: FastifyPluginAsync['prototype']['reply'],
@@ -45,7 +46,15 @@ export function addDebounceHeaders(reply: FastifyPluginAsync['prototype']['reply
   reply.header('X-Debounce', TYPEAHEAD_DEBOUNCE_MS.toString())
 }
 
-export function rateLimitConfig(fastify: FastifyInstance, timeWindow: string, max: number) {
+/**
+ * @param code - Error code sent in the 429 body, for clients that branch on it
+ */
+export function rateLimitConfig(
+  fastify: FastifyInstance,
+  timeWindow: string,
+  max: number,
+  code?: string
+) {
   return {
     rateLimit: {
       max,
@@ -57,6 +66,10 @@ export function rateLimitConfig(fastify: FastifyInstance, timeWindow: string, ma
       onExceeded: (req: FastifyRequest, key: string) => {
         fastify.log.warn(`Rate limit exceeded for user: ${key}`)
       },
+      ...(code && {
+        errorResponseBuilder: (_req: FastifyRequest, context: { statusCode: number }) =>
+          new RateLimitError(context.statusCode, code),
+      }),
     },
   }
 }

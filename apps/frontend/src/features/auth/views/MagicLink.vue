@@ -42,7 +42,7 @@ onMounted(async () => {
   }
   const params = TokenParamSchema.safeParse(route.query)
   if (!params.success) {
-    tracker.track('auth-token-failed', { code: 'AUTH_MALFORMED_LINK' })
+    tracker.track('auth-token-failed:AUTH_MALFORMED_LINK')
     error.value = t('auth.token_invalid_link')
     isCheckingMagicLinkToken.value = false
     return
@@ -71,7 +71,7 @@ onMounted(async () => {
       await router.push(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
       return
     }
-    tracker.track('auth-token-failed', { code: res.code })
+    tracker.track(`auth-token-failed:${res.code}`)
     switch (res.code) {
       case 'AUTH_EXPIRED_TOKEN':
         error.value = t('auth.token_expired')

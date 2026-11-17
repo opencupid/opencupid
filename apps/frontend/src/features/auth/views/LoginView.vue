@@ -42,7 +42,7 @@ async function handleSendOtp(authIdCaptcha: UserIdentifyPayload) {
     if (res.success) {
       router.push({ name: 'MagicLink', query: { redirect } })
     } else {
-      tracker.track('auth-magic-link-failed', { code: res.code })
+      tracker.track(`auth-magic-link-failed:${res.code}`)
       error.value = res.message || t('auth.unknown_error')
     }
   } finally {
