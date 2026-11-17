@@ -66,7 +66,8 @@ export function applyHysteresis(
 
 /**
  * Process a single profile's session stats: look up existing summary,
- * compute segment with hysteresis, and upsert the result.
+ * compute segment with hysteresis, and upsert the result. lastSeenAt is kept
+ * current by recordActivity and only read here.
  */
 async function processProfileStats(
   tx: Prisma.TransactionClient,
@@ -78,10 +79,7 @@ async function processProfileStats(
   })
 
   const firstSeenAt = existing?.firstSeenAt ?? row.lastSessionAt
-  const lastSeenAt =
-    row.lastSessionAt > (existing?.lastSeenAt ?? new Date(0))
-      ? row.lastSessionAt
-      : existing!.lastSeenAt
+  const lastSeenAt = existing?.lastSeenAt ?? row.lastSessionAt
 
   const rawSegment = computeRawSegment(lastSeenAt, row.activeDays28, now)
   const currentSegment = existing?.segment ?? 'dormant'
@@ -103,7 +101,6 @@ async function processProfileStats(
       segmentUpdatedAt: now,
     },
     update: {
-      lastSeenAt,
       activeDays28: row.activeDays28,
       sessions28: row.sessions28,
       segment,

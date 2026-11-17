@@ -2,8 +2,12 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('../../lib/prisma', () => ({
   prisma: {
+    $transaction: vi.fn(),
     profileSessionLog: {
       create: vi.fn(),
+    },
+    profileActivitySummary: {
+      upsert: vi.fn(),
     },
   },
 }))
@@ -20,6 +24,10 @@ function makeRedis(setReturn: '1' | null) {
 beforeEach(() => {
   vi.clearAllMocks()
   mockedPrisma.profileSessionLog.create.mockResolvedValue({} as any)
+  mockedPrisma.profileActivitySummary.upsert.mockResolvedValue({} as any)
+  // Batch form: resolve the queued operations like Prisma does.
+  mockedPrisma.$transaction.mockImplementation(((ops: Promise<unknown>[]) =>
+    Promise.all(ops)) as any)
 })
 
 describe('recordActivity', () => {
@@ -34,12 +42,33 @@ describe('recordActivity', () => {
     )
   })
 
+  it('moves lastSeenAt to the session start in the same transaction', async () => {
+    const redis = makeRedis('1')
+
+    await recordActivity(redis, 'profile-1')
+
+    expect(mockedPrisma.$transaction).toHaveBeenCalledTimes(1)
+    const startedAt = mockedPrisma.profileSessionLog.create.mock.calls[0][0].data.startedAt
+    expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith({
+      where: { profileId: 'profile-1' },
+      create: {
+        profileId: 'profile-1',
+        firstSeenAt: startedAt,
+        lastSeenAt: startedAt,
+        segment: 'new',
+      },
+      update: { lastSeenAt: startedAt },
+    })
+  })
+
   it('skips the DB write when the NX claim is held by a prior request', async () => {
     const redis = makeRedis(null)
 
     await recordActivity(redis, 'profile-1')
 
+    expect(mockedPrisma.$transaction).not.toHaveBeenCalled()
     expect(mockedPrisma.profileSessionLog.create).not.toHaveBeenCalled()
+    expect(mockedPrisma.profileActivitySummary.upsert).not.toHaveBeenCalled()
   })
 
   it('swallows P2003 (deleted profile)', async () => {
@@ -49,14 +78,14 @@ describe('recordActivity', () => {
       code: 'P2003',
       clientVersion: '5.0.0',
     })
-    mockedPrisma.profileSessionLog.create.mockRejectedValueOnce(fkErr)
+    mockedPrisma.$transaction.mockRejectedValueOnce(fkErr)
 
     await expect(recordActivity(redis, 'profile-1')).resolves.not.toThrow()
   })
 
   it('rethrows non-P2003 Prisma errors', async () => {
     const redis = makeRedis('1')
-    mockedPrisma.profileSessionLog.create.mockRejectedValueOnce(new Error('boom'))
+    mockedPrisma.$transaction.mockRejectedValueOnce(new Error('boom'))
 
     await expect(recordActivity(redis, 'profile-1')).rejects.toThrow('boom')
   })
@@ -75,6 +104,7 @@ describe('recordActivity', () => {
 
     await Promise.all(Array.from({ length: 20 }, () => recordActivity(redis, 'profile-1')))
 
-    expect(mockedPrisma.profileSessionLog.create).toHaveBeenCalledTimes(1)
+    expect(mockedPrisma.$transaction).toHaveBeenCalledTimes(1)
+    expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledTimes(1)
   })
 })
