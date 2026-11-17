@@ -332,6 +332,20 @@ describe('GET /stats/daily', () => {
     expect(reply.payload.dailyMessages.every((d: any) => d.count === 0)).toBe(true)
   })
 
+  it('counts daily active as distinct profiles with a session that day', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([])
+
+    const handler = fastify.routes['GET /stats/daily']
+    await handler({}, reply)
+
+    // Second query = dailyLastSeen. Counting rows by ProfileActivitySummary.lastSeenAt
+    // would put each profile only on its most recent day.
+    const sql = mockPrisma.$queryRaw.mock.calls[1][0].join('')
+    expect(sql).toContain('COUNT(DISTINCT "profileId")')
+    expect(sql).toContain('FROM "ProfileSessionLog"')
+    expect(sql).not.toContain('ProfileActivitySummary')
+  })
+
   it('excludes ADMIN_PROFILE_ID messages when a system sender is configured', async () => {
     mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
     mockPrisma.$queryRaw.mockResolvedValue([])
