@@ -1,5 +1,16 @@
 # frontend
 
+## 0.90.0
+
+### Minor Changes
+
+- 9414d76: Dark colour mode: follows the browser's preference, with a light/dark toggle in the profile drawer header. Map tiles follow the mode when `MAP_TILE_URL_DARK` is set.
+
+### Patch Changes
+
+- c7242c0: Give the API outage overlay the same light backdrop as the network offline overlay
+- cbce5da: Remove the expired host-only session cookie migration (#1557)
+
 ## 0.89.0
 
 ### Minor Changes

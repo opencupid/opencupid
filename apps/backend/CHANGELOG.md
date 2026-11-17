@@ -1,5 +1,21 @@
 # backend
 
+## 0.90.0
+
+### Minor Changes
+
+- 9ecd0eb: Scope session cookies to the brand of the request host and reject requests on hosts no brand serves (#1557)
+- e504040: `FALLBACK_LOCALE` is set per brand: each brand's emails fall back to its own locale, and a new user who signs up with an unsupported language gets the brand's fallback instead of `en`. An unsupported `FALLBACK_LOCALE` now stops the backend at startup.
+- 4a2f92d: Read brands from one `<name>.env` file per brand in `BRANDS_DIR`, the same files the brand frontends use, instead of the `BRANDS` JSON. Breaking for multi-brand deployments: replace `BRANDS` with a mounted `brands/` directory.
+- 8b2a117: Admin profiles table: drop Social/Active columns, show segment badge and face icon next to name, add relative Last active column, Profile link button, and a sort dropdown (date created / last active). Profile detail modal gains an Activity tab with conversation, message, like and match counts. The standalone Activity page and its `GET /admin/activity` endpoint are removed; the Signups and Daily Active KPIs now open hourly/daily drill-down charts like Interactions and Messages.
+
+### Patch Changes
+
+- c2e33a7: Remove the per-process brand: unknown brand domains are an error instead of falling back to DOMAIN (#1557)
+- cbce5da: Remove the expired host-only session cookie migration (#1557)
+- 8cf4425: Record a new user's originDomain from the brand of the host they signed up on (#1557)
+- 83b5dc8: Allow CORS from every brand's frontend instead of only FRONTEND_URL (#1557)
+
 ## 0.89.0
 
 ### Minor Changes
