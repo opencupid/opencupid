@@ -1,5 +1,11 @@
 # frontend
 
+## 0.90.2
+
+### Patch Changes
+
+- 35c531e: Send auth failure codes in the Umami event name (`auth-token-failed:<code>`, `auth-magic-link-failed:<code>`) so each failure shows up as its own event
+
 ## 0.90.1
 
 ### Patch Changes

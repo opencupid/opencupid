@@ -1,5 +1,14 @@
 # backend
 
+## 0.90.2
+
+### Patch Changes
+
+- cb26efd: Profile "last seen" now updates as activity happens instead of once a night.
+- 35c531e: Relax the rate limit on `/auth/send-magic-link` and `/auth/verify-token` from 5 requests per 15 minutes to 5 per 3 minutes, and return `code: AUTH_RATE_LIMITED` in their 429 responses
+- 99fe06e: Admin dashboard "Daily Active" now counts every profile active on each day, instead of only putting each profile on its most recent day.
+- 1f47a83: Activity segments: an account older than 28 days that becomes active again is now `returning` instead of `new`, and returning users are no longer demoted into `new`. Account age comes from the profile's creation date; the unused `firstSeenAt` column is dropped.
+
 ## 0.90.1
 
 ## 0.90.0
