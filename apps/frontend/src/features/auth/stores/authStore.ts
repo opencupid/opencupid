@@ -127,9 +127,7 @@ export const useAuthStore = defineStore('auth', {
       }
       try {
         const res = await safeApiCall(() =>
-          api.get<VerifyTokenResponse>('/auth/verify-token', {
-            params: { token },
-          })
+          api.post<VerifyTokenResponse>('/auth/verify-token', { token })
         )
 
         if (res.data.success === true) {

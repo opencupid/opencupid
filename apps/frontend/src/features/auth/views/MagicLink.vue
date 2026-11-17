@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import z from 'zod'
-import { ref, onMounted, defineAsyncComponent } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useI18n } from 'vue-i18n'
@@ -28,7 +28,6 @@ const isLoading = ref(false)
 
 const router = useRouter()
 const route = useRoute()
-const isCheckingMagicLinkToken = ref(Boolean(route.query.token))
 const authStore = useAuthStore()
 const { t } = useI18n()
 
@@ -36,17 +35,18 @@ const TokenParamSchema = z.object({
   token: z.string().min(6).max(6),
 })
 
-onMounted(async () => {
-  if (!route.query.token) {
-    return
-  }
-  const params = TokenParamSchema.safeParse(route.query)
-  if (!params.success) {
-    tracker.track('auth-token-failed:AUTH_MALFORMED_LINK')
-    error.value = t('auth.token_invalid_link')
-    isCheckingMagicLinkToken.value = false
-    return
-  }
+// The emailed link only lands here; nothing is spent until the user clicks
+// Continue. Mail gateways and link scanners prefetch (and often render) links
+// in emails, and verifying on load would let them burn the single-use token.
+const hasToken = Boolean(route.query.token)
+const params = TokenParamSchema.safeParse(route.query)
+if (hasToken && !params.success) {
+  tracker.track('auth-token-failed:AUTH_MALFORMED_LINK')
+  error.value = t('auth.token_invalid_link')
+}
+
+async function handleContinue() {
+  if (!params.success) return
   isLoading.value = true
   try {
     const res = await authStore.verifyToken(params.data.token)
@@ -65,7 +65,6 @@ onMounted(async () => {
         console.error('Bootstrap failed after login:', err)
         tracker.track('auth-bootstrap-failed')
         error.value = t('auth.token_unknown_error')
-        isCheckingMagicLinkToken.value = false
         return
       }
       await router.push(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
@@ -85,11 +84,10 @@ onMounted(async () => {
       default:
         error.value = t('auth.token_unknown_error')
     }
-    isCheckingMagicLinkToken.value = false
   } finally {
     isLoading.value = false
   }
-})
+}
 
 function handleBackButton() {
   error.value = ''
@@ -112,46 +110,58 @@ function handleBackButton() {
           <ChevronLeftIcon class="svg-icon" />
         </a>
       </div>
-      <BSpinner
-        v-if="isCheckingMagicLinkToken"
-        type="grow"
-        variant="primary"
-      />
+      <div
+        v-if="error"
+        class="mt-2 text-center"
+      >
+        <div class="text-danger mb-2">{{ error }}</div>
+
+        <BButton
+          variant="secondary"
+          :title="$t('uicomponents.back_button_title')"
+          @click="handleBackButton"
+        >
+          {{ $t('uicomponents.back_button_title') }}
+        </BButton>
+      </div>
+      <div
+        v-else-if="hasToken"
+        class="text-center"
+      >
+        <p class="fs-5 mb-4">{{ $t('auth.magic_link_prompt') }}</p>
+        <BButton
+          class="continue-button"
+          variant="primary"
+          size="lg"
+          :disabled="isLoading"
+          @click="handleContinue"
+        >
+          <BSpinner
+            v-if="isLoading"
+            small
+          />
+          {{ $t('auth.login') }}
+        </BButton>
+      </div>
       <DevAutoLogin v-else-if="DevAutoLogin" />
       <div
         v-else
         class="text-center"
       >
-        <template v-if="!error">
-          <div class="fs-4 mb-3 w-100">
-            <ViewTitle
-              :icon="IconMail"
-              title=""
-              class="text-primary"
-            />
-            <div class="text-center">
-              {{ $t('auth.token_check_messages') }}
-            </div>
+        <div class="fs-4 mb-3 w-100">
+          <ViewTitle
+            :icon="IconMail"
+            title=""
+            class="text-primary"
+          />
+          <div class="text-center">
+            {{ $t('auth.token_check_messages') }}
           </div>
-          <p class="text-muted fs-6">
-            {{ $t('auth.token_check_email') }}<br />
-            {{ $t('auth.token_check_junk') }}
-          </p>
-        </template>
-        <div
-          v-if="error"
-          class="mt-2"
-        >
-          <div class="text-danger mb-2">{{ error }}</div>
-
-          <BButton
-            variant="secondary"
-            :title="$t('uicomponents.back_button_title')"
-            @click="handleBackButton"
-          >
-            {{ $t('uicomponents.back_button_title') }}
-          </BButton>
         </div>
+        <p class="text-muted fs-6">
+          {{ $t('auth.token_check_email') }}<br />
+          {{ $t('auth.token_check_junk') }}
+        </p>
       </div>
     </div>
   </AuthLayout>

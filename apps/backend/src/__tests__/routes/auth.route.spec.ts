@@ -86,20 +86,31 @@ beforeEach(async () => {
 })
 
 describe('GET /verify-token', () => {
-  it('AUTH_INVALID_INPUT on bad zod parse', async () => {
+  it('returns an empty 200 without spending the token', async () => {
     const handler = fastify.routes['GET /verify-token']
-    await handler({ query: { token: 'ab' } } as any, reply as any)
+    await handler({ query: { token: 'abc123' } } as any, reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toBeUndefined()
+    expect(mockUserService.validateLoginToken).not.toHaveBeenCalled()
+    expect(reply.cookies).toEqual([])
+  })
+})
+
+describe('POST /verify-token', () => {
+  it('AUTH_INVALID_INPUT on bad zod parse', async () => {
+    const handler = fastify.routes['POST /verify-token']
+    await handler({ body: { token: 'ab' } } as any, reply as any)
     expect(reply.payload.code).toBe('AUTH_INVALID_INPUT')
   })
 
   it('returns 422 if token is invalid', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     mockUserService.validateLoginToken.mockResolvedValue({
       code: 'AUTH_INVALID_TOKEN',
       message: 'Invalid token',
       success: false,
     })
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(422)
     expect(reply.payload.code).toBe('AUTH_INVALID_TOKEN')
@@ -107,7 +118,7 @@ describe('GET /verify-token', () => {
   })
 
   it('returns 200 and token + refreshToken for existing user', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     const user = {
       id: 'user1',
       email: 'test@example.com',
@@ -133,7 +144,7 @@ describe('GET /verify-token', () => {
       },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -163,7 +174,7 @@ describe('GET /verify-token', () => {
     const origNodeEnv = appConfig.NODE_ENV
     appConfig.NODE_ENV = 'production'
     try {
-      const handler = fastify.routes['GET /verify-token']
+      const handler = fastify.routes['POST /verify-token']
       const user = { id: 'u1', email: 't@e.com', tokenVersion: 0, roles: [], language: 'en' }
       mockUserService.validateLoginToken.mockResolvedValue({
         success: true,
@@ -183,7 +194,7 @@ describe('GET /verify-token', () => {
         },
       })
       fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
-      await handler({ query: { token: 'abc123' } } as any, reply as any)
+      await handler({ body: { token: 'abc123' } } as any, reply as any)
 
       const session = reply.cookies.find((c: any) => c.name === '__session')!
       const refresh = reply.cookies.find((c: any) => c.name === '__refresh')!
@@ -198,7 +209,7 @@ describe('GET /verify-token', () => {
   })
 
   it('returns 200 and token for new user and initializes profile', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     const user = {
       id: 'user2',
       email: 'new@example.com',
@@ -225,7 +236,7 @@ describe('GET /verify-token', () => {
       },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(mockCreateNewUserSession).toHaveBeenCalledWith(user)
     expect(reply.statusCode).toBe(200)
@@ -235,11 +246,11 @@ describe('GET /verify-token', () => {
   })
 
   it('returns 500 on unexpected error', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     mockUserService.validateLoginToken.mockImplementation(() => {
       throw new Error('fail')
     })
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(500)
     expect(reply.payload.code).toBe('AUTH_INTERNAL_ERROR')
