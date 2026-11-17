@@ -225,6 +225,19 @@ describe('ProfilesPage', () => {
     expect(wrapper.find('tbody [data-testid="has-face-icon"]').exists()).toBe(true)
   })
 
+  it('starts sorted by last active when the route asks for it', async () => {
+    mockRoute.query = { sort: 'lastActive' }
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+
+    expect(useApiCall).toHaveBeenCalledWith('/admin/profiles', {
+      params: expect.objectContaining({ sort: 'lastActive' }),
+    })
+    expect((wrapper.find('[data-testid="profile-sort"]').element as HTMLSelectElement).value).toBe(
+      'lastActive'
+    )
+  })
+
   it('requests profiles sorted by date created, then by last active when chosen', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()

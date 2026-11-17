@@ -115,7 +115,8 @@ const sortOptions: { value: ProfileSort; label: string }[] = [
   { value: 'created', label: 'Date created' },
   { value: 'lastActive', label: 'Last active' },
 ]
-const selectedSort = ref<ProfileSort>('created')
+const route = useRoute()
+const selectedSort = ref<ProfileSort>(route.query.sort === 'lastActive' ? 'lastActive' : 'created')
 
 function formatLastActive(lastSeenAt: string) {
   return formatTimeAgoIntl(new Date(lastSeenAt), { locale: 'en' })
@@ -703,8 +704,6 @@ async function sendBulkMessage() {
 
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
-
-const route = useRoute()
 
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
