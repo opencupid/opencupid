@@ -212,7 +212,7 @@ const handleMessageClick = () => {
       </template>
       <template #target>
         <BButton
-          class="btn-icon-lg btn-shadow bg-dating-light"
+          class="btn-icon-lg btn-shadow dating"
           variant="dating"
         >
           <IconLike class="svg-icon-lg text-dating" />

@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterAll } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 
 // jsdom does not provide ResizeObserver — stub it so createLeafletMap() can
 // call `new ResizeObserver(cb)` / `.observe()` / `.disconnect()` without error.
@@ -126,6 +126,7 @@ vi.mock('leaflet', () => {
       cb()
       return this
     }),
+    setUrl: vi.fn(),
   }
   const tileLayer = vi.fn(() => ({ ...tileLayerProto }))
 
@@ -170,6 +171,11 @@ vi.mock('leaflet', () => {
 })
 
 // Mock blurhash (canvas unavailable in jsdom)
+const colorMode = ref<'light' | 'dark'>('light')
+vi.mock('@/features/app/composables/useAppColorMode', () => ({
+  useAppColorMode: () => colorMode,
+}))
+
 vi.mock('@/features/images/composables/useBlurhashDataUrl', () => ({
   blurhashToDataUrl: (hash: string) => `data:image/png;blurhash=${hash}`,
 }))
@@ -299,6 +305,44 @@ describe('OsmPoiMap', () => {
     expect(L.tileLayer).toHaveBeenCalledOnce()
     const [url] = (L.tileLayer as any).mock.calls[0]
     expect(url).toBe(tileUrl)
+    ;(globalThis as any).__APP_CONFIG__ = { ...__APP_CONFIG__, MAP_TILE_URL: '' }
+  })
+
+  it('switches to MAP_TILE_URL_DARK tiles with the colour mode', async () => {
+    const tileUrl = 'https://tiles.example.com/day/{z}/{x}/{y}.png'
+    const darkTileUrl = 'https://tiles.example.com/night/{z}/{x}/{y}.png'
+    ;(globalThis as any).__APP_CONFIG__ = {
+      ...__APP_CONFIG__,
+      MAP_TILE_URL: tileUrl,
+      MAP_TILE_URL_DARK: darkTileUrl,
+    }
+    colorMode.value = 'dark'
+    await mountMap()
+    await flushPromises()
+
+    expect((L.tileLayer as any).mock.calls[0][0]).toBe(darkTileUrl)
+    const layer = (L.tileLayer as any).mock.results[0].value
+
+    colorMode.value = 'light'
+    await nextTick()
+
+    expect(layer.setUrl).toHaveBeenLastCalledWith(tileUrl)
+    ;(globalThis as any).__APP_CONFIG__ = {
+      ...__APP_CONFIG__,
+      MAP_TILE_URL: '',
+      MAP_TILE_URL_DARK: '',
+    }
+  })
+
+  it('keeps MAP_TILE_URL in dark mode when no dark tiles are configured', async () => {
+    const tileUrl = 'https://tiles.example.com/{z}/{x}/{y}.png'
+    ;(globalThis as any).__APP_CONFIG__ = { ...__APP_CONFIG__, MAP_TILE_URL: tileUrl }
+    colorMode.value = 'dark'
+    await mountMap()
+    await flushPromises()
+
+    expect((L.tileLayer as any).mock.calls[0][0]).toBe(tileUrl)
+    colorMode.value = 'light'
     ;(globalThis as any).__APP_CONFIG__ = { ...__APP_CONFIG__, MAP_TILE_URL: '' }
   })
 

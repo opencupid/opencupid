@@ -32,9 +32,9 @@ const handleRevealedClick = () => {
     <div class="d-flex justify-content-center gap-2">
       <div class="anon-choice">
         <BButton
-          variant="outline-dating-light"
+          variant="outline-dating"
           size="lg"
-          class="d-flex align-items-center justify-content-center mb-1 p-2 "
+          class="d-flex align-items-center justify-content-center mb-1 p-2"
           @click="handleAnonymousClick"
           @mouseover="hintAnonymous = true"
           @mouseout="hintAnonymous = null"
@@ -47,9 +47,9 @@ const handleRevealedClick = () => {
 
       <div class="anon-choice">
         <BButton
-          variant="outline-dating-light"
+          variant="outline-dating"
           size="lg"
-          class="d-flex align-items-center justify-content-center mb-1 p-2 "
+          class="d-flex align-items-center justify-content-center mb-1 p-2"
           @click="handleRevealedClick"
           @mouseover="hintAnonymous = false"
           @mouseout="hintAnonymous = null"
@@ -92,12 +92,21 @@ const handleRevealedClick = () => {
   flex-direction: column;
 }
 
+/* Outline and fill in the match wash rather than the full dating red. */
+.anon-choice :deep(.btn) {
+  --bs-btn-border-color: var(--dating-tint);
+  --bs-btn-hover-bg: var(--dating-tint);
+  --bs-btn-hover-border-color: var(--dating-tint);
+  --bs-btn-active-bg: var(--dating-tint);
+  --bs-btn-active-border-color: var(--dating-tint);
+}
+
 .hint {
   display: none;
 }
 .placeholder-chip {
   width: 2.5rem;
-  background-color: var(--bs-dating-light);
+  background-color: var(--dating-tint);
   opacity: 0.4;
 }
 .profile-thumbnail {

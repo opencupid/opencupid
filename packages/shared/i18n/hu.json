@@ -489,6 +489,8 @@
     "close_account_dialog_message": "Ez véglegesen törli a fiókodat és az összes kapcsolódó adatot. Ez a művelet nem visszavonható.",
     "close_account_dialog_title": "Fiók törlése",
     "close_account_ok_button": "Fiók végleges törlése",
+    "color_mode_dark": "Váltás sötét módra",
+    "color_mode_light": "Váltás világos módra",
     "email_notifications_opt_in": "e-mail",
     "newsletter_opt_in": "Kérek alkalmi hírlevelet",
     "newsletter_opt_in_hint": "Közösségi hírek, új funkciók, ilyesmi. Bármikor leiratkozhatsz.",

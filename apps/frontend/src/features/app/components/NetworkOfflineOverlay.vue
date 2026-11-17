@@ -20,7 +20,7 @@ const { t } = useI18n()
   >
     <template #overlay>
       <div
-        class="network-offline-overlay-content text-center text-dark d-flex flex-column align-items-center justify-content-center"
+        class="network-offline-overlay-content text-center text-body d-flex flex-column align-items-center justify-content-center"
       >
         <IconSignal class="signal-icon text-secondary mb-3" />
         <h3>{{ t('uicomponents.network_offline.title') }}</h3>

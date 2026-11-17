@@ -258,4 +258,9 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
     display: none;
   }
 }
+
+/* Shown behind tiles while they load; Leaflet's default is a light grey. */
+[data-bs-theme='dark'] .leaflet-container {
+  background: var(--bs-secondary-bg);
+}
 </style>

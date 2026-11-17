@@ -22,7 +22,7 @@ const { t } = useI18n()
   >
     <template #overlay>
       <div
-        class="api-error-overlay-content text-center text-dark d-flex flex-column align-items-center justify-content-center"
+        class="api-error-overlay-content text-center text-body d-flex flex-column align-items-center justify-content-center"
       >
         <div>
           <BSpinner

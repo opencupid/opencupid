@@ -186,8 +186,13 @@ main {
   @include btn-colored-push($dating);
 }
 
+// Potential-match surfaces: the dating red at low opacity (--dating-tint),
+// layered over the mode's own background so the result is opaque in light
+// and dark alike without a hand-picked colour per mode. !important as on
+// Bootstrap's own bg-* utilities, so it also holds on buttons.
 .dating {
-  background-color: $dating-light;
+  background-color: var(--bs-body-bg) !important;
+  background-image: linear-gradient(var(--dating-tint), var(--dating-tint)) !important;
 }
 
 // List group checkbox/radio lists
@@ -372,4 +377,25 @@ main {
 // base rule so v-show (display:none) handles hiding instead.
 .offcanvas {
   visibility: visible;
+}
+
+// ─── Dark mode ───────────────────────────────────────────────────────
+[data-bs-theme='dark'] {
+  // Follows --bs-light, which becomes a dark paper tone (see main.scss).
+  .btn-light {
+    @include button-variant($night-600, $night-600);
+  }
+
+  // Accents as foreground colours — see $theme-colors-on-dark.
+  @each $name, $color in $theme-colors-on-dark {
+    .text-#{$name},
+    .link-#{$name} {
+      --bs-#{$name}-rgb: #{to-rgb($color)};
+    }
+
+    .btn-outline-#{$name} {
+      --bs-btn-color: #{$color};
+      --bs-btn-border-color: #{$color};
+    }
+  }
 }

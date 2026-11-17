@@ -19,6 +19,7 @@ import {
   MAP_MAX_ZOOM,
 } from '../utils/mapUtils'
 import { MAP_CLUSTER_RADIUS, MAP_DEFAULT_ZOOM } from '@shared/maps'
+import { useAppColorMode } from '@/features/app/composables/useAppColorMode'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -99,6 +100,8 @@ export function useMapController(
   const popupItem = ref<MapPoi | null>(null)
   const popupFullData = ref<unknown>(null)
   const popupTarget = ref<HTMLElement | null>(null)
+
+  const colorMode = useAppColorMode()
 
   // Internal mutable state
   let phase: MapPhase = 'uninitialized'
@@ -182,8 +185,13 @@ export function useMapController(
       onReady()
       return
     }
-    const tile = L.tileLayer(tileUrl, { maxZoom: MAP_MAX_ZOOM, attribution }).addTo(map)
+    // MAP_TILE_URL_DARK is optional: a deployment without dark tiles keeps
+    // the regular ones in both colour modes.
+    const darkTileUrl = __APP_CONFIG__.MAP_TILE_URL_DARK
+    const urlForMode = () => (colorMode.value === 'dark' && darkTileUrl ? darkTileUrl : tileUrl)
+    const tile = L.tileLayer(urlForMode(), { maxZoom: MAP_MAX_ZOOM, attribution }).addTo(map)
     tile.once('load', () => onReady())
+    if (darkTileUrl) watch(colorMode, () => tile.setUrl(urlForMode()))
   }
 
   function initLayers(): void {

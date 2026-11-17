@@ -83,6 +83,7 @@ const globalConfig = {
     DatingPrefs: { name: 'DatingPrefs', template: '<div />', emits: ['close'] },
     DatingWizard: { name: 'DatingWizard', template: '<div />', emits: ['close'] },
     ProfileImage: { template: '<span />' },
+    ColorModeToggle: { name: 'ColorModeToggle', template: '<span />' },
     IconSetting2: { template: '<span />' },
     IconBackward: { template: '<span />' },
     PanelHeader: {
@@ -122,6 +123,15 @@ describe('ProfilePanel', () => {
     expect(wrapper.find('[data-testid="post-list"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="my-profile-view"]').exists()).toBe(false)
     expect(wrapper.find('ul.nav-tabs').exists()).toBe(true)
+  })
+
+  it('offers the colour mode toggle in the main header only', () => {
+    const wrapper = mount(ProfilePanel, { global: globalConfig })
+    expect(wrapper.findComponent({ name: 'ColorModeToggle' }).exists()).toBe(true)
+
+    mockSubView.value = 'settings'
+    const settings = mount(ProfilePanel, { global: globalConfig })
+    expect(settings.findComponent({ name: 'ColorModeToggle' }).exists()).toBe(false)
   })
 
   it('settings button calls router.push({ name: MeSettings })', async () => {

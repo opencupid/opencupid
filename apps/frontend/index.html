@@ -47,16 +47,29 @@
       name="theme-color"
       content="#325d88"
     />
+    <!--
+      Page backdrop, inlined so the splash is painted in the right colour mode
+      before the app stylesheet arrives. color-mode.js sets data-bs-theme
+      ahead of first paint; it is an external file because script-src only
+      admits one hashed inline script (the bouncer below).
+    -->
+    <style>
+      html {
+        --page-gradient: linear-gradient(170deg, #dbc49c 0%, #e8d5b5 40%, #faf4ea 100%);
+      }
+      html[data-bs-theme='dark'] {
+        --page-gradient: linear-gradient(170deg, #12100e 0%, #1a1815 40%, #26231f 100%);
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--page-gradient) fixed;
+      }
+    </style>
+    <script src="/color-mode.js"></script>
   </head>
 
-  <body
-    style="
-      margin: 0;
-      min-height: 100dvh;
-      background: linear-gradient(170deg, #dbc49c 0%, #e8d5b5 40%, #faf4ea 100%);
-      background-attachment: fixed;
-    "
-  >
+  <body>
     <div
       id="splash"
       style="

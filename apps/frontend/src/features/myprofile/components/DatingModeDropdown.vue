@@ -42,9 +42,7 @@ function toggleExpand() {
       class="d-flex"
       ref="pillRef"
     >
-      <div
-        class="expand-pill d-flex align-items-center"
-      >
+      <div class="expand-pill d-flex align-items-center">
         <BButton variant="link">
           <span :class="{ 'text-dating': isDatingActive, 'text-secondary': !isDatingActive }">
             <IconHeart class="svg-icon-lg" />
@@ -83,7 +81,7 @@ function toggleExpand() {
 <style scoped>
 .expand-pill {
   border-radius: 9999px;
-  background-color: white;
+  background-color: var(--surface-inset-bg);
   overflow: hidden;
   white-space: nowrap;
 }
