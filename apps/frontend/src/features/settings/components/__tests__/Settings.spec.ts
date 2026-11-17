@@ -36,6 +36,25 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
+describe('Settings logout', () => {
+  it('logs out and goes to Login', async () => {
+    const wrapper = shallowMount(Settings, {
+      global: {
+        mocks: { $t: (k: string) => k },
+        stubs: { BButton: { template: '<button><slot /></button>' } },
+      },
+    })
+
+    const button = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('authentication.logout'))!
+    await button.trigger('click')
+
+    expect(mockLogout).toHaveBeenCalled()
+    expect(mockPush).toHaveBeenCalledWith({ name: 'Login' })
+  })
+})
+
 describe('Settings close account', () => {
   it('tracks opening the dialog, without counting it as a confirmation', async () => {
     const wrapper = shallowMount(Settings, {
