@@ -24,6 +24,7 @@ import type {
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
 import { JwtPayload } from '@zod/user/user.dto'
+import { AuthErrorCodes } from '@zod/user/auth.dto'
 import {
   setSessionCookie,
   setRefreshCookie,
@@ -58,7 +59,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     '/verify-token',
     {
       config: {
-        ...rateLimitConfig(fastify, '3 minute', 5),
+        ...rateLimitConfig(fastify, '3 minute', 5, AuthErrorCodes.RATE_LIMITED),
       },
     },
     async (req, reply) => {
@@ -231,7 +232,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     '/send-magic-link',
     {
       config: {
-        ...rateLimitConfig(fastify, '3 minute', 5),
+        ...rateLimitConfig(fastify, '3 minute', 5, AuthErrorCodes.RATE_LIMITED),
       },
     },
     async (req, reply) => {
