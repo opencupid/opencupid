@@ -150,6 +150,40 @@ describe('distillActivitySegments', () => {
     vi.useRealTimers()
   })
 
+  it('leaves lastSeenAt to recordActivity and reads it for the segment', async () => {
+    const now = new Date()
+    vi.useFakeTimers()
+    vi.setSystemTime(now)
+
+    // The session log's newest row is older than the live lastSeenAt; the
+    // distill must neither overwrite nor ignore the stored value.
+    mockedPrisma.$queryRaw.mockResolvedValue([
+      { profileId: 'profile1', activeDays28: 1, sessions28: 1, lastSessionAt: daysAgo(20, now) },
+    ])
+    mockedPrisma.profileActivitySummary.findUnique.mockResolvedValue({
+      profileId: 'profile1',
+      firstSeenAt: daysAgo(25, now),
+      lastSeenAt: daysAgo(0, now),
+      activeDays28: 1,
+      sessions28: 1,
+      segment: 'new',
+      demotionStreak: 0,
+      segmentUpdatedAt: daysAgo(1, now),
+    })
+    mockedPrisma.profileActivitySummary.upsert.mockResolvedValue({} as any)
+    mockedPrisma.profileActivitySummary.updateMany.mockResolvedValue({ count: 0 })
+    mockedPrisma.profileSessionLog.deleteMany.mockResolvedValue({ count: 0 })
+
+    await distillActivitySegments()
+
+    const args = mockedPrisma.profileActivitySummary.upsert.mock.calls[0][0]
+    expect(args.update).not.toHaveProperty('lastSeenAt')
+    // Seen today per the stored lastSeenAt, so not dormant despite the 20-day-old session.
+    expect(args.update).toEqual(expect.objectContaining({ segment: 'new' }))
+
+    vi.useRealTimers()
+  })
+
   it('processes multiple profiles in a single batch', async () => {
     const now = new Date()
     vi.useFakeTimers()
