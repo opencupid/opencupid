@@ -13,7 +13,8 @@ const SESSION_GAP_SECONDS = 30 * 60
  * Redis round-trip and exits.
  *
  * lastSeenAt is written only here; the nightly distill reads it but never
- * writes it. A profile's first summary row starts in the `new` segment; the
+ * writes it. A summary row is created on a profile's first activity, right
+ * after the first login created the profile, so it starts as `new`; the
  * distill recomputes the segment from there.
  *
  * P2003 (FK violation) is swallowed silently: a profile may be deleted while
@@ -38,7 +39,7 @@ export async function recordActivity(redis: Redis, profileId: string): Promise<v
       }),
       prisma.profileActivitySummary.upsert({
         where: { profileId },
-        create: { profileId, firstSeenAt: now, lastSeenAt: now, segment: 'new' },
+        create: { profileId, lastSeenAt: now, segment: 'new' },
         update: { lastSeenAt: now },
       }),
     ])

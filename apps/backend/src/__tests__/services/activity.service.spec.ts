@@ -53,7 +53,6 @@ describe('recordActivity', () => {
       where: { profileId: 'profile-1' },
       create: {
         profileId: 'profile-1',
-        firstSeenAt: startedAt,
         lastSeenAt: startedAt,
         segment: 'new',
       },

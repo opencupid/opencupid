@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // Mock prisma before imports
 vi.mock('../../lib/prisma', () => {
@@ -32,45 +32,48 @@ function daysAgo(days: number, from = new Date()): Date {
 
 describe('computeRawSegment', () => {
   const now = new Date('2026-03-01T12:00:00Z')
+  const newAccount = daysAgo(3, now)
+  const oldAccount = daysAgo(400, now)
 
   it('returns dormant when lastSeenAt is 14+ days ago', () => {
-    const result = computeRawSegment(daysAgo(14, now), 5, now)
-    expect(result).toBe('dormant')
+    expect(computeRawSegment(daysAgo(14, now), 5, oldAccount, now)).toBe('dormant')
   })
 
   it('returns dormant when lastSeenAt is 20 days ago even with high activeDays', () => {
-    const result = computeRawSegment(daysAgo(20, now), 15, now)
-    expect(result).toBe('dormant')
+    expect(computeRawSegment(daysAgo(20, now), 15, oldAccount, now)).toBe('dormant')
+  })
+
+  it('returns dormant for a new account not seen in 14+ days', () => {
+    expect(computeRawSegment(daysAgo(14, now), 1, daysAgo(20, now), now)).toBe('dormant')
   })
 
   it('returns frequent when activeDays28 >= 8', () => {
-    const result = computeRawSegment(daysAgo(0, now), 8, now)
-    expect(result).toBe('frequent')
+    expect(computeRawSegment(daysAgo(0, now), 8, newAccount, now)).toBe('frequent')
   })
 
   it('returns returning when activeDays28 >= 2 and < 8', () => {
-    const result = computeRawSegment(daysAgo(1, now), 4, now)
-    expect(result).toBe('returning')
+    expect(computeRawSegment(daysAgo(1, now), 4, newAccount, now)).toBe('returning')
   })
 
   it('returns returning at the threshold of 2 active days', () => {
-    const result = computeRawSegment(daysAgo(0, now), 2, now)
-    expect(result).toBe('returning')
+    expect(computeRawSegment(daysAgo(0, now), 2, newAccount, now)).toBe('returning')
   })
 
-  it('returns new for single-visit users', () => {
-    const result = computeRawSegment(daysAgo(0, now), 1, now)
-    expect(result).toBe('new')
+  it('returns new for a recent account with a single active day', () => {
+    expect(computeRawSegment(daysAgo(0, now), 1, newAccount, now)).toBe('new')
   })
 
-  it('returns new for single-visit users even if first seen long ago', () => {
-    const result = computeRawSegment(daysAgo(10, now), 1, now)
-    expect(result).toBe('new')
+  it('returns new up to an account age just under 28 days', () => {
+    expect(computeRawSegment(daysAgo(0, now), 1, daysAgo(27.9, now), now)).toBe('new')
+  })
+
+  it('returns returning for an account of 28+ days active on a single day (back from dormant)', () => {
+    expect(computeRawSegment(daysAgo(0, now), 1, daysAgo(28, now), now)).toBe('returning')
+    expect(computeRawSegment(daysAgo(0, now), 1, oldAccount, now)).toBe('returning')
   })
 
   it('dormant overrides frequent (priority)', () => {
-    const result = computeRawSegment(daysAgo(15, now), 12, now)
-    expect(result).toBe('dormant')
+    expect(computeRawSegment(daysAgo(15, now), 12, oldAccount, now)).toBe('dormant')
   })
 })
 
@@ -117,11 +120,16 @@ describe('distillActivitySegments', () => {
     vi.setSystemTime(now)
 
     mockedPrisma.$queryRaw.mockResolvedValue([
-      { profileId: 'profile1', activeDays28: 10, sessions28: 20, lastSessionAt: daysAgo(1, now) },
+      {
+        profileId: 'profile1',
+        activeDays28: 10,
+        sessions28: 20,
+        lastSessionAt: daysAgo(1, now),
+        accountCreatedAt: daysAgo(60, now),
+      },
     ])
     mockedPrisma.profileActivitySummary.findUnique.mockResolvedValue({
       profileId: 'profile1',
-      firstSeenAt: daysAgo(30, now),
       lastSeenAt: daysAgo(2, now),
       activeDays28: 8,
       sessions28: 15,
@@ -158,11 +166,16 @@ describe('distillActivitySegments', () => {
     // The session log's newest row is older than the live lastSeenAt; the
     // distill must neither overwrite nor ignore the stored value.
     mockedPrisma.$queryRaw.mockResolvedValue([
-      { profileId: 'profile1', activeDays28: 1, sessions28: 1, lastSessionAt: daysAgo(20, now) },
+      {
+        profileId: 'profile1',
+        activeDays28: 1,
+        sessions28: 1,
+        lastSessionAt: daysAgo(20, now),
+        accountCreatedAt: daysAgo(25, now),
+      },
     ])
     mockedPrisma.profileActivitySummary.findUnique.mockResolvedValue({
       profileId: 'profile1',
-      firstSeenAt: daysAgo(25, now),
       lastSeenAt: daysAgo(0, now),
       activeDays28: 1,
       sessions28: 1,
@@ -190,9 +203,27 @@ describe('distillActivitySegments', () => {
     vi.setSystemTime(now)
 
     mockedPrisma.$queryRaw.mockResolvedValue([
-      { profileId: 'profile1', activeDays28: 10, sessions28: 20, lastSessionAt: daysAgo(1, now) },
-      { profileId: 'profile2', activeDays28: 3, sessions28: 5, lastSessionAt: daysAgo(0, now) },
-      { profileId: 'profile3', activeDays28: 1, sessions28: 1, lastSessionAt: daysAgo(0, now) },
+      {
+        profileId: 'profile1',
+        activeDays28: 10,
+        sessions28: 20,
+        lastSessionAt: daysAgo(1, now),
+        accountCreatedAt: daysAgo(60, now),
+      },
+      {
+        profileId: 'profile2',
+        activeDays28: 3,
+        sessions28: 5,
+        lastSessionAt: daysAgo(0, now),
+        accountCreatedAt: daysAgo(5, now),
+      },
+      {
+        profileId: 'profile3',
+        activeDays28: 1,
+        sessions28: 1,
+        lastSessionAt: daysAgo(0, now),
+        accountCreatedAt: daysAgo(1, now),
+      },
     ])
     // profile1: existing frequent profile
     // profile2: no existing summary, 3 active days → returning
@@ -200,7 +231,6 @@ describe('distillActivitySegments', () => {
     mockedPrisma.profileActivitySummary.findUnique
       .mockResolvedValueOnce({
         profileId: 'profile1',
-        firstSeenAt: daysAgo(30, now),
         lastSeenAt: daysAgo(2, now),
         activeDays28: 8,
         sessions28: 15,
@@ -242,6 +272,108 @@ describe('distillActivitySegments', () => {
     )
 
     vi.useRealTimers()
+  })
+
+  describe('account age (Profile.createdAt)', () => {
+    const now = new Date('2026-11-17T03:00:00Z')
+
+    function summary(segment: 'dormant' | 'returning', lastSeenAt: Date) {
+      return {
+        profileId: 'p1',
+        lastSeenAt,
+        activeDays28: 0,
+        sessions28: 0,
+        segment,
+        demotionStreak: 0,
+        segmentUpdatedAt: daysAgo(100, now),
+      }
+    }
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(now)
+      mockedPrisma.profileActivitySummary.upsert.mockResolvedValue({} as any)
+      mockedPrisma.profileActivitySummary.updateMany.mockResolvedValue({ count: 0 })
+      mockedPrisma.profileSessionLog.deleteMany.mockResolvedValue({ count: 0 })
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('reads the account creation time from Profile', async () => {
+      mockedPrisma.$queryRaw.mockResolvedValue([])
+      await distillActivitySegments()
+      const sql = (mockedPrisma.$queryRaw.mock.calls[0][0] as unknown as string[]).join('')
+      expect(sql).toContain('JOIN "Profile" p')
+      expect(sql).toContain('p."createdAt" AS "accountCreatedAt"')
+    })
+
+    it('promotes a dormant old account that comes back for one day straight to returning', async () => {
+      mockedPrisma.$queryRaw.mockResolvedValue([
+        {
+          profileId: 'p1',
+          activeDays28: 1,
+          sessions28: 2,
+          lastSessionAt: daysAgo(0.1, now),
+          accountCreatedAt: daysAgo(480, now),
+        },
+      ])
+      // Still dormant, but recordActivity already moved lastSeenAt to the visit.
+      mockedPrisma.profileActivitySummary.findUnique.mockResolvedValue(
+        summary('dormant', daysAgo(0.1, now))
+      )
+
+      await distillActivitySegments()
+
+      expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ segment: 'returning', demotionStreak: 0 }),
+        })
+      )
+    })
+
+    it('keeps an old returning account at returning when its active days drop to 1', async () => {
+      mockedPrisma.$queryRaw.mockResolvedValue([
+        {
+          profileId: 'p1',
+          activeDays28: 1,
+          sessions28: 1,
+          lastSessionAt: daysAgo(10, now),
+          accountCreatedAt: daysAgo(230, now),
+        },
+      ])
+      mockedPrisma.profileActivitySummary.findUnique.mockResolvedValue(
+        summary('returning', daysAgo(10, now))
+      )
+
+      await distillActivitySegments()
+
+      expect(mockedPrisma.profileActivitySummary.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ segment: 'returning', demotionStreak: 0 }),
+        })
+      )
+    })
+
+    it('no longer writes firstSeenAt', async () => {
+      mockedPrisma.$queryRaw.mockResolvedValue([
+        {
+          profileId: 'p1',
+          activeDays28: 1,
+          sessions28: 1,
+          lastSessionAt: daysAgo(0, now),
+          accountCreatedAt: daysAgo(0, now),
+        },
+      ])
+      mockedPrisma.profileActivitySummary.findUnique.mockResolvedValue(null)
+
+      await distillActivitySegments()
+
+      const args = mockedPrisma.profileActivitySummary.upsert.mock.calls[0][0]
+      expect(args.create).not.toHaveProperty('firstSeenAt')
+      expect(args.create).toEqual(expect.objectContaining({ segment: 'new' }))
+    })
   })
 
   it('runs dormant sweep for stale summaries', async () => {
