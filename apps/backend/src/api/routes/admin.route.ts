@@ -617,6 +617,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {string} [search] - Search by name, city, country, profile id, user id, email, or phone
    * @query {string} [country] - Country code filter
    * @query {string} [segments] - Comma-separated activity segments filter (e.g. "new,frequent")
+   * @query {'created'|'lastActive'} [sort=created] - Newest first by creation date, or most
+   *   recently seen first. `lastActive` lists only profiles that have been seen.
    * @returns {{ success, profiles, total, page, pageSize }}
    */
   fastify.get('/profiles', async (req, reply) => {
@@ -627,6 +629,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         search = '',
         country = '',
         segments = '',
+        sort = 'created',
       } = req.query as Record<string, string>
       const pageNum = Math.max(1, parseInt(page, 10) || 1)
       const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
@@ -657,6 +660,10 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           })
         }
       }
+      const sortByLastActive = sort === 'lastActive'
+      if (sortByLastActive) {
+        conditions.push({ activitySummary: { isNot: null } })
+      }
       const where = conditions.length > 0 ? { AND: conditions } : {}
 
       const [rows, total] = await Promise.all([
@@ -664,7 +671,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           where,
           skip,
           take: size,
-          orderBy: [{ createdAt: 'desc' }],
+          orderBy: sortByLastActive
+            ? [{ activitySummary: { lastSeenAt: 'desc' } }]
+            : [{ createdAt: 'desc' }],
           select: {
             id: true,
             publicName: true,
@@ -680,7 +689,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             createdAt: true,
             userId: true,
             user: { select: { email: true, phonenumber: true } },
-            activitySummary: { select: { segment: true } },
+            activitySummary: { select: { segment: true, lastSeenAt: true } },
             _count: { select: { trustFlags: { where: { clearedAt: null } } } },
           },
         }),

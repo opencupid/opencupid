@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { formatTimeAgoIntl } from '@vueuse/core'
 import { useApi, apiRequest } from '../composables/useApi'
 import {
   flagProfile,
@@ -27,7 +28,7 @@ interface AdminProfile {
   createdAt: string
   userId: string
   user: { email: string; phonenumber: string | null } | null
-  activitySummary: { segment: string } | null
+  activitySummary: { segment: string; lastSeenAt: string } | null
   hasActiveTrustFlag: boolean
 }
 
@@ -109,56 +110,15 @@ const sending = ref(false)
 const sendError = ref<string | null>(null)
 const sendResult = ref<{ sent: number; failed: number } | null>(null)
 
-type SortColumn =
-  | 'publicName'
-  | 'country'
-  | 'gender'
-  | 'isSocialActive'
-  | 'isDatingActive'
-  | 'isActive'
-  | 'segment'
-  | 'createdAt'
-const sortColumn = ref<SortColumn | null>(null)
-const sortDirection = ref<'asc' | 'desc'>('asc')
+type ProfileSort = 'created' | 'lastActive'
+const sortOptions: { value: ProfileSort; label: string }[] = [
+  { value: 'created', label: 'Date created' },
+  { value: 'lastActive', label: 'Last active' },
+]
+const selectedSort = ref<ProfileSort>('created')
 
-const sortedProfiles = computed(() => {
-  if (!sortColumn.value) return profiles.value
-  const col = sortColumn.value
-  const dir = sortDirection.value === 'asc' ? 1 : -1
-  return [...profiles.value].sort((a, b) => {
-    let aVal: string | number
-    let bVal: string | number
-    if (col === 'isSocialActive' || col === 'isDatingActive' || col === 'isActive') {
-      aVal = a[col] ? 1 : 0
-      bVal = b[col] ? 1 : 0
-    } else if (col === 'segment') {
-      aVal = (a.activitySummary?.segment ?? '').toLowerCase()
-      bVal = (b.activitySummary?.segment ?? '').toLowerCase()
-    } else if (col === 'createdAt') {
-      aVal = a.createdAt
-      bVal = b.createdAt
-    } else {
-      aVal = (a[col] ?? '').toLowerCase()
-      bVal = (b[col] ?? '').toLowerCase()
-    }
-    if (aVal < bVal) return -1 * dir
-    if (aVal > bVal) return 1 * dir
-    return 0
-  })
-})
-
-function toggleSort(col: SortColumn) {
-  if (sortColumn.value === col) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortColumn.value = col
-    sortDirection.value = 'asc'
-  }
-}
-
-function sortIndicator(col: SortColumn) {
-  if (sortColumn.value !== col) return ''
-  return sortDirection.value === 'asc' ? ' ▲' : ' ▼'
+function formatLastActive(lastSeenAt: string) {
+  return formatTimeAgoIntl(new Date(lastSeenAt), { locale: 'en' })
 }
 
 async function fetchCountries() {
@@ -176,6 +136,7 @@ function buildParams() {
     search: search.value || undefined,
     country: selectedCountry.value || undefined,
     segments: selectedSegments.value.length > 0 ? selectedSegments.value.join(',') : undefined,
+    sort: selectedSort.value,
   }
 }
 
@@ -602,23 +563,19 @@ function toggleProfileSelection(profile: AdminProfile) {
 }
 
 const allVisibleSelected = computed(
-  () =>
-    sortedProfiles.value.length > 0 &&
-    sortedProfiles.value.every((p) => selectedProfileIds.value.has(p.id))
+  () => profiles.value.length > 0 && profiles.value.every((p) => selectedProfileIds.value.has(p.id))
 )
 
 const someVisibleSelected = computed(
-  () =>
-    !allVisibleSelected.value &&
-    sortedProfiles.value.some((p) => selectedProfileIds.value.has(p.id))
+  () => !allVisibleSelected.value && profiles.value.some((p) => selectedProfileIds.value.has(p.id))
 )
 
 function toggleSelectAllVisible() {
   const next = new Map(selectedProfiles.value)
   if (allVisibleSelected.value) {
-    for (const p of sortedProfiles.value) next.delete(p.id)
+    for (const p of profiles.value) next.delete(p.id)
   } else {
-    for (const p of sortedProfiles.value) next.set(p.id, p)
+    for (const p of profiles.value) next.set(p.id, p)
   }
   selectedProfiles.value = next
 }
@@ -821,6 +778,23 @@ onUnmounted(() => {
           {{ c }}
         </option>
       </select>
+      <select
+        v-if="pageTab === 'profiles'"
+        v-model="selectedSort"
+        class="form-select"
+        style="max-width: 200px"
+        aria-label="Sort profiles"
+        data-testid="profile-sort"
+        @change="resetAndFetch"
+      >
+        <option
+          v-for="opt in sortOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          Sort: {{ opt.label }}
+        </option>
+      </select>
       <button
         v-if="pageTab === 'profiles'"
         type="button"
@@ -856,60 +830,18 @@ onUnmounted(() => {
                   @change="toggleSelectAllVisible"
                 />
               </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('publicName')"
-              >
-                Name{{ sortIndicator('publicName') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('country')"
-              >
-                Location{{ sortIndicator('country') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('gender')"
-              >
-                Gender{{ sortIndicator('gender') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('isSocialActive')"
-              >
-                Social{{ sortIndicator('isSocialActive') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('isDatingActive')"
-              >
-                Dating{{ sortIndicator('isDatingActive') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('isActive')"
-              >
-                Active{{ sortIndicator('isActive') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('segment')"
-              >
-                Segment{{ sortIndicator('segment') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('createdAt')"
-              >
-                Created{{ sortIndicator('createdAt') }}
-              </th>
+              <th>Name</th>
+              <th>Location</th>
+              <th>Gender</th>
+              <th>Dating</th>
+              <th>Last active</th>
+              <th>Created</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="profile in sortedProfiles"
+              v-for="profile in profiles"
               :key="profile.id"
               :class="{ 'table-warning': profile.hasActiveTrustFlag }"
               style="cursor: pointer"
@@ -924,46 +856,38 @@ onUnmounted(() => {
                   @change="toggleProfileSelection(profile)"
                 />
               </td>
-              <td>{{ profile.publicName || '-' }}</td>
-              <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
-              <td>{{ profile.gender || '-' }}</td>
               <td>
-                <span :class="profile.isSocialActive ? 'badge bg-success' : 'badge bg-secondary'">
-                  {{ profile.isSocialActive ? 'Yes' : 'No' }}
+                {{ profile.publicName || '-' }}
+                <span
+                  v-if="profile.activitySummary?.segment"
+                  :class="segmentBadgeClass(profile.activitySummary.segment)"
+                  class="ms-1"
+                >
+                  {{ profile.activitySummary.segment }}
                 </span>
               </td>
+              <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
+              <td>{{ profile.gender || '-' }}</td>
               <td>
                 <span :class="profile.isDatingActive ? 'badge bg-success' : 'badge bg-secondary'">
                   {{ profile.isDatingActive ? 'Yes' : 'No' }}
                 </span>
               </td>
-              <td>
-                <span :class="profile.isActive ? 'badge bg-success' : 'badge bg-secondary'">
-                  {{ profile.isActive ? 'Yes' : 'No' }}
-                </span>
+              <td
+                v-if="profile.activitySummary"
+                :title="new Date(profile.activitySummary.lastSeenAt).toLocaleString()"
+              >
+                {{ formatLastActive(profile.activitySummary.lastSeenAt) }}
               </td>
-              <td>
-                <span
-                  v-if="profile.activitySummary?.segment"
-                  :class="segmentBadgeClass(profile.activitySummary.segment)"
-                >
-                  {{ profile.activitySummary.segment }}
-                </span>
-                <span v-else>—</span>
-              </td>
+              <td v-else>—</td>
               <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
-              <td>
-                <button
-                  class="btn btn-sm btn-outline-primary"
-                  @click.stop="viewProfile(profile)"
-                >
-                  View
-                </button>
+              <td @click.stop>
+                <PublicProfileLink :profile-id="profile.id" />
               </td>
             </tr>
             <tr v-if="profiles.length === 0">
               <td
-                colspan="10"
+                colspan="8"
                 class="text-center text-muted"
               >
                 No profiles found

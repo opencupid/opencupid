@@ -136,6 +136,68 @@ describe('ProfilesPage', () => {
     expect(rows[1].classes()).not.toContain('table-warning')
   })
 
+  it('renders the table columns, segment badge after the name, last active and profile link', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-17T12:00:00Z'))
+    const seen = {
+      ...baseProfile,
+      activitySummary: { segment: 'frequent', lastSeenAt: '2026-11-14T12:00:00Z' },
+    }
+    useApiCall.mockImplementation((path: string) => {
+      if (path === '/admin/profiles/countries') {
+        return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
+      }
+      return Promise.resolve(listResponse([seen, { ...baseProfile, id: 'p2' }]))
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    vi.useRealTimers()
+
+    const headers = wrapper.findAll('thead th').map((th) => th.text())
+    expect(headers).toEqual([
+      '',
+      'Name',
+      'Location',
+      'Gender',
+      'Dating',
+      'Last active',
+      'Created',
+      'Actions',
+    ])
+
+    const [first, second] = wrapper.findAll('tbody tr')
+    const cells = first.findAll('td')
+    expect(cells[1].text()).toBe('Alice frequent')
+    expect(cells[1].find('.badge').text()).toBe('frequent')
+    expect(cells[5].text()).toBe('3 days ago')
+    expect(second.findAll('td')[5].text()).toBe('—')
+
+    const link = first.find('[data-testid="view-public-profile"]')
+    expect(link.text()).toBe('Profile')
+    expect(link.attributes('href')).toMatch(/\/profile\/p1$/)
+    expect(first.findAll('button').filter((b) => b.text() === 'View')).toHaveLength(0)
+  })
+
+  it('requests profiles sorted by date created, then by last active when chosen', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+
+    expect(useApiCall).toHaveBeenCalledWith('/admin/profiles', {
+      params: expect.objectContaining({ sort: 'created', page: 1 }),
+    })
+
+    await wrapper.find('[data-testid="profile-sort"]').setValue('lastActive')
+    await flushPromises()
+
+    expect(useApiCall).toHaveBeenLastCalledWith('/admin/profiles', {
+      params: expect.objectContaining({ sort: 'lastActive', page: 1 }),
+    })
+  })
+
   it('shows "No active trust flags" in modal when profile is clean', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()

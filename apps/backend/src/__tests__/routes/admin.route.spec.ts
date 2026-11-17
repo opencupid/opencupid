@@ -923,6 +923,46 @@ describe('GET /profiles', () => {
     )
   })
 
+  it('orders by creation date by default', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler({ query: {} }, reply)
+
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: {}, orderBy: [{ createdAt: 'desc' }] })
+    )
+  })
+
+  it('sort=lastActive orders by last seen and lists only seen profiles', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler({ query: { sort: 'lastActive', country: 'DE' } }, reply)
+
+    const where = { AND: [{ country: 'DE' }, { activitySummary: { isNot: null } }] }
+    expect(mockPrisma.profile.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where,
+        orderBy: [{ activitySummary: { lastSeenAt: 'desc' } }],
+      })
+    )
+    expect(mockPrisma.profile.count).toHaveBeenCalledWith({ where })
+  })
+
+  it('selects the activity summary segment and last seen time', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    mockPrisma.profile.count.mockResolvedValue(0)
+
+    const handler = fastify.routes['GET /profiles']
+    await handler({ query: {} }, reply)
+
+    const args = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(args.select.activitySummary).toEqual({ select: { segment: true, lastSeenAt: true } })
+  })
+
   it('search OR clause includes id, publicName, cityName, country, userId, user email and phone', async () => {
     mockPrisma.profile.findMany.mockResolvedValue([])
     mockPrisma.profile.count.mockResolvedValue(0)
