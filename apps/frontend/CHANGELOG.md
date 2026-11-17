@@ -1,5 +1,11 @@
 # frontend
 
+## 0.90.1
+
+### Patch Changes
+
+- 62ca597: Show the exit survey again after closing an account instead of redirecting to the login page
+
 ## 0.90.0
 
 ### Minor Changes
