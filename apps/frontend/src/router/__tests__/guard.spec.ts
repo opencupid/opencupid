@@ -9,6 +9,7 @@ vi.mock('@/features/auth/views/LoginView.vue', () => stub)
 vi.mock('@/features/auth/views/MagicLink.vue', () => stub)
 vi.mock('@/features/app/views/AppShellLayout.vue', () => stub)
 vi.mock('@/features/browse/views/BrowseProfiles.vue', () => stub)
+vi.mock('@/features/settings/views/AccountDeletedView.vue', () => stub)
 
 import router from '../index'
 import { bus } from '@/lib/bus'
@@ -48,14 +49,16 @@ describe('router auth guard', () => {
     expect(router.currentRoute.value.query).toEqual({ redirect: '/inbox/abc' })
   })
 
-  it('goes to a plain Login after an explicit logout', async () => {
+  it('leaves navigation to the caller after an explicit logout', async () => {
     authStore.isLoggedIn = true
     await router.push('/me/settings')
     authStore.isLoggedIn = false
 
+    // Closing the account: logout, then the exit survey.
     bus.emit('auth:logged-out', { expired: false })
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('Login'))
+    await router.push({ name: 'AccountDeleted' })
+    await new Promise((resolve) => setTimeout(resolve))
 
-    expect(router.currentRoute.value.fullPath).toBe('/auth')
+    expect(router.currentRoute.value.name).toBe('AccountDeleted')
   })
 })

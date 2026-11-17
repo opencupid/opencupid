@@ -55,6 +55,7 @@ onMounted(async () => {
 
 function handleLogout() {
   authStore.logout()
+  router.push({ name: 'Login' })
 }
 
 function openCloseAccountDialog() {

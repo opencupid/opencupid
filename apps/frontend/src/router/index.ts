@@ -151,11 +151,14 @@ router.afterEach((to, from) => {
 export { getPreviousUrl } from './history'
 
 bus.on('auth:logged-out', async ({ expired }) => {
+  // An explicit logout navigates on its own (to Login, or to the exit survey
+  // after closing the account); only a dead session is routed from here.
+  if (!expired) return
   // On a cold start with a stale session the refresh can fail while the
   // initial navigation is still loading its lazy route components. Wait for
   // it to land so currentRoute is the page the user was heading to.
   await router.isReady()
-  router.push(expired ? loginRoute(router.currentRoute.value) : { name: 'Login' })
+  router.push(loginRoute(router.currentRoute.value))
 })
 
 export default router
