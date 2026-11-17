@@ -58,7 +58,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     '/verify-token',
     {
       config: {
-        ...rateLimitConfig(fastify, '15 minute', 5),
+        ...rateLimitConfig(fastify, '3 minute', 5),
       },
     },
     async (req, reply) => {
@@ -231,7 +231,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     '/send-magic-link',
     {
       config: {
-        ...rateLimitConfig(fastify, '15 minute', 5),
+        ...rateLimitConfig(fastify, '3 minute', 5),
       },
     },
     async (req, reply) => {
