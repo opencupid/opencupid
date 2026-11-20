@@ -255,8 +255,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       const token = userService.generateLoginToken()
 
-      // A new user belongs to the brand they signed up on. In dev the vite
-      // proxy rewrites Host to localhost (changeOrigin), which is the dev brand.
+      // A new user belongs to the brand they signed up on.
       // A language without translations becomes that brand's fallback locale.
       const brand = brandForHost(req.hostname)
       const { user, isNewUser } = await userService.setLoginToken(
