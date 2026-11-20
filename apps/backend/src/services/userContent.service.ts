@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { notBlockedUserWhere } from '@/db/includes/notBlockedUserWhere'
+import { notPastEventWhere } from '@/db/includes/notPastEventWhere'
 import { profileImageInclude, userContentTagsInclude } from '@/db/includes/profileIncludes'
 import { TagService } from './tag.service'
 import type { BaseUserContentPayload, ContentKind } from '@shared/zod/userContent/userContent.dto'
@@ -119,6 +120,7 @@ export class UserContentService {
         lat: { gte: box.south, lte: box.north },
         lon: { gte: box.west, lte: box.east },
         postedBy: notBlockedUserWhere,
+        ...notPastEventWhere(),
       },
       include: profileSummaryInclude,
       orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
@@ -314,6 +316,7 @@ export class UserContentService {
         lon: { not: null },
         postedBy: { ...blocklistWhereClause(viewerProfileId), ...notBlockedUserWhere },
         kind: { in: kinds },
+        ...notPastEventWhere(),
       },
       include: contentSummaryInclude,
       orderBy: { createdAt: 'desc' },
