@@ -119,10 +119,7 @@ export class ProfileMatchService {
         isDatingActive: true,
         id: { not: profile.id },
         ...blocklistWhereClause(profileId),
-        birthday: {
-          gte: subtractYears(new Date(), profile.prefAgeMax + AGE_TOLERANCE),
-          lte: subtractYears(new Date(), profile.prefAgeMin - AGE_TOLERANCE),
-        },
+        birthday: birthdayRangeForAgePrefs(profile.prefAgeMin, profile.prefAgeMax),
         gender: { in: profile.prefGender },
         ...hasKids,
         prefAgeMin: { lte: myAge + AGE_TOLERANCE },
@@ -179,12 +176,16 @@ export function subtractYears(date: Date, years: number): Date {
 }
 
 /**
- * ±1 year tolerance on age preference boundaries. Accounts for rounding in
- * discrete age calculation (e.g. someone turning 35 later this year should
- * still match a prefAgeMin of 35). Must be applied symmetrically in both
- * directions to avoid one-way matches.
+ * ±3 year tolerance on age preference boundaries, so candidates just outside
+ * the stated range still surface as matches. Must be applied symmetrically in
+ * both directions to avoid one-way matches.
  */
-const AGE_TOLERANCE = 1
+const AGE_TOLERANCE = 3
+
+/** Candidate ages (inclusive) accepted by an age preference range, tolerance applied. */
+function acceptedAgeRange(prefAgeMin: number, prefAgeMax: number) {
+  return { minAge: prefAgeMin - AGE_TOLERANCE, maxAge: prefAgeMax + AGE_TOLERANCE }
+}
 
 /** Check whether `candidateAge` falls within the viewer's age preference range (with tolerance). */
 export function isAgeCompatible(
@@ -192,5 +193,23 @@ export function isAgeCompatible(
   prefAgeMin: number,
   prefAgeMax: number
 ): boolean {
-  return candidateAge >= prefAgeMin - AGE_TOLERANCE && candidateAge <= prefAgeMax + AGE_TOLERANCE
+  const { minAge, maxAge } = acceptedAgeRange(prefAgeMin, prefAgeMax)
+  return candidateAge >= minAge && candidateAge <= maxAge
+}
+
+/**
+ * Birthday filter selecting exactly the candidates `isAgeCompatible` accepts.
+ * Someone stays `maxAge` years old until the day they turn `maxAge + 1`,
+ * hence the exclusive lower bound one year further back.
+ */
+export function birthdayRangeForAgePrefs(
+  prefAgeMin: number,
+  prefAgeMax: number,
+  today: Date = new Date()
+): { gt: Date; lte: Date } {
+  const { minAge, maxAge } = acceptedAgeRange(prefAgeMin, prefAgeMax)
+  return {
+    gt: subtractYears(today, maxAge + 1),
+    lte: subtractYears(today, minAge),
+  }
 }

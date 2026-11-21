@@ -1,8 +1,11 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 vi.mock('../../lib/prisma', () => ({ prisma: {} }))
-import { subtractYears } from '../../services/profileMatch.service'
+import {
+  birthdayRangeForAgePrefs,
+  isAgeCompatible,
+  subtractYears,
+} from '../../services/profileMatch.service'
 import { calculateAge } from '@zod/match/filters.form'
-import { date } from 'zod'
 
 describe('subtractYears', () => {
   it('should subtract years from a date', () => {
@@ -101,5 +104,46 @@ describe('subtractYears', () => {
       const birthday = new Date('2025-01-01')
       expect(calculateAge(birthday)).toBe(-1)
     })
+  })
+})
+
+describe('birthdayRangeForAgePrefs', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const inRange = (birthday: Date, range: { gt: Date; lte: Date }) =>
+    birthday > range.gt && birthday <= range.lte
+
+  it('accepts a candidate one year past prefAgeMax whose birthday already passed', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-21T14:00:00'))
+    const birthday = new Date('1975-03-15T00:00:00') // 51 years old
+    expect(isAgeCompatible(calculateAge(birthday), 29, 50)).toBe(true)
+    expect(inRange(birthday, birthdayRangeForAgePrefs(29, 50))).toBe(true)
+  })
+
+  it('agrees with isAgeCompatible for birthdays around both boundaries', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-21T14:00:00'))
+    const range = birthdayRangeForAgePrefs(30, 40)
+    // Sweep daily birthdays covering candidates aged 26 to 44 (both bounds ±1)
+    const start = new Date('1982-01-01T00:00:00')
+    const end = new Date('2000-12-31T00:00:00')
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      expect(inRange(d, range), d.toDateString()).toBe(isAgeCompatible(calculateAge(d), 30, 40))
+    }
+  })
+})
+
+describe('isAgeCompatible', () => {
+  it('accepts ages up to 3 years outside the preferred range', () => {
+    expect(isAgeCompatible(27, 30, 40)).toBe(true)
+    expect(isAgeCompatible(43, 30, 40)).toBe(true)
+  })
+
+  it('rejects ages more than 3 years outside the preferred range', () => {
+    expect(isAgeCompatible(26, 30, 40)).toBe(false)
+    expect(isAgeCompatible(44, 30, 40)).toBe(false)
   })
 })
