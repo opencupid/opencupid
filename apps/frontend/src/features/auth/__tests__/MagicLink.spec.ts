@@ -60,6 +60,15 @@ const mountMagicLink = () =>
     },
   })
 
+// Mount, then click Continue: the emailed link only lands on the page, the
+// token is verified by the explicit click.
+const mountAndContinue = async () => {
+  const wrapper = mountMagicLink()
+  await wrapper.get('.continue-button').trigger('click')
+  await flushPromises()
+  return wrapper
+}
+
 const emailLoginUser = {
   id: 'ck1234567890abcd12345678',
   email: 'test@example.com',
@@ -73,6 +82,7 @@ describe('MagicLink', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     route.query = {}
+    localStorage.clear()
     push.mockReset()
     track.mockReset()
     bootstrapReady.mockReset()
@@ -85,8 +95,7 @@ describe('MagicLink', () => {
     authStore.loginUser = emailLoginUser
     vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
 
-    mountMagicLink()
-    await flushPromises()
+    await mountAndContinue()
 
     expect(push).toHaveBeenCalledWith('/browse')
   })
@@ -96,8 +105,7 @@ describe('MagicLink', () => {
     const authStore = useAuthStore()
     vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
 
-    mountMagicLink()
-    await flushPromises()
+    await mountAndContinue()
 
     expect(push).toHaveBeenCalledWith('/inbox/abc')
   })
@@ -109,8 +117,7 @@ describe('MagicLink', () => {
       const authStore = useAuthStore()
       vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
 
-      mountMagicLink()
-      await flushPromises()
+      await mountAndContinue()
 
       expect(push).toHaveBeenCalledWith('/browse')
     }
@@ -126,11 +133,78 @@ describe('MagicLink', () => {
       restart: 'otp',
     })
 
-    const wrapper = mountMagicLink()
-    await flushPromises()
+    const wrapper = await mountAndContinue()
     await wrapper.get('.back-button a').trigger('click')
 
     expect(push).toHaveBeenCalledWith({ name: 'Login', query: { redirect: '/inbox/abc' } })
+  })
+
+  it('does not spend the token on load when this browser did not request the link', async () => {
+    route.query = { token: '123456' }
+    const authStore = useAuthStore()
+    const verifyToken = vi.spyOn(authStore, 'verifyToken')
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    expect(verifyToken).not.toHaveBeenCalled()
+    expect(push).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('auth.magic_link_prompt')
+    expect(wrapper.get('.continue-button').text()).toContain('auth.login')
+  })
+
+  it('continues without a click when this browser requested the link', async () => {
+    route.query = { token: '123456' }
+    localStorage.setItem('authId', 'test@example.com')
+    const authStore = useAuthStore()
+    const verifyToken = vi
+      .spyOn(authStore, 'verifyToken')
+      .mockResolvedValue({ success: true, status: '' })
+
+    mountMagicLink()
+    await flushPromises()
+
+    expect(verifyToken).toHaveBeenCalledWith('123456')
+    expect(push).toHaveBeenCalledWith('/browse')
+  })
+
+  it('shows only a spinner, not the Continue prompt, while continuing on its own', async () => {
+    route.query = { token: '123456' }
+    localStorage.setItem('authId', 'test@example.com')
+    const authStore = useAuthStore()
+    vi.spyOn(authStore, 'verifyToken').mockReturnValue(new Promise(() => {}))
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    expect(wrapper.find('.auto-continue-spinner').exists()).toBe(true)
+    expect(wrapper.find('.continue-button').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('auth.magic_link_prompt')
+  })
+
+  it('does not continue on its own when the token param is malformed', async () => {
+    route.query = { token: '12' }
+    localStorage.setItem('authId', 'test@example.com')
+    const authStore = useAuthStore()
+    const verifyToken = vi.spyOn(authStore, 'verifyToken')
+
+    mountMagicLink()
+    await flushPromises()
+
+    expect(verifyToken).not.toHaveBeenCalled()
+  })
+
+  it('verifies the token from the link when Continue is clicked', async () => {
+    route.query = { token: '123456' }
+    const authStore = useAuthStore()
+    const verifyToken = vi
+      .spyOn(authStore, 'verifyToken')
+      .mockResolvedValue({ success: true, status: '' })
+
+    await mountAndContinue()
+
+    expect(verifyToken).toHaveBeenCalledOnce()
+    expect(verifyToken).toHaveBeenCalledWith('123456')
   })
 
   it('shows check-email message when no token in query', async () => {
@@ -155,8 +229,7 @@ describe('MagicLink', () => {
       restart: 'otp',
     })
 
-    const wrapper = mountMagicLink()
-    await flushPromises()
+    const wrapper = await mountAndContinue()
 
     expect(wrapper.text()).not.toContain('auth.token_check_email')
     expect(wrapper.text()).not.toContain('auth.token_check_junk')
@@ -181,8 +254,7 @@ describe('MagicLink', () => {
       restart: 'otp',
     })
 
-    const wrapper = mountMagicLink()
-    await flushPromises()
+    const wrapper = await mountAndContinue()
 
     expect(track).toHaveBeenCalledWith(`auth-token-failed:${code}`)
     expect(wrapper.text()).toContain(errorKey)
@@ -210,8 +282,7 @@ describe('MagicLink', () => {
     bootstrapReady.mockRejectedValue(new Error('chunk load failed'))
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const wrapper = mountMagicLink()
-    await flushPromises()
+    const wrapper = await mountAndContinue()
 
     expect(track).toHaveBeenCalledWith('auth-bootstrap-failed')
     expect(push).not.toHaveBeenCalled()
@@ -225,8 +296,7 @@ describe('MagicLink', () => {
     authStore.loginUser = emailLoginUser
     vi.spyOn(authStore, 'verifyToken').mockResolvedValue({ success: true, status: '' })
 
-    mountMagicLink()
-    await flushPromises()
+    await mountAndContinue()
 
     expect(track).not.toHaveBeenCalled()
   })

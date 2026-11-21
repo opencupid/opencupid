@@ -229,7 +229,7 @@ describe('authStore localStorage auth flow', () => {
       profileId: 'p1',
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
-    mockApi.get.mockResolvedValue({
+    mockApi.post.mockResolvedValue({
       data: { success: true, token },
     })
 
@@ -246,7 +246,7 @@ describe('authStore localStorage auth flow', () => {
       profileId: 'p1',
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
-    mockApi.get.mockResolvedValue({
+    mockApi.post.mockResolvedValue({
       data: {
         success: true,
         token,
@@ -256,6 +256,7 @@ describe('authStore localStorage auth flow', () => {
     const store = useAuthStore()
     const res = await store.verifyToken('123456')
 
+    expect(mockApi.post).toHaveBeenCalledWith('/auth/verify-token', { token: '123456' })
     expect(res.success).toBe(true)
     expect(localStorage.getItem('authId')).toBeNull()
   })

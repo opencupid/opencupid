@@ -23,6 +23,7 @@
     "captcha_verify": "Let's check",
     "captcha_verifying": "Hang on a sec...",
     "login": "Continue",
+    "magic_link_prompt": "You're almost in. Click Continue to log in.",
     "token_check_email": "We sent you a login link. Check your email and click the link to log in.",
     "token_check_junk": "If you don't see the email, please check your junk folder.",
     "token_check_messages": "Check your messages",

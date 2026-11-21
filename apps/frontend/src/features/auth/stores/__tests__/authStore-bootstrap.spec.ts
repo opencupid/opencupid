@@ -54,7 +54,7 @@ describe('authStore.verifyToken signals login via bus', () => {
 
   it('emits auth:login after successful token verification', async () => {
     const token = makeJwt({ userId: 'u1', profileId: 'p1', exp: Date.now() / 1000 + 3600 })
-    mockApi.get.mockResolvedValue({ data: { success: true, token } })
+    mockApi.post.mockResolvedValue({ data: { success: true, token } })
 
     const store = useAuthStore()
     const result = await store.verifyToken('123456')
@@ -64,7 +64,7 @@ describe('authStore.verifyToken signals login via bus', () => {
   })
 
   it('does not emit auth:login when token verification fails', async () => {
-    mockApi.get.mockResolvedValue({ data: { success: false } })
+    mockApi.post.mockResolvedValue({ data: { success: false } })
 
     const store = useAuthStore()
     const result = await store.verifyToken('wrong-token')
