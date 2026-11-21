@@ -49,18 +49,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   const refreshTokenService = new RefreshTokenService(fastify.redis)
 
   /**
-   * GET /verify-token
-   * Inert on purpose: mail gateways and link scanners prefetch URLs found in
-   * emails, and a GET that spent the single-use token would log them in and
-   * leave the user with a dead link. Answers an empty 200 so the prefetch
-   * succeeds without touching the token; the login itself is the POST below,
-   * sent when the user clicks Continue on the magic-link page.
-   */
-  fastify.get('/verify-token', async (_req, reply) => reply.code(200).send())
-
-  /**
    * POST /verify-token
    * Validates a magic-link token, creates or resumes a user session.
+   * POST only: mail gateways and link scanners prefetch with GET, so a GET
+   * that spent the single-use token would leave the user with a dead link.
    * Sets __session and __refresh cookies on success.
    * @body {string} token - The magic-link or OTP token
    * @returns {VerifyTokenResponse} JWT access token (refresh token set via httpOnly cookie)

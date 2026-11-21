@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import z from 'zod'
-import { ref, defineAsyncComponent } from 'vue'
+import { ref, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useI18n } from 'vue-i18n'
@@ -35,9 +35,10 @@ const TokenParamSchema = z.object({
   token: z.string().min(6).max(6),
 })
 
-// The emailed link only lands here; nothing is spent until the user clicks
-// Continue. Mail gateways and link scanners prefetch (and often render) links
-// in emails, and verifying on load would let them burn the single-use token.
+// Mail gateways and link scanners prefetch (and often render) links in emails,
+// so verifying on every load would let them burn the single-use token. Only a
+// browser that requested the link (sendMagicLink stores authId) continues on
+// its own; anything else has to click Continue.
 const hasToken = Boolean(route.query.token)
 const params = TokenParamSchema.safeParse(route.query)
 if (hasToken && !params.success) {
@@ -88,6 +89,10 @@ async function handleContinue() {
     isLoading.value = false
   }
 }
+
+onMounted(() => {
+  if (params.success && localStorage.getItem('authId')) handleContinue()
+})
 
 function handleBackButton() {
   error.value = ''

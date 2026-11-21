@@ -86,13 +86,8 @@ beforeEach(async () => {
 })
 
 describe('GET /verify-token', () => {
-  it('returns an empty 200 without spending the token', async () => {
-    const handler = fastify.routes['GET /verify-token']
-    await handler({ query: { token: 'abc123' } } as any, reply as any)
-    expect(reply.statusCode).toBe(200)
-    expect(reply.payload).toBeUndefined()
-    expect(mockUserService.validateLoginToken).not.toHaveBeenCalled()
-    expect(reply.cookies).toEqual([])
+  it('is not registered, so no GET can spend a login token', () => {
+    expect(fastify.routes['GET /verify-token']).toBeUndefined()
   })
 })
 

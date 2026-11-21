@@ -82,6 +82,7 @@ describe('MagicLink', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     route.query = {}
+    localStorage.clear()
     push.mockReset()
     track.mockReset()
     bootstrapReady.mockReset()
@@ -138,7 +139,7 @@ describe('MagicLink', () => {
     expect(push).toHaveBeenCalledWith({ name: 'Login', query: { redirect: '/inbox/abc' } })
   })
 
-  it('does not spend the token on page load', async () => {
+  it('does not spend the token on load when this browser did not request the link', async () => {
     route.query = { token: '123456' }
     const authStore = useAuthStore()
     const verifyToken = vi.spyOn(authStore, 'verifyToken')
@@ -150,6 +151,33 @@ describe('MagicLink', () => {
     expect(push).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('auth.magic_link_prompt')
     expect(wrapper.get('.continue-button').text()).toContain('auth.login')
+  })
+
+  it('continues without a click when this browser requested the link', async () => {
+    route.query = { token: '123456' }
+    localStorage.setItem('authId', 'test@example.com')
+    const authStore = useAuthStore()
+    const verifyToken = vi
+      .spyOn(authStore, 'verifyToken')
+      .mockResolvedValue({ success: true, status: '' })
+
+    mountMagicLink()
+    await flushPromises()
+
+    expect(verifyToken).toHaveBeenCalledWith('123456')
+    expect(push).toHaveBeenCalledWith('/browse')
+  })
+
+  it('does not continue on its own when the token param is malformed', async () => {
+    route.query = { token: '12' }
+    localStorage.setItem('authId', 'test@example.com')
+    const authStore = useAuthStore()
+    const verifyToken = vi.spyOn(authStore, 'verifyToken')
+
+    mountMagicLink()
+    await flushPromises()
+
+    expect(verifyToken).not.toHaveBeenCalled()
   })
 
   it('verifies the token from the link when Continue is clicked', async () => {
