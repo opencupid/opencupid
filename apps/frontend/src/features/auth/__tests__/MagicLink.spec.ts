@@ -168,6 +168,20 @@ describe('MagicLink', () => {
     expect(push).toHaveBeenCalledWith('/browse')
   })
 
+  it('shows only a spinner, not the Continue prompt, while continuing on its own', async () => {
+    route.query = { token: '123456' }
+    localStorage.setItem('authId', 'test@example.com')
+    const authStore = useAuthStore()
+    vi.spyOn(authStore, 'verifyToken').mockReturnValue(new Promise(() => {}))
+
+    const wrapper = mountMagicLink()
+    await flushPromises()
+
+    expect(wrapper.find('.auto-continue-spinner').exists()).toBe(true)
+    expect(wrapper.find('.continue-button').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('auth.magic_link_prompt')
+  })
+
   it('does not continue on its own when the token param is malformed', async () => {
     route.query = { token: '12' }
     localStorage.setItem('authId', 'test@example.com')

@@ -41,6 +41,7 @@ const TokenParamSchema = z.object({
 // its own; anything else has to click Continue.
 const hasToken = Boolean(route.query.token)
 const params = TokenParamSchema.safeParse(route.query)
+const requestedHere = params.success && Boolean(localStorage.getItem('authId'))
 if (hasToken && !params.success) {
   tracker.track('auth-token-failed:AUTH_MALFORMED_LINK')
   error.value = t('auth.token_invalid_link')
@@ -91,7 +92,7 @@ async function handleContinue() {
 }
 
 onMounted(() => {
-  if (params.success && localStorage.getItem('authId')) handleContinue()
+  if (requestedHere) handleContinue()
 })
 
 function handleBackButton() {
@@ -129,6 +130,10 @@ function handleBackButton() {
           {{ $t('uicomponents.back_button_title') }}
         </BButton>
       </div>
+      <BSpinner
+        v-else-if="requestedHere"
+        class="auto-continue-spinner"
+      />
       <div
         v-else-if="hasToken"
         class="text-center"
