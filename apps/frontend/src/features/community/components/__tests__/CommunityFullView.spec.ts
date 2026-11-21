@@ -18,14 +18,18 @@ vi.mock('@/lib/responsive', () => ({
   isMdUp: { value: true },
 }))
 
+// Mocked at module level (not just stubbed) so the real card's messaging
+// dependencies are never imported.
+vi.mock('../CommunityCard.vue', () => ({
+  default: {
+    props: ['community'],
+    template: '<div class="community-card-stub">{{ community.id }}</div>',
+  },
+}))
+
 import CommunityFullView from '../CommunityFullView.vue'
 
 const stubs = {
-  CommunityCard: {
-    props: ['community'],
-    // Renders the `details` slot so contact-block assertions still see it.
-    template: '<div class="community-card-stub">{{ community.id }}</div>',
-  },
   BButton: { template: '<button @click="$emit(\'click\')"><slot /></button>' },
 }
 
