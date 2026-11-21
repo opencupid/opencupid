@@ -127,11 +127,23 @@ describe('birthdayRangeForAgePrefs', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-11-21T14:00:00'))
     const range = birthdayRangeForAgePrefs(30, 40)
-    // Sweep daily birthdays covering candidates aged 27 to 43
-    const start = new Date('1983-01-01T00:00:00')
-    const end = new Date('1999-12-31T00:00:00')
+    // Sweep daily birthdays covering candidates aged 26 to 44 (both bounds ±1)
+    const start = new Date('1982-01-01T00:00:00')
+    const end = new Date('2000-12-31T00:00:00')
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       expect(inRange(d, range), d.toDateString()).toBe(isAgeCompatible(calculateAge(d), 30, 40))
     }
+  })
+})
+
+describe('isAgeCompatible', () => {
+  it('accepts ages up to 3 years outside the preferred range', () => {
+    expect(isAgeCompatible(27, 30, 40)).toBe(true)
+    expect(isAgeCompatible(43, 30, 40)).toBe(true)
+  })
+
+  it('rejects ages more than 3 years outside the preferred range', () => {
+    expect(isAgeCompatible(26, 30, 40)).toBe(false)
+    expect(isAgeCompatible(44, 30, 40)).toBe(false)
   })
 })

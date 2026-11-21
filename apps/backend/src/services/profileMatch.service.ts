@@ -176,12 +176,11 @@ export function subtractYears(date: Date, years: number): Date {
 }
 
 /**
- * ±1 year tolerance on age preference boundaries. Accounts for rounding in
- * discrete age calculation (e.g. someone turning 35 later this year should
- * still match a prefAgeMin of 35). Must be applied symmetrically in both
- * directions to avoid one-way matches.
+ * ±3 year tolerance on age preference boundaries, so candidates just outside
+ * the stated range still surface as matches. Must be applied symmetrically in
+ * both directions to avoid one-way matches.
  */
-const AGE_TOLERANCE = 1
+const AGE_TOLERANCE = 3
 
 /** Candidate ages (inclusive) accepted by an age preference range, tolerance applied. */
 function acceptedAgeRange(prefAgeMin: number, prefAgeMax: number) {
