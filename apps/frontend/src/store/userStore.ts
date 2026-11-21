@@ -21,6 +21,7 @@ import type {
   UpdateUserLanguageResponse,
   DeleteAccountResponse,
   AccountDeletionFeedbackResponse,
+  AccountDeletionFeedbackCommentResponse,
 } from '@zod/apiResponse.dto'
 
 export const useUserStore = defineStore('user', () => {
@@ -72,10 +73,26 @@ export const useUserStore = defineStore('user', () => {
 
   async function submitAccountDeletionFeedback(
     payload: AccountDeletionFeedbackPayload
+  ): Promise<{ success: true; id: string } | StoreError> {
+    try {
+      const res = await safeApiCall(() =>
+        api.post<AccountDeletionFeedbackResponse>('/users/deletion-feedback', payload)
+      )
+      return { success: true, id: res.data.id }
+    } catch (error) {
+      return storeError(error, 'Failed to submit feedback')
+    }
+  }
+
+  async function addAccountDeletionFeedbackComment(
+    id: string,
+    comment: string
   ): Promise<StoreVoidSuccess | StoreError> {
     try {
       await safeApiCall(() =>
-        api.post<AccountDeletionFeedbackResponse>('/users/deletion-feedback', payload)
+        api.patch<AccountDeletionFeedbackCommentResponse>(`/users/deletion-feedback/${id}`, {
+          comment,
+        })
       )
       return storeSuccess()
     } catch (error) {
@@ -90,6 +107,7 @@ export const useUserStore = defineStore('user', () => {
     updateLanguage,
     deleteAccount,
     submitAccountDeletionFeedback,
+    addAccountDeletionFeedbackComment,
   }
 })
 

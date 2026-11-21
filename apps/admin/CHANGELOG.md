@@ -1,5 +1,23 @@
 # @opencupid/admin
 
+## 0.90.2
+
+## 0.90.1
+
+## 0.90.0
+
+### Minor Changes
+
+- 8b2a117: Admin profiles table: drop Social/Active columns, show segment badge and face icon next to name, add relative Last active column, Profile link button, and a sort dropdown (date created / last active). Profile detail modal gains an Activity tab with conversation, message, like and match counts. The standalone Activity page and its `GET /admin/activity` endpoint are removed; the Signups and Daily Active KPIs now open hourly/daily drill-down charts like Interactions and Messages.
+
+## 0.89.0
+
+## 0.88.0
+
+### Minor Changes
+
+- b9ab0d5: Add an Activity page to the admin app listing profiles by last seen, with messages sent/received, likes sent, face and dating flags; the Daily Active KPI now links to it
+
 ## 0.87.0
 
 ## 0.86.0

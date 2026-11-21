@@ -54,6 +54,33 @@ source .env
 # on first request to each domain.
 ```
 
+## Multi-brand deployments
+
+Several brands (sites with their own domain, name and look) can share one database. A single `backend` and a single `worker` serve all of them; only the frontend runs once per brand.
+
+**Configuration**
+
+- Give each brand a file `brands/<name>.env` with its keys: `DOMAIN`, `SITE_NAME`, `FRONTEND_URL`, `EMAIL_FROM`, `EMAIL_REPLY_TO` (optional), `FALLBACK_LOCALE` (optional, `en` or `hu`; the brand's email and new-user language fallback and the site's default UI language), and whatever its frontend needs (`SITE_SHORT_NAME`, `WS_BASE_URL`, analytics, …). See `.env.example` for an example.
+- Each frontend gets `.env` plus its brand's file as `env_file`.
+- Mount the `brands/` directory read-only into the backend and the worker, and set `BRANDS_DIR` to the mount point. They get `.env` without any brand file: the backend reads every brand from the directory. A missing key or invalid value in any brand file stops both at startup, with the file and key in the error.
+- Route `/api` and `/ws` for every brand host to the one backend, for example ``(Host(`a.example.org`) || Host(`b.example.org`)) && PathPrefix(`/api`)``. Keep each frontend's ``Host(`…`)`` router on its own brand.
+
+**How the backend uses the request host**
+
+- Each request is matched to a brand by its host: the brand's domain itself or any subdomain of it (`www.`, `admin.`). Session cookies are scoped to that brand's domain, and a new user is recorded with that brand (`User.originDomain`).
+- Login, refresh and the other `/api/auth` routes answer **421** on a host that no brand serves. The proxy must therefore pass the browser's `Host` through, and must not trust a client-supplied `X-Forwarded-Host` (Traefik's default).
+- Internal callers that reach the backend by container name (`http://backend:3000/api/admin`, as the admin MCP and import jobs do) are unaffected, because they don't use `/api/auth`. Point them at the backend's service name.
+- Emails go out under the recipient's brand (`User.originDomain`). Every `originDomain` in the database must be the `DOMAIN` of a brand file. A user whose domain isn't listed gets no notification emails (the error is logged) and can't request a login link. Before removing a brand file, move its users to another brand.
+- CORS allows every brand's `frontendUrl` origin.
+
+**Moving from one backend per brand**
+
+1. Deploy the new backend image first, with the old one-backend-per-brand services left as they are, but mount `brands/` and set `BRANDS_DIR` for each of them. Every backend then knows every brand, so they keep working.
+2. Then merge them into one `backend` service with the combined routes and no brand `env_file`. Update everything that addressed the old service names (`depends_on`, URLs like `http://backend-<brand>:3000`).
+3. Live updates (new messages, likes, call signalling) between users on different brands start working only after step 2. Each backend process holds its own WebSocket connections.
+
+**Local development:** set `DOMAIN=localhost`. The Vite dev proxy rewrites `Host` to `localhost`, so any other value gets a 421 on login.
+
 ## Management commands
 
 All management commands are defined as pnpm scripts in `apps/backend/package.json` and run inside containers via `docker compose exec`.

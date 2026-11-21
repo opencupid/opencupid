@@ -39,8 +39,22 @@ vi.mock('@/lib/appconfig', () => ({
     NODE_ENV: 'development',
     ALTCHA_HMAC_KEY: 'x',
     IMAGE_MAX_SIZE: 1000,
-    FRONTEND_URL: 'http://test',
-    DOMAIN: 'fallback.example',
+    brands: [
+      {
+        domain: 'fallback.example',
+        siteName: 'Fallback',
+        frontendUrl: 'https://fallback.example',
+        emailFrom: 'hello@fallback.example',
+        fallbackLocale: 'en',
+      },
+      {
+        domain: 'other.example',
+        siteName: 'Other',
+        frontendUrl: 'https://other.example',
+        emailFrom: 'hello@other.example',
+        fallbackLocale: 'hu',
+      },
+    ],
     DEV_AUTH_BYPASS_ENABLED: true,
   },
 }))
@@ -51,6 +65,7 @@ beforeEach(async () => {
     set: vi.fn().mockResolvedValue('OK'),
   }
   reply = new MockReply()
+  reply.request.hostname = 'fallback.example'
   mockUserService = {
     validateLoginToken: vi.fn(),
     setLoginToken: vi.fn(),
@@ -71,20 +86,26 @@ beforeEach(async () => {
 })
 
 describe('GET /verify-token', () => {
+  it('is not registered, so no GET can spend a login token', () => {
+    expect(fastify.routes['GET /verify-token']).toBeUndefined()
+  })
+})
+
+describe('POST /verify-token', () => {
   it('AUTH_INVALID_INPUT on bad zod parse', async () => {
-    const handler = fastify.routes['GET /verify-token']
-    await handler({ query: { token: 'ab' } } as any, reply as any)
+    const handler = fastify.routes['POST /verify-token']
+    await handler({ body: { token: 'ab' } } as any, reply as any)
     expect(reply.payload.code).toBe('AUTH_INVALID_INPUT')
   })
 
   it('returns 422 if token is invalid', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     mockUserService.validateLoginToken.mockResolvedValue({
       code: 'AUTH_INVALID_TOKEN',
       message: 'Invalid token',
       success: false,
     })
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(422)
     expect(reply.payload.code).toBe('AUTH_INVALID_TOKEN')
@@ -92,7 +113,7 @@ describe('GET /verify-token', () => {
   })
 
   it('returns 200 and token + refreshToken for existing user', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     const user = {
       id: 'user1',
       email: 'test@example.com',
@@ -118,7 +139,7 @@ describe('GET /verify-token', () => {
       },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
@@ -141,20 +162,14 @@ describe('GET /verify-token', () => {
       httpOnly: true,
       sameSite: 'lax',
     })
-    // Dev mode: the new-shape cookie is already host-only, so emitting a
-    // legacy host-only clearCookie would target the same (name, Domain, Path)
-    // slot as the just-set cookie and wipe it. The migration helper must
-    // skip the legacy clear in this case.
-    const clearedNames = reply.clearedCookies.map((c: any) => c.name)
-    expect(clearedNames).not.toContain('__session')
-    expect(clearedNames).not.toContain('__refresh')
+    expect(reply.clearedCookies).toEqual([])
   })
 
   it('sets Domain=.<DOMAIN> on session + refresh cookies in production', async () => {
     const origNodeEnv = appConfig.NODE_ENV
     appConfig.NODE_ENV = 'production'
     try {
-      const handler = fastify.routes['GET /verify-token']
+      const handler = fastify.routes['POST /verify-token']
       const user = { id: 'u1', email: 't@e.com', tokenVersion: 0, roles: [], language: 'en' }
       mockUserService.validateLoginToken.mockResolvedValue({
         success: true,
@@ -174,7 +189,7 @@ describe('GET /verify-token', () => {
         },
       })
       fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token') }
-      await handler({ query: { token: 'abc123' } } as any, reply as any)
+      await handler({ body: { token: 'abc123' } } as any, reply as any)
 
       const session = reply.cookies.find((c: any) => c.name === '__session')!
       const refresh = reply.cookies.find((c: any) => c.name === '__refresh')!
@@ -182,18 +197,14 @@ describe('GET /verify-token', () => {
       // subdomain (apex + app. + api. etc.).
       expect(session.opts.domain).toBe('.fallback.example')
       expect(refresh.opts.domain).toBe('.fallback.example')
-      // The legacy-shape delete must NOT carry the Domain attribute — it
-      // targets the pre-migration host-only slot, which the browser keys
-      // separately from the domain-scoped slot.
-      const clearedSession = reply.clearedCookies.find((c: any) => c.name === '__session')!
-      expect(clearedSession.opts).toEqual({ path: '/' })
+      expect(reply.clearedCookies).toEqual([])
     } finally {
       appConfig.NODE_ENV = origNodeEnv
     }
   })
 
   it('returns 200 and token for new user and initializes profile', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     const user = {
       id: 'user2',
       email: 'new@example.com',
@@ -220,7 +231,7 @@ describe('GET /verify-token', () => {
       },
     })
     fastify.jwt = { sign: vi.fn().mockReturnValue('jwt-token2') }
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(mockCreateNewUserSession).toHaveBeenCalledWith(user)
     expect(reply.statusCode).toBe(200)
@@ -230,11 +241,11 @@ describe('GET /verify-token', () => {
   })
 
   it('returns 500 on unexpected error', async () => {
-    const handler = fastify.routes['GET /verify-token']
+    const handler = fastify.routes['POST /verify-token']
     mockUserService.validateLoginToken.mockImplementation(() => {
       throw new Error('fail')
     })
-    const req = { query: { token: 'abc123' } }
+    const req = { body: { token: 'abc123' } }
     await handler(req as any, reply as any)
     expect(reply.statusCode).toBe(500)
     expect(reply.payload.code).toBe('AUTH_INTERNAL_ERROR')
@@ -307,7 +318,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: true,
     })
     const req = {
-      hostname: 'test.local',
+      hostname: 'fallback.example',
       body: {
         email: 'newuser@example.com',
         captchaSolution: 'ok',
@@ -331,6 +342,59 @@ describe('POST /send-magic-link', () => {
     expect(reply.payload.user.email).toBe('newuser@example.com')
   })
 
+  it("records the brand of the request host as a new user's originDomain", async () => {
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: { id: 'user7', email: 'n@example.com', language: 'en' },
+      isNewUser: true,
+    })
+    const req = {
+      hostname: 'www.other.example',
+      body: { email: 'n@example.com', captchaSolution: 'ok', language: 'en' },
+    }
+    await handler(req as any, reply as any)
+    expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
+      expect.any(Object),
+      'abc123',
+      'en',
+      'other.example'
+    )
+  })
+
+  it.each([
+    ['fallback.example', 'zz', 'en'],
+    ['other.example', 'zz', 'hu'],
+    ['other.example', '', 'hu'],
+    ['other.example', 'constructor', 'hu'],
+    ['other.example', 'en-GB', 'en'],
+    ['fallback.example', 'hu-HU', 'hu'],
+  ])(
+    "on %s, stores language '%s' as '%s' (the brand's fallback when unsupported)",
+    async (hostname, language, stored) => {
+      mockUserService.setLoginToken.mockResolvedValue({
+        user: { id: 'user8', email: 'n@example.com', language: stored },
+        isNewUser: true,
+      })
+      const req = { hostname, body: { email: 'n@example.com', captchaSolution: 'ok', language } }
+      await handler(req as any, reply as any)
+      expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
+        expect.any(Object),
+        'abc123',
+        stored,
+        hostname
+      )
+    }
+  )
+
+  it('rejects a magic-link request on a host no brand serves', async () => {
+    const req = {
+      hostname: 'nowhere.example',
+      body: { email: 'n@example.com', captchaSolution: 'ok', language: 'en' },
+    }
+    await expect(handler(req as any, reply as any)).rejects.toMatchObject({ statusCode: 421 })
+    expect(mockUserService.setLoginToken).not.toHaveBeenCalled()
+    expect(notifier.notifyUser).not.toHaveBeenCalled()
+  })
+
   it('sends token via email for existing user and returns login status', async () => {
     mockUserService.setLoginToken.mockResolvedValue({
       user: {
@@ -343,7 +407,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
-      hostname: 'test.local',
+      hostname: 'fallback.example',
       body: {
         email: 'existing@example.com',
         captchaSolution: 'ok',
@@ -359,6 +423,40 @@ describe('POST /send-magic-link', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.status).toBe('login')
     expect(reply.payload.user.email).toBe('existing@example.com')
+  })
+
+  it('carries the redirect deep link in the magic-link path', async () => {
+    mockUserService.setLoginToken.mockResolvedValue({
+      user: { id: 'user4', email: 'existing@example.com', language: 'en' },
+      isNewUser: false,
+    })
+    const req = {
+      body: {
+        email: 'existing@example.com',
+        captchaSolution: 'x',
+        language: 'en',
+        redirect: '/inbox/abc?tab=1',
+      },
+      hostname: 'fallback.example',
+    }
+    await handler(req as any, reply as any)
+    expect(notifier.notifyUser).toHaveBeenCalledWith('user4', 'login_link', {
+      path: '/magic-link?token=abc123&redirect=%2Finbox%2Fabc%3Ftab%3D1',
+    })
+  })
+
+  it('returns 400 when redirect is not an in-app path', async () => {
+    const req = {
+      body: {
+        email: 'existing@example.com',
+        captchaSolution: 'x',
+        language: 'en',
+        redirect: '//evil.example',
+      },
+    }
+    await handler(req as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(notifier.notifyUser).not.toHaveBeenCalled()
   })
 
   // The magic-link email itself is branded by the notifier from originDomain;
@@ -380,6 +478,7 @@ describe('POST /send-magic-link', () => {
         isNewUser: false,
       })
       const req = {
+        hostname: 'fallback.example',
         body: {
           email: 'crossbrand@example.com',
           captchaSolution: 'ok',
@@ -421,6 +520,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
+      hostname: 'fallback.example',
       body: {
         email: 'match@example.com',
         captchaSolution: 'ok',
@@ -452,6 +552,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: false,
     })
     const req = {
+      hostname: 'fallback.example',
       body: {
         email: 'empty@example.com',
         captchaSolution: 'ok',
@@ -478,6 +579,7 @@ describe('POST /send-magic-link', () => {
       isNewUser: true,
     })
     const req = {
+      hostname: 'fallback.example',
       body: {
         email: 'brand-new@example.com',
         captchaSolution: 'ok',

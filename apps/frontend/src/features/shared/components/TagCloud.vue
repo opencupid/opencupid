@@ -4,6 +4,7 @@ import { useElementSize, useDebounceFn } from '@vueuse/core'
 import { useTagsStore } from '@/store/tagStore'
 import type { PopularTag } from '@zod/tag/tag.dto'
 import { bus } from '@/lib/bus'
+import { useAppColorMode } from '@/features/app/composables/useAppColorMode'
 import cloud from 'd3-cloud'
 
 const props = withDefaults(
@@ -25,7 +26,13 @@ const tagStore = useTagsStore()
 const FONT_MIN = 12
 const FONT_MAX = 48
 const FONT_FAMILY = 'Nunito, Poppins, sans-serif'
-const COLORS = ['#5e4b2c', '#8b6914', '#6b8e23', '#a0522d', '#2e8b57', '#b8860b', '#556b2f']
+// Earth tones, with a lifted set that stays legible on the dark page.
+const PALETTES = {
+  light: ['#5e4b2c', '#8b6914', '#6b8e23', '#a0522d', '#2e8b57', '#b8860b', '#556b2f'],
+  dark: ['#c9a66b', '#e0b84a', '#a5c95a', '#d98a66', '#5fc494', '#e6b84d', '#9dbb6a'],
+}
+const colorMode = useAppColorMode()
+const colors = computed(() => (colorMode.value === 'dark' ? PALETTES.dark : PALETTES.light))
 
 const container = useTemplateRef<HTMLDivElement>('container')
 const { width, height } = useElementSize(container)
@@ -186,7 +193,7 @@ onUnmounted(() => {
         dominant-baseline="central"
         :x="w.x"
         :y="w.y"
-        :fill="COLORS[i % COLORS.length]"
+        :fill="colors[i % colors.length]"
         :style="{ fontSize: `${w.size}px`, fontFamily: FONT_FAMILY, cursor: 'pointer' }"
         class="tag-cloud-word"
         @click="handleTagClick(w.tag)"

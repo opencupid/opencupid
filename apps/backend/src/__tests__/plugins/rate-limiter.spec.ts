@@ -11,6 +11,11 @@ beforeEach(async () => {
   fastify.get('/ping', { config: rateLimitConfig(fastify, '1 minute', 1) }, async () => ({
     ok: true,
   }))
+  fastify.get(
+    '/coded',
+    { config: rateLimitConfig(fastify, '1 minute', 1, 'AUTH_RATE_LIMITED') },
+    async () => ({ ok: true })
+  )
   fastify.get('/boom', async () => {
     throw new Error('kaboom')
   })
@@ -36,6 +41,17 @@ describe('rate-limiter plugin', () => {
     })
     expect(body).not.toHaveProperty('statusCode')
     expect(body).not.toHaveProperty('error')
+  })
+
+  it('includes the route error code in the 429 body when one is configured', async () => {
+    await fastify.inject({ method: 'GET', url: '/coded' })
+    const res = await fastify.inject({ method: 'GET', url: '/coded' })
+    expect(res.statusCode).toBe(429)
+    expect(res.json()).toEqual({
+      success: false,
+      message: 'Rate limit exceeded.',
+      code: 'AUTH_RATE_LIMITED',
+    })
   })
 
   it('delegates non-rate-limit errors to the default Fastify error handler', async () => {

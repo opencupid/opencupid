@@ -99,7 +99,6 @@ const { width, height } = useWindowSize()
 const selectHeight = computed(() => {
   return height.value * 0.25
 })
-
 </script>
 
 <template>
@@ -151,14 +150,12 @@ const selectHeight = computed(() => {
 
 <style lang="scss">
 .interests-multiselect {
- 
-
   .multiselect__tag {
     background-color: var(--bs-tag);
     color: var(--bs-body-bg);
 
     &--hint {
-      background-color: #efefef;
+      background-color: var(--bs-secondary-bg);
       color: var(--bs-secondary);
       opacity: 0.7;
     }

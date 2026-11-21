@@ -113,15 +113,24 @@ const handleSubmitted = () => {
 
 <!--
   Unscoped: BModal teleports content-class target to <body>, so a scoped
-  selector (or :deep()) cannot reach it. --bs-dating-light is emitted at
-  :root by Bootstrap's _root.scss from $dating-light in theme.scss.
+  selector (or :deep()) cannot reach it. The match wash is a layer of its
+  own so it can fade out once the message is sent.
 -->
 <style lang="scss">
 .match-popup-content {
-  background-color: var(--bs-dating-light);
-  transition: background-color 300ms ease-in-out;
+  background-color: var(--surface-inset-bg);
+  isolation: isolate;
 }
-.match-popup-content.sent {
-  background-color: white;
+.match-popup-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: var(--dating-tint);
+  transition: opacity 300ms ease-in-out;
+}
+.match-popup-content.sent::before {
+  opacity: 0;
 }
 </style>

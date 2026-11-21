@@ -188,8 +188,8 @@ describe('userStore', () => {
   })
 
   describe('submitAccountDeletionFeedback', () => {
-    it('posts the answer and reports success', async () => {
-      mockApi.post.mockResolvedValue({ data: { success: true } })
+    it('posts the answer and returns its id', async () => {
+      mockApi.post.mockResolvedValue({ data: { success: true, id: 'fb1' } })
 
       const res = await useUserStore().submitAccountDeletionFeedback({
         reason: 'technical_issue',
@@ -198,7 +198,7 @@ describe('userStore', () => {
       expect(mockApi.post).toHaveBeenCalledWith('/users/deletion-feedback', {
         reason: 'technical_issue',
       })
-      expect(res.success).toBe(true)
+      expect(res).toEqual({ success: true, id: 'fb1' })
     })
 
     it('reports failure', async () => {
@@ -208,6 +208,27 @@ describe('userStore', () => {
         reason: 'other',
         comment: 'Too quiet',
       })
+
+      expect(res.success).toBe(false)
+    })
+  })
+
+  describe('addAccountDeletionFeedbackComment', () => {
+    it('patches the comment onto the answer and reports success', async () => {
+      mockApi.patch.mockResolvedValue({ data: { success: true } })
+
+      const res = await useUserStore().addAccountDeletionFeedbackComment('fb1', 'Upload failed')
+
+      expect(mockApi.patch).toHaveBeenCalledWith('/users/deletion-feedback/fb1', {
+        comment: 'Upload failed',
+      })
+      expect(res.success).toBe(true)
+    })
+
+    it('reports failure', async () => {
+      mockApi.patch.mockRejectedValue(new Error('nope'))
+
+      const res = await useUserStore().addAccountDeletionFeedbackComment('fb1', 'Upload failed')
 
       expect(res.success).toBe(false)
     })

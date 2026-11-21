@@ -153,6 +153,10 @@ withDefaults(
   background: #e8e8e8;
 }
 
+[data-bs-theme='dark'] .map-placeholder {
+  background: var(--bs-secondary-bg);
+}
+
 .placeholder-svg {
   width: 100%;
   height: 100%;

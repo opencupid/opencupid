@@ -221,7 +221,23 @@ export class UserService {
     })
   }
 
-  async saveAccountDeletionFeedback(feedback: AccountDeletionFeedbackPayload): Promise<void> {
-    await prisma.accountDeletionFeedback.create({ data: feedback })
+  async saveAccountDeletionFeedback(feedback: AccountDeletionFeedbackPayload): Promise<string> {
+    const { id } = await prisma.accountDeletionFeedback.create({
+      data: feedback,
+      select: { id: true },
+    })
+    return id
+  }
+
+  /**
+   * Adds a comment to an answer that has none. Returns false when there is no
+   * such answer, so an existing comment can never be overwritten.
+   */
+  async addAccountDeletionFeedbackComment(id: string, comment: string): Promise<boolean> {
+    const { count } = await prisma.accountDeletionFeedback.updateMany({
+      where: { id, comment: null },
+      data: { comment },
+    })
+    return count > 0
   }
 }

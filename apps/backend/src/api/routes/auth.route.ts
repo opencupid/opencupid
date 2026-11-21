@@ -7,6 +7,9 @@ import { createNewUserSession, getExistingUserSession } from '@/services/auth-se
 import { rateLimitConfig, sendError, sendUnauthorizedError } from '../helpers'
 import { CaptchaService } from '@/services/captcha.service'
 import { appConfig } from '@/lib/appconfig'
+import { brandForHost } from '@/lib/brand'
+import brandHostPlugin from '@/plugins/brand-host'
+import { normalizeLocale } from '@shared/i18n/locales'
 import '@fastify/cookie'
 
 import {
@@ -21,6 +24,7 @@ import type {
   WsTicketResponse,
 } from '@zod/apiResponse.dto'
 import { JwtPayload } from '@zod/user/user.dto'
+import { AuthErrorCodes } from '@zod/user/auth.dto'
 import {
   setSessionCookie,
   setRefreshCookie,
@@ -34,27 +38,35 @@ import {
 const WS_TICKET_TTL = 30 // seconds
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
+  // Auth routes spend login and refresh tokens and then set brand-scoped
+  // cookies, so a host no brand serves is rejected before any of them runs.
+  // Scoped to these routes: internal callers (the admin MCP) reach the rest of
+  // the API by container hostname.
+  await fastify.register(brandHostPlugin)
+
   const userService = UserService.getInstance()
   const captchaService = new CaptchaService(appConfig.ALTCHA_HMAC_KEY)
   const refreshTokenService = new RefreshTokenService(fastify.redis)
 
   /**
-   * GET /verify-token
+   * POST /verify-token
    * Validates a magic-link token, creates or resumes a user session.
+   * POST only: mail gateways and link scanners prefetch with GET, so a GET
+   * that spent the single-use token would leave the user with a dead link.
    * Sets __session and __refresh cookies on success.
-   * @query {string} token - The magic-link or OTP token
+   * @body {string} token - The magic-link or OTP token
    * @returns {VerifyTokenResponse} JWT access token (refresh token set via httpOnly cookie)
    */
-  fastify.get(
+  fastify.post(
     '/verify-token',
     {
       config: {
-        ...rateLimitConfig(fastify, '15 minute', 5),
+        ...rateLimitConfig(fastify, '3 minute', 5, AuthErrorCodes.RATE_LIMITED),
       },
     },
     async (req, reply) => {
       try {
-        const params = VerifyTokenPayloadSchema.safeParse(req.query)
+        const params = VerifyTokenPayloadSchema.safeParse(req.body)
         if (!params.success) {
           return reply.code(400).send({ code: 'AUTH_INVALID_INPUT' })
         }
@@ -215,13 +227,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
    * @body {string} email - Email address (send email link)
    * @body {string} captchaSolution - ALTCHA captcha solution
    * @body {string} [language] - Preferred language code
+   * @body {string} [redirect] - In-app path to land on after login
    * @returns {SendMagicLinkResponse} User info + status ('login' | 'register')
    */
   fastify.post(
     '/send-magic-link',
     {
       config: {
-        ...rateLimitConfig(fastify, '15 minute', 5),
+        ...rateLimitConfig(fastify, '3 minute', 5, AuthErrorCodes.RATE_LIMITED),
       },
     },
     async (req, reply) => {
@@ -230,7 +243,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ code: 'AUTH_MISSING_FIELD' })
       }
 
-      const { email, captchaSolution, language } = params.data
+      const { email, captchaSolution, language, redirect } = params.data
 
       try {
         const captchaOk = await captchaService.validate(captchaSolution)
@@ -244,14 +257,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       const token = userService.generateLoginToken()
 
-      // Per-brand-stack deployment: each API container's env DOMAIN is the
-      // brand it serves. Read it directly instead of req.hostname — vite's
-      // dev proxy rewrites Host (changeOrigin: true) which would clobber it.
+      // A new user belongs to the brand they signed up on. In dev the vite
+      // proxy rewrites Host to localhost (changeOrigin), which is the dev brand.
+      // A language without translations becomes that brand's fallback locale.
+      const brand = brandForHost(req.hostname)
       const { user, isNewUser } = await userService.setLoginToken(
         { email },
         token,
-        language,
-        appConfig.DOMAIN
+        normalizeLocale(language, brand.fallbackLocale),
+        brand.domain
       )
 
       const userReturned: LoginUser = {
@@ -270,8 +284,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       // existing users to new brand domains expires.
       setOriginCookie(reply, user.originDomain)
 
+      // `redirect` rides along in the emailed link so the deep link survives
+      // the link being opened in another tab, browser or device.
+      const query = new URLSearchParams({ token, ...(redirect && { redirect }) })
       await notifierService.notifyUser(user.id, 'login_link', {
-        path: `/magic-link?token=${token}`,
+        path: `/magic-link?${query}`,
       })
 
       const response: SendMagicLinkResponse = {

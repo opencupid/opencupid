@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, watchEffect, computed, inject, useId, type Ref } from 'vue'
 import { funnel } from 'remeda'
+import { useI18n } from 'vue-i18n'
 
 import { useLocalStore } from '@/store/localStore'
 
@@ -21,6 +22,7 @@ import { useUserContentImageStore } from '@/features/images/stores/userContentIm
 import { useMessageStore } from '../stores/messageStore'
 
 const toast = useToast()
+const { t } = useI18n()
 
 const messageStore = useMessageStore()
 messageStore.error = null
@@ -79,6 +81,29 @@ async function sendImageMessage(imageIds: string[]) {
   imageStore.$reset()
   if (result.success) {
     emit('message:sent', result.data!)
+  }
+}
+
+// Pasting an image into the textarea attaches it exactly like picking a file:
+// it is uploaded into the draft store and the watcher above sends it.
+const PASTEABLE_IMAGE_TYPES = ['image/jpeg', 'image/png']
+
+async function handlePaste(event: ClipboardEvent) {
+  const file = Array.from(event.clipboardData?.files ?? []).find((f) =>
+    PASTEABLE_IMAGE_TYPES.includes(f.type)
+  )
+  // No image on the clipboard — let the browser paste text as usual.
+  if (!file) return
+  event.preventDefault()
+  // One attachment at a time: a second upload landing mid-send would be sent twice.
+  if (imageStore.isLoading || isSending.value) return
+
+  const res = await imageStore.upload(file, '')
+  if (!res.success) {
+    const code = res.message ?? 'unknown'
+    toast.error(
+      t(`profiles.image_upload.errors.${code}`, t('profiles.image_upload.errors.unknown'))
+    )
   }
 }
 
@@ -243,6 +268,7 @@ function handleVoiceRecordingError(error: string) {
           class="mb-2"
           :class="{ 'opacity-25': isVoiceActive }"
           @keydown="handleKeyPress"
+          @paste="handlePaste"
           :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive"
         />

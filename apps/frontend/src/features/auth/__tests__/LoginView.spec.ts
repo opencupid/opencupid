@@ -3,12 +3,17 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 const push = vi.fn()
+const route = { query: {} as Record<string, unknown> }
+const resolve = vi.fn((path: string) => ({ fullPath: path, meta: { requiresAuth: true } }))
 const sendMagicLink = vi.fn()
 const setLanguage = vi.fn()
 const track = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/umami', () => ({ tracker: { track } }))
-vi.mock('vue-router', () => ({ useRouter: () => ({ push }) }))
+vi.mock('vue-router', () => ({
+  useRoute: () => route,
+  useRouter: () => ({ push, resolve }),
+}))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (key: string) => key }) }))
 vi.mock('../stores/authStore', () => ({ useAuthStore: () => ({ sendMagicLink }) }))
 vi.mock('@/store/i18nStore', () => ({
@@ -24,6 +29,7 @@ describe('LoginView', () => {
   beforeEach(() => {
     localStorage.clear()
     push.mockReset()
+    route.query = {}
     sendMagicLink.mockReset()
     setLanguage.mockReset()
     track.mockReset()
@@ -69,7 +75,7 @@ describe('LoginView', () => {
       },
     })
 
-  it('tracks auth-magic-link-failed when sending the magic link fails', async () => {
+  it('tracks auth-magic-link-failed:<code> when sending the magic link fails', async () => {
     sendMagicLink.mockResolvedValue({
       success: false,
       code: 'AUTH_RATE_LIMITED',
@@ -81,7 +87,7 @@ describe('LoginView', () => {
     await wrapper.get('[data-test="submit"]').trigger('click')
     await flushPromises()
 
-    expect(track).toHaveBeenCalledWith('auth-magic-link-failed', { code: 'AUTH_RATE_LIMITED' })
+    expect(track).toHaveBeenCalledWith('auth-magic-link-failed:AUTH_RATE_LIMITED')
     expect(push).not.toHaveBeenCalled()
   })
 
@@ -93,6 +99,30 @@ describe('LoginView', () => {
     await flushPromises()
 
     expect(track).not.toHaveBeenCalled()
-    expect(push).toHaveBeenCalledWith({ name: 'MagicLink' })
+    expect(sendMagicLink).toHaveBeenCalledWith(expect.objectContaining({ redirect: undefined }))
+    expect(push).toHaveBeenCalledWith({ name: 'MagicLink', query: { redirect: undefined } })
+  })
+
+  it('forwards the deep link from the redirect query to the magic link request', async () => {
+    route.query = { redirect: '/inbox/abc' }
+    sendMagicLink.mockResolvedValue({ success: true, user: {} })
+
+    const wrapper = mountWithSubmittingLoginForm()
+    await wrapper.get('[data-test="submit"]').trigger('click')
+    await flushPromises()
+
+    expect(sendMagicLink).toHaveBeenCalledWith(expect.objectContaining({ redirect: '/inbox/abc' }))
+    expect(push).toHaveBeenCalledWith({ name: 'MagicLink', query: { redirect: '/inbox/abc' } })
+  })
+
+  it('drops a redirect that is not an in-app path', async () => {
+    route.query = { redirect: '//evil.example' }
+    sendMagicLink.mockResolvedValue({ success: true, user: {} })
+
+    const wrapper = mountWithSubmittingLoginForm()
+    await wrapper.get('[data-test="submit"]').trigger('click')
+    await flushPromises()
+
+    expect(sendMagicLink).toHaveBeenCalledWith(expect.objectContaining({ redirect: undefined }))
   })
 })

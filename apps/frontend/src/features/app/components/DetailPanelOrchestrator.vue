@@ -73,7 +73,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
   height: 3rem;
   padding: 0;
 
-  background: $white;
+  background: var(--bs-body-bg);
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-left: none;
   box-shadow: 1px 0px 2px rgba(0, 0, 0, 0.1);
@@ -84,7 +84,7 @@ const { isOpen, currentComponent, currentProps, close, notifyHidden } = useDetai
   font-size: 0.825rem;
 
   &:hover {
-    background-color: whitesmoke;
+    background-color: var(--bs-secondary-bg);
   }
 
   &::before {

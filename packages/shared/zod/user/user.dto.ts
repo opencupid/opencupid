@@ -8,8 +8,9 @@ import {
 } from '../generated'
 import { fallbackLocale, normalizeLocale } from '../../i18n/locales'
 
-// These schemas run in both runtimes and cannot read FALLBACK_LOCALE, so a
-// stored language falls back to the built-in locale rather than the configured one.
+// These schemas run in both runtimes and know no brand, so a language normalized
+// here falls back to the built-in locale. Signup normalizes against the brand's
+// fallback locale in the route instead (see /auth/send-magic-link).
 
 export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
@@ -23,9 +24,19 @@ export const UserIdentifierSchema = z.object({
 })
 export type UserIdentifier = z.infer<typeof UserIdentifierSchema>
 
+/**
+ * In-app path to land on after login (the deep link the user was heading to
+ * when they were sent to the login page). Same-origin absolute paths only.
+ */
+export const LoginRedirectSchema = z
+  .string()
+  .max(512)
+  .regex(/^\/(?![/\\])/, 'Must be an in-app path')
+
 export const UserIdentifyPayloadSchema = UserIdentifierSchema.extend({
   captchaSolution: z.string().min(1, 'Captcha solution is required'),
-  language: z.string().transform((lang) => normalizeLocale(lang, fallbackLocale)),
+  language: z.string(),
+  redirect: LoginRedirectSchema.optional(),
 })
 export type UserIdentifyPayload = z.infer<typeof UserIdentifyPayloadSchema>
 
@@ -94,13 +105,21 @@ export type DeleteAccountPayload = z.infer<typeof DeleteAccountPayloadSchema>
 
 export const ACCOUNT_DELETION_COMMENT_MAX_LENGTH = 2000
 
-// Exit survey submitted after account deletion. A free-text comment belongs
-// with the "other" reason only, where it is mandatory.
+// Optional follow-up comment added to an exit survey answer that was stored
+// without one.
+export const AccountDeletionFeedbackCommentPayloadSchema = z.object({
+  comment: z.string().trim().min(1).max(ACCOUNT_DELETION_COMMENT_MAX_LENGTH),
+})
+export type AccountDeletionFeedbackCommentPayload = z.infer<
+  typeof AccountDeletionFeedbackCommentPayloadSchema
+>
+
+// Exit survey submitted after account deletion. "other" must come with a
+// comment; the preset reasons are stored bare and may get one as a follow-up.
 export const AccountDeletionFeedbackPayloadSchema = z.discriminatedUnion('reason', [
   z.object({ reason: AccountDeletionReasonSchema.exclude(['other']) }),
-  z.object({
+  AccountDeletionFeedbackCommentPayloadSchema.extend({
     reason: z.literal(AccountDeletionReasonSchema.enum.other),
-    comment: z.string().trim().min(1).max(ACCOUNT_DELETION_COMMENT_MAX_LENGTH),
   }),
 ])
 export type AccountDeletionFeedbackPayload = z.infer<typeof AccountDeletionFeedbackPayloadSchema>

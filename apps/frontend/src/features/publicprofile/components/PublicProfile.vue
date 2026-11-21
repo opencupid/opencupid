@@ -56,10 +56,10 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 
 <style scoped>
 .public-profile {
-  --panel-bg: var(--bs-body-bg);
+  --panel-tint: none;
 }
 .public-profile.dating {
-  --panel-bg: var(--bs-dating-light);
+  --panel-tint: linear-gradient(var(--dating-tint), var(--dating-tint));
 }
 
 .secondary-nav {
@@ -77,7 +77,12 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
   right: 0;
   bottom: 0;
   height: 5rem;
-  background: linear-gradient(to bottom, transparent, var(--panel-bg));
+  /* The panel's own surface, faded in from the top so content scrolls out
+     from under the buttons. */
+  background-color: var(--bs-body-bg);
+  background-image: var(--panel-tint);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000);
+  mask-image: linear-gradient(to bottom, transparent, #000);
   pointer-events: none;
 }
 </style>

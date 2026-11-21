@@ -121,4 +121,15 @@ describe('ConversationSummaries', () => {
 
     expect(wrapper.find('.last-message').text()).toBe('Bold and italic')
   })
+
+  it('shows a loading indicator only while the next page is loading', async () => {
+    const wrapper = mount(ConversationSummaries, {
+      props: { conversations: [makeConvo()], activeConversation: null, loading: false },
+      ...globalMocks,
+    })
+    expect(wrapper.find('[data-testid="conversations-loading-more"]').exists()).toBe(false)
+
+    await wrapper.setProps({ loadingMore: true })
+    expect(wrapper.find('[data-testid="conversations-loading-more"]').exists()).toBe(true)
+  })
 })

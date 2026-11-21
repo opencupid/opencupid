@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { formatTimeAgoIntl } from '@vueuse/core'
 import { useApi, apiRequest } from '../composables/useApi'
 import {
   flagProfile,
@@ -24,10 +25,11 @@ interface AdminProfile {
   isBlocked: boolean
   isOnboarded: boolean
   gender: string | null
+  hasFace: boolean
   createdAt: string
   userId: string
   user: { email: string; phonenumber: string | null } | null
-  activitySummary: { segment: string } | null
+  activitySummary: { segment: string; lastSeenAt: string } | null
   hasActiveTrustFlag: boolean
 }
 
@@ -41,7 +43,6 @@ interface AdminProfileTrustFlag {
 
 interface AdminProfileDetail extends AdminProfile {
   trustFlags: AdminProfileTrustFlag[]
-  hasFace: boolean
   profileImages: AdminProfileImage[]
 }
 
@@ -109,56 +110,15 @@ const sending = ref(false)
 const sendError = ref<string | null>(null)
 const sendResult = ref<{ sent: number; failed: number } | null>(null)
 
-type SortColumn =
-  | 'publicName'
-  | 'country'
-  | 'gender'
-  | 'isSocialActive'
-  | 'isDatingActive'
-  | 'isActive'
-  | 'segment'
-  | 'createdAt'
-const sortColumn = ref<SortColumn | null>(null)
-const sortDirection = ref<'asc' | 'desc'>('asc')
+type ProfileSort = 'created' | 'lastActive'
+const sortOptions: { value: ProfileSort; label: string }[] = [
+  { value: 'created', label: 'Date created' },
+  { value: 'lastActive', label: 'Last active' },
+]
+const selectedSort = ref<ProfileSort>('created')
 
-const sortedProfiles = computed(() => {
-  if (!sortColumn.value) return profiles.value
-  const col = sortColumn.value
-  const dir = sortDirection.value === 'asc' ? 1 : -1
-  return [...profiles.value].sort((a, b) => {
-    let aVal: string | number
-    let bVal: string | number
-    if (col === 'isSocialActive' || col === 'isDatingActive' || col === 'isActive') {
-      aVal = a[col] ? 1 : 0
-      bVal = b[col] ? 1 : 0
-    } else if (col === 'segment') {
-      aVal = (a.activitySummary?.segment ?? '').toLowerCase()
-      bVal = (b.activitySummary?.segment ?? '').toLowerCase()
-    } else if (col === 'createdAt') {
-      aVal = a.createdAt
-      bVal = b.createdAt
-    } else {
-      aVal = (a[col] ?? '').toLowerCase()
-      bVal = (b[col] ?? '').toLowerCase()
-    }
-    if (aVal < bVal) return -1 * dir
-    if (aVal > bVal) return 1 * dir
-    return 0
-  })
-})
-
-function toggleSort(col: SortColumn) {
-  if (sortColumn.value === col) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortColumn.value = col
-    sortDirection.value = 'asc'
-  }
-}
-
-function sortIndicator(col: SortColumn) {
-  if (sortColumn.value !== col) return ''
-  return sortDirection.value === 'asc' ? ' ▲' : ' ▼'
+function formatLastActive(lastSeenAt: string) {
+  return formatTimeAgoIntl(new Date(lastSeenAt), { locale: 'en' })
 }
 
 async function fetchCountries() {
@@ -176,6 +136,7 @@ function buildParams() {
     search: search.value || undefined,
     country: selectedCountry.value || undefined,
     segments: selectedSegments.value.length > 0 ? selectedSegments.value.join(',') : undefined,
+    sort: selectedSort.value,
   }
 }
 
@@ -269,7 +230,69 @@ function segmentBadgeClass(segment: string) {
 const selectedProfileDetail = ref<AdminProfileDetail | null>(null)
 const detailLoading = ref(false)
 const detailError = ref<string | null>(null)
-const detailTab = ref<'profile' | 'user'>('profile')
+const detailTab = ref<'profile' | 'activity' | 'user'>('profile')
+
+interface AdminProfileActivity {
+  conversations: { participating: number; initiated: number }
+  messages: { sent: number; received: number }
+  likes: { sent: number; received: number }
+  matches: number
+}
+
+const profileActivity = ref<AdminProfileActivity | null>(null)
+const activityLoading = ref(false)
+const activityError = ref<string | null>(null)
+let activityFetchToken = 0
+
+function resetProfileActivity() {
+  activityFetchToken++ // invalidate any in-flight fetch
+  profileActivity.value = null
+  activityError.value = null
+  activityLoading.value = false
+}
+
+async function fetchProfileActivity(profileId: string) {
+  const token = ++activityFetchToken
+  activityLoading.value = true
+  activityError.value = null
+  try {
+    const res = await apiRequest<{ success: true; activity: AdminProfileActivity }>(
+      `/admin/profiles/${profileId}/activity`
+    )
+    if (token === activityFetchToken) profileActivity.value = res.activity
+  } catch (err) {
+    if (token === activityFetchToken) {
+      activityError.value = err instanceof Error ? err.message : 'failed to load activity'
+    }
+  } finally {
+    if (token === activityFetchToken) activityLoading.value = false
+  }
+}
+
+const activityRows = computed(() => {
+  const a = profileActivity.value
+  if (!a) return []
+  return [
+    {
+      label: 'Conversations',
+      detail: 'participating / initiated',
+      values: [a.conversations.participating, a.conversations.initiated],
+    },
+    {
+      label: 'Messages',
+      detail: 'sent / received',
+      values: [a.messages.sent, a.messages.received],
+    },
+    { label: 'Likes', detail: 'sent / received', values: [a.likes.sent, a.likes.received] },
+    { label: 'Matches', detail: '', values: [a.matches] },
+  ]
+})
+
+// Keep the list row's face icon in sync with an edit made in the detail modal.
+function onDetailHasFaceChange(hasFace: boolean) {
+  const row = profiles.value.find((p) => p.id === selectedProfileDetail.value?.id)
+  if (row) row.hasFace = hasFace
+}
 
 const userDetail = ref<AdminUserDetail | null>(null)
 const userLoading = ref(false)
@@ -407,10 +430,18 @@ function closeDetail() {
   userModalOpen.value = false
 }
 
-// The User tab's data is fetched lazily on first switch, not on row click.
+// The User and Activity tabs' data is fetched lazily on first switch, not on row click.
 watch(detailTab, (tab) => {
   if (tab === 'user' && selectedProfile.value && !userDetail.value && !userLoading.value) {
     fetchUserDetail(selectedProfile.value.userId)
+  }
+  if (
+    tab === 'activity' &&
+    selectedProfile.value &&
+    !profileActivity.value &&
+    !activityLoading.value
+  ) {
+    fetchProfileActivity(selectedProfile.value.id)
   }
 })
 
@@ -420,6 +451,7 @@ async function viewProfile(profile: AdminProfile) {
   detailError.value = null
   detailTab.value = 'profile'
   resetUserDetail()
+  resetProfileActivity()
   detailLoading.value = true
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
@@ -441,6 +473,7 @@ async function viewProfileById(id: string) {
   detailError.value = null
   detailTab.value = 'profile'
   resetUserDetail()
+  resetProfileActivity()
   try {
     const res = await apiRequest<{ success: true; profile: AdminProfileDetail }>(
       `/admin/profiles/${id}`
@@ -602,23 +635,19 @@ function toggleProfileSelection(profile: AdminProfile) {
 }
 
 const allVisibleSelected = computed(
-  () =>
-    sortedProfiles.value.length > 0 &&
-    sortedProfiles.value.every((p) => selectedProfileIds.value.has(p.id))
+  () => profiles.value.length > 0 && profiles.value.every((p) => selectedProfileIds.value.has(p.id))
 )
 
 const someVisibleSelected = computed(
-  () =>
-    !allVisibleSelected.value &&
-    sortedProfiles.value.some((p) => selectedProfileIds.value.has(p.id))
+  () => !allVisibleSelected.value && profiles.value.some((p) => selectedProfileIds.value.has(p.id))
 )
 
 function toggleSelectAllVisible() {
   const next = new Map(selectedProfiles.value)
   if (allVisibleSelected.value) {
-    for (const p of sortedProfiles.value) next.delete(p.id)
+    for (const p of profiles.value) next.delete(p.id)
   } else {
-    for (const p of sortedProfiles.value) next.set(p.id, p)
+    for (const p of profiles.value) next.set(p.id, p)
   }
   selectedProfiles.value = next
 }
@@ -821,6 +850,23 @@ onUnmounted(() => {
           {{ c }}
         </option>
       </select>
+      <select
+        v-if="pageTab === 'profiles'"
+        v-model="selectedSort"
+        class="form-select"
+        style="max-width: 200px"
+        aria-label="Sort profiles"
+        data-testid="profile-sort"
+        @change="resetAndFetch"
+      >
+        <option
+          v-for="opt in sortOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          Sort: {{ opt.label }}
+        </option>
+      </select>
       <button
         v-if="pageTab === 'profiles'"
         type="button"
@@ -856,60 +902,18 @@ onUnmounted(() => {
                   @change="toggleSelectAllVisible"
                 />
               </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('publicName')"
-              >
-                Name{{ sortIndicator('publicName') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('country')"
-              >
-                Location{{ sortIndicator('country') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('gender')"
-              >
-                Gender{{ sortIndicator('gender') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('isSocialActive')"
-              >
-                Social{{ sortIndicator('isSocialActive') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('isDatingActive')"
-              >
-                Dating{{ sortIndicator('isDatingActive') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('isActive')"
-              >
-                Active{{ sortIndicator('isActive') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('segment')"
-              >
-                Segment{{ sortIndicator('segment') }}
-              </th>
-              <th
-                style="cursor: pointer"
-                @click="toggleSort('createdAt')"
-              >
-                Created{{ sortIndicator('createdAt') }}
-              </th>
+              <th>Name</th>
+              <th>Location</th>
+              <th>Gender</th>
+              <th>Dating</th>
+              <th>Last active</th>
+              <th>Created</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="profile in sortedProfiles"
+              v-for="profile in profiles"
               :key="profile.id"
               :class="{ 'table-warning': profile.hasActiveTrustFlag }"
               style="cursor: pointer"
@@ -924,46 +928,57 @@ onUnmounted(() => {
                   @change="toggleProfileSelection(profile)"
                 />
               </td>
-              <td>{{ profile.publicName || '-' }}</td>
-              <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
-              <td>{{ profile.gender || '-' }}</td>
               <td>
-                <span :class="profile.isSocialActive ? 'badge bg-success' : 'badge bg-secondary'">
-                  {{ profile.isSocialActive ? 'Yes' : 'No' }}
+                {{ profile.publicName || '-' }}
+                <svg
+                  v-if="profile.hasFace"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  class="text-secondary opacity-75 ms-1 align-baseline"
+                  role="img"
+                  aria-label="Has face photo"
+                  data-testid="has-face-icon"
+                >
+                  <title>Has face photo</title>
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                  <path
+                    fill-rule="evenodd"
+                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"
+                  />
+                </svg>
+                <span
+                  v-if="profile.activitySummary?.segment"
+                  :class="segmentBadgeClass(profile.activitySummary.segment)"
+                  class="ms-1"
+                >
+                  {{ profile.activitySummary.segment }}
                 </span>
               </td>
+              <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
+              <td>{{ profile.gender || '-' }}</td>
               <td>
                 <span :class="profile.isDatingActive ? 'badge bg-success' : 'badge bg-secondary'">
                   {{ profile.isDatingActive ? 'Yes' : 'No' }}
                 </span>
               </td>
-              <td>
-                <span :class="profile.isActive ? 'badge bg-success' : 'badge bg-secondary'">
-                  {{ profile.isActive ? 'Yes' : 'No' }}
-                </span>
+              <td
+                v-if="profile.activitySummary"
+                :title="new Date(profile.activitySummary.lastSeenAt).toLocaleString()"
+              >
+                {{ formatLastActive(profile.activitySummary.lastSeenAt) }}
               </td>
-              <td>
-                <span
-                  v-if="profile.activitySummary?.segment"
-                  :class="segmentBadgeClass(profile.activitySummary.segment)"
-                >
-                  {{ profile.activitySummary.segment }}
-                </span>
-                <span v-else>—</span>
-              </td>
+              <td v-else>—</td>
               <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
-              <td>
-                <button
-                  class="btn btn-sm btn-outline-primary"
-                  @click.stop="viewProfile(profile)"
-                >
-                  View
-                </button>
+              <td @click.stop>
+                <PublicProfileLink :profile-id="profile.id" />
               </td>
             </tr>
             <tr v-if="profiles.length === 0">
               <td
-                colspan="10"
+                colspan="8"
                 class="text-center text-muted"
               >
                 No profiles found
@@ -1101,6 +1116,16 @@ onUnmounted(() => {
                   <button
                     type="button"
                     class="nav-link"
+                    :class="{ active: detailTab === 'activity' }"
+                    @click="detailTab = 'activity'"
+                  >
+                    Activity
+                  </button>
+                </li>
+                <li class="nav-item">
+                  <button
+                    type="button"
+                    class="nav-link"
                     :class="{ active: detailTab === 'user' }"
                     @click="detailTab = 'user'"
                   >
@@ -1116,6 +1141,7 @@ onUnmounted(() => {
                     <dd class="col-sm-8">
                       <ProfileImageReview
                         v-model:has-face="selectedProfileDetail.hasFace"
+                        @update:has-face="onDetailHasFaceChange"
                         :profile-id="selectedProfileDetail.id"
                         :images="selectedProfileDetail.profileImages"
                       />
@@ -1206,6 +1232,40 @@ onUnmounted(() => {
                 </div>
               </template>
 
+              <template v-else-if="detailTab === 'activity'">
+                <div
+                  v-if="activityLoading"
+                  class="text-muted"
+                >
+                  Loading activity...
+                </div>
+                <div
+                  v-else-if="activityError"
+                  class="alert alert-danger mb-0"
+                >
+                  {{ activityError }}
+                </div>
+                <dl
+                  v-else-if="profileActivity"
+                  class="row mb-0"
+                  data-testid="profile-activity"
+                >
+                  <template
+                    v-for="row in activityRows"
+                    :key="row.label"
+                  >
+                    <dt class="col-sm-4">{{ row.label }}</dt>
+                    <dd class="col-sm-8">
+                      {{ row.values.join(' / ') }}
+                      <small
+                        v-if="row.detail"
+                        class="text-muted ms-1"
+                        >{{ row.detail }}</small
+                      >
+                    </dd>
+                  </template>
+                </dl>
+              </template>
               <template v-else>
                 <div
                   v-if="userLoading"

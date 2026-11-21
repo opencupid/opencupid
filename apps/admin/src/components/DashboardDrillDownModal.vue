@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { Bar } from 'vue-chartjs'
 import { useApi } from '../composables/useApi'
 
-type Metric = 'interactions' | 'messages'
+export type Metric = 'interactions' | 'messages' | 'signups' | 'active'
 type Range = '24h' | '72h' | '7d'
 
 interface Props {
@@ -44,6 +44,8 @@ const SERIES_COLORS: Record<string, string> = {
   matches: '#d63384',
   messages: '#fd7e14',
   conversations: '#0d6efd',
+  signups: '#0d6efd',
+  active: '#198754',
 }
 
 const range = ref<Range>('72h')

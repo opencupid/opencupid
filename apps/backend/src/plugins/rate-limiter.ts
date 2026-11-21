@@ -1,12 +1,14 @@
 import fp from 'fastify-plugin'
 import ratelimit from '@fastify/rate-limit'
 
-class RateLimitError extends Error {
+export class RateLimitError extends Error {
   statusCode: number
-  constructor(statusCode: number, message = 'Rate limit exceeded.') {
+  code?: string
+  constructor(statusCode: number, code?: string, message = 'Rate limit exceeded.') {
     super(message)
     this.name = 'RateLimitError'
     this.statusCode = statusCode
+    this.code = code
   }
 }
 
@@ -24,6 +26,7 @@ export default fp(async (fastify) => {
       return reply.code(err.statusCode).send({
         success: false,
         message: err.message,
+        ...(err.code && { code: err.code }),
       })
     }
     reply.send(err)

@@ -4,8 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const mockSubmit = vi.fn()
+const mockAddComment = vi.fn()
 vi.mock('@/store/userStore', () => ({
-  useUserStore: () => ({ submitAccountDeletionFeedback: mockSubmit }),
+  useUserStore: () => ({
+    submitAccountDeletionFeedback: mockSubmit,
+    addAccountDeletionFeedbackComment: mockAddComment,
+  }),
 }))
 
 const mockTrack = vi.hoisted(() => vi.fn())
@@ -25,10 +29,10 @@ function mountView() {
             '<label><input type="radio" :id="id" :value="value" :checked="modelValue === value" :disabled="disabled" @change="$emit(\'update:modelValue\', value)" /><slot /></label>',
         },
         BFormTextarea: {
-          props: ['modelValue'],
+          props: ['modelValue', 'placeholder'],
           emits: ['update:modelValue'],
           template:
-            '<textarea :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+            '<textarea :placeholder="placeholder" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
         },
         BButton: {
           props: ['disabled', 'type'],
@@ -49,7 +53,9 @@ const pick = (wrapper: ReturnType<typeof mountView>, reason: string) =>
 beforeEach(() => {
   mockSubmit.mockReset()
   mockTrack.mockReset()
-  mockSubmit.mockResolvedValue({ success: true })
+  mockAddComment.mockReset()
+  mockSubmit.mockResolvedValue({ success: true, id: 'fb1' })
+  mockAddComment.mockResolvedValue({ success: true })
 })
 
 describe('AccountDeletedView', () => {
@@ -102,9 +108,72 @@ describe('AccountDeletedView', () => {
 
       expect(mockSubmit).toHaveBeenCalledWith({ reason })
       expect(wrapper.find('[data-testid="thank-you"]').exists()).toBe(true)
-      expect(wrapper.find('form').exists()).toBe(false)
+      expect(wrapper.find('input[type="radio"]').exists()).toBe(false)
     }
   )
+
+  it.each([
+    ['technical_issue', 'account_deleted.comment_technical_issue'],
+    ['not_a_good_fit', 'account_deleted.comment_label'],
+    ['bad_experience', 'account_deleted.comment_label'],
+  ])('offers an optional comment after %s', async (reason, placeholder) => {
+    const wrapper = mountView()
+
+    await pick(wrapper, reason)
+    await flushPromises()
+
+    expect(wrapper.find('textarea').attributes('placeholder')).toBe(placeholder)
+    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('adds the follow-up comment to the stored answer and leaves only the thank-you', async () => {
+    const wrapper = mountView()
+
+    await pick(wrapper, 'technical_issue')
+    await flushPromises()
+    await wrapper.find('textarea').setValue('Upload kept failing')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(mockSubmit).toHaveBeenCalledTimes(1)
+    expect(mockAddComment).toHaveBeenCalledWith('fb1', 'Upload kept failing')
+    expect(wrapper.find('[data-testid="thank-you"]').exists()).toBe(true)
+    expect(wrapper.find('form').exists()).toBe(false)
+  })
+
+  it('does not send a blank follow-up comment', async () => {
+    const wrapper = mountView()
+
+    await pick(wrapper, 'technical_issue')
+    await flushPromises()
+    await wrapper.find('textarea').setValue('   ')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(mockAddComment).not.toHaveBeenCalled()
+  })
+
+  it('keeps the follow-up comment and shows an error when sending it fails', async () => {
+    mockAddComment.mockResolvedValueOnce({ success: false, message: 'nope' })
+    const wrapper = mountView()
+
+    await pick(wrapper, 'technical_issue')
+    await flushPromises()
+    await wrapper.find('textarea').setValue('Upload kept failing')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="error"]').exists()).toBe(true)
+    expect((wrapper.find('textarea').element as HTMLTextAreaElement).value).toBe(
+      'Upload kept failing'
+    )
+
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    expect(mockAddComment).toHaveBeenCalledTimes(2)
+    expect(wrapper.find('form').exists()).toBe(false)
+  })
 
   it('opens a textarea for "other" without submitting', async () => {
     const wrapper = mountView()
@@ -127,7 +196,9 @@ describe('AccountDeletedView', () => {
     await flushPromises()
 
     expect(mockSubmit).toHaveBeenCalledWith({ reason: 'other', comment: 'Too quiet' })
+    expect(mockAddComment).not.toHaveBeenCalled()
     expect(wrapper.find('[data-testid="thank-you"]').exists()).toBe(true)
+    expect(wrapper.find('form').exists()).toBe(false)
   })
 
   it('does not submit a blank "other" comment', async () => {

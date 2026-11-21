@@ -32,9 +32,13 @@ export class MockFastify {
   register(_plugin: any, _opts?: any) {
     // no-op for tests
   }
+  addContentTypeParser(_contentType: any, _opts: any, _parser?: any) {
+    // no-op for tests: body parsing is exercised with a real Fastify instance
+  }
 }
 
 export class MockReply {
+  request = { hostname: 'localhost' }
   statusCode = 200
   payload: any
   headers: Record<string, string> = {}

@@ -31,15 +31,13 @@ describe('useLocalStore', () => {
       expect(store.getLanguage).toBeNull()
     })
 
-    it('restores theme, currentScope and sendMode from localStorage', async () => {
-      localStorage.setItem('theme', 'dark')
+    it('restores currentScope and sendMode from localStorage', async () => {
       localStorage.setItem('currentScope', 'dating')
       localStorage.setItem('sendMode', 'enter')
 
       const store = useLocalStore()
       await store.initialize()
 
-      expect(store.getTheme).toBe('dark')
       expect(store.getCurrentScope).toBe('dating')
       expect(store.getSendMode).toBe('enter')
     })

@@ -14,7 +14,6 @@ import 'bootstrap-vue-next'
 declare module 'bootstrap-vue-next' {
   export interface BaseColorVariant {
     dating: unknown
-    'dating-light': unknown
     event: unknown
     'event-light': unknown
     community: unknown
@@ -29,7 +28,6 @@ declare module 'bootstrap-vue-next' {
 
   export interface BaseButtonVariant {
     'outline-dating': unknown
-    'outline-dating-light': unknown
     'outline-event': unknown
     'outline-event-light': unknown
     'outline-community': unknown

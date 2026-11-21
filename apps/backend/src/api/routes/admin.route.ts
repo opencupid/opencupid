@@ -43,6 +43,8 @@ function excludeAdminProfile(column: Prisma.Sql): Prisma.Sql {
     : Prisma.empty
 }
 
+const BREAKDOWN_METRICS = ['interactions', 'messages', 'signups', 'active'] as const
+
 // DeepL locale codes require region suffixes for some languages
 const DEEPL_LOCALE_MAP: Record<string, string> = {
   en: 'en-GB',
@@ -99,11 +101,13 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           GROUP BY DATE("createdAt")
           ORDER BY date
         `,
+        // A profile counts once on every day it started a session, as in the
+        // 'active' breakdown below.
         prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE("lastSeenAt")::text AS date, COUNT(*)::bigint AS count
-          FROM "ProfileActivitySummary"
-          WHERE "lastSeenAt" >= ${since}::date
-          GROUP BY DATE("lastSeenAt")
+          SELECT DATE("startedAt")::text AS date, COUNT(DISTINCT "profileId")::bigint AS count
+          FROM "ProfileSessionLog"
+          WHERE "startedAt" >= ${since}::date
+          GROUP BY DATE("startedAt")
           ORDER BY date
         `,
         // Approximation: User has no blockedAt timestamp, so use updatedAt
@@ -176,7 +180,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * Returns per-bucket series powering the dashboard drill-down modal.
    *
    * Query params:
-   *   metric: 'interactions' | 'messages' (default: 'interactions')
+   *   metric: 'interactions' | 'messages' | 'signups' | 'active' (default: 'interactions')
    *   range:  '24h' | '72h' | '7d'        (default: '72h')
    *
    * 24h/72h are bucketed by hour; 7d is bucketed by day. All buckets are
@@ -185,13 +189,20 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/stats/breakdown', async (req, reply) => {
     try {
       const q = req.query as Record<string, string | undefined>
-      const metric = q.metric === 'messages' ? 'messages' : 'interactions'
+      const metric = BREAKDOWN_METRICS.find((m) => m === q.metric) ?? 'interactions'
       const rangeParam: BreakdownRange = q.range === '24h' ? '24h' : q.range === '7d' ? '7d' : '72h'
 
       const { since, unit, buckets } = getBreakdownConfig(rangeParam)
       const fmt = bucketFormat(unit)
 
       type BucketRow = { bucket: string; count: bigint }
+      const toSeries = (key: string, label: string, rows: BucketRow[]) => ({
+        key,
+        label,
+        data: fillZeroBuckets(rows, buckets, unit),
+      })
+
+      let series: ReturnType<typeof toSeries>[]
 
       if (metric === 'interactions') {
         const [likeRows, anonRows, matchRows] = await Promise.all([
@@ -225,48 +236,61 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             ORDER BY 1
           `,
         ])
+        series = [
+          toSeries('likes', 'Likes', likeRows),
+          toSeries('anonymous', 'Anonymous', anonRows),
+          toSeries('matches', 'Matches', matchRows),
+        ]
+      } else if (metric === 'messages') {
+        const excludeAdminSender = excludeAdminProfile(Prisma.sql`"senderId"`)
+        const excludeAdminInitiator = excludeAdminProfile(Prisma.sql`"initiatorProfileId"`)
 
-        return reply.code(200).send({
-          success: true,
-          metric,
-          range: rangeParam,
-          unit,
-          buckets: buckets.map((d) => d.toISOString()),
-          series: [
-            { key: 'likes', label: 'Likes', data: fillZeroBuckets(likeRows, buckets, unit) },
-            {
-              key: 'anonymous',
-              label: 'Anonymous',
-              data: fillZeroBuckets(anonRows, buckets, unit),
-            },
-            { key: 'matches', label: 'Matches', data: fillZeroBuckets(matchRows, buckets, unit) },
-          ],
-        })
+        const [messageRows, conversationRows] = await Promise.all([
+          prisma.$queryRaw<BucketRow[]>`
+            SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                   COUNT(*)::bigint AS count
+            FROM "Message"
+            WHERE "createdAt" >= ${since}
+            ${excludeAdminSender}
+            GROUP BY 1
+            ORDER BY 1
+          `,
+          prisma.$queryRaw<BucketRow[]>`
+            SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                   COUNT(*)::bigint AS count
+            FROM "Conversation"
+            WHERE "createdAt" >= ${since}
+            ${excludeAdminInitiator}
+            GROUP BY 1
+            ORDER BY 1
+          `,
+        ])
+        series = [
+          toSeries('messages', 'Messages Sent', messageRows),
+          toSeries('conversations', 'New Conversations', conversationRows),
+        ]
+      } else if (metric === 'signups') {
+        const signupRows = await prisma.$queryRaw<BucketRow[]>`
+          SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                 COUNT(*)::bigint AS count
+          FROM "User"
+          WHERE "createdAt" >= ${since}
+          GROUP BY 1
+          ORDER BY 1
+        `
+        series = [toSeries('signups', 'Signups', signupRows)]
+      } else {
+        // A profile counts once per bucket, however many sessions it started.
+        const activeRows = await prisma.$queryRaw<BucketRow[]>`
+          SELECT to_char(date_trunc(${unit}, "startedAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
+                 COUNT(DISTINCT "profileId")::bigint AS count
+          FROM "ProfileSessionLog"
+          WHERE "startedAt" >= ${since}
+          GROUP BY 1
+          ORDER BY 1
+        `
+        series = [toSeries('active', 'Active Profiles', activeRows)]
       }
-
-      const excludeAdminSender = excludeAdminProfile(Prisma.sql`"senderId"`)
-      const excludeAdminInitiator = excludeAdminProfile(Prisma.sql`"initiatorProfileId"`)
-
-      const [messageRows, conversationRows] = await Promise.all([
-        prisma.$queryRaw<BucketRow[]>`
-          SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
-                 COUNT(*)::bigint AS count
-          FROM "Message"
-          WHERE "createdAt" >= ${since}
-          ${excludeAdminSender}
-          GROUP BY 1
-          ORDER BY 1
-        `,
-        prisma.$queryRaw<BucketRow[]>`
-          SELECT to_char(date_trunc(${unit}, "createdAt" AT TIME ZONE 'UTC'), ${fmt}) AS bucket,
-                 COUNT(*)::bigint AS count
-          FROM "Conversation"
-          WHERE "createdAt" >= ${since}
-          ${excludeAdminInitiator}
-          GROUP BY 1
-          ORDER BY 1
-        `,
-      ])
 
       return reply.code(200).send({
         success: true,
@@ -274,18 +298,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         range: rangeParam,
         unit,
         buckets: buckets.map((d) => d.toISOString()),
-        series: [
-          {
-            key: 'messages',
-            label: 'Messages Sent',
-            data: fillZeroBuckets(messageRows, buckets, unit),
-          },
-          {
-            key: 'conversations',
-            label: 'New Conversations',
-            data: fillZeroBuckets(conversationRows, buckets, unit),
-          },
-        ],
+        series,
       })
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching breakdown stats')
@@ -617,6 +630,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {string} [search] - Search by name, city, country, profile id, user id, email, or phone
    * @query {string} [country] - Country code filter
    * @query {string} [segments] - Comma-separated activity segments filter (e.g. "new,frequent")
+   * @query {'created'|'lastActive'} [sort=created] - Newest first by creation date, or most
+   *   recently seen first. `lastActive` lists only profiles that have been seen.
    * @returns {{ success, profiles, total, page, pageSize }}
    */
   fastify.get('/profiles', async (req, reply) => {
@@ -627,6 +642,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         search = '',
         country = '',
         segments = '',
+        sort = 'created',
       } = req.query as Record<string, string>
       const pageNum = Math.max(1, parseInt(page, 10) || 1)
       const size = Math.min(100, Math.max(1, parseInt(pageSize, 10) || 25))
@@ -657,6 +673,10 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           })
         }
       }
+      const sortByLastActive = sort === 'lastActive'
+      if (sortByLastActive) {
+        conditions.push({ activitySummary: { isNot: null } })
+      }
       const where = conditions.length > 0 ? { AND: conditions } : {}
 
       const [rows, total] = await Promise.all([
@@ -664,7 +684,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           where,
           skip,
           take: size,
-          orderBy: [{ createdAt: 'desc' }],
+          orderBy: sortByLastActive
+            ? [{ activitySummary: { lastSeenAt: 'desc' } }]
+            : [{ createdAt: 'desc' }],
           select: {
             id: true,
             publicName: true,
@@ -677,10 +699,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             isBlocked: true,
             isOnboarded: true,
             gender: true,
+            hasFace: true,
             createdAt: true,
             userId: true,
             user: { select: { email: true, phonenumber: true } },
-            activitySummary: { select: { segment: true } },
+            activitySummary: { select: { segment: true, lastSeenAt: true } },
             _count: { select: { trustFlags: { where: { clearedAt: null } } } },
           },
         }),
@@ -1256,6 +1279,59 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error fetching admin profile detail')
       return sendError(reply, 500, 'Failed to fetch profile')
+    }
+  })
+
+  /**
+   * GET /profiles/:id/activity
+   * Interaction counts for one profile. Messages from the system sender
+   * (ADMIN_PROFILE_ID) are not counted as received.
+   * @param {string} id - Profile ID
+   * @returns {{ success, activity: { conversations: { participating, initiated },
+   *   messages: { sent, received }, likes: { sent, received }, matches } }}
+   */
+  fastify.get('/profiles/:id/activity', async (req, reply) => {
+    try {
+      const { id } = req.params as { id: string }
+      const excludedSenders = [id, appConfig.ADMIN_PROFILE_ID].filter(Boolean) as string[]
+
+      const [
+        participating,
+        initiated,
+        messagesSent,
+        messagesReceived,
+        likesSent,
+        likesReceived,
+        matches,
+      ] = await Promise.all([
+        prisma.conversationParticipant.count({ where: { profileId: id } }),
+        prisma.conversation.count({ where: { initiatorProfileId: id } }),
+        prisma.message.count({ where: { senderId: id } }),
+        prisma.message.count({
+          where: {
+            senderId: { notIn: excludedSenders },
+            conversation: { participants: { some: { profileId: id } } },
+          },
+        }),
+        prisma.likedProfile.count({ where: { fromId: id } }),
+        prisma.likedProfile.count({ where: { toId: id } }),
+        prisma.likedProfile.count({
+          where: { fromId: id, to: { likesSent: { some: { toId: id } } } },
+        }),
+      ])
+
+      return reply.code(200).send({
+        success: true,
+        activity: {
+          conversations: { participating, initiated },
+          messages: { sent: messagesSent, received: messagesReceived },
+          likes: { sent: likesSent, received: likesReceived },
+          matches,
+        },
+      })
+    } catch (err) {
+      fastify.log.error({ err }, 'Error fetching admin profile activity')
+      return sendError(reply, 500, 'Failed to fetch profile activity')
     }
   })
 

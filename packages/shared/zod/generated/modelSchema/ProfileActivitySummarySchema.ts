@@ -8,7 +8,6 @@ import { ActivitySegmentSchema } from '../inputTypeSchemas/ActivitySegmentSchema
 export const ProfileActivitySummarySchema = z.object({
   segment: ActivitySegmentSchema,
   profileId: z.string(),
-  firstSeenAt: z.coerce.date(),
   lastSeenAt: z.coerce.date(),
   activeDays28: z.number().int(),
   sessions28: z.number().int(),

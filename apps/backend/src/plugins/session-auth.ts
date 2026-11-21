@@ -9,7 +9,6 @@ import { appConfig } from '@/lib/appconfig'
 import '@fastify/cookie'
 import { SESSION_COOKIE } from '@shared/session'
 import { getSessionCookie, setSessionCookie } from '@/lib/session'
-import { restampRefreshCookieIfPresent } from '@/lib/session-legacy'
 import { SessionData } from '@zod/user/user.dto'
 
 // Extend Fastify types
@@ -83,9 +82,8 @@ export default fp(async (fastify: FastifyInstance) => {
     // Resolve the session ID — prefer cookie, fall back to Bearer token
     const sessionId = cookieToken ?? bearerToken!
 
-    // Session lookup + validation + migration-cookie stamp + TTL refresh all
-    // touch Redis (directly or indirectly). Wrap as one unit so any transient
-    // Redis failure (restart, network blip during backend deploy) returns a
+    // Session lookup + validation + TTL refresh all touch Redis. Wrap as one
+    // unit so any transient Redis failure (restart, network blip during backend deploy) returns a
     // single distinguishable 503 — never fail-open, that would turn infra
     // blips into auth bypasses.
     let sess: SessionData | null
@@ -97,30 +95,22 @@ export default fp(async (fastify: FastifyInstance) => {
       if (req.user.tokenVersion !== sess.tokenVersion) {
         return sendUnauthorizedError(reply, 'Token revoked')
       }
-      // Refresh the session cookie on every authenticated request. Three
-      // jobs in one call:
-      //   1. Sliding TTL — resets Max-Age to 30d so active users stay
-      //      logged in as long as they keep using the app. Permanent
-      //      behavior, survives post-migration sunset.
-      //   2. Phase 1 shape migration — stamps the current domain-scoped
-      //      shape and (inside `clearLegacyCookie`) wipes the legacy
-      //      host-only slot when they're distinct.
-      //   3. Phase 0 Bearer → cookie migration — clients that sent only
-      //      an `Authorization: Bearer` header now carry a proper cookie
-      //      on their next request.
-      // Only runs after the full auth chain succeeds, so failed-auth
-      // responses don't re-stamp a cookie the client can't use.
-      setSessionCookie(reply, sessionId)
-      // Phase 1 shape migration for __refresh: same intent as job (2)
-      // above but for the refresh cookie. Eager re-stamp here means a
-      // planned host migration does not force active sessions to
-      // re-authenticate. Sunsets together with `session-legacy.ts`.
-      restampRefreshCookieIfPresent(req, reply)
       await sessionService.refreshTtl(sessionId, sess.userId)
     } catch (err) {
       req.log.error({ err, sessionId }, 'Redis error during authenticated request')
       return sendServiceUnavailableError(reply, 'Session lookup failed')
     }
+
+    // Refresh the session cookie on every authenticated request. Two
+    // jobs in one call:
+    //   1. Sliding TTL — resets Max-Age to 30d so active users stay
+    //      logged in as long as they keep using the app.
+    //   2. Phase 0 Bearer → cookie migration — clients that sent only
+    //      an `Authorization: Bearer` header now carry a proper cookie
+    //      on their next request.
+    // Only runs after the full auth chain succeeds, so failed-auth
+    // responses don't re-stamp a cookie the client can't use.
+    setSessionCookie(reply, sessionId)
 
     const session = sess
     req.session = session

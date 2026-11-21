@@ -220,11 +220,35 @@ describe('UserService.deactivate', () => {
 })
 
 describe('UserService.saveAccountDeletionFeedback', () => {
-  it('stores the answer', async () => {
-    await service.saveAccountDeletionFeedback({ reason: 'other', comment: 'Too quiet' })
+  it('stores the answer and returns its id', async () => {
+    mockPrisma.accountDeletionFeedback.create.mockResolvedValue({ id: 'fb1' })
+
+    const id = await service.saveAccountDeletionFeedback({ reason: 'other', comment: 'Too quiet' })
 
     expect(mockPrisma.accountDeletionFeedback.create).toHaveBeenCalledWith({
       data: { reason: 'other', comment: 'Too quiet' },
+      select: { id: true },
     })
+    expect(id).toBe('fb1')
+  })
+})
+
+describe('UserService.addAccountDeletionFeedbackComment', () => {
+  it('sets the comment only on an answer that has none', async () => {
+    mockPrisma.accountDeletionFeedback.updateMany.mockResolvedValue({ count: 1 })
+
+    const updated = await service.addAccountDeletionFeedbackComment('fb1', 'Upload kept failing')
+
+    expect(mockPrisma.accountDeletionFeedback.updateMany).toHaveBeenCalledWith({
+      where: { id: 'fb1', comment: null },
+      data: { comment: 'Upload kept failing' },
+    })
+    expect(updated).toBe(true)
+  })
+
+  it('reports when no answer was updated', async () => {
+    mockPrisma.accountDeletionFeedback.updateMany.mockResolvedValue({ count: 0 })
+
+    expect(await service.addAccountDeletionFeedbackComment('nope', 'Hi')).toBe(false)
   })
 })

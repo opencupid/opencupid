@@ -375,6 +375,8 @@ model Message {
   createdAt      DateTime           @default(now())
   attachment     MessageAttachment?
   images         MessageImage[]
+
+  @@index([conversationId, createdAt])
 }
 
 model MessageAttachment {
@@ -500,7 +502,6 @@ model ProfileSessionLog {
 model ProfileActivitySummary {
   profileId        String          @id
   profile          Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  firstSeenAt      DateTime
   lastSeenAt       DateTime
   activeDays28     Int             @default(0)
   sessions28       Int             @default(0)

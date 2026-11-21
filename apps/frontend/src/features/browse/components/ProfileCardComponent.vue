@@ -70,7 +70,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
 }
 .card-title {
   text-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.8);
-  color: var(--bs-light);
+  color: var(--bs-white);
   padding: 0.5rem;
   width: 100%;
 }
@@ -99,10 +99,7 @@ const viewerLocation = computed(() => viewerProfile?.value?.location)
   left: 0;
   right: 0;
   height: 4em;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
-  [data-bs-theme='dark'] & {
-    background: linear-gradient(to bottom, rgba(33, 37, 41, 0), rgba(33, 37, 41, 1));
-  }
+  background: linear-gradient(to bottom, rgba(var(--bs-body-bg-rgb), 0), var(--bs-body-bg));
   pointer-events: none;
 }
 </style>

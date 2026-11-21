@@ -17,12 +17,12 @@ const { t } = useI18n()
     :z-index="1200"
     spinner-variant="danger"
     spinner-type="grow"
-    variant="warning"
+    variant="light"
     :opacity="0.9"
   >
     <template #overlay>
       <div
-        class="api-error-overlay-content text-center text-dark d-flex flex-column align-items-center justify-content-center"
+        class="api-error-overlay-content text-center text-body d-flex flex-column align-items-center justify-content-center"
       >
         <div>
           <BSpinner

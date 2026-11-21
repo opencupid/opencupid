@@ -3,9 +3,8 @@
  * Centralizes every Fastify `setCookie`/`clearCookie` call that touches these
  * names so the cookie shape is decided in exactly one place per operation.
  *
- * Platform-agnostic primitives (cookie names, max-ages, `resolveSessionCookie`,
- * `canScopeToDomain`) live in `@shared/session`; migration-only helpers live
- * alongside in `./session-legacy` and get deleted post-sunset.
+ * Platform-agnostic primitives (cookie names, max-ages, `resolveSessionCookie`)
+ * live in `@shared/session`.
  */
 import { FastifyReply, FastifyRequest } from 'fastify'
 import '@fastify/cookie'
@@ -19,11 +18,15 @@ import {
   ORIGIN_MAX_AGE,
   resolveSessionCookie,
 } from '@shared/session'
-import { clearLegacyCookie } from './session-legacy'
 import { appConfig } from '@/lib/appconfig'
+import { brandForHost } from '@/lib/brand'
 
-function currentSessionCookieOpts() {
-  return resolveSessionCookie(appConfig.NODE_ENV, appConfig.DOMAIN)
+/**
+ * Session cookies are scoped to the domain of the brand the request was made
+ * to, so one process can serve every brand.
+ */
+function sessionCookieOpts(reply: FastifyReply) {
+  return resolveSessionCookie(appConfig.NODE_ENV, brandForHost(reply.request.hostname).domain)
 }
 
 export function getSessionCookie(req: FastifyRequest): string | undefined {
@@ -36,32 +39,28 @@ export function getRefreshCookie(req: FastifyRequest): string | undefined {
 
 export function setSessionCookie(reply: FastifyReply, jwt: string) {
   reply.setCookie(SESSION_COOKIE, jwt, {
-    ...currentSessionCookieOpts(),
+    ...sessionCookieOpts(reply),
     httpOnly: false,
     secure: appConfig.NODE_ENV !== 'development',
     maxAge: SESSION_MAX_AGE,
   })
-  clearLegacyCookie(reply, SESSION_COOKIE)
 }
 
 export function setRefreshCookie(reply: FastifyReply, token: string) {
   reply.setCookie(REFRESH_COOKIE, token, {
-    ...currentSessionCookieOpts(),
+    ...sessionCookieOpts(reply),
     httpOnly: true,
     secure: appConfig.NODE_ENV !== 'development',
     maxAge: REFRESH_MAX_AGE,
   })
-  clearLegacyCookie(reply, REFRESH_COOKIE)
 }
 
 export function clearSessionCookie(reply: FastifyReply) {
-  reply.clearCookie(SESSION_COOKIE, currentSessionCookieOpts())
-  clearLegacyCookie(reply, SESSION_COOKIE)
+  reply.clearCookie(SESSION_COOKIE, sessionCookieOpts(reply))
 }
 
 export function clearRefreshCookie(reply: FastifyReply) {
-  reply.clearCookie(REFRESH_COOKIE, currentSessionCookieOpts())
-  clearLegacyCookie(reply, REFRESH_COOKIE)
+  reply.clearCookie(REFRESH_COOKIE, sessionCookieOpts(reply))
 }
 
 /**

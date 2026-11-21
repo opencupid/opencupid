@@ -97,7 +97,7 @@ const items = computed(() => myContent.value)
           @click="emit('intent:fullview', item)"
         />
         <OwnerToolbar
-          class="owner-toolbar position-absolute shadow "
+          class="owner-toolbar position-absolute shadow"
           :is-visible="item.isVisible"
           @edit="emit('intent:edit', item)"
           @hide="emit('intent:hide', item)"
@@ -115,7 +115,7 @@ const items = computed(() => myContent.value)
 .owner-toolbar {
   z-index: 2;
   margin-top: -2rem;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(var(--bs-body-bg-rgb), 0.5);
   right: 1rem;
 }
 .scroll-container {

@@ -7,7 +7,10 @@ const RETURNING_MIN_ACTIVE_DAYS = 2
 const FREQUENT_MIN_ACTIVE_DAYS = 8
 const HYSTERESIS_K = 2
 const RETENTION_DAYS = 28
+/** Accounts younger than this are 'new'; older ones that are active again are 'returning'. */
+const NEW_ACCOUNT_MAX_DAYS = 28
 const BATCH_SIZE = 10
+const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Ordered from highest to lowest priority for comparison. */
 const SEGMENT_RANK: Record<ActivitySegment, number> = {
@@ -19,13 +22,16 @@ const SEGMENT_RANK: Record<ActivitySegment, number> = {
 
 /**
  * Compute the raw segment from summary stats (before hysteresis).
+ * `accountCreatedAt` is Profile.createdAt: a profile is created at the user's
+ * first login, so it is when the profile was first seen.
  */
 export function computeRawSegment(
   lastSeenAt: Date,
   activeDays28: number,
+  accountCreatedAt: Date,
   now: Date
 ): ActivitySegment {
-  const daysSinceLastSeen = (now.getTime() - lastSeenAt.getTime()) / (1000 * 60 * 60 * 24)
+  const daysSinceLastSeen = (now.getTime() - lastSeenAt.getTime()) / DAY_MS
 
   // Highest priority: dormant if not seen in 14+ days
   if (daysSinceLastSeen >= DORMANT_THRESHOLD_DAYS) return 'dormant'
@@ -33,10 +39,13 @@ export function computeRawSegment(
   // Frequent: 8+ active days in last 28d
   if (activeDays28 >= FREQUENT_MIN_ACTIVE_DAYS) return 'frequent'
 
-  // Returning: visited on 2+ distinct days (evidence of actual return)
-  if (activeDays28 >= RETURNING_MIN_ACTIVE_DAYS) return 'returning'
+  // Returning: visited on 2+ distinct days, or active again on an account
+  // older than the window (e.g. back from dormant): either way, came back.
+  const accountAgeDays = (now.getTime() - accountCreatedAt.getTime()) / DAY_MS
+  if (activeDays28 >= RETURNING_MIN_ACTIVE_DAYS || accountAgeDays >= NEW_ACCOUNT_MAX_DAYS)
+    return 'returning'
 
-  // New: single-visit users who haven't yet demonstrated engagement
+  // New: a recent account with a single active day so far
   return 'new'
 }
 
@@ -64,26 +73,31 @@ export function applyHysteresis(
   return { segment: currentSegment, demotionStreak: newStreak }
 }
 
+type ProfileStats = {
+  profileId: string
+  activeDays28: number
+  sessions28: number
+  lastSessionAt: Date
+  accountCreatedAt: Date
+}
+
 /**
  * Process a single profile's session stats: look up existing summary,
- * compute segment with hysteresis, and upsert the result.
+ * compute segment with hysteresis, and upsert the result. lastSeenAt is kept
+ * current by recordActivity and only read here.
  */
 async function processProfileStats(
   tx: Prisma.TransactionClient,
-  row: { profileId: string; activeDays28: number; sessions28: number; lastSessionAt: Date },
+  row: ProfileStats,
   now: Date
 ): Promise<void> {
   const existing = await tx.profileActivitySummary.findUnique({
     where: { profileId: row.profileId },
   })
 
-  const firstSeenAt = existing?.firstSeenAt ?? row.lastSessionAt
-  const lastSeenAt =
-    row.lastSessionAt > (existing?.lastSeenAt ?? new Date(0))
-      ? row.lastSessionAt
-      : existing!.lastSeenAt
+  const lastSeenAt = existing?.lastSeenAt ?? row.lastSessionAt
 
-  const rawSegment = computeRawSegment(lastSeenAt, row.activeDays28, now)
+  const rawSegment = computeRawSegment(lastSeenAt, row.activeDays28, row.accountCreatedAt, now)
   const currentSegment = existing?.segment ?? 'dormant'
   const currentStreak = existing?.demotionStreak ?? 0
 
@@ -94,7 +108,6 @@ async function processProfileStats(
     where: { profileId: row.profileId },
     create: {
       profileId: row.profileId,
-      firstSeenAt,
       lastSeenAt,
       activeDays28: row.activeDays28,
       sessions28: row.sessions28,
@@ -103,7 +116,6 @@ async function processProfileStats(
       segmentUpdatedAt: now,
     },
     update: {
-      lastSeenAt,
       activeDays28: row.activeDays28,
       sessions28: row.sessions28,
       segment,
@@ -122,20 +134,17 @@ export async function distillActivitySegments(): Promise<void> {
 
   // 1. Aggregate session data for profiles with activity in the 28-day window.
   //    Uses raw SQL for the DATE-distinct count which Prisma can't express natively.
-  const stats: Array<{
-    profileId: string
-    activeDays28: number
-    sessions28: number
-    lastSessionAt: Date
-  }> = await prisma.$queryRaw`
+  const stats: ProfileStats[] = await prisma.$queryRaw`
     SELECT
-      "profileId",
-      COUNT(DISTINCT DATE("startedAt"))::int AS "activeDays28",
+      s."profileId",
+      COUNT(DISTINCT DATE(s."startedAt"))::int AS "activeDays28",
       COUNT(*)::int AS "sessions28",
-      MAX("startedAt") AS "lastSessionAt"
-    FROM "ProfileSessionLog"
-    WHERE "startedAt" >= ${windowStart}
-    GROUP BY "profileId"
+      MAX(s."startedAt") AS "lastSessionAt",
+      p."createdAt" AS "accountCreatedAt"
+    FROM "ProfileSessionLog" s
+    JOIN "Profile" p ON p."id" = s."profileId"
+    WHERE s."startedAt" >= ${windowStart}
+    GROUP BY s."profileId", p."createdAt"
   `
 
   // 2. Process profiles in per-batch transactions (sequential within each to

@@ -32,6 +32,17 @@ async function applyUnsubscribe(token: string): Promise<UnsubscribeResult> {
 }
 
 const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
+  // RFC 8058 one-click POSTs carry `List-Unsubscribe=One-Click` as
+  // application/x-www-form-urlencoded or multipart/form-data. Fastify parses
+  // neither by default and would answer 415 before the handler runs. The token
+  // in the path is the only input, so the body is read and discarded. Scoped to
+  // this plugin, so no other route accepts these content types.
+  fastify.addContentTypeParser(
+    ['application/x-www-form-urlencoded', 'multipart/form-data'],
+    { parseAs: 'string', bodyLimit: 1024 },
+    (_req, _body, done) => done(null, undefined)
+  )
+
   /**
    * POST /:token
    * RFC 8058 one-click unsubscribe endpoint. Mail providers POST here with a

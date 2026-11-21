@@ -18,21 +18,18 @@ type AuthStoreResponse<T> =
   | (ApiError & { code: AuthErrorCodes; restart: 'otp' | 'userid' })
 
 import { SESSION_COOKIE, resolveSessionCookie } from '@shared/session'
-import { clearLegacyCookie } from '@/lib/session-legacy'
 
 const cookies = new Cookies()
 
 /**
  * Remove the currently-active cookie shape (host-only in dev, domain-scoped
- * in prod), then delegate the legacy host-only delete to `clearLegacyCookie`
- * which no-ops when the active shape is already host-only.
+ * in prod).
  */
 function removeSessionCookie() {
   cookies.remove(
     SESSION_COOKIE,
     resolveSessionCookie(__APP_CONFIG__.NODE_ENV, __APP_CONFIG__.DOMAIN)
   )
-  clearLegacyCookie(cookies, SESSION_COOKIE)
 }
 
 /**
@@ -130,9 +127,7 @@ export const useAuthStore = defineStore('auth', {
       }
       try {
         const res = await safeApiCall(() =>
-          api.get<VerifyTokenResponse>('/auth/verify-token', {
-            params: { token },
-          })
+          api.post<VerifyTokenResponse>('/auth/verify-token', { token })
         )
 
         if (res.data.success === true) {
@@ -228,7 +223,7 @@ export const useAuthStore = defineStore('auth', {
 // api.ts refresh-failure path which emits auth:logout directly.
 // Must complete before auth:logged-out is emitted so the router guard
 // sees isLoggedIn=false when it navigates to Login.
-bus.on('auth:logout', () => {
+bus.on('auth:logout', (event) => {
   const store = useAuthStore()
   // A request in flight when the session died can fail its refresh after the user
   // is already logged out. That must not redirect them to Login again, away from
@@ -241,7 +236,7 @@ bus.on('auth:logout', () => {
   // doesn't leave the user appearing logged in on next page load.
   removeSessionCookie()
   localStorage.removeItem('authId')
-  bus.emit('auth:logged-out')
+  bus.emit('auth:logged-out', { expired: event?.expired === true })
 })
 
 bus.on('auth:token-refreshed', ({ token }) => {

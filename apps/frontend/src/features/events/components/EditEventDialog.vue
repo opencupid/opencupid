@@ -12,6 +12,7 @@ import { hu as huLocale } from 'date-fns/locale/hu'
 import LocationSelector from '@/features/shared/profileform/LocationSelector.vue'
 import AttachImageButton from '@/features/images/components/AttachImageButton.vue'
 import VisibilityToggle from '@/features/shared/ui/VisibilityToggle.vue'
+import { useAppColorMode } from '@/features/app/composables/useAppColorMode'
 
 // XXX hardcoded locales - needs attention when adding new locale support to i18n
 const datepickerLocales = { en: enGB, hu: huLocale } as const
@@ -46,6 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const { locale } = useI18n()
+const colorMode = useAppColorMode()
 const datepickerLocale = computed(
   () => datepickerLocales[locale.value as keyof typeof datepickerLocales] ?? enGB
 )
@@ -152,6 +154,7 @@ function nextHourFromNow(): Date {
         id="event-starts-at"
         v-model="form.startsAt"
         :locale="datepickerLocale"
+        :dark="colorMode === 'dark'"
         :min-date="new Date()"
         :enable-time-picker="true"
         :clearable="false"
