@@ -53,6 +53,9 @@ vi.mock('@/features/posts/components/PostMapPopup.vue', () => ({
 vi.mock('@/features/posts/components/PostFullView.vue', () => ({
   default: { template: '<div class="post-full-view" />', props: ['post'] },
 }))
+vi.mock('@/features/community/components/CommunityFullView.vue', () => ({
+  default: { template: '<div class="community-full-view" />', props: ['community'] },
+}))
 vi.mock('@/features/browse/components/OwnerDrawerControls.vue', () => ({
   default: {
     template: '<div class="owner-drawer-controls" />',

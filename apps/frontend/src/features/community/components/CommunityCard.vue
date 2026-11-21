@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type { PublicCommunity, OwnerCommunity } from '@zod/community/community.dto'
+import type { MessageRecipient } from '@zod/profile/profile.dto'
+import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 import ViewerToolbar from '@/features/userContent/components/ViewerToolbar.vue'
 import type { SharePayload } from '@/features/app/components/ShareSheet.vue'
 import LocationLabel from '@/features/shared/profiledisplay/LocationLabel.vue'
@@ -14,7 +17,7 @@ import { tagsDataAttr } from '@/features/shared/contentTags'
 
 const props = defineProps<{
   community: PublicCommunity | OwnerCommunity
-  /** Show the copy/share toolbar. */
+  /** Show the owner header and the contact/copy/share toolbar. */
   showDetails: boolean
   /** Clip the description to a short excerpt, as in grid tiles. */
   truncateText?: boolean
@@ -31,6 +34,17 @@ const shareCommunityPayload = computed<SharePayload>(() => ({
   text: t('community.share.community_text', { publicName: props.community.postedBy.publicName }),
   url: `${window.location.origin}/communities/${props.community.id}`,
 }))
+
+const showMessageForm = ref(false)
+const messageInput = ref<InstanceType<typeof ContactFormPanel> | null>(null)
+
+const recipientProfile = computed<MessageRecipient>(() => props.community.postedBy)
+
+const handleContact = async () => {
+  showMessageForm.value = true
+  await nextTick()
+  messageInput.value?.focusTextarea?.()
+}
 
 const hasImages = computed(() => props.community.images.length > 0)
 
@@ -163,13 +177,35 @@ const tagSlugs = computed(() => tagsDataAttr(props.community.tags))
       <div
         class="community-meta d-flex align-items-center justify-content-between gap-2 small text-muted p-2"
       >
+        <div
+          v-if="showDetails && !community.isOwn"
+          class="community-owner d-flex align-items-center min-w-0"
+        >
+          <ProfileThumbnail
+            :profile="community.postedBy"
+            class="me-2"
+          />
+          <span class="text-truncate">{{ community.postedBy.publicName }}</span>
+        </div>
         <ViewerToolbar
           v-if="showDetails"
-          :actions="['copy', 'share']"
+          class="ms-auto"
+          :actions="community.isOwn ? ['copy', 'share'] : ['contact', 'copy', 'share']"
           :copy-text="community.content"
           :share-payload="shareCommunityPayload"
+          @contact="handleContact"
         />
       </div>
+    </div>
+
+    <div
+      v-if="showMessageForm"
+      class="mt-2 px-2"
+    >
+      <ContactFormPanel
+        ref="messageInput"
+        :recipient-profile="recipientProfile"
+      />
     </div>
   </div>
 </template>

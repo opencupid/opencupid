@@ -21,8 +21,18 @@ vi.mock('@/assets/icons/interface/mail.svg', () => ({
 vi.mock('@/features/userContent/components/ViewerToolbar.vue', () => ({
   default: {
     props: ['actions', 'copyText', 'sharePayload'],
+    emits: ['contact'],
     template:
-      '<div class="viewer-toolbar" :data-actions="JSON.stringify(actions)" :data-copy-text="copyText"><slot /></div>',
+      '<div class="viewer-toolbar" :data-actions="JSON.stringify(actions)" :data-copy-text="copyText" @click="$emit(\'contact\')"><slot /></div>',
+  },
+}))
+vi.mock('@/features/images/components/ProfileThumbnail.vue', () => ({
+  default: { props: ['profile'], template: '<span class="profile-thumbnail" />' },
+}))
+vi.mock('@/features/messaging/components/ContactFormPanel.vue', () => ({
+  default: {
+    props: ['recipientProfile'],
+    template: '<div class="contact-form-panel" :data-recipient-id="recipientProfile.id" />',
   },
 }))
 vi.mock('@/features/shared/profiledisplay/LocationLabel.vue', () => ({
@@ -156,15 +166,55 @@ describe('CommunityCard', () => {
     expect(wrapper.emitted('click')?.[0]?.[0]).toMatchObject({ id: 'c-1' })
   })
 
-  it('wires ViewerToolbar with copy + share actions and the community content as copy text', () => {
+  it('wires ViewerToolbar with contact + copy + share actions and the community content as copy text', () => {
     const wrapper = mount(CommunityCard, {
       props: { community: baseCommunity, showDetails: true },
       global: { stubs },
     })
     const toolbar = wrapper.find('.viewer-toolbar')
     expect(toolbar.exists()).toBe(true)
-    expect(toolbar.attributes('data-actions')).toBe('["copy","share"]')
+    expect(toolbar.attributes('data-actions')).toBe('["contact","copy","share"]')
     expect(toolbar.attributes('data-copy-text')).toBe(baseCommunity.content)
+  })
+
+  it('shows the owner name and thumbnail in the detail view', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: baseCommunity, showDetails: true },
+      global: { stubs },
+    })
+    const owner = wrapper.find('.community-owner')
+    expect(owner.exists()).toBe(true)
+    expect(owner.text()).toContain('Alice')
+    expect(owner.find('.profile-thumbnail').exists()).toBe(true)
+  })
+
+  it('hides the owner header outside the detail view', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: baseCommunity, showDetails: false },
+      global: { stubs },
+    })
+    expect(wrapper.find('.community-owner').exists()).toBe(false)
+  })
+
+  it('omits the owner header and contact action on own communities', () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: { ...baseCommunity, isOwn: true }, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.find('.community-owner').exists()).toBe(false)
+    expect(wrapper.find('.viewer-toolbar').attributes('data-actions')).toBe('["copy","share"]')
+  })
+
+  it('opens the contact form addressed to the owner on contact', async () => {
+    const wrapper = mount(CommunityCard, {
+      props: { community: baseCommunity, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.find('.contact-form-panel').exists()).toBe(false)
+    await wrapper.find('.viewer-toolbar').trigger('click')
+    const panel = wrapper.find('.contact-form-panel')
+    expect(panel.exists()).toBe(true)
+    expect(panel.attributes('data-recipient-id')).toBe('p-1')
   })
 
   it('exposes tag slugs on the wrapper via the data-tags attribute', () => {
