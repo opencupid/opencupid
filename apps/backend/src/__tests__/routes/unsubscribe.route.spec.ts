@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import Fastify, { type FastifyInstance } from 'fastify'
 
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
@@ -162,5 +163,89 @@ describe('GET /unsubscribe/:token', () => {
     const handler = fastify.routes['GET /:token']
     await handler({ params: { token: 'nope' } } as any, reply as any)
     expect(reply.statusCode).toBe(400)
+  })
+})
+
+// Real Fastify instance: content-type handling happens before the handler, so
+// the MockFastify tests above cannot catch a 415.
+describe('one-click request bodies (RFC 8058)', () => {
+  let app: FastifyInstance
+
+  beforeEach(async () => {
+    // Same router option as api.ts: signed tokens exceed the 100-char default.
+    app = Fastify({ routerOptions: { maxParamLength: 500 } })
+    await app.register(unsubscribeRoutes, { prefix: '/api/unsubscribe' })
+    // A sibling route: the parser must not leak out of the unsubscribe scope.
+    app.post('/api/other', async () => ({ ok: true }))
+    await app.ready()
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: USER_ID,
+      email: EMAIL,
+      emailNotificationsOptIn: true,
+    })
+    mockPrisma.user.update.mockResolvedValue({})
+  })
+
+  afterEach(async () => {
+    await app.close()
+  })
+
+  it('unsubscribes on a form-urlencoded one-click POST, as Gmail and Yahoo send it', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/unsubscribe/${validToken()}`,
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: 'List-Unsubscribe=One-Click',
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ success: true, alreadyUnsubscribed: false })
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({
+      where: { id: USER_ID },
+      data: { emailNotificationsOptIn: false },
+    })
+  })
+
+  it('unsubscribes on a multipart/form-data one-click POST', async () => {
+    const boundary = 'xBOUNDARYx'
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/unsubscribe/${validToken()}`,
+      headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
+      payload:
+        `--${boundary}\r\n` +
+        'Content-Disposition: form-data; name="List-Unsubscribe"\r\n\r\n' +
+        'One-Click\r\n' +
+        `--${boundary}--\r\n`,
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(mockPrisma.user.update).toHaveBeenCalled()
+  })
+
+  it('still accepts the bodiless POST the unsubscribe page sends', async () => {
+    const res = await app.inject({ method: 'POST', url: `/api/unsubscribe/${validToken()}` })
+    expect(res.statusCode).toBe(200)
+  })
+
+  it('rejects an invalid token sent with a form body', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/unsubscribe/not-a-token',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: 'List-Unsubscribe=One-Click',
+    })
+    expect(res.statusCode).toBe(400)
+    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+  })
+
+  it('does not accept form bodies on routes outside the unsubscribe plugin', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/other',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: 'a=b',
+    })
+    expect(res.statusCode).toBe(415)
   })
 })
