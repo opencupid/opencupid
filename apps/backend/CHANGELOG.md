@@ -1,5 +1,16 @@
 # backend
 
+## 0.91.0
+
+### Minor Changes
+
+- c52f430: Email link scanners that prefetch the magic link no longer spend the one-time token. Login is now `POST /auth/verify-token` (the GET route is removed). The magic-link page logs in straight away in the browser that requested the link, and anywhere else asks the user to click Continue first.
+
+### Patch Changes
+
+- 7fea23a: Accept RFC 8058 one-click unsubscribe POSTs with form-urlencoded or multipart bodies; they returned 415 so mail providers' unsubscribe button never worked (#1649)
+- c81f317: Hide past events from the map and grid
+
 ## 0.90.2
 
 ### Patch Changes

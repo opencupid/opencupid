@@ -1,5 +1,13 @@
 # frontend
 
+## 0.91.0
+
+### Minor Changes
+
+- 1914697: Show the community owner and a contact button in the community full view
+- c52f430: Email link scanners that prefetch the magic link no longer spend the one-time token. Login is now `POST /auth/verify-token` (the GET route is removed). The magic-link page logs in straight away in the browser that requested the link, and anywhere else asks the user to click Continue first.
+- 8efcd61: Show the entered email address on the magic link "check your email" screen and add an "Incorrect email?" link back to the login step
+
 ## 0.90.2
 
 ### Patch Changes
