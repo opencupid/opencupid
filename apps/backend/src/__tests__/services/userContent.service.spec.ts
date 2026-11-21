@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { createMockPrisma } from '../../test-utils/prisma'
 
 let mockPrisma: any = {}
@@ -75,5 +75,34 @@ describe('feeds hide content by blocked authors', () => {
     await service.findNearby(47.5, 19.0, 10, { kind: 'post', limit: 10, offset: 0 })
     const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
     expect(where.postedBy).toEqual({ user: { isBlocked: false } })
+  })
+})
+
+describe('map reads hide past events', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-20T12:00:00Z'))
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const expected = {
+    OR: [
+      { kind: { not: 'event' } },
+      { event: { startsAt: { gte: new Date('2026-11-20T12:00:00Z') } } },
+    ],
+  }
+
+  it('findAllWithLocation', async () => {
+    await service.findAllWithLocation('viewer-1', ['event'])
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where).toMatchObject(expected)
+  })
+
+  it('findInBounds', async () => {
+    await service.findInBounds(box, { kinds: ['event'] })
+    const { where } = mockPrisma.userContent.findMany.mock.calls[0][0]
+    expect(where).toMatchObject(expected)
   })
 })
