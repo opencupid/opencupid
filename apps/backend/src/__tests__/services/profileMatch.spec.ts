@@ -58,6 +58,28 @@ describe('MatchQueryService.findMutualMatchesFor', () => {
     expect(call.where.user).toEqual({ isBlocked: false })
   })
 
+  it('filters birthdays with the same range isAgeCompatible accepts', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-11-21T14:00:00'))
+    const { birthdayRangeForAgePrefs } = await import('../../services/profileMatch.service')
+    mockPrisma.profile.findUnique.mockResolvedValue({
+      id: 'p1',
+      birthday: new Date('1987-02-01'),
+      gender: 'female',
+      isDatingActive: true,
+      prefAgeMin: 29,
+      prefAgeMax: 50,
+      prefGender: ['male'],
+      prefKids: [],
+      hasKids: 'no' as const,
+    })
+    mockPrisma.profile.findMany.mockResolvedValue([])
+    await service.findMutualMatchesFor('p1')
+
+    const call = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(call.where.birthday).toEqual(birthdayRangeForAgePrefs(29, 50))
+  })
+
   it('findMutualMatchIds returns only IDs', async () => {
     vi.setSystemTime(new Date('2024-05-20'))
     const profile = {

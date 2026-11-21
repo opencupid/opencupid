@@ -119,10 +119,7 @@ export class ProfileMatchService {
         isDatingActive: true,
         id: { not: profile.id },
         ...blocklistWhereClause(profileId),
-        birthday: {
-          gte: subtractYears(new Date(), profile.prefAgeMax + AGE_TOLERANCE),
-          lte: subtractYears(new Date(), profile.prefAgeMin - AGE_TOLERANCE),
-        },
+        birthday: birthdayRangeForAgePrefs(profile.prefAgeMin, profile.prefAgeMax),
         gender: { in: profile.prefGender },
         ...hasKids,
         prefAgeMin: { lte: myAge + AGE_TOLERANCE },
@@ -186,11 +183,34 @@ export function subtractYears(date: Date, years: number): Date {
  */
 const AGE_TOLERANCE = 1
 
+/** Candidate ages (inclusive) accepted by an age preference range, tolerance applied. */
+function acceptedAgeRange(prefAgeMin: number, prefAgeMax: number) {
+  return { minAge: prefAgeMin - AGE_TOLERANCE, maxAge: prefAgeMax + AGE_TOLERANCE }
+}
+
 /** Check whether `candidateAge` falls within the viewer's age preference range (with tolerance). */
 export function isAgeCompatible(
   candidateAge: number,
   prefAgeMin: number,
   prefAgeMax: number
 ): boolean {
-  return candidateAge >= prefAgeMin - AGE_TOLERANCE && candidateAge <= prefAgeMax + AGE_TOLERANCE
+  const { minAge, maxAge } = acceptedAgeRange(prefAgeMin, prefAgeMax)
+  return candidateAge >= minAge && candidateAge <= maxAge
+}
+
+/**
+ * Birthday filter selecting exactly the candidates `isAgeCompatible` accepts.
+ * Someone stays `maxAge` years old until the day they turn `maxAge + 1`,
+ * hence the exclusive lower bound one year further back.
+ */
+export function birthdayRangeForAgePrefs(
+  prefAgeMin: number,
+  prefAgeMax: number,
+  today: Date = new Date()
+): { gt: Date; lte: Date } {
+  const { minAge, maxAge } = acceptedAgeRange(prefAgeMin, prefAgeMax)
+  return {
+    gt: subtractYears(today, maxAge + 1),
+    lte: subtractYears(today, minAge),
+  }
 }
