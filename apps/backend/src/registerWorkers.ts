@@ -13,17 +13,22 @@ import {
 import { processProfileTrustJob } from '@/workers/profileTrustWorker'
 import type { ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
+/** One bulk email per 15 s keeps reminder and digest runs under the SMTP provider's rate limit. */
+export const BULK_EMAIL_INTERVAL_MS = 15_000
+
 export function registerWorkers(): Worker[] {
   const connection = bullConnection
+  const sendEmail = async (job: Job<EmailPayload>) => {
+    await processEmailJob(job.data, emailService)
+  }
 
   const workers: Worker[] = [
-    new Worker<EmailPayload>(
-      'emails',
-      async (job: Job<EmailPayload>) => {
-        await processEmailJob(job.data, emailService)
-      },
-      { connection }
-    ),
+    new Worker<EmailPayload>('emails', sendEmail, { connection }),
+
+    new Worker<EmailPayload>('emails-bulk', sendEmail, {
+      connection,
+      limiter: { max: 1, duration: BULK_EMAIL_INTERVAL_MS },
+    }),
 
     new Worker(
       'activity-distill',

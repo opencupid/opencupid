@@ -8,6 +8,8 @@ import { notifierService } from './notifier.service'
  * @param windowStart - start of the registration window (inclusive)
  * @param windowEnd   - end of the registration window (exclusive)
  *
+ * Emails go on the rate-limited bulk queue, which paces them for SMTP.
+ *
  * Idempotency: each email job uses a deterministic jobId based on the user ID,
  * so BullMQ deduplicates if this function runs more than once for the same window.
  */
@@ -24,23 +26,17 @@ export async function sendOnboardingReminders(
       },
       OR: [{ profile: null }, { profile: { isOnboarded: false } }],
     },
-    select: {
-      id: true,
+    include: {
+      profile: { select: { publicName: true } },
     },
   })
 
-  // TODO: select email/language/profile fields in findMany and call notifyResolvedUser
-  // directly to avoid N+1 queries (notifyUser re-fetches each user individually)
   for (let i = 0; i < users.length; i++) {
     const user = users[i]
-    await notifierService.notifyUser(user.id, 'onboarding_reminder', {
+    await notifierService.notifyLoadedUser(user, 'onboarding_reminder', {
       path: '/onboarding',
     })
     await onProgress?.(i + 1, users.length, user.id)
-    // Stagger sends with a random 10-15s delay to avoid hitting SMTP rate limits
-    if (i < users.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 10_000 + Math.random() * 5_000))
-    }
   }
 
   return users.length

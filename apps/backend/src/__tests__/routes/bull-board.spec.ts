@@ -13,7 +13,7 @@ vi.mock('@bull-board/fastify', () => ({
     registerPlugin = vi.fn(() => vi.fn())
   },
 }))
-vi.mock('../../queues/emailQueue', () => ({ emailQueue: {} }))
+vi.mock('../../queues/emailQueue', () => ({ emailQueue: {}, bulkEmailQueue: {} }))
 vi.mock('../../queues/activityQueue', () => ({ activityQueue: {} }))
 vi.mock('../../queues/onboardingReminderQueue', () => ({ onboardingReminderQueue: {} }))
 vi.mock('../../queues/profileTrustQueue', () => ({ profileTrustQueue: {} }))
