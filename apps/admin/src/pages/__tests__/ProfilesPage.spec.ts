@@ -237,7 +237,8 @@ describe('ProfilesPage', () => {
     const [withFace, withoutFace] = wrapper.findAll('tbody tr')
     const faceTag = withFace.findAll('td')[1].find('[data-testid="has-face-icon"]')
     expect(faceTag.classes()).toContain('badge')
-    expect(faceTag.text()).toBe('face')
+    expect(faceTag.text()).toBe('')
+    expect(faceTag.find('svg').exists()).toBe(true)
     expect(withoutFace.find('[data-testid="has-face-icon"]').exists()).toBe(false)
   })
 
