@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
 import type { ProfileSummary } from '@zod/profile/profile.dto'
 
 defineProps<{
@@ -11,10 +11,9 @@ defineProps<{
   <div
     class="rounded-3 d-flex flex-column align-items-center justify-content-center gap-2 p-2 h-100"
   >
-    <ProfileThumbnail
-      v-if="profile.profileImages[0]"
+    <ProfileMarker
       :profile="profile"
-      class="avatar-chip dating-eligible-highlight"
+      highlighted
     />
     <small class="publicname w-75 text-truncate text-center d-block">
       {{ profile.publicName }}
@@ -23,12 +22,6 @@ defineProps<{
 </template>
 
 <style scoped>
-.avatar-chip {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-}
-
 .clickable {
   cursor: pointer;
 }
