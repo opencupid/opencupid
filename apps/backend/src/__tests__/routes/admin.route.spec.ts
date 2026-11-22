@@ -145,9 +145,9 @@ vi.mock('@/services/cluster.service', () => ({
   ClusterService: { getInstance: () => ({ evictAll: mockEvictAll }) },
 }))
 
-const mockSyncHidden = vi.hoisted(() => vi.fn())
+const mockComputeHidden = vi.hoisted(() => vi.fn())
 vi.mock('@/services/profileVisibility.service', () => ({
-  syncProfileHiddenFromResults: mockSyncHidden,
+  computeHiddenFromResults: mockComputeHidden,
 }))
 
 vi.mock('@/utils/wsUtils', () => ({
@@ -1246,7 +1246,8 @@ describe('GET /profiles/:id', () => {
 })
 
 describe('PATCH /profiles/:id', () => {
-  it('overrides hasFace', async () => {
+  it('overrides hasFace and re-derives isHiddenFromResults', async () => {
+    mockComputeHidden.mockResolvedValue(false)
     mockPrisma.profile.update.mockResolvedValue({ id: 'p1', hasFace: true })
     const handler = fastify.routes['PATCH /profiles/:id']
     await handler({ params: { id: 'p1' }, body: { hasFace: true } }, reply)
@@ -1255,10 +1256,10 @@ describe('PATCH /profiles/:id', () => {
     expect(reply.payload.profile).toEqual({ id: 'p1', hasFace: true })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
       where: { id: 'p1' },
-      data: { hasFace: true },
+      data: { hasFace: true, isHiddenFromResults: false },
       select: { id: true, hasFace: true },
     })
-    expect(mockSyncHidden).toHaveBeenCalledWith(mockPrisma, 'p1')
+    expect(mockComputeHidden).toHaveBeenCalledWith(mockPrisma, 'p1', true)
   })
 
   it('rejects a non-boolean hasFace', async () => {

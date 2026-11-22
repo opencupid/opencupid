@@ -1,25 +1,22 @@
 import { Prisma } from '@prisma/client'
 
+const INTRO_FIELDS = ['introSocial', 'introDating']
+
 /**
- * Recalculates Profile.isHiddenFromResults for one profile in both directions.
- * A profile is hidden when it has no face photo and no intro in any language.
- * Call it in the same transaction as any write to hasFace or the intro fields,
- * after those writes.
- *
- * Raw SQL so that "updatedAt" stays unchanged: it sets the browse order.
+ * Whether a profile belongs hidden from results: no face photo and no intro
+ * in any language. Intros are trimmed on input, so blank means ''. Call it
+ * after writing the intro fields, in the same transaction, and store the
+ * result in the same update that writes hasFace or the profile scalars.
  */
-export async function syncProfileHiddenFromResults(
+export async function computeHiddenFromResults(
   tx: Prisma.TransactionClient,
-  profileId: string
-): Promise<void> {
-  await tx.$executeRaw`
-    UPDATE "Profile" p
-    SET "isHiddenFromResults" = NOT p."hasFace" AND NOT EXISTS (
-      SELECT 1 FROM "LocalizedProfileField" f
-      WHERE f."profileId" = p."id"
-        AND f."field" IN ('introSocial', 'introDating')
-        AND btrim(f."value") <> ''
-    )
-    WHERE p."id" = ${profileId}
-  `
+  profileId: string,
+  hasFace: boolean
+): Promise<boolean> {
+  if (hasFace) return false
+  const intro = await tx.localizedProfileField.findFirst({
+    where: { profileId, field: { in: INTRO_FIELDS }, value: { not: '' } },
+    select: { id: true },
+  })
+  return intro === null
 }

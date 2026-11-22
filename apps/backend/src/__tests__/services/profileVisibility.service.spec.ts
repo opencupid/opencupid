@@ -1,19 +1,32 @@
 import { describe, it, expect, vi } from 'vitest'
 
-import { syncProfileHiddenFromResults } from '../../services/profileVisibility.service'
+import { computeHiddenFromResults } from '../../services/profileVisibility.service'
 
-describe('syncProfileHiddenFromResults', () => {
-  it('recomputes the flag for one profile from hasFace and the intro fields', async () => {
-    const tx = { $executeRaw: vi.fn() }
+function txWithIntro(intro: { id: string } | null) {
+  return { localizedProfileField: { findFirst: vi.fn().mockResolvedValue(intro) } }
+}
 
-    await syncProfileHiddenFromResults(tx as never, 'p1')
+describe('computeHiddenFromResults', () => {
+  it('hides a profile with no face and no intro', async () => {
+    const tx = txWithIntro(null)
 
-    const [strings, profileId] = tx.$executeRaw.mock.calls[0]
-    const sql = (strings as string[]).join('?')
-    expect(sql).toContain('SET "isHiddenFromResults" = NOT p."hasFace" AND NOT EXISTS')
-    expect(sql).toContain(`f."field" IN ('introSocial', 'introDating')`)
-    expect(sql).toContain(`btrim(f."value") <> ''`)
-    expect(sql).not.toContain('lastSeenAt')
-    expect(profileId).toBe('p1')
+    expect(await computeHiddenFromResults(tx as never, 'p1', false)).toBe(true)
+    expect(tx.localizedProfileField.findFirst).toHaveBeenCalledWith({
+      where: { profileId: 'p1', field: { in: ['introSocial', 'introDating'] }, value: { not: '' } },
+      select: { id: true },
+    })
+  })
+
+  it('shows a profile with no face but an intro in some language', async () => {
+    expect(await computeHiddenFromResults(txWithIntro({ id: 'f1' }) as never, 'p1', false)).toBe(
+      false
+    )
+  })
+
+  it('shows a profile with a face without looking at intros', async () => {
+    const tx = txWithIntro(null)
+
+    expect(await computeHiddenFromResults(tx as never, 'p1', true)).toBe(false)
+    expect(tx.localizedProfileField.findFirst).not.toHaveBeenCalled()
   })
 })

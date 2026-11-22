@@ -27,7 +27,7 @@ import { broadcastToProfile } from '@/utils/wsUtils'
 import { ProfileTrustService } from '@/services/profileTrust.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageService } from '@/services/image.service'
-import { syncProfileHiddenFromResults } from '@/services/profileVisibility.service'
+import { computeHiddenFromResults } from '@/services/profileVisibility.service'
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
 
@@ -1406,15 +1406,16 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
     try {
       const hasFace = body.hasFace
-      const profile = await prisma.$transaction(async (tx) => {
-        const updated = await tx.profile.update({
+      const profile = await prisma.$transaction(async (tx) =>
+        tx.profile.update({
           where: { id },
-          data: { hasFace },
+          data: {
+            hasFace,
+            isHiddenFromResults: await computeHiddenFromResults(tx, id, hasFace),
+          },
           select: { id: true, hasFace: true },
         })
-        await syncProfileHiddenFromResults(tx, id)
-        return updated
-      })
+      )
       return reply.code(200).send({ success: true, profile })
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

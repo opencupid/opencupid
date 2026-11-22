@@ -15,7 +15,7 @@ import {
   type ProfileUpdateInput,
 } from '@zod/profile/profile.db'
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
-import { syncProfileHiddenFromResults } from '@/services/profileVisibility.service'
+import { computeHiddenFromResults } from '@/services/profileVisibility.service'
 import {
   blockedContextInclude,
   conversationContextInclude,
@@ -38,11 +38,14 @@ export async function syncProfileHasFace(
     where: { profileId, image: { hasFace: true } },
     select: { imageId: true },
   })
+  const hasFace = withFace !== null
   await tx.profile.update({
     where: { id: profileId },
-    data: { hasFace: withFace !== null },
+    data: {
+      hasFace,
+      isHiddenFromResults: await computeHiddenFromResults(tx, profileId, hasFace),
+    },
   })
-  await syncProfileHiddenFromResults(tx, profileId)
 }
 
 export class ProfileService {
@@ -307,7 +310,6 @@ export class ProfileService {
     for (const { locale, updates } of localizedUpdates) {
       await this.upsertLocalizedProfileText(tx, profileId, locale, updates)
     }
-    await syncProfileHiddenFromResults(tx, profileId)
 
     // 5) Update all scalar fields
     const updated = await tx.profile.update({
@@ -315,6 +317,7 @@ export class ProfileService {
       data: {
         ...rest,
         isActive: true, // TODO change this to isVisible when we have that field
+        isHiddenFromResults: await computeHiddenFromResults(tx, profileId, current.hasFace),
       },
       include: {
         ...tagsInclude(),
