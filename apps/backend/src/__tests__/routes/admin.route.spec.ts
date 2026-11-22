@@ -159,6 +159,7 @@ import adminRoutes from '../../api/routes/admin.route'
 import { MockReply } from '../../test-utils/fastify'
 import { ProfileTrustService } from '../../services/profileTrust.service'
 import { Prisma } from '@prisma/client'
+import { getLast7Days } from '../../api/adminHelpers'
 
 class AdminMockFastify {
   public routes: Record<string, any> = {}
@@ -1067,6 +1068,7 @@ describe('GET /profiles/:id/activity', () => {
       .mockResolvedValueOnce(12)
       .mockResolvedValueOnce(9)
       .mockResolvedValueOnce(3)
+    mockPrisma.$queryRaw.mockResolvedValue([])
   })
 
   it('returns conversation, message, like and match counts', async () => {
@@ -1074,7 +1076,7 @@ describe('GET /profiles/:id/activity', () => {
     await handler({ params: { id: 'p1' } }, reply)
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload).toEqual({
+    expect(reply.payload).toMatchObject({
       success: true,
       activity: {
         conversations: { participating: 5, initiated: 2 },
@@ -1083,6 +1085,41 @@ describe('GET /profiles/:id/activity', () => {
         matches: 3,
       },
     })
+  })
+
+  it('returns a zero-filled 7-day series for each figure', async () => {
+    const days = getLast7Days()
+    mockPrisma.$queryRaw
+      .mockResolvedValueOnce([{ date: days[6], count: BigInt(1) }]) // conversations
+      .mockResolvedValueOnce([
+        { date: days[0], count: BigInt(4) },
+        { date: days[6], count: BigInt(2) },
+      ]) // messages
+      .mockResolvedValueOnce([{ date: days[3], count: BigInt(3) }]) // likes
+      .mockResolvedValueOnce([]) // matches
+
+    const handler = fastify.routes['GET /profiles/:id/activity']
+    await handler({ params: { id: 'p1' } }, reply)
+
+    const { daily } = reply.payload.activity
+    const counts = (series: { date: string; count: number }[]) => series.map((d) => d.count)
+    expect(daily.conversations.map((d: { date: string }) => d.date)).toEqual(days)
+    expect(counts(daily.conversations)).toEqual([0, 0, 0, 0, 0, 0, 1])
+    expect(counts(daily.messages)).toEqual([4, 0, 0, 0, 0, 0, 2])
+    expect(counts(daily.likes)).toEqual([0, 0, 0, 3, 0, 0, 0])
+    expect(counts(daily.matches)).toEqual([0, 0, 0, 0, 0, 0, 0])
+  })
+
+  it('excludes the system sender from the daily message series only when configured', async () => {
+    const handler = fastify.routes['GET /profiles/:id/activity']
+    await handler({ params: { id: 'p1' } }, reply)
+    expect(adminSenderExclusionFragments()).toHaveLength(1)
+
+    mockPrisma.$queryRaw.mockClear()
+    mockAppConfig.ADMIN_PROFILE_ID = undefined as any
+    await handler({ params: { id: 'p1' } }, reply)
+    mockAppConfig.ADMIN_PROFILE_ID = 'sys-sender'
+    expect(adminSenderExclusionFragments()).toHaveLength(0)
   })
 
   it('counts each figure with the expected filter', async () => {

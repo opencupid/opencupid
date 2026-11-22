@@ -1284,16 +1284,21 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /profiles/:id/activity
-   * Interaction counts for one profile. Messages from the system sender
-   * (ADMIN_PROFILE_ID) are not counted as received.
+   * Interaction counts for one profile, plus a zero-filled per-day series of
+   * the last 7 days for each figure (conversations joined, messages sent or
+   * received, likes sent or received, matches formed). Messages from the
+   * system sender (ADMIN_PROFILE_ID) are not counted as received.
    * @param {string} id - Profile ID
    * @returns {{ success, activity: { conversations: { participating, initiated },
-   *   messages: { sent, received }, likes: { sent, received }, matches } }}
+   *   messages: { sent, received }, likes: { sent, received }, matches,
+   *   daily: { conversations, messages, likes, matches: { date, count }[] } } }}
    */
   fastify.get('/profiles/:id/activity', async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
       const excludedSenders = [id, appConfig.ADMIN_PROFILE_ID].filter(Boolean) as string[]
+      const days = getLast7Days()
+      const since = days[0]
 
       const [
         participating,
@@ -1303,6 +1308,10 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         likesSent,
         likesReceived,
         matches,
+        dailyConversations,
+        dailyMessages,
+        dailyLikes,
+        dailyMatches,
       ] = await Promise.all([
         prisma.conversationParticipant.count({ where: { profileId: id } }),
         prisma.conversation.count({ where: { initiatorProfileId: id } }),
@@ -1318,6 +1327,36 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         prisma.likedProfile.count({
           where: { fromId: id, to: { likesSent: { some: { toId: id } } } },
         }),
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE(c."createdAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "Conversation" c
+          JOIN "ConversationParticipant" p ON p."conversationId" = c.id
+          WHERE p."profileId" = ${id} AND c."createdAt" >= ${since}::date
+          GROUP BY DATE(c."createdAt")
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE(m."createdAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "Message" m
+          JOIN "ConversationParticipant" p ON p."conversationId" = m."conversationId"
+          WHERE p."profileId" = ${id} AND m."createdAt" >= ${since}::date
+          ${excludeAdminProfile(Prisma.sql`m."senderId"`)}
+          GROUP BY DATE(m."createdAt")
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
+          FROM "LikedProfile"
+          WHERE ("fromId" = ${id} OR "toId" = ${id}) AND "createdAt" >= ${since}::date
+          GROUP BY DATE("createdAt")
+        `,
+        prisma.$queryRaw<{ date: string; count: bigint }[]>`
+          SELECT DATE(GREATEST(a."createdAt", b."createdAt"))::text AS date,
+                 COUNT(*)::bigint AS count
+          FROM "LikedProfile" a
+          JOIN "LikedProfile" b ON b."fromId" = a."toId" AND b."toId" = a."fromId"
+          WHERE a."fromId" = ${id}
+            AND GREATEST(a."createdAt", b."createdAt") >= ${since}::date
+          GROUP BY DATE(GREATEST(a."createdAt", b."createdAt"))
+        `,
       ])
 
       return reply.code(200).send({
@@ -1327,6 +1366,12 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           messages: { sent: messagesSent, received: messagesReceived },
           likes: { sent: likesSent, received: likesReceived },
           matches,
+          daily: {
+            conversations: fillZeroDays(dailyConversations, days),
+            messages: fillZeroDays(dailyMessages, days),
+            likes: fillZeroDays(dailyLikes, days),
+            matches: fillZeroDays(dailyMatches, days),
+          },
         },
       })
     } catch (err) {

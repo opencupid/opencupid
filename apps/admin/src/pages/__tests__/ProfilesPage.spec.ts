@@ -613,6 +613,12 @@ describe('ProfilesPage', () => {
       messages: { sent: 40, received: 31 },
       likes: { sent: 12, received: 9 },
       matches: 3,
+      daily: {
+        conversations: [{ date: '2026-11-21', count: 1 }],
+        messages: [{ date: '2026-11-21', count: 6 }],
+        likes: [{ date: '2026-11-21', count: 2 }],
+        matches: [{ date: '2026-11-21', count: 0 }],
+      },
     }
     apiRequestMock.mockImplementation((path: string) => {
       if (path === '/admin/profiles/p1/activity') {
@@ -635,16 +641,21 @@ describe('ProfilesPage', () => {
     await flushPromises()
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/profiles/p1/activity')
-    const list = wrapper.find('[data-testid="profile-activity"]')
-    const terms = list.findAll('dt').map((dt) => dt.text())
-    const values = list.findAll('dd').map((dd) => dd.text())
-    expect(terms).toEqual(['Conversations', 'Messages', 'Likes', 'Matches'])
-    expect(values).toEqual([
-      '5 / 2 participating / initiated',
-      '40 / 31 sent / received',
-      '12 / 9 sent / received',
-      '3',
+    const cards = wrapper.find('[data-testid="profile-activity"]').findAll('.kpi-card')
+    expect(cards.map((c) => c.find('.card-title').text())).toEqual([
+      'Conversations',
+      'Messages',
+      'Likes',
+      'Matches',
     ])
+    expect(cards.map((c) => c.find('.kpi-value').text())).toEqual(['5', '71', '21', '3'])
+    expect(cards.map((c) => c.find('.kpi-subtitle').text())).toEqual([
+      '2 initiated',
+      '40 sent · 31 received',
+      '12 sent · 9 received',
+      'mutual likes',
+    ])
+    expect(cards[1].find('rect title').text()).toBe('2026-11-21: 6')
   })
 
   it('Activity tab shows an error when the activity fetch fails', async () => {

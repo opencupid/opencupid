@@ -11,6 +11,7 @@ import {
 } from '../composables/useTrustFlags'
 import { appLocales } from '@shared/i18n/locales'
 import PublicProfileLink from '../components/PublicProfileLink.vue'
+import KpiCard from '../components/KpiCard.vue'
 import ProfileImageReview, { type AdminProfileImage } from '../components/ProfileImageReview.vue'
 
 interface AdminProfile {
@@ -237,6 +238,10 @@ interface AdminProfileActivity {
   messages: { sent: number; received: number }
   likes: { sent: number; received: number }
   matches: number
+  daily: Record<
+    'conversations' | 'messages' | 'likes' | 'matches',
+    { date: string; count: number }[]
+  >
 }
 
 const profileActivity = ref<AdminProfileActivity | null>(null)
@@ -269,23 +274,47 @@ async function fetchProfileActivity(profileId: string) {
   }
 }
 
-const activityRows = computed(() => {
+// Stat tiles: all-time total, its breakdown, and a 7-day daily sparkline.
+const activityCards = computed(() => {
   const a = profileActivity.value
   if (!a) return []
   return [
     {
-      label: 'Conversations',
-      detail: 'participating / initiated',
-      values: [a.conversations.participating, a.conversations.initiated],
+      key: 'conversations',
+      title: 'Conversations',
+      value: a.conversations.participating,
+      subtitle: `${a.conversations.initiated} initiated`,
+      color: '#198754',
     },
     {
-      label: 'Messages',
-      detail: 'sent / received',
-      values: [a.messages.sent, a.messages.received],
+      key: 'messages',
+      title: 'Messages',
+      value: a.messages.sent + a.messages.received,
+      subtitle: `${a.messages.sent} sent · ${a.messages.received} received`,
+      color: '#fd7e14',
     },
-    { label: 'Likes', detail: 'sent / received', values: [a.likes.sent, a.likes.received] },
-    { label: 'Matches', detail: '', values: [a.matches] },
-  ]
+    {
+      key: 'likes',
+      title: 'Likes',
+      value: a.likes.sent + a.likes.received,
+      subtitle: `${a.likes.sent} sent · ${a.likes.received} received`,
+      color: '#6f42c1',
+    },
+    {
+      key: 'matches',
+      title: 'Matches',
+      value: a.matches,
+      subtitle: 'mutual likes',
+      color: '#d63384',
+    },
+  ].map((card) => {
+    const daily = a.daily[card.key as keyof AdminProfileActivity['daily']]
+    return {
+      ...card,
+      series: daily.map((d) => d.count),
+      seriesLabels: daily.map((d) => d.date),
+    }
+  })
 })
 
 // Keep the list row's face icon in sync with an edit made in the detail modal.
@@ -1245,26 +1274,26 @@ onUnmounted(() => {
                 >
                   {{ activityError }}
                 </div>
-                <dl
+                <div
                   v-else-if="profileActivity"
-                  class="row mb-0"
                   data-testid="profile-activity"
                 >
-                  <template
-                    v-for="row in activityRows"
-                    :key="row.label"
-                  >
-                    <dt class="col-sm-4">{{ row.label }}</dt>
-                    <dd class="col-sm-8">
-                      {{ row.values.join(' / ') }}
-                      <small
-                        v-if="row.detail"
-                        class="text-muted ms-1"
-                        >{{ row.detail }}</small
-                      >
-                    </dd>
-                  </template>
-                </dl>
+                  <div class="d-grid gap-2">
+                    <KpiCard
+                      v-for="card in activityCards"
+                      :key="card.key"
+                      :title="card.title"
+                      :subtitle="card.subtitle"
+                      :value="card.value"
+                      :series="card.series"
+                      :series-labels="card.seriesLabels"
+                      :color="card.color"
+                    />
+                  </div>
+                  <div class="small text-body-secondary mt-2">
+                    Totals are all-time; bars show the last 7 days.
+                  </div>
+                </div>
               </template>
               <template v-else>
                 <div

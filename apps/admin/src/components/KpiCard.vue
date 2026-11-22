@@ -6,6 +6,8 @@ interface Props {
   subtitle?: string
   value: number | string
   series?: number[]
+  /** Per-bar hover labels (e.g. dates), parallel to `series`. */
+  seriesLabels?: string[]
   color?: string
   clickable?: boolean
 }
@@ -13,6 +15,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   subtitle: '',
   series: () => [],
+  seriesLabels: () => [],
   color: '#0d6efd',
   clickable: false,
 })
@@ -72,6 +75,17 @@ const bars = computed(() => {
             :height="bar.height"
             :fill="color"
             rx="0.5"
+          >
+            <title v-if="seriesLabels[i]">{{ seriesLabels[i] }}: {{ series[i] }}</title>
+          </rect>
+          <line
+            x1="0"
+            :y1="VIEW_H"
+            :x2="VIEW_W"
+            :y2="VIEW_H"
+            :stroke="color"
+            stroke-width="1"
+            vector-effect="non-scaling-stroke"
           />
         </svg>
       </div>
