@@ -20,6 +20,23 @@ export function fillZeroDays(
   return days.map((date) => ({ date, count: map.get(date) ?? 0 }))
 }
 
+/**
+ * Like fillZeroDays, for rows that carry several counts per day (e.g. sent /
+ * received). Every requested key is present on every day, zero when absent.
+ */
+export function fillZeroDaysSplit<K extends string>(
+  rows: ({ date: string } & Record<K, bigint>)[],
+  days: string[],
+  keys: readonly K[]
+): ({ date: string } & Record<K, number>)[] {
+  const map = new Map(rows.map((r) => [r.date, r]))
+  return days.map((date) => {
+    const row = map.get(date)
+    const counts = Object.fromEntries(keys.map((k) => [k, row ? Number(row[k]) : 0]))
+    return { date, ...counts } as { date: string } & Record<K, number>
+  })
+}
+
 export type BreakdownRange = '24h' | '72h' | '7d'
 export type BreakdownUnit = 'hour' | 'day'
 

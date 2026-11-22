@@ -238,10 +238,12 @@ interface AdminProfileActivity {
   messages: { sent: number; received: number }
   likes: { sent: number; received: number }
   matches: number
-  daily: Record<
-    'conversations' | 'messages' | 'likes' | 'matches',
-    { date: string; count: number }[]
-  >
+  daily: {
+    conversations: { date: string; initiated: number; joined: number }[]
+    messages: { date: string; sent: number; received: number }[]
+    likes: { date: string; sent: number; received: number }[]
+    matches: { date: string; count: number }[]
+  }
 }
 
 const profileActivity = ref<AdminProfileActivity | null>(null)
@@ -274,17 +276,25 @@ async function fetchProfileActivity(profileId: string) {
   }
 }
 
-// Stat tiles: all-time total, its breakdown, and a 7-day daily sparkline.
+// Stat tiles: all-time total, its breakdown, and a 7-day daily sparkline,
+// stacked by the same split as the breakdown (solid = first part).
 const activityCards = computed(() => {
   const a = profileActivity.value
   if (!a) return []
+  const { conversations, messages, likes, matches } = a.daily
+  const joined = a.conversations.participating - a.conversations.initiated
   return [
     {
       key: 'conversations',
       title: 'Conversations',
       value: a.conversations.participating,
-      subtitle: `${a.conversations.initiated} initiated`,
+      subtitle: `${a.conversations.initiated} initiated · ${joined} joined`,
       color: '#198754',
+      seriesLabels: conversations.map((d) => d.date),
+      stacks: [
+        { label: 'initiated', values: conversations.map((d) => d.initiated) },
+        { label: 'joined', values: conversations.map((d) => d.joined) },
+      ],
     },
     {
       key: 'messages',
@@ -292,6 +302,11 @@ const activityCards = computed(() => {
       value: a.messages.sent + a.messages.received,
       subtitle: `${a.messages.sent} sent · ${a.messages.received} received`,
       color: '#fd7e14',
+      seriesLabels: messages.map((d) => d.date),
+      stacks: [
+        { label: 'sent', values: messages.map((d) => d.sent) },
+        { label: 'received', values: messages.map((d) => d.received) },
+      ],
     },
     {
       key: 'likes',
@@ -299,6 +314,11 @@ const activityCards = computed(() => {
       value: a.likes.sent + a.likes.received,
       subtitle: `${a.likes.sent} sent · ${a.likes.received} received`,
       color: '#6f42c1',
+      seriesLabels: likes.map((d) => d.date),
+      stacks: [
+        { label: 'sent', values: likes.map((d) => d.sent) },
+        { label: 'received', values: likes.map((d) => d.received) },
+      ],
     },
     {
       key: 'matches',
@@ -306,15 +326,10 @@ const activityCards = computed(() => {
       value: a.matches,
       subtitle: 'mutual likes',
       color: '#d63384',
+      seriesLabels: matches.map((d) => d.date),
+      series: matches.map((d) => d.count),
     },
-  ].map((card) => {
-    const daily = a.daily[card.key as keyof AdminProfileActivity['daily']]
-    return {
-      ...card,
-      series: daily.map((d) => d.count),
-      seriesLabels: daily.map((d) => d.date),
-    }
-  })
+  ]
 })
 
 // Keep the list row's face icon in sync with an edit made in the detail modal.
@@ -1286,12 +1301,14 @@ onUnmounted(() => {
                       :subtitle="card.subtitle"
                       :value="card.value"
                       :series="card.series"
+                      :stacks="card.stacks"
                       :series-labels="card.seriesLabels"
                       :color="card.color"
                     />
                   </div>
                   <div class="small text-body-secondary mt-2">
-                    Totals are all-time; bars show the last 7 days.
+                    Totals are all-time; bars show the last 7 days (solid: sent / initiated, light:
+                    received / joined).
                   </div>
                 </div>
               </template>

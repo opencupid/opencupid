@@ -14,6 +14,7 @@ import { appConfig } from '@/lib/appconfig'
 import {
   getLast7Days,
   fillZeroDays,
+  fillZeroDaysSplit,
   getBreakdownConfig,
   bucketFormat,
   fillZeroBuckets,
@@ -1285,13 +1286,15 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * GET /profiles/:id/activity
    * Interaction counts for one profile, plus a zero-filled per-day series of
-   * the last 7 days for each figure (conversations joined, messages sent or
-   * received, likes sent or received, matches formed). Messages from the
-   * system sender (ADMIN_PROFILE_ID) are not counted as received.
+   * the last 7 days for each figure, split the same way as the totals:
+   * conversations initiated / joined (started by someone else), messages and
+   * likes sent / received, and matches formed. Messages from the system sender
+   * (ADMIN_PROFILE_ID) are not counted as received.
    * @param {string} id - Profile ID
    * @returns {{ success, activity: { conversations: { participating, initiated },
    *   messages: { sent, received }, likes: { sent, received }, matches,
-   *   daily: { conversations, messages, likes, matches: { date, count }[] } } }}
+   *   daily: { conversations: { date, initiated, joined }[],
+   *     messages, likes: { date, sent, received }[], matches: { date, count }[] } } }}
    */
   fastify.get('/profiles/:id/activity', async (req, reply) => {
     try {
@@ -1327,23 +1330,29 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         prisma.likedProfile.count({
           where: { fromId: id, to: { likesSent: { some: { toId: id } } } },
         }),
-        prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE(c."createdAt")::text AS date, COUNT(*)::bigint AS count
+        prisma.$queryRaw<{ date: string; initiated: bigint; joined: bigint }[]>`
+          SELECT DATE(c."createdAt")::text AS date,
+                 COUNT(*) FILTER (WHERE c."initiatorProfileId" = ${id})::bigint AS initiated,
+                 COUNT(*) FILTER (WHERE c."initiatorProfileId" IS DISTINCT FROM ${id})::bigint AS joined
           FROM "Conversation" c
           JOIN "ConversationParticipant" p ON p."conversationId" = c.id
           WHERE p."profileId" = ${id} AND c."createdAt" >= ${since}::date
           GROUP BY DATE(c."createdAt")
         `,
-        prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE(m."createdAt")::text AS date, COUNT(*)::bigint AS count
+        prisma.$queryRaw<{ date: string; sent: bigint; received: bigint }[]>`
+          SELECT DATE(m."createdAt")::text AS date,
+                 COUNT(*) FILTER (WHERE m."senderId" = ${id})::bigint AS sent,
+                 COUNT(*) FILTER (WHERE m."senderId" <> ${id})::bigint AS received
           FROM "Message" m
           JOIN "ConversationParticipant" p ON p."conversationId" = m."conversationId"
           WHERE p."profileId" = ${id} AND m."createdAt" >= ${since}::date
           ${excludeAdminProfile(Prisma.sql`m."senderId"`)}
           GROUP BY DATE(m."createdAt")
         `,
-        prisma.$queryRaw<{ date: string; count: bigint }[]>`
-          SELECT DATE("createdAt")::text AS date, COUNT(*)::bigint AS count
+        prisma.$queryRaw<{ date: string; sent: bigint; received: bigint }[]>`
+          SELECT DATE("createdAt")::text AS date,
+                 COUNT(*) FILTER (WHERE "fromId" = ${id})::bigint AS sent,
+                 COUNT(*) FILTER (WHERE "toId" = ${id})::bigint AS received
           FROM "LikedProfile"
           WHERE ("fromId" = ${id} OR "toId" = ${id}) AND "createdAt" >= ${since}::date
           GROUP BY DATE("createdAt")
@@ -1367,9 +1376,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           likes: { sent: likesSent, received: likesReceived },
           matches,
           daily: {
-            conversations: fillZeroDays(dailyConversations, days),
-            messages: fillZeroDays(dailyMessages, days),
-            likes: fillZeroDays(dailyLikes, days),
+            conversations: fillZeroDaysSplit(dailyConversations, days, ['initiated', 'joined']),
+            messages: fillZeroDaysSplit(dailyMessages, days, ['sent', 'received']),
+            likes: fillZeroDaysSplit(dailyLikes, days, ['sent', 'received']),
             matches: fillZeroDays(dailyMatches, days),
           },
         },

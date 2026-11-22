@@ -1,12 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+export interface KpiStack {
+  /** Segment name used in the hover title, e.g. "sent". */
+  label: string
+  values: number[]
+}
+
 interface Props {
   title: string
   subtitle?: string
   value: number | string
   series?: number[]
-  /** Per-bar hover labels (e.g. dates), parallel to `series`. */
+  /**
+   * Stacked alternative to `series`: one entry per segment, bottom first, each
+   * with one value per bar. The first segment is drawn solid, the rest lighter.
+   */
+  stacks?: KpiStack[]
+  /** Per-bar hover labels (e.g. dates), parallel to the bars. */
   seriesLabels?: string[]
   color?: string
   clickable?: boolean
@@ -15,6 +26,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   subtitle: '',
   series: () => [],
+  stacks: () => [],
   seriesLabels: () => [],
   color: '#0d6efd',
   clickable: false,
@@ -23,19 +35,36 @@ const props = withDefaults(defineProps<Props>(), {
 const VIEW_W = 100
 const VIEW_H = 32
 const GAP_RATIO = 0.25
+const SECONDARY_OPACITY = 0.4
+
+const layers = computed<KpiStack[]>(() =>
+  props.stacks.length ? props.stacks : [{ label: '', values: props.series }]
+)
 
 const bars = computed(() => {
-  if (!props.series.length) return []
-  const max = Math.max(1, ...props.series)
-  const slot = VIEW_W / props.series.length
+  const n = Math.max(0, ...layers.value.map((l) => l.values.length))
+  if (!n) return []
+  // columns[i][j]: value of segment j in bar i (a ragged stack counts as 0)
+  const columns = Array.from({ length: n }, (_, i) => layers.value.map((l) => l.values[i] ?? 0))
+  const max = Math.max(1, ...columns.map((c) => c.reduce((a, b) => a + b, 0)))
+  const slot = VIEW_W / n
   const barW = slot * (1 - GAP_RATIO)
-  return props.series.map((v, i) => {
-    const h = (v / max) * VIEW_H
+  return columns.map((column, i) => {
+    let base = VIEW_H
+    const segments = column.map((v, j) => {
+      const h = (v / max) * VIEW_H
+      base -= h
+      return { y: base, height: h, opacity: j === 0 ? 1 : SECONDARY_OPACITY }
+    })
+    const label = props.seriesLabels[i]
+    const parts = props.stacks.length
+      ? column.map((v, j) => `${v} ${props.stacks[j]?.label}`).join(' · ')
+      : String(column[0])
     return {
       x: i * slot + (slot - barW) / 2,
-      y: VIEW_H - h,
       width: barW,
-      height: h,
+      segments,
+      title: label ? `${label}: ${parts}` : '',
     }
   })
 })
@@ -57,7 +86,7 @@ const bars = computed(() => {
         <div class="kpi-value">{{ value }}</div>
       </div>
       <div
-        v-if="series.length"
+        v-if="bars.length"
         class="kpi-spark"
       >
         <svg
@@ -66,18 +95,23 @@ const bars = computed(() => {
           aria-hidden="true"
           role="presentation"
         >
-          <rect
+          <g
             v-for="(bar, i) in bars"
             :key="i"
-            :x="bar.x"
-            :y="bar.y"
-            :width="bar.width"
-            :height="bar.height"
-            :fill="color"
-            rx="0.5"
           >
-            <title v-if="seriesLabels[i]">{{ seriesLabels[i] }}: {{ series[i] }}</title>
-          </rect>
+            <title v-if="bar.title">{{ bar.title }}</title>
+            <rect
+              v-for="(seg, j) in bar.segments"
+              :key="j"
+              :x="bar.x"
+              :y="seg.y"
+              :width="bar.width"
+              :height="seg.height"
+              :fill="color"
+              :fill-opacity="seg.opacity"
+              rx="0.5"
+            />
+          </g>
           <line
             x1="0"
             :y1="VIEW_H"

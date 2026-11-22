@@ -614,9 +614,9 @@ describe('ProfilesPage', () => {
       likes: { sent: 12, received: 9 },
       matches: 3,
       daily: {
-        conversations: [{ date: '2026-11-21', count: 1 }],
-        messages: [{ date: '2026-11-21', count: 6 }],
-        likes: [{ date: '2026-11-21', count: 2 }],
+        conversations: [{ date: '2026-11-21', initiated: 1, joined: 0 }],
+        messages: [{ date: '2026-11-21', sent: 4, received: 2 }],
+        likes: [{ date: '2026-11-21', sent: 0, received: 2 }],
         matches: [{ date: '2026-11-21', count: 0 }],
       },
     }
@@ -650,12 +650,19 @@ describe('ProfilesPage', () => {
     ])
     expect(cards.map((c) => c.find('.kpi-value').text())).toEqual(['5', '71', '21', '3'])
     expect(cards.map((c) => c.find('.kpi-subtitle').text())).toEqual([
-      '2 initiated',
+      '2 initiated · 3 joined',
       '40 sent · 31 received',
       '12 sent · 9 received',
       'mutual likes',
     ])
-    expect(cards[1].find('rect title').text()).toBe('2026-11-21: 6')
+    expect(cards.map((c) => c.find('g > title').text())).toEqual([
+      '2026-11-21: 1 initiated · 0 joined',
+      '2026-11-21: 4 sent · 2 received',
+      '2026-11-21: 0 sent · 2 received',
+      '2026-11-21: 0',
+    ])
+    // Stacked cards draw one rect per segment, matches a single bar.
+    expect(cards.map((c) => c.findAll('rect').length)).toEqual([2, 2, 2, 1])
   })
 
   it('Activity tab shows an error when the activity fetch fails', async () => {

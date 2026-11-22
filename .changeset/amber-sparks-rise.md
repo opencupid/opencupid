@@ -3,4 +3,4 @@
 '@opencupid/backend': minor
 ---
 
-Admin profile Activity tab: KPI tiles with 7-day sparklines for conversations, messages, likes and matches
+Admin profile Activity tab: KPI tiles with 7-day sparklines for conversations, messages, likes and matches, stacked by sent/received and initiated/joined

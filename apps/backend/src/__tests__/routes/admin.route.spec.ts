@@ -1087,27 +1087,30 @@ describe('GET /profiles/:id/activity', () => {
     })
   })
 
-  it('returns a zero-filled 7-day series for each figure', async () => {
+  it('returns a zero-filled 7-day series for each figure, split like the totals', async () => {
     const days = getLast7Days()
     mockPrisma.$queryRaw
-      .mockResolvedValueOnce([{ date: days[6], count: BigInt(1) }]) // conversations
+      .mockResolvedValueOnce([{ date: days[6], initiated: BigInt(1), joined: BigInt(2) }])
       .mockResolvedValueOnce([
-        { date: days[0], count: BigInt(4) },
-        { date: days[6], count: BigInt(2) },
-      ]) // messages
-      .mockResolvedValueOnce([{ date: days[3], count: BigInt(3) }]) // likes
+        { date: days[0], sent: BigInt(4), received: BigInt(1) },
+        { date: days[6], sent: BigInt(0), received: BigInt(2) },
+      ])
+      .mockResolvedValueOnce([{ date: days[3], sent: BigInt(3), received: BigInt(0) }])
       .mockResolvedValueOnce([]) // matches
 
     const handler = fastify.routes['GET /profiles/:id/activity']
     await handler({ params: { id: 'p1' } }, reply)
 
     const { daily } = reply.payload.activity
-    const counts = (series: { date: string; count: number }[]) => series.map((d) => d.count)
-    expect(daily.conversations.map((d: { date: string }) => d.date)).toEqual(days)
-    expect(counts(daily.conversations)).toEqual([0, 0, 0, 0, 0, 0, 1])
-    expect(counts(daily.messages)).toEqual([4, 0, 0, 0, 0, 0, 2])
-    expect(counts(daily.likes)).toEqual([0, 0, 0, 3, 0, 0, 0])
-    expect(counts(daily.matches)).toEqual([0, 0, 0, 0, 0, 0, 0])
+    const pick = (series: Record<string, unknown>[], key: string) => series.map((d) => d[key])
+    expect(pick(daily.conversations, 'date')).toEqual(days)
+    expect(pick(daily.conversations, 'initiated')).toEqual([0, 0, 0, 0, 0, 0, 1])
+    expect(pick(daily.conversations, 'joined')).toEqual([0, 0, 0, 0, 0, 0, 2])
+    expect(pick(daily.messages, 'sent')).toEqual([4, 0, 0, 0, 0, 0, 0])
+    expect(pick(daily.messages, 'received')).toEqual([1, 0, 0, 0, 0, 0, 2])
+    expect(pick(daily.likes, 'sent')).toEqual([0, 0, 0, 3, 0, 0, 0])
+    expect(pick(daily.likes, 'received')).toEqual([0, 0, 0, 0, 0, 0, 0])
+    expect(pick(daily.matches, 'count')).toEqual([0, 0, 0, 0, 0, 0, 0])
   })
 
   it('excludes the system sender from the daily message series only when configured', async () => {
