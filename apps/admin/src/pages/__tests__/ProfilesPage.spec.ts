@@ -158,28 +158,61 @@ describe('ProfilesPage', () => {
     vi.useRealTimers()
 
     const headers = wrapper.findAll('thead th').map((th) => th.text())
-    expect(headers).toEqual([
-      '',
-      'Name',
-      'Location',
-      'Gender',
-      'Dating',
-      'Last active',
-      'Created',
-      'Actions',
-    ])
+    expect(headers).toEqual(['', 'Name', 'Location', 'Last active', 'Created', 'Actions'])
 
     const [first, second] = wrapper.findAll('tbody tr')
     const cells = first.findAll('td')
     expect(cells[1].text()).toBe('Alice frequent')
     expect(cells[1].find('.badge').text()).toBe('frequent')
-    expect(cells[5].text()).toBe('3 days ago')
-    expect(second.findAll('td')[5].text()).toBe('—')
+    expect(cells[3].text()).toBe('3 days ago')
+    expect(second.findAll('td')[3].text()).toBe('—')
 
     const link = first.find('[data-testid="view-public-profile"]')
     expect(link.text()).toBe('Profile')
     expect(link.attributes('href')).toMatch(/\/profile\/p1$/)
     expect(first.findAll('button').filter((b) => b.text() === 'View')).toHaveLength(0)
+  })
+
+  it('renders Created as a relative date with the full timestamp as tooltip', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-01-08T00:00:00Z'))
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    vi.useRealTimers()
+
+    const created = wrapper.find('tbody tr').findAll('td')[4]
+    expect(created.text()).toBe('last week')
+    expect(created.attributes('title')).toBe(new Date('2026-01-01T00:00:00Z').toLocaleString())
+  })
+
+  it('shows a heart after the segment tag only for dating-active profiles', async () => {
+    useApiCall.mockImplementation((path: string) => {
+      if (path === '/admin/profiles/countries') {
+        return Promise.resolve({ success: true, countries: ['US'] })
+      }
+      if (path === '/admin/users/origins') {
+        return Promise.resolve({ success: true, origins: ['example.org'] })
+      }
+      return Promise.resolve(
+        listResponse([
+          {
+            ...baseProfile,
+            isDatingActive: true,
+            activitySummary: { segment: 'new', lastSeenAt: '2026-01-01T00:00:00Z' },
+          },
+          { ...baseProfile, id: 'p2' },
+        ])
+      )
+    })
+
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+
+    const [dating, social] = wrapper.findAll('tbody tr')
+    const nameCell = dating.findAll('td')[1]
+    expect(nameCell.find('[data-testid="dating-icon"]').exists()).toBe(true)
+    expect(nameCell.find('.badge + [data-testid="dating-icon"]').exists()).toBe(true)
+    expect(social.find('[data-testid="dating-icon"]').exists()).toBe(false)
   })
 
   it('shows the face icon after the name only for profiles with hasFace', async () => {
@@ -202,7 +235,10 @@ describe('ProfilesPage', () => {
     await flushPromises()
 
     const [withFace, withoutFace] = wrapper.findAll('tbody tr')
-    expect(withFace.findAll('td')[1].find('[data-testid="has-face-icon"]').exists()).toBe(true)
+    const faceTag = withFace.findAll('td')[1].find('[data-testid="has-face-icon"]')
+    expect(faceTag.classes()).toContain('badge')
+    expect(faceTag.text()).toBe('')
+    expect(faceTag.find('svg').exists()).toBe(true)
     expect(withoutFace.find('[data-testid="has-face-icon"]').exists()).toBe(false)
   })
 

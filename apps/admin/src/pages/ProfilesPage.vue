@@ -118,8 +118,8 @@ const sortOptions: { value: ProfileSort; label: string }[] = [
 ]
 const selectedSort = ref<ProfileSort>('created')
 
-function formatLastActive(lastSeenAt: string) {
-  return formatTimeAgoIntl(new Date(lastSeenAt), { locale: 'en' })
+function formatRelative(date: string) {
+  return formatTimeAgoIntl(new Date(date), { locale: 'en' })
 }
 
 async function fetchCountries() {
@@ -983,8 +983,6 @@ onUnmounted(() => {
               </th>
               <th>Name</th>
               <th>Location</th>
-              <th>Gender</th>
-              <th>Dating</th>
               <th>Last active</th>
               <th>Created</th>
               <th>Actions</th>
@@ -1009,25 +1007,30 @@ onUnmounted(() => {
               </td>
               <td>
                 {{ profile.publicName || '-' }}
-                <svg
+                <span
                   v-if="profile.hasFace"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  class="text-secondary opacity-75 ms-1 align-baseline"
+                  class="badge text-bg-light border ms-1"
+                  title="Has face photo"
                   role="img"
                   aria-label="Has face photo"
                   data-testid="has-face-icon"
                 >
-                  <title>Has face photo</title>
-                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
-                  <path
-                    fill-rule="evenodd"
-                    d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"
-                  />
-                </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    class="align-baseline"
+                    aria-hidden="true"
+                  >
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0" />
+                    <path
+                      fill-rule="evenodd"
+                      d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"
+                    />
+                  </svg>
+                </span>
                 <span
                   v-if="profile.activitySummary?.segment"
                   :class="segmentBadgeClass(profile.activitySummary.segment)"
@@ -1035,29 +1038,43 @@ onUnmounted(() => {
                 >
                   {{ profile.activitySummary.segment }}
                 </span>
+                <svg
+                  v-if="profile.isDatingActive"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  class="text-danger ms-1 align-baseline"
+                  role="img"
+                  aria-label="Dating active"
+                  data-testid="dating-icon"
+                >
+                  <title>Dating active</title>
+                  <path
+                    fill-rule="evenodd"
+                    d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"
+                  />
+                </svg>
               </td>
               <td>{{ [profile.cityName, profile.country].filter(Boolean).join(', ') || '-' }}</td>
-              <td>{{ profile.gender || '-' }}</td>
-              <td>
-                <span :class="profile.isDatingActive ? 'badge bg-success' : 'badge bg-secondary'">
-                  {{ profile.isDatingActive ? 'Yes' : 'No' }}
-                </span>
-              </td>
               <td
                 v-if="profile.activitySummary"
                 :title="new Date(profile.activitySummary.lastSeenAt).toLocaleString()"
               >
-                {{ formatLastActive(profile.activitySummary.lastSeenAt) }}
+                {{ formatRelative(profile.activitySummary.lastSeenAt) }}
               </td>
               <td v-else>—</td>
-              <td>{{ new Date(profile.createdAt).toLocaleDateString() }}</td>
+              <td :title="new Date(profile.createdAt).toLocaleString()">
+                {{ formatRelative(profile.createdAt) }}
+              </td>
               <td @click.stop>
                 <PublicProfileLink :profile-id="profile.id" />
               </td>
             </tr>
             <tr v-if="profiles.length === 0">
               <td
-                colspan="8"
+                colspan="6"
                 class="text-center text-muted"
               >
                 No profiles found
