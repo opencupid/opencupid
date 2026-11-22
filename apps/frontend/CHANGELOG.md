@@ -1,5 +1,16 @@
 # frontend
 
+## 0.93.0
+
+### Minor Changes
+
+- d99817c: Map zoom and locate-home controls in the bottom-right corner, kept clear of the nearby-content panel
+
+### Patch Changes
+
+- ecc0d9b: Stack post card name, locality and date so the locality no longer overlaps the date on narrow screens; use compact Hungarian relative dates ("6 hónapja", "2 hete")
+- 56e4a01: Use the shared `toGeoPoint` helper everywhere instead of a duplicate in the map utils
+
 ## 0.92.0
 
 ## 0.91.0

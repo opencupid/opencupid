@@ -1,5 +1,16 @@
 # @opencupid/admin
 
+## 0.93.0
+
+### Minor Changes
+
+- 65f01d4: Admin profile Activity tab: 7-day KPI tiles with sparklines for conversations, messages, likes and matches, stacked by sent/received and initiated/joined, plus an all-time totals section
+- c3cbab8: Compact admin profile table: drop Gender/Dating columns, show dating as a heart next to the segment tag, render hasFace as a tag and Created as a relative date
+
+### Patch Changes
+
+- 398ef31: Fix admin modals (profile detail, tags, messages, dashboard drill-down, send message) not closing on Esc until clicked inside
+
 ## 0.92.0
 
 ## 0.91.0

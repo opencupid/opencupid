@@ -1,5 +1,11 @@
 # backend
 
+## 0.93.0
+
+### Minor Changes
+
+- 65f01d4: Admin profile Activity tab: 7-day KPI tiles with sparklines for conversations, messages, likes and matches, stacked by sent/received and initiated/joined, plus an all-time totals section
+
 ## 0.92.0
 
 ### Minor Changes
