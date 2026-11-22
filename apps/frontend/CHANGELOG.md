@@ -1,5 +1,7 @@
 # frontend
 
+## 0.94.0
+
 ## 0.93.0
 
 ### Minor Changes
