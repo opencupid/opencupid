@@ -12,6 +12,11 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapToLocalizedUpserts: vi.fn().mockReturnValue([]),
 }))
 
+const mockSyncHidden = vi.hoisted(() => vi.fn())
+vi.mock('../../services/profileVisibility.service', () => ({
+  syncProfileHiddenFromResults: mockSyncHidden,
+}))
+
 vi.mock('../../services/profileMatch.service', () => ({
   ProfileMatchService: {
     getInstance: () => ({
@@ -349,6 +354,7 @@ describe('syncProfileHasFace', () => {
       where: { id: 'p1' },
       data: { hasFace: true },
     })
+    expect(mockSyncHidden).toHaveBeenCalledWith(mockPrisma, 'p1')
   })
 
   it('writes false when no gallery image has a face, or the gallery is empty', async () => {
@@ -361,6 +367,25 @@ describe('syncProfileHasFace', () => {
       where: { id: 'p1' },
       data: { hasFace: false },
     })
+  })
+})
+
+describe('ProfileService.updateCompleteProfile', () => {
+  it('re-syncs isHiddenFromResults after writing the intros, before the scalar update', async () => {
+    const order: string[] = []
+    mockSyncHidden.mockImplementation(async () => {
+      order.push('sync')
+    })
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p1' })
+    mockPrisma.profile.update.mockImplementation(async () => {
+      order.push('update')
+      return { id: 'p1' }
+    })
+
+    await service.updateCompleteProfile(mockPrisma, 'en', 'u1', { publicName: 'A' })
+
+    expect(mockSyncHidden).toHaveBeenCalledWith(mockPrisma, 'p1')
+    expect(order).toEqual(['sync', 'update'])
   })
 })
 

@@ -145,6 +145,11 @@ vi.mock('@/services/cluster.service', () => ({
   ClusterService: { getInstance: () => ({ evictAll: mockEvictAll }) },
 }))
 
+const mockSyncHidden = vi.hoisted(() => vi.fn())
+vi.mock('@/services/profileVisibility.service', () => ({
+  syncProfileHiddenFromResults: mockSyncHidden,
+}))
+
 vi.mock('@/utils/wsUtils', () => ({
   broadcastToProfile: mockBroadcastToProfile,
 }))
@@ -1253,6 +1258,7 @@ describe('PATCH /profiles/:id', () => {
       data: { hasFace: true },
       select: { id: true, hasFace: true },
     })
+    expect(mockSyncHidden).toHaveBeenCalledWith(mockPrisma, 'p1')
   })
 
   it('rejects a non-boolean hasFace', async () => {

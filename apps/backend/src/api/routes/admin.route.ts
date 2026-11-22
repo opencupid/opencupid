@@ -27,6 +27,7 @@ import { broadcastToProfile } from '@/utils/wsUtils'
 import { ProfileTrustService } from '@/services/profileTrust.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageService } from '@/services/image.service'
+import { syncProfileHiddenFromResults } from '@/services/profileVisibility.service'
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
 
@@ -1404,10 +1405,15 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 400, 'hasFace must be a boolean')
     }
     try {
-      const profile = await prisma.profile.update({
-        where: { id },
-        data: { hasFace: body.hasFace },
-        select: { id: true, hasFace: true },
+      const hasFace = body.hasFace
+      const profile = await prisma.$transaction(async (tx) => {
+        const updated = await tx.profile.update({
+          where: { id },
+          data: { hasFace },
+          select: { id: true, hasFace: true },
+        })
+        await syncProfileHiddenFromResults(tx, id)
+        return updated
       })
       return reply.code(200).send({ success: true, profile })
     } catch (err) {

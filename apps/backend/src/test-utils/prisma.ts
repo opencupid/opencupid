@@ -137,6 +137,7 @@ export function createMockPrisma() {
       deleteMany: vi.fn(),
       count: vi.fn(),
     },
+    $executeRaw: vi.fn(),
     $transaction: vi.fn((fn: (client: any) => any) => fn(mock)),
   }
   return mock

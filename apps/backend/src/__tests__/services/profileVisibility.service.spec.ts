@@ -1,39 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('../../lib/prisma', () => ({ prisma: { $executeRaw: vi.fn() } }))
-vi.mock('../../lib/logger', () => ({ logger: { info: vi.fn() } }))
+import { syncProfileHiddenFromResults } from '../../services/profileVisibility.service'
 
-import { syncHiddenFromResults } from '../../services/profileVisibility.service'
-import { prisma } from '../../lib/prisma'
-import { logger } from '../../lib/logger'
+describe('syncProfileHiddenFromResults', () => {
+  it('recomputes the flag for one profile from hasFace and the intro fields', async () => {
+    const tx = { $executeRaw: vi.fn() }
 
-const mockExecuteRaw = vi.mocked(prisma.$executeRaw)
+    await syncProfileHiddenFromResults(tx as never, 'p1')
 
-describe('syncHiddenFromResults', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockExecuteRaw.mockResolvedValue(3 as never)
-  })
-
-  it('treats profiles as unseen 5 days before now', async () => {
-    await syncHiddenFromResults(new Date('2026-11-07T03:00:00Z'))
-
-    const [, unseenSince] = mockExecuteRaw.mock.calls[0]
-    expect(unseenSince).toEqual(new Date('2026-11-02T03:00:00Z'))
-  })
-
-  it('checks the face, intro and last-seen conditions', async () => {
-    await syncHiddenFromResults()
-
-    const sql = (mockExecuteRaw.mock.calls[0][0] as unknown as string[]).join('?')
-    expect(sql).toContain('NOT pr."hasFace"')
+    const [strings, profileId] = tx.$executeRaw.mock.calls[0]
+    const sql = (strings as string[]).join('?')
+    expect(sql).toContain('SET "isHiddenFromResults" = NOT p."hasFace" AND NOT EXISTS')
     expect(sql).toContain(`f."field" IN ('introSocial', 'introDating')`)
-    expect(sql).toContain('s."lastSeenAt" < ?')
-  })
-
-  it('logs how many profiles changed', async () => {
-    await syncHiddenFromResults()
-
-    expect(logger.info).toHaveBeenCalledWith({ changed: 3 }, 'profile visibility synced')
+    expect(sql).toContain(`btrim(f."value") <> ''`)
+    expect(sql).not.toContain('lastSeenAt')
+    expect(profileId).toBe('p1')
   })
 })
