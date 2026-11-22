@@ -9,7 +9,7 @@ import SearchRefiners from './SearchRefiners.vue'
 import SearchMatches from './SearchMatches.vue'
 import IconHome from '@/assets/icons/interface/home.svg'
 
-import type { LocationDTO, GeoPoint } from '@zod/dto/location.dto'
+import { toGeoPoint, type LocationDTO, type GeoPoint } from '@zod/dto/location.dto'
 import type { OwnerProfile, ProfileSummary } from '@zod/profile/profile.dto'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { PostSummary } from '@zod/post/post.dto'
@@ -21,7 +21,6 @@ import { useSearchStore } from '@/features/browse/stores/searchStore'
 import { useGeocoder } from '@/features/geocoding/composables/useGeocoder'
 import { tracker } from '@/lib/umami'
 import { useI18n } from 'vue-i18n'
-import { toGeoPoint } from '../../map/utils/mapUtils'
 
 const props = defineProps<{
   viewerProfile: OwnerProfile | null

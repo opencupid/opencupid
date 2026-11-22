@@ -1,6 +1,6 @@
 import L from 'leaflet'
 import type { IconRenderer, PoiIconProps } from '../types/map.types'
-import type { GeoPoint, LocationDTO } from '@zod/dto/location.dto'
+import type { LocationDTO } from '@zod/dto/location.dto'
 
 /** Validates that a coordinate pair contains finite numbers (rejects NaN, Infinity, null, undefined). */
 export function isValidLatLng(center: [number, number] | undefined): center is [number, number] {
@@ -10,11 +10,6 @@ export function isValidLatLng(center: [number, number] | undefined): center is [
 /** Extracts a Leaflet-compatible [lat, lon] tuple from a LocationDTO, or undefined if coords are absent. */
 export function toLatLng(loc?: LocationDTO): [number, number] | undefined {
   if (loc?.lat != null && loc?.lon != null) return [loc.lat, loc.lon]
-}
-
-/** Extracts a GeoPoint from a LocationDTO, or undefined if input or coords are absent. */
-export function toGeoPoint(loc: LocationDTO | null | undefined): GeoPoint | undefined {
-  if (loc?.lat != null && loc?.lon != null) return { lat: loc.lat, lon: loc.lon }
 }
 
 export { MAP_MAX_ZOOM } from '@shared/maps'
