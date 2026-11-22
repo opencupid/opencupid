@@ -1,5 +1,6 @@
 import type { Component } from 'vue'
 import type { ClusterFeature, PointFeature } from '@shared/zod/map/cluster.dto'
+import type { GeoPoint } from '@zod/dto/location.dto'
 
 /**
  * The map layer renders the cluster service's DTOs directly. Earlier
@@ -42,7 +43,7 @@ export interface PoiIconProps {
  */
 export interface MapTarget {
   id: string
-  point?: { lat: number; lon: number }
+  point: GeoPoint | null
 }
 
 /** Bounds + zoom emitted on viewport change for cluster queries. */

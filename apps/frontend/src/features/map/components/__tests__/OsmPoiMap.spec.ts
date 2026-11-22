@@ -503,10 +503,10 @@ describe('OsmPoiMap', () => {
       const wrapper = await mountMap()
       await flushPromises()
 
-      await wrapper.setProps({ emphasizedPoi: { id: '1' } })
+      await wrapper.setProps({ emphasizedPoi: { id: '1', point: null } })
       expect(elementOf(0).classList.contains('poi-emphasized')).toBe(true)
 
-      await wrapper.setProps({ emphasizedPoi: { id: '2' } })
+      await wrapper.setProps({ emphasizedPoi: { id: '2', point: null } })
       expect(elementOf(0).classList.contains('poi-emphasized')).toBe(false)
       expect(elementOf(1).classList.contains('poi-emphasized')).toBe(true)
 
@@ -518,7 +518,9 @@ describe('OsmPoiMap', () => {
       const wrapper = await mountMap()
       await flushPromises()
 
-      await expect(wrapper.setProps({ emphasizedPoi: { id: 'missing' } })).resolves.not.toThrow()
+      await expect(
+        wrapper.setProps({ emphasizedPoi: { id: 'missing', point: null } })
+      ).resolves.not.toThrow()
     })
 
     describe('items inside a cluster', () => {
@@ -573,7 +575,7 @@ describe('OsmPoiMap', () => {
       await flushPromises()
       vi.useFakeTimers()
 
-      await wrapper.setProps({ pulsePoi: { id: '1' } })
+      await wrapper.setProps({ pulsePoi: { id: '1', point: null } })
       expect(elementOf(0).classList.contains('poi-pulse')).toBe(true)
 
       vi.advanceTimersByTime(3000)
@@ -585,7 +587,7 @@ describe('OsmPoiMap', () => {
       const wrapper = await mountMap({ items: [] })
       await flushPromises()
 
-      await wrapper.setProps({ pulsePoi: { id: '1' } })
+      await wrapper.setProps({ pulsePoi: { id: '1', point: null } })
       await wrapper.setProps({ items })
       await flushPromises()
 

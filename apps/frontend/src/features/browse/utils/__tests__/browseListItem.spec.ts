@@ -35,6 +35,6 @@ describe('browseItemTarget', () => {
       distanceKm: 2,
       post: { id: 'po1', location: null },
     } as unknown as BrowseListItem
-    expect(browseItemTarget(item).point).toBeUndefined()
+    expect(browseItemTarget(item).point).toBeNull()
   })
 })
