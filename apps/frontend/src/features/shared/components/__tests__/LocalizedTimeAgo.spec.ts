@@ -1,50 +1,47 @@
-import { describe, it, expect, vi } from 'vitest'
-import { computed } from 'vue'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
+import { computed, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 
-vi.mock('vue-i18n', () => ({
-  useI18n: () => ({ t: (k: string) => k, locale: computed(() => 'en') }),
-}))
+const currentLocale = ref('en')
 
-vi.mock('@vueuse/core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@vueuse/core')>()
-  return {
-    ...actual,
-    useTimeAgoIntl: (_time: unknown, options?: { locale?: string }) => {
-      // Return a string that encodes the locale so we can assert on it
-      return `mocked-time-ago-${options?.locale ?? 'unknown'}`
-    },
-  }
-})
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({ t: (k: string) => k, locale: computed(() => currentLocale.value) }),
+}))
 
 import LocalizedTimeAgo from '../LocalizedTimeAgo.vue'
 
-describe('LocalizedTimeAgo', () => {
-  it('renders time-ago text using the current locale', () => {
-    const wrapper = mount(LocalizedTimeAgo, {
-      props: { time: new Date('2026-03-23T12:00:00Z') },
-    })
+const NOW = new Date('2026-11-22T12:00:00Z')
+const daysAgo = (n: number) => new Date(NOW.getTime() - n * 24 * 60 * 60 * 1000)
 
-    expect(wrapper.text()).toContain('mocked-time-ago-')
+describe('LocalizedTimeAgo', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    currentLocale.value = 'en'
+  })
+
+  it('renders the long English form', () => {
+    const wrapper = mount(LocalizedTimeAgo, { props: { time: daysAgo(90) } })
+    expect(wrapper.text()).toBe('3 months ago')
+  })
+
+  it('renders the compact Hungarian forms', () => {
+    currentLocale.value = 'hu'
+    expect(mount(LocalizedTimeAgo, { props: { time: daysAgo(180) } }).text()).toBe('6 hónapja')
+    expect(mount(LocalizedTimeAgo, { props: { time: daysAgo(14) } }).text()).toBe('2 hete')
   })
 
   it('exposes timeAgo via scoped slot', () => {
     const wrapper = mount(LocalizedTimeAgo, {
-      props: { time: new Date('2026-03-23T12:00:00Z') },
+      props: { time: daysAgo(90) },
       slots: {
         default: `<template #default="{ timeAgo }"><span class="slot-content">{{ timeAgo }}</span></template>`,
       },
     })
-
-    expect(wrapper.find('.slot-content').text()).toContain('mocked-time-ago-')
-  })
-
-  it('passes locale from useI18n to useTimeAgoIntl', () => {
-    const wrapper = mount(LocalizedTimeAgo, {
-      props: { time: new Date('2026-03-23T12:00:00Z') },
-    })
-
-    // Our mock encodes locale into the output string
-    expect(wrapper.text()).toContain('mocked-time-ago-en')
+    expect(wrapper.find('.slot-content').text()).toBe('3 months ago')
   })
 })

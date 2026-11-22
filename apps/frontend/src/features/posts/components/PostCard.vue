@@ -33,6 +33,7 @@ defineEmits<{
 }>()
 
 const postLocation = computed(() => props.post.location ?? null)
+const showAuthor = computed(() => props.showDetails && !props.post.isOwn)
 
 const GRID_TRUNCATE_LENGTH = 100
 
@@ -104,62 +105,53 @@ const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
           {{ displayContent }}
         </p>
 
-        <div class="post-meta d-flex align-items-center justify-content-start gap-2 p-2">
-          <div
-            v-if="showDetails && !post.isOwn"
-            class="text-muted d-flex align-items-center"
-          >
+        <div class="post-meta d-flex align-items-center gap-2 p-2">
+          <div class="text-muted d-flex align-items-center flex-grow-1 min-w-0">
             <ProfileThumbnail
+              v-if="showAuthor"
               :profile="post.postedBy"
-              class="me-2"
+              class="me-2 flex-shrink-0"
             />
-            <div>
-              <div>{{ post.postedBy.publicName }}</div>
-              <LocalizedTimeAgo
-                v-slot="{ timeAgo }"
-                :time="post.createdAt"
+            <div class="min-w-0">
+              <div
+                v-if="showAuthor"
+                class="text-truncate"
               >
-                {{ timeAgo }}
-              </LocalizedTimeAgo>
+                {{ post.postedBy.publicName }}
+              </div>
+              <div
+                v-if="postLocation"
+                class="post-location text-truncate"
+              >
+                <LocationLabel
+                  :viewerLocation="viewerLocation"
+                  :location="postLocation"
+                  :show-country-label="false"
+                  :show-city="true"
+                  :show-country-icon="true"
+                  :show-only-foreign-country="true"
+                />
+              </div>
+              <div
+                v-if="showAuthor || !showDetails"
+                class="post-date"
+              >
+                <LocalizedTimeAgo
+                  v-slot="{ timeAgo }"
+                  :time="post.createdAt"
+                  >{{ timeAgo }}</LocalizedTimeAgo
+                >
+              </div>
             </div>
           </div>
-
-          <div
-            v-if="!showDetails"
-            class="post-date text-muted small"
-          >
-            <LocalizedTimeAgo
-              v-slot="{ timeAgo }"
-              :time="post.createdAt"
-              >{{ timeAgo }}</LocalizedTimeAgo
-            >
-          </div>
-
-          <!-- location  in right column 50% can shrink -->
-          <div
-            class="location d-flex flex-shrink-1 flex-grow-1 min-w-0 justify-content-end align-items-center gap-2"
-          >
-            <span
-              v-if="postLocation"
-              class="post-location text-muted"
-            >
-              <LocationLabel
-                :viewerLocation="viewerLocation"
-                :location="postLocation"
-                :show-country-label="false"
-                :show-city="true"
-                :show-country-icon="true"
-                :show-only-foreign-country="true"
-              />
-            </span>
-            <ViewerToolbar
-              v-if="showDetails"
-              :actions="['contact', 'copy', 'share']"
-              :copy-text="post.content"
-              :share-payload="sharePostPayload"
-              @contact="handleContact"
-            />
-          </div>
+          <ViewerToolbar
+            v-if="showDetails"
+            class="flex-shrink-0"
+            :actions="['contact', 'copy', 'share']"
+            :copy-text="post.content"
+            :share-payload="sharePostPayload"
+            @contact="handleContact"
+          />
         </div>
       </div>
     </PostIt>
@@ -208,7 +200,6 @@ const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
 
 .post-date {
   font-size: 0.7rem;
-  margin-top: 0.25rem;
 }
 
 .post-meta {

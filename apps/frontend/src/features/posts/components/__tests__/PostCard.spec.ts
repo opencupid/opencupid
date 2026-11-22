@@ -101,3 +101,43 @@ describe('PostCard truncateText', () => {
     expect(withToolbar.get('.post-content').classes()).toContain('post-content--truncated')
   })
 })
+
+describe('PostCard meta layout', () => {
+  it('stacks name, location and date in one column beside the toolbar', () => {
+    const wrapper = mount(PostCard, {
+      props: { post: basePost, showDetails: true },
+      global: { stubs },
+    })
+    const meta = wrapper.get('.post-meta')
+    const column = meta.get('.post-location').element.parentElement!
+    expect([...column.children].map((el) => el.className)).toEqual([
+      'text-truncate',
+      'post-location text-truncate',
+      'post-date',
+    ])
+    expect(column.textContent).toContain('Alice')
+    expect(meta.get('.viewer-toolbar').element.parentElement).toBe(meta.element)
+  })
+
+  it('stacks the date under the location in grid tiles', () => {
+    const wrapper = mount(PostCard, {
+      props: { post: basePost, showDetails: false },
+      global: { stubs },
+    })
+    const column = wrapper.get('.post-location').element.parentElement!
+    expect([...column.children].map((el) => el.className)).toEqual([
+      'post-location text-truncate',
+      'post-date',
+    ])
+    expect(wrapper.find('.viewer-toolbar').exists()).toBe(false)
+  })
+
+  it('omits the date on own posts in the detail view', () => {
+    const wrapper = mount(PostCard, {
+      props: { post: { ...basePost, isOwn: true }, showDetails: true },
+      global: { stubs },
+    })
+    expect(wrapper.find('.post-date').exists()).toBe(false)
+    expect(wrapper.find('.post-location').exists()).toBe(true)
+  })
+})
