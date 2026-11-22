@@ -613,6 +613,12 @@ describe('ProfilesPage', () => {
       messages: { sent: 40, received: 31 },
       likes: { sent: 12, received: 9 },
       matches: 3,
+      daily: {
+        conversations: [{ date: '2026-11-21', initiated: 1, joined: 0 }],
+        messages: [{ date: '2026-11-21', sent: 4, received: 2 }],
+        likes: [{ date: '2026-11-21', sent: 0, received: 2 }],
+        matches: [{ date: '2026-11-21', count: 0 }],
+      },
     }
     apiRequestMock.mockImplementation((path: string) => {
       if (path === '/admin/profiles/p1/activity') {
@@ -635,16 +641,40 @@ describe('ProfilesPage', () => {
     await flushPromises()
 
     expect(apiRequestMock).toHaveBeenCalledWith('/admin/profiles/p1/activity')
-    const list = wrapper.find('[data-testid="profile-activity"]')
-    const terms = list.findAll('dt').map((dt) => dt.text())
-    const values = list.findAll('dd').map((dd) => dd.text())
-    expect(terms).toEqual(['Conversations', 'Messages', 'Likes', 'Matches'])
-    expect(values).toEqual([
-      '5 / 2 participating / initiated',
-      '40 / 31 sent / received',
-      '12 / 9 sent / received',
-      '3',
+    const cards = wrapper.find('[data-testid="profile-activity"]').findAll('.kpi-card')
+    expect(cards.map((c) => c.find('.card-title').text())).toEqual([
+      'Conversations',
+      'Messages',
+      'Likes',
+      'Matches',
     ])
+    // Tiles show the 7-day sums of the daily series.
+    expect(cards.map((c) => c.find('.kpi-value').text())).toEqual(['1', '6', '2', '0'])
+    expect(cards.map((c) => c.find('.kpi-subtitle').text())).toEqual([
+      '1 initiated · 0 joined',
+      '4 sent · 2 received',
+      '0 sent · 2 received',
+      'mutual likes',
+    ])
+    // All-time figures are listed separately, without charts.
+    const totals = wrapper.find('[data-testid="profile-activity-totals"]')
+    const tile = (c: ReturnType<typeof totals.find>) =>
+      ['.fw-semibold', '.fs-5', '.text-body-secondary'].map((sel) => c.find(sel).text())
+    expect(totals.findAll('.col').map(tile)).toEqual([
+      ['Conversations', '5', '2 initiated · 3 joined'],
+      ['Messages', '71', '40 sent · 31 received'],
+      ['Likes', '21', '12 sent · 9 received'],
+      ['Matches', '3', 'mutual likes'],
+    ])
+    expect(totals.find('svg').exists()).toBe(false)
+    expect(cards.map((c) => c.find('g > title').text())).toEqual([
+      '2026-11-21: 1 initiated · 0 joined',
+      '2026-11-21: 4 sent · 2 received',
+      '2026-11-21: 0 sent · 2 received',
+      '2026-11-21: 0',
+    ])
+    // Stacked cards draw one rect per segment, matches a single bar.
+    expect(cards.map((c) => c.findAll('rect').length)).toEqual([2, 2, 2, 1])
   })
 
   it('Activity tab shows an error when the activity fetch fails', async () => {

@@ -11,6 +11,7 @@ import {
 } from '../composables/useTrustFlags'
 import { appLocales } from '@shared/i18n/locales'
 import PublicProfileLink from '../components/PublicProfileLink.vue'
+import KpiCard from '../components/KpiCard.vue'
 import ProfileImageReview, { type AdminProfileImage } from '../components/ProfileImageReview.vue'
 
 interface AdminProfile {
@@ -237,6 +238,12 @@ interface AdminProfileActivity {
   messages: { sent: number; received: number }
   likes: { sent: number; received: number }
   matches: number
+  daily: {
+    conversations: { date: string; initiated: number; joined: number }[]
+    messages: { date: string; sent: number; received: number }[]
+    likes: { date: string; sent: number; received: number }[]
+    matches: { date: string; count: number }[]
+  }
 }
 
 const profileActivity = ref<AdminProfileActivity | null>(null)
@@ -269,22 +276,94 @@ async function fetchProfileActivity(profileId: string) {
   }
 }
 
-const activityRows = computed(() => {
+const sum = (values: number[]) => values.reduce((a, b) => a + b, 0)
+
+// 7-day tiles: the week's total, its split, and a daily sparkline stacked by
+// the same split (solid = first part).
+const activityCards = computed(() => {
   const a = profileActivity.value
   if (!a) return []
+  const { conversations, messages, likes, matches } = a.daily
+  const stack = <T,>(rows: T[], parts: { label: string; pick: (r: T) => number }[]) =>
+    parts.map(({ label, pick }) => ({ label, values: rows.map(pick) }))
+  const conv = stack(conversations, [
+    { label: 'initiated', pick: (d) => d.initiated },
+    { label: 'joined', pick: (d) => d.joined },
+  ])
+  const msg = stack(messages, [
+    { label: 'sent', pick: (d) => d.sent },
+    { label: 'received', pick: (d) => d.received },
+  ])
+  const lik = stack(likes, [
+    { label: 'sent', pick: (d) => d.sent },
+    { label: 'received', pick: (d) => d.received },
+  ])
+  const splitSubtitle = (stacks: { label: string; values: number[] }[]) =>
+    stacks.map((s) => `${sum(s.values)} ${s.label}`).join(' · ')
+  const total = (stacks: { values: number[] }[]) => sum(stacks.map((s) => sum(s.values)))
+  const matchSeries = matches.map((d) => d.count)
   return [
     {
-      label: 'Conversations',
-      detail: 'participating / initiated',
-      values: [a.conversations.participating, a.conversations.initiated],
+      key: 'conversations',
+      title: 'Conversations',
+      value: total(conv),
+      subtitle: splitSubtitle(conv),
+      color: '#198754',
+      seriesLabels: conversations.map((d) => d.date),
+      stacks: conv,
     },
     {
-      label: 'Messages',
-      detail: 'sent / received',
-      values: [a.messages.sent, a.messages.received],
+      key: 'messages',
+      title: 'Messages',
+      value: total(msg),
+      subtitle: splitSubtitle(msg),
+      color: '#fd7e14',
+      seriesLabels: messages.map((d) => d.date),
+      stacks: msg,
     },
-    { label: 'Likes', detail: 'sent / received', values: [a.likes.sent, a.likes.received] },
-    { label: 'Matches', detail: '', values: [a.matches] },
+    {
+      key: 'likes',
+      title: 'Likes',
+      value: total(lik),
+      subtitle: splitSubtitle(lik),
+      color: '#6f42c1',
+      seriesLabels: likes.map((d) => d.date),
+      stacks: lik,
+    },
+    {
+      key: 'matches',
+      title: 'Matches',
+      value: sum(matchSeries),
+      subtitle: 'mutual likes',
+      color: '#d63384',
+      seriesLabels: matches.map((d) => d.date),
+      series: matchSeries,
+    },
+  ]
+})
+
+// All-time figures, shown as plain KPIs below the 7-day tiles.
+const activityTotals = computed(() => {
+  const a = profileActivity.value
+  if (!a) return []
+  const joined = a.conversations.participating - a.conversations.initiated
+  return [
+    {
+      title: 'Conversations',
+      value: a.conversations.participating,
+      subtitle: `${a.conversations.initiated} initiated · ${joined} joined`,
+    },
+    {
+      title: 'Messages',
+      value: a.messages.sent + a.messages.received,
+      subtitle: `${a.messages.sent} sent · ${a.messages.received} received`,
+    },
+    {
+      title: 'Likes',
+      value: a.likes.sent + a.likes.received,
+      subtitle: `${a.likes.sent} sent · ${a.likes.received} received`,
+    },
+    { title: 'Matches', value: a.matches, subtitle: 'mutual likes' },
   ]
 })
 
@@ -1245,26 +1324,44 @@ onUnmounted(() => {
                 >
                   {{ activityError }}
                 </div>
-                <dl
+                <div
                   v-else-if="profileActivity"
-                  class="row mb-0"
                   data-testid="profile-activity"
                 >
-                  <template
-                    v-for="row in activityRows"
-                    :key="row.label"
+                  <div class="d-grid gap-2">
+                    <KpiCard
+                      v-for="card in activityCards"
+                      :key="card.key"
+                      :title="card.title"
+                      :subtitle="card.subtitle"
+                      :value="card.value"
+                      :series="card.series"
+                      :stacks="card.stacks"
+                      :series-labels="card.seriesLabels"
+                      :color="card.color"
+                    />
+                  </div>
+                  <div class="small text-body-secondary mt-2">
+                    Last 7 days (solid: sent / initiated, light: received / joined).
+                  </div>
+                  <h6 class="mt-4 mb-2">All time</h6>
+                  <div
+                    class="row row-cols-2 g-2"
+                    data-testid="profile-activity-totals"
                   >
-                    <dt class="col-sm-4">{{ row.label }}</dt>
-                    <dd class="col-sm-8">
-                      {{ row.values.join(' / ') }}
-                      <small
-                        v-if="row.detail"
-                        class="text-muted ms-1"
-                        >{{ row.detail }}</small
-                      >
-                    </dd>
-                  </template>
-                </dl>
+                    <div
+                      v-for="kpi in activityTotals"
+                      :key="kpi.title"
+                      class="col"
+                    >
+                      <div class="border rounded px-3 py-2 h-100">
+                        <div class="small fw-semibold">{{ kpi.title }}</div>
+                        <div class="fs-5 fw-bold lh-sm">{{ kpi.value }}</div>
+                        <div class="small text-body-secondary">{{ kpi.subtitle }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </template>
               <template v-else>
                 <div
