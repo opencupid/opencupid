@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterAll } from 'vitest'
+import { nextTick } from 'vue'
 import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
 
 vi.mock('@/assets/icons/arrows/chevrons-up.svg', () => ({
@@ -29,6 +30,17 @@ vi.mock('@/features/community/components/CommunityTeaser.vue', () => ({
     template: '<div class="community-teaser-stub">{{ item.content }}</div>',
   },
 }))
+// jsdom has no ResizeObserver; keep the callback so tests can fire it.
+let resizeCallback: ((entries: { target: Element }[]) => void) | null = null
+vi.stubGlobal(
+  'ResizeObserver',
+  vi.fn(function (cb: typeof resizeCallback) {
+    resizeCallback = cb
+    return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() }
+  })
+)
+afterAll(() => vi.unstubAllGlobals())
+
 vi.mock('@/features/app/components/BottomSheet.vue', () => ({
   default: { template: '<div />' },
 }))
@@ -42,7 +54,7 @@ const stubs = {
   BOffcanvas: {
     name: 'BOffcanvas',
     props: ['show'],
-    template: `<div class="offcanvas-stub" v-if="show"><slot name="header" /><slot /></div>`,
+    template: `<div class="offcanvas offcanvas-stub" v-if="show"><slot name="header" /><slot /></div>`,
   },
   BButton: { template: '<button><slot /></button>' },
 }
@@ -114,5 +126,23 @@ describe('NearbyFeatures', () => {
   it('does not render offcanvas when items is empty', () => {
     const wrapper = mount(NearbyFeatures, { props: { items: [] }, global: { stubs } })
     expect(wrapper.find('.offcanvas-stub').exists()).toBe(false)
+  })
+
+  describe('height:changed', () => {
+    it('reports the panel height while shown', async () => {
+      const items = [makeItem('p1', 'post', 'hello')]
+      const wrapper = mount(NearbyFeatures, { props: { items }, global: { stubs } })
+      await nextTick()
+      const panel = wrapper.find('.offcanvas').element as HTMLElement
+      Object.defineProperty(panel, 'offsetHeight', { value: 130 })
+      resizeCallback!([{ target: panel }])
+      await nextTick()
+      expect(wrapper.emitted('height:changed')!.at(-1)).toEqual([130])
+    })
+
+    it('reports 0 while there is nothing to show', () => {
+      const wrapper = mount(NearbyFeatures, { props: { items: [] }, global: { stubs } })
+      expect(wrapper.emitted('height:changed')).toEqual([[0]])
+    })
   })
 })
