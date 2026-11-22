@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useApi, apiRequest } from '../composables/useApi'
+import { vModalFocus } from '../directives/modalFocus'
 
 interface MessageTemplate {
   id: string
@@ -143,6 +144,7 @@ onMounted(fetchTemplates)
 
     <div
       v-if="selected"
+      v-modal-focus
       class="modal d-block"
       tabindex="-1"
       @click.self="closeEdit"

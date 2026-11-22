@@ -310,6 +310,23 @@ describe('ProfilesPage', () => {
     expect(box.element.checked).toBe(true)
   })
 
+  it('closes the profile detail modal on Escape without clicking inside it first', async () => {
+    const wrapper = mount(ProfilesPage, { attachTo: document.body })
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+
+    const modal = wrapper.find('.modal')
+    expect(document.activeElement).toBe(modal.element)
+
+    document.activeElement!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+    )
+    await flushPromises()
+    expect(wrapper.find('.modal').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
   it('omits the phone, gender and created rows from the profile tab', async () => {
     const wrapper = mount(ProfilesPage)
     await flushPromises()

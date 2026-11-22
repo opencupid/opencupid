@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useApi } from '../composables/useApi'
 import { apiRequest } from '../composables/useApi'
 import PublicProfileLink from '../components/PublicProfileLink.vue'
+import { vModalFocus } from '../directives/modalFocus'
 
 const LANGUAGES = [
   { code: 'en', label: 'English' },
@@ -637,6 +638,7 @@ onUnmounted(() => {
     <!-- Tag Edit Modal -->
     <div
       v-if="selectedTag"
+      v-modal-focus
       class="modal d-block"
       tabindex="-1"
       @click.self="selectedTag = null"

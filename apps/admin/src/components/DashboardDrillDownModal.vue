@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { Bar } from 'vue-chartjs'
 import { useApi } from '../composables/useApi'
+import { vModalFocus } from '../directives/modalFocus'
 
 export type Metric = 'interactions' | 'messages' | 'signups' | 'active'
 type Range = '24h' | '72h' | '7d'
@@ -137,6 +138,7 @@ function onClose() {
 
 <template>
   <div
+    v-modal-focus
     class="modal d-block"
     tabindex="-1"
     @click.self="onClose"

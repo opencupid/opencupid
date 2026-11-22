@@ -13,6 +13,7 @@ import { appLocales } from '@shared/i18n/locales'
 import PublicProfileLink from '../components/PublicProfileLink.vue'
 import KpiCard from '../components/KpiCard.vue'
 import ProfileImageReview, { type AdminProfileImage } from '../components/ProfileImageReview.vue'
+import { vModalFocus } from '../directives/modalFocus'
 
 interface AdminProfile {
   id: string
@@ -746,15 +747,6 @@ function closeSendMessageModal() {
   showSendMessageModal.value = false
 }
 
-function onSendModalKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') closeSendMessageModal()
-}
-
-watch(showSendMessageModal, (open) => {
-  if (open) document.addEventListener('keydown', onSendModalKeydown)
-  else document.removeEventListener('keydown', onSendModalKeydown)
-})
-
 async function sendBulkMessage() {
   if (!messageContent.value.trim() || selectedProfiles.value.size === 0) return
   sending.value = true
@@ -817,7 +809,6 @@ watch(
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)
-  document.removeEventListener('keydown', onSendModalKeydown)
   observer?.disconnect()
 })
 </script>
@@ -1177,6 +1168,7 @@ onUnmounted(() => {
     <!-- Detail Modal (profile + user tabs, or user-only from the Not onboarded tab) -->
     <div v-if="selectedProfile || userModalOpen">
       <div
+        v-modal-focus
         class="modal d-block"
         tabindex="-1"
         @click.self="closeDetail"
@@ -1624,9 +1616,11 @@ onUnmounted(() => {
     <!-- Send Message Modal -->
     <div v-if="showSendMessageModal">
       <div
+        v-modal-focus
         class="modal d-block"
         tabindex="-1"
         @click.self="closeSendMessageModal"
+        @keydown.escape="closeSendMessageModal"
       >
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
