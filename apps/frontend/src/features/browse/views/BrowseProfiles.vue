@@ -96,6 +96,9 @@ const { selectedLayers, lastMapBounds, lastMapZoom, clusterFeatures } =
 // first tile load completes. Hoisted out of OsmPoiMap so it paints from
 // first render — i.e. before initialMapCenter resolves and the map mounts.
 const isMapReady = ref(false)
+// Height of the nearby-content panel over the map's bottom edge, which the
+// map's zoom/locate controls sit above.
+const nearbyPanelHeight = ref(0)
 function onMapReady() {
   isMapReady.value = true
 }
@@ -111,6 +114,12 @@ const initialMapCenter = computed<[number, number]>(() => {
 const highlightedLocation = ref<[number, number] | null>(null)
 function onLocationSet(point: GeoPoint) {
   highlightedLocation.value = [point.lat, point.lon]
+}
+
+// The map's locate button: same as the search bar's home button.
+function onLocateHome() {
+  const point = toGeoPoint(viewerProfile.value?.location)
+  if (point) onLocationSet(point)
 }
 
 // Per-kind dispatch for marker icons and popup components. The discriminator
@@ -477,17 +486,20 @@ onMounted(async () => {
           :pulse-poi="pulsePoi"
           :popup-resolver="popupResolver"
           :fetch-popup-data="fetchPopupData"
+          :controls-bottom-inset="isGridOpen ? 0 : nearbyPanelHeight"
           class="h-100"
           @item:select="handleMarkerSelect"
           @bounds:changed="onBoundsChanged"
           @map:ready="onMapReady"
           @cluster:max-zoom="onMaxZoomCluster"
+          @locate="onLocateHome"
         />
 
         <NearbyFeatures
           v-if="!isGridOpen"
           :items="contentStore.feedItems"
           @item:select="onNearbyItemSelect"
+          @height:changed="nearbyPanelHeight = $event"
         />
 
         <BrowseGridChip

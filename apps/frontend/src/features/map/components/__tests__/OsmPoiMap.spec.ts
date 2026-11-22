@@ -117,6 +117,8 @@ vi.mock('leaflet', () => {
     addLayer: vi.fn(),
     createPane: vi.fn(() => document.createElement('div')),
     closePopup: vi.fn().mockReturnThis(),
+    zoomIn: vi.fn().mockReturnThis(),
+    zoomOut: vi.fn().mockReturnThis(),
   }
   const mapFn = vi.fn(() => ({ ...mapProto }))
 
@@ -138,8 +140,6 @@ vi.mock('leaflet', () => {
 
   const Browser = { touch: false, mobile: false }
 
-  const control = { zoom: vi.fn(() => ({ addTo: vi.fn() })) }
-
   return {
     default: {
       map: mapFn,
@@ -152,7 +152,6 @@ vi.mock('leaflet', () => {
       tileLayer,
       DomEvent,
       Browser,
-      control,
     },
     Map: mapFn,
     Marker: marker,
@@ -166,8 +165,16 @@ vi.mock('leaflet', () => {
     tileLayer,
     DomEvent,
     Browser,
-    control,
   }
+})
+
+vi.mock('@/lib/i18n', () => ({
+  useI18n: () => ({ t: (k: string) => k, locale: { value: 'en' } }),
+}))
+
+vi.mock('@/assets/icons/interface/target-2.svg', async () => {
+  const { defineComponent, h } = await import('vue')
+  return { default: defineComponent({ render: () => h('svg') }) }
 })
 
 // Mock blurhash (canvas unavailable in jsdom)
@@ -991,6 +998,33 @@ describe('OsmPoiMap', () => {
 
       // popup.update should NOT have been called since popup closed
       expect(popupUpdate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('map controls', () => {
+    function mapInstance() {
+      return (L.map as any).mock.results[0].value
+    }
+
+    it('zooms the map in and out', async () => {
+      const wrapper = await mountMap()
+      const controls = wrapper.findComponent({ name: 'MapControls' })
+      controls.vm.$emit('zoom:in')
+      controls.vm.$emit('zoom:out')
+      expect(mapInstance().zoomIn).toHaveBeenCalledOnce()
+      expect(mapInstance().zoomOut).toHaveBeenCalledOnce()
+    })
+
+    it('forwards the locate button as a locate event', async () => {
+      const wrapper = await mountMap()
+      wrapper.findComponent({ name: 'MapControls' }).vm.$emit('locate')
+      expect(wrapper.emitted('locate')).toHaveLength(1)
+    })
+
+    it('places the controls above the given bottom inset', async () => {
+      const wrapper = await mountMap({ controlsBottomInset: 120 })
+      const style = (wrapper.element as HTMLElement).style
+      expect(style.getPropertyValue('--map-controls-bottom-inset')).toBe('120px')
     })
   })
 })

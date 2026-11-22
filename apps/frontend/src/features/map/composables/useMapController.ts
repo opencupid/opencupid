@@ -46,6 +46,8 @@ export interface MapProps {
   /** Item to pulse once; pass a new object each time to pulse again. */
   pulsePoi?: MapTarget | null
   fetchPopupData?: (id: string, signal?: AbortSignal) => Promise<unknown>
+  /** Height in px of whatever covers the bottom of the map; the controls sit above it. */
+  controlsBottomInset?: number
 }
 
 type MapEmit = {
@@ -162,9 +164,9 @@ export function useMapController(
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
       trackResize: false,
+      // Zoom and locate buttons are rendered by MapControls.vue.
       zoomControl: false,
     })
-    L.control.zoom({ position: 'bottomright' }).addTo(map)
 
     map.on('moveend', emitBounds)
 
@@ -531,6 +533,16 @@ export function useMapController(
     applyPulse()
   }
 
+  // ── Zoom controls ──────────────────────────────────────────
+
+  function zoomIn(): void {
+    if (phase === 'ready') map.zoomIn()
+  }
+
+  function zoomOut(): void {
+    if (phase === 'ready') map.zoomOut()
+  }
+
   // ── Helper ────────────────────────────────────────────────────────────
 
   function markerConfigFromProps(): MarkerConfig {
@@ -595,5 +607,5 @@ export function useMapController(
     { immediate: true }
   )
 
-  return { popupItem, popupFullData, popupTarget }
+  return { popupItem, popupFullData, popupTarget, zoomIn, zoomOut }
 }

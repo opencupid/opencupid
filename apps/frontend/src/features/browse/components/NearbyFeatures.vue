@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
 import type { UserContentMetadata } from '@zod/userContent/userContent.dto'
 import PostIt from '@/features/shared/ui/PostIt.vue'
 import EventTeaser from '@/features/events/components/EventTeaser.vue'
@@ -14,6 +15,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'item:select', item: UserContentMetadata): void
+  /** Height in px the panel covers at the bottom of the screen; 0 while hidden. */
+  (e: 'height:changed', height: number): void
 }>()
 
 function handleClick(item: UserContentMetadata) {
@@ -35,6 +38,20 @@ function onWheel(e: WheelEvent) {
 }
 
 const isVisible = computed(() => props.items.length > 0)
+
+// The offcanvas root is teleported and not ours to ref, so it's reached
+// from the header slot content.
+const headerEl = ref<HTMLElement | null>(null)
+const panelEl = computed(() => headerEl.value?.closest<HTMLElement>('.offcanvas') ?? null)
+const panelHeight = ref(0)
+useResizeObserver(panelEl, ([entry]) => {
+  panelHeight.value = (entry!.target as HTMLElement).offsetHeight
+})
+watch(
+  () => (isVisible.value ? panelHeight.value : 0),
+  (height) => emit('height:changed', height),
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -51,7 +68,10 @@ const isVisible = computed(() => props.items.length > 0)
     style="z-index: 1005"
   >
     <template #header>
-      <div class="d-flex align-items-center justify-content-center w-100">
+      <div
+        ref="headerEl"
+        class="d-flex align-items-center justify-content-center w-100"
+      >
         <BButton
           variant="link-secondary"
           class="p-0 m-0"

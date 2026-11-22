@@ -3,11 +3,14 @@ import { ref } from 'vue'
 import type { Map as LMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
+import MapControls from './MapControls.vue'
+
 import type { BoundsWithZoom } from '../types/map.types'
 import { useMapController, type MapProps } from '../composables/useMapController'
 
 const props = withDefaults(defineProps<MapProps>(), {
   clusters: () => [],
+  controlsBottomInset: 0,
 })
 
 const emit = defineEmits<{
@@ -15,18 +18,33 @@ const emit = defineEmits<{
   (e: 'map:ready', map: LMap): void
   (e: 'bounds:changed', payload: BoundsWithZoom): void
   (e: 'cluster:max-zoom'): void
+  (e: 'locate'): void
 }>()
 
 const mapEl = ref<HTMLDivElement | null>(null)
 
-const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props, emit)
+const { popupItem, popupFullData, popupTarget, zoomIn, zoomOut } = useMapController(
+  mapEl,
+  props,
+  emit
+)
 </script>
 
 <template>
-  <div class="osm-poi-map-wrapper">
+  <div
+    class="osm-poi-map-wrapper"
+    :style="{ '--map-controls-bottom-inset': `${controlsBottomInset}px` }"
+  >
     <div
       ref="mapEl"
       class="osm-poi-map"
+    />
+
+    <MapControls
+      class="osm-poi-map-controls"
+      @zoom:in="zoomIn"
+      @zoom:out="zoomOut"
+      @locate="emit('locate')"
     />
 
     <!--
@@ -55,6 +73,15 @@ const { popupItem, popupFullData, popupTarget } = useMapController(mapEl, props,
 .osm-poi-map {
   height: 100%;
   width: 100%;
+}
+
+/* Above the tiles and markers (Leaflet panes go up to 700), below the popup. */
+.osm-poi-map-controls {
+  position: absolute;
+  right: 0.75rem;
+  bottom: calc(var(--map-controls-bottom-inset) + 0.75rem);
+  z-index: 1000;
+  transition: bottom 200ms ease;
 }
 
 /* Cluster badge */
