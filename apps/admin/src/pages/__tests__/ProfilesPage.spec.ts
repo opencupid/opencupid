@@ -648,13 +648,25 @@ describe('ProfilesPage', () => {
       'Likes',
       'Matches',
     ])
-    expect(cards.map((c) => c.find('.kpi-value').text())).toEqual(['5', '71', '21', '3'])
+    // Tiles show the 7-day sums of the daily series.
+    expect(cards.map((c) => c.find('.kpi-value').text())).toEqual(['1', '6', '2', '0'])
     expect(cards.map((c) => c.find('.kpi-subtitle').text())).toEqual([
-      '2 initiated · 3 joined',
-      '40 sent · 31 received',
-      '12 sent · 9 received',
+      '1 initiated · 0 joined',
+      '4 sent · 2 received',
+      '0 sent · 2 received',
       'mutual likes',
     ])
+    // All-time figures are listed separately, without charts.
+    const totals = wrapper.find('[data-testid="profile-activity-totals"]')
+    const tile = (c: ReturnType<typeof totals.find>) =>
+      ['.fw-semibold', '.fs-5', '.text-body-secondary'].map((sel) => c.find(sel).text())
+    expect(totals.findAll('.col').map(tile)).toEqual([
+      ['Conversations', '5', '2 initiated · 3 joined'],
+      ['Messages', '71', '40 sent · 31 received'],
+      ['Likes', '21', '12 sent · 9 received'],
+      ['Matches', '3', 'mutual likes'],
+    ])
+    expect(totals.find('svg').exists()).toBe(false)
     expect(cards.map((c) => c.find('g > title').text())).toEqual([
       '2026-11-21: 1 initiated · 0 joined',
       '2026-11-21: 4 sent · 2 received',

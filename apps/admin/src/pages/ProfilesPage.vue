@@ -276,59 +276,94 @@ async function fetchProfileActivity(profileId: string) {
   }
 }
 
-// Stat tiles: all-time total, its breakdown, and a 7-day daily sparkline,
-// stacked by the same split as the breakdown (solid = first part).
+const sum = (values: number[]) => values.reduce((a, b) => a + b, 0)
+
+// 7-day tiles: the week's total, its split, and a daily sparkline stacked by
+// the same split (solid = first part).
 const activityCards = computed(() => {
   const a = profileActivity.value
   if (!a) return []
   const { conversations, messages, likes, matches } = a.daily
-  const joined = a.conversations.participating - a.conversations.initiated
+  const stack = <T,>(rows: T[], parts: { label: string; pick: (r: T) => number }[]) =>
+    parts.map(({ label, pick }) => ({ label, values: rows.map(pick) }))
+  const conv = stack(conversations, [
+    { label: 'initiated', pick: (d) => d.initiated },
+    { label: 'joined', pick: (d) => d.joined },
+  ])
+  const msg = stack(messages, [
+    { label: 'sent', pick: (d) => d.sent },
+    { label: 'received', pick: (d) => d.received },
+  ])
+  const lik = stack(likes, [
+    { label: 'sent', pick: (d) => d.sent },
+    { label: 'received', pick: (d) => d.received },
+  ])
+  const splitSubtitle = (stacks: { label: string; values: number[] }[]) =>
+    stacks.map((s) => `${sum(s.values)} ${s.label}`).join(' · ')
+  const total = (stacks: { values: number[] }[]) => sum(stacks.map((s) => sum(s.values)))
+  const matchSeries = matches.map((d) => d.count)
   return [
     {
       key: 'conversations',
       title: 'Conversations',
-      value: a.conversations.participating,
-      subtitle: `${a.conversations.initiated} initiated · ${joined} joined`,
+      value: total(conv),
+      subtitle: splitSubtitle(conv),
       color: '#198754',
       seriesLabels: conversations.map((d) => d.date),
-      stacks: [
-        { label: 'initiated', values: conversations.map((d) => d.initiated) },
-        { label: 'joined', values: conversations.map((d) => d.joined) },
-      ],
+      stacks: conv,
     },
     {
       key: 'messages',
       title: 'Messages',
-      value: a.messages.sent + a.messages.received,
-      subtitle: `${a.messages.sent} sent · ${a.messages.received} received`,
+      value: total(msg),
+      subtitle: splitSubtitle(msg),
       color: '#fd7e14',
       seriesLabels: messages.map((d) => d.date),
-      stacks: [
-        { label: 'sent', values: messages.map((d) => d.sent) },
-        { label: 'received', values: messages.map((d) => d.received) },
-      ],
+      stacks: msg,
     },
     {
       key: 'likes',
       title: 'Likes',
-      value: a.likes.sent + a.likes.received,
-      subtitle: `${a.likes.sent} sent · ${a.likes.received} received`,
+      value: total(lik),
+      subtitle: splitSubtitle(lik),
       color: '#6f42c1',
       seriesLabels: likes.map((d) => d.date),
-      stacks: [
-        { label: 'sent', values: likes.map((d) => d.sent) },
-        { label: 'received', values: likes.map((d) => d.received) },
-      ],
+      stacks: lik,
     },
     {
       key: 'matches',
       title: 'Matches',
-      value: a.matches,
+      value: sum(matchSeries),
       subtitle: 'mutual likes',
       color: '#d63384',
       seriesLabels: matches.map((d) => d.date),
-      series: matches.map((d) => d.count),
+      series: matchSeries,
     },
+  ]
+})
+
+// All-time figures, shown as plain KPIs below the 7-day tiles.
+const activityTotals = computed(() => {
+  const a = profileActivity.value
+  if (!a) return []
+  const joined = a.conversations.participating - a.conversations.initiated
+  return [
+    {
+      title: 'Conversations',
+      value: a.conversations.participating,
+      subtitle: `${a.conversations.initiated} initiated · ${joined} joined`,
+    },
+    {
+      title: 'Messages',
+      value: a.messages.sent + a.messages.received,
+      subtitle: `${a.messages.sent} sent · ${a.messages.received} received`,
+    },
+    {
+      title: 'Likes',
+      value: a.likes.sent + a.likes.received,
+      subtitle: `${a.likes.sent} sent · ${a.likes.received} received`,
+    },
+    { title: 'Matches', value: a.matches, subtitle: 'mutual likes' },
   ]
 })
 
@@ -1307,8 +1342,24 @@ onUnmounted(() => {
                     />
                   </div>
                   <div class="small text-body-secondary mt-2">
-                    Totals are all-time; bars show the last 7 days (solid: sent / initiated, light:
-                    received / joined).
+                    Last 7 days (solid: sent / initiated, light: received / joined).
+                  </div>
+                  <h6 class="mt-4 mb-2">All time</h6>
+                  <div
+                    class="row row-cols-2 g-2"
+                    data-testid="profile-activity-totals"
+                  >
+                    <div
+                      v-for="kpi in activityTotals"
+                      :key="kpi.title"
+                      class="col"
+                    >
+                      <div class="border rounded px-3 py-2 h-100">
+                        <div class="small fw-semibold">{{ kpi.title }}</div>
+                        <div class="fs-5 fw-bold lh-sm">{{ kpi.value }}</div>
+                        <div class="small text-body-secondary">{{ kpi.subtitle }}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </template>
