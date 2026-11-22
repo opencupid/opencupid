@@ -137,6 +137,9 @@ export function createMockPrisma() {
       deleteMany: vi.fn(),
       count: vi.fn(),
     },
+    localizedProfileField: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn((fn: (client: any) => any) => fn(mock)),
   }
   return mock

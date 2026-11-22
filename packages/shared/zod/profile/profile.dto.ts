@@ -82,6 +82,9 @@ export const editableFields = {
   isSocialActive: true,
 } as const
 
+// Intros arrive per locale; trimmed so that a blank intro is stored as ''.
+const LocalizedIntroInputSchema = z.record(z.string(), z.string().trim()).optional()
+
 // Client -> API DTO profile editing payload
 export const UpdateProfilePayloadSchema = ProfileSchema.pick({
   ...editableFields,
@@ -90,8 +93,8 @@ export const UpdateProfilePayloadSchema = ProfileSchema.pick({
 })
   .extend({
     tags: z.array(z.string().cuid()),
-    introSocialLocalized: z.record(z.string(), z.string()).optional(),
-    introDatingLocalized: z.record(z.string(), z.string()).optional(),
+    introSocialLocalized: LocalizedIntroInputSchema,
+    introDatingLocalized: LocalizedIntroInputSchema,
   })
   .partial()
 
@@ -106,8 +109,8 @@ export const CreateProfilePayloadSchema = ProfileSchema.pick({
 })
   .extend({
     tags: z.array(z.string().cuid()),
-    introSocialLocalized: z.record(z.string(), z.string()).optional(),
-    introDatingLocalized: z.record(z.string(), z.string()).optional(),
+    introSocialLocalized: LocalizedIntroInputSchema,
+    introDatingLocalized: LocalizedIntroInputSchema,
   })
   .partial()
 

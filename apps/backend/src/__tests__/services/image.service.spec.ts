@@ -93,6 +93,7 @@ beforeEach(async () => {
   mockPrisma.$transaction = vi.fn((fn: (client: any) => any) => fn(mockPrisma))
   mockPrisma.imageAttachment.findMany.mockResolvedValue([])
   mockPrisma.imageAttachment.findFirst.mockResolvedValue(null)
+  mockPrisma.localizedProfileField.findFirst.mockResolvedValue(null)
   mockPrisma.imageAttachment.deleteMany.mockResolvedValue({ count: 1 })
   mockUnlink.mockClear()
   images = {}
@@ -191,7 +192,7 @@ describe('attachToProfile', () => {
     })
     expect(mockPrisma.profile.update).toHaveBeenLastCalledWith({
       where: { id: ME },
-      data: { hasFace: true },
+      data: { hasFace: true, isHiddenFromResults: false },
     })
     expect(firstCall(mockPrisma.profile.update)).toBeLessThan(firstCall(mockPrisma.image.update))
     expect(firstCall(mockPrisma.image.update)).toBeLessThan(
@@ -347,7 +348,7 @@ describe('detachFromProfile', () => {
     )
     expect(mockPrisma.profile.update).toHaveBeenLastCalledWith({
       where: { id: ME },
-      data: { hasFace: false },
+      data: { hasFace: false, isHiddenFromResults: true },
     })
   })
 
@@ -408,7 +409,7 @@ describe('deleteImage', () => {
     expect(firstCall(mockPrisma.image.update)).toBeLessThan(firstCall(mockPrisma.image.delete))
     expect(mockPrisma.profile.update).toHaveBeenLastCalledWith({
       where: { id: ME },
-      data: { hasFace: false },
+      data: { hasFace: false, isHiddenFromResults: true },
     })
     expect(mockUnlink).toHaveBeenCalled()
   })
@@ -524,7 +525,7 @@ describe('reorderProfileGallery', () => {
     expect(mockPrisma.imageAttachment.create).not.toHaveBeenCalled()
     expect(mockPrisma.profile.update).toHaveBeenLastCalledWith({
       where: { id: ME },
-      data: { hasFace: false },
+      data: { hasFace: false, isHiddenFromResults: true },
     })
   })
 

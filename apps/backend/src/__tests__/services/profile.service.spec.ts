@@ -12,6 +12,11 @@ vi.mock('../../api/mappers/profile.mappers', () => ({
   mapToLocalizedUpserts: vi.fn().mockReturnValue([]),
 }))
 
+const mockComputeHidden = vi.hoisted(() => vi.fn())
+vi.mock('../../services/profileVisibility.service', () => ({
+  computeHiddenFromResults: mockComputeHidden,
+}))
+
 vi.mock('../../services/profileMatch.service', () => ({
   ProfileMatchService: {
     getInstance: () => ({
@@ -338,6 +343,7 @@ describe('syncProfileHasFace', () => {
   it('writes true when any gallery image has a face', async () => {
     const { syncProfileHasFace } = await import('../../services/profile.service')
     mockPrisma.imageAttachment.findFirst.mockResolvedValue({ imageId: 'img2' })
+    mockComputeHidden.mockResolvedValue(false)
 
     await syncProfileHasFace(mockPrisma, 'p1')
 
@@ -347,19 +353,39 @@ describe('syncProfileHasFace', () => {
     })
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
       where: { id: 'p1' },
-      data: { hasFace: true },
+      data: { hasFace: true, isHiddenFromResults: false },
     })
+    expect(mockComputeHidden).toHaveBeenCalledWith(mockPrisma, 'p1', true)
   })
 
   it('writes false when no gallery image has a face, or the gallery is empty', async () => {
     const { syncProfileHasFace } = await import('../../services/profile.service')
     mockPrisma.imageAttachment.findFirst.mockResolvedValue(null)
+    mockComputeHidden.mockResolvedValue(true)
 
     await syncProfileHasFace(mockPrisma, 'p1')
 
     expect(mockPrisma.profile.update).toHaveBeenCalledWith({
       where: { id: 'p1' },
-      data: { hasFace: false },
+      data: { hasFace: false, isHiddenFromResults: true },
+    })
+    expect(mockComputeHidden).toHaveBeenCalledWith(mockPrisma, 'p1', false)
+  })
+})
+
+describe('ProfileService.updateCompleteProfile', () => {
+  it('stores isHiddenFromResults derived from the current hasFace with the scalars', async () => {
+    mockComputeHidden.mockResolvedValue(true)
+    mockPrisma.profile.findUnique.mockResolvedValue({ id: 'p1', hasFace: false })
+    mockPrisma.profile.update.mockResolvedValue({ id: 'p1' })
+
+    await service.updateCompleteProfile(mockPrisma, 'en', 'u1', { publicName: 'A' })
+
+    expect(mockComputeHidden).toHaveBeenCalledWith(mockPrisma, 'p1', false)
+    expect(mockPrisma.profile.update.mock.calls[0][0].data).toEqual({
+      publicName: 'A',
+      isActive: true,
+      isHiddenFromResults: true,
     })
   })
 })

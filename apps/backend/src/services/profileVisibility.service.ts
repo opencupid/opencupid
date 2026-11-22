@@ -1,42 +1,22 @@
-import { prisma } from '@/lib/prisma'
-import { logger } from '@/lib/logger'
+import { Prisma } from '@prisma/client'
 
-const HIDE_AFTER_DAYS_UNSEEN = 5
+const INTRO_FIELDS = ['introSocial', 'introDating']
 
 /**
- * Recalculates Profile.isHiddenFromResults in both directions. A profile is
- * hidden when it has no face photo, no intro in any language, and has not been
- * seen for HIDE_AFTER_DAYS_UNSEEN days. Profiles with no activity summary have
- * no known last-seen date, so they stay visible.
- *
- * Raw SQL so that "updatedAt" stays unchanged: it sets the browse order.
+ * Whether a profile belongs hidden from results: no face photo and no intro
+ * in any language. Intros are trimmed on input, so blank means ''. Call it
+ * after writing the intro fields, in the same transaction, and store the
+ * result in the same update that writes hasFace or the profile scalars.
  */
-export async function syncHiddenFromResults(now: Date = new Date()): Promise<void> {
-  const unseenSince = new Date(now.getTime() - HIDE_AFTER_DAYS_UNSEEN * 24 * 60 * 60 * 1000)
-
-  const changed = await prisma.$executeRaw`
-    WITH desired AS (
-      SELECT
-        pr."id",
-        (
-          NOT pr."hasFace"
-          AND EXISTS (
-            SELECT 1 FROM "ProfileActivitySummary" s
-            WHERE s."profileId" = pr."id" AND s."lastSeenAt" < ${unseenSince}
-          )
-          AND NOT EXISTS (
-            SELECT 1 FROM "LocalizedProfileField" f
-            WHERE f."profileId" = pr."id"
-              AND f."field" IN ('introSocial', 'introDating')
-              AND btrim(f."value") <> ''
-          )
-        ) AS hide
-      FROM "Profile" pr
-    )
-    UPDATE "Profile" p
-    SET "isHiddenFromResults" = d.hide
-    FROM desired d
-    WHERE p."id" = d."id" AND p."isHiddenFromResults" <> d.hide
-  `
-  logger.info({ changed }, 'profile visibility synced')
+export async function computeHiddenFromResults(
+  tx: Prisma.TransactionClient,
+  profileId: string,
+  hasFace: boolean
+): Promise<boolean> {
+  if (hasFace) return false
+  const intro = await tx.localizedProfileField.findFirst({
+    where: { profileId, field: { in: INTRO_FIELDS }, value: { not: '' } },
+    select: { id: true },
+  })
+  return intro === null
 }

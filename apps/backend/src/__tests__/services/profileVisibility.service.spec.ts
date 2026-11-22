@@ -1,39 +1,32 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('../../lib/prisma', () => ({ prisma: { $executeRaw: vi.fn() } }))
-vi.mock('../../lib/logger', () => ({ logger: { info: vi.fn() } }))
+import { computeHiddenFromResults } from '../../services/profileVisibility.service'
 
-import { syncHiddenFromResults } from '../../services/profileVisibility.service'
-import { prisma } from '../../lib/prisma'
-import { logger } from '../../lib/logger'
+function txWithIntro(intro: { id: string } | null) {
+  return { localizedProfileField: { findFirst: vi.fn().mockResolvedValue(intro) } }
+}
 
-const mockExecuteRaw = vi.mocked(prisma.$executeRaw)
+describe('computeHiddenFromResults', () => {
+  it('hides a profile with no face and no intro', async () => {
+    const tx = txWithIntro(null)
 
-describe('syncHiddenFromResults', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockExecuteRaw.mockResolvedValue(3 as never)
+    expect(await computeHiddenFromResults(tx as never, 'p1', false)).toBe(true)
+    expect(tx.localizedProfileField.findFirst).toHaveBeenCalledWith({
+      where: { profileId: 'p1', field: { in: ['introSocial', 'introDating'] }, value: { not: '' } },
+      select: { id: true },
+    })
   })
 
-  it('treats profiles as unseen 5 days before now', async () => {
-    await syncHiddenFromResults(new Date('2026-11-07T03:00:00Z'))
-
-    const [, unseenSince] = mockExecuteRaw.mock.calls[0]
-    expect(unseenSince).toEqual(new Date('2026-11-02T03:00:00Z'))
+  it('shows a profile with no face but an intro in some language', async () => {
+    expect(await computeHiddenFromResults(txWithIntro({ id: 'f1' }) as never, 'p1', false)).toBe(
+      false
+    )
   })
 
-  it('checks the face, intro and last-seen conditions', async () => {
-    await syncHiddenFromResults()
+  it('shows a profile with a face without looking at intros', async () => {
+    const tx = txWithIntro(null)
 
-    const sql = (mockExecuteRaw.mock.calls[0][0] as unknown as string[]).join('?')
-    expect(sql).toContain('NOT pr."hasFace"')
-    expect(sql).toContain(`f."field" IN ('introSocial', 'introDating')`)
-    expect(sql).toContain('s."lastSeenAt" < ?')
-  })
-
-  it('logs how many profiles changed', async () => {
-    await syncHiddenFromResults()
-
-    expect(logger.info).toHaveBeenCalledWith({ changed: 3 }, 'profile visibility synced')
+    expect(await computeHiddenFromResults(tx as never, 'p1', true)).toBe(false)
+    expect(tx.localizedProfileField.findFirst).not.toHaveBeenCalled()
   })
 })
