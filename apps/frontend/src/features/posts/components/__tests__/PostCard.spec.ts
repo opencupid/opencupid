@@ -101,3 +101,16 @@ describe('PostCard truncateText', () => {
     expect(withToolbar.get('.post-content').classes()).toContain('post-content--truncated')
   })
 })
+
+describe('PostCard meta layout', () => {
+  it('lets the location shrink and truncate instead of overlapping the date', () => {
+    const wrapper = mount(PostCard, {
+      props: { post: basePost, showDetails: true },
+      global: { stubs },
+    })
+    const location = wrapper.get('.post-location')
+    expect(location.classes()).toContain('text-truncate')
+    expect(location.classes()).toContain('min-w-0')
+    expect(wrapper.get('.viewer-toolbar').classes()).toContain('flex-shrink-0')
+  })
+})

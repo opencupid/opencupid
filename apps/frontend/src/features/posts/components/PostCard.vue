@@ -141,7 +141,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
           >
             <span
               v-if="postLocation"
-              class="post-location text-muted"
+              class="post-location text-muted text-truncate min-w-0"
             >
               <LocationLabel
                 :viewerLocation="viewerLocation"
@@ -154,6 +154,7 @@ const tagSlugs = computed(() => tagsDataAttr(props.post.tags))
             </span>
             <ViewerToolbar
               v-if="showDetails"
+              class="flex-shrink-0"
               :actions="['contact', 'copy', 'share']"
               :copy-text="post.content"
               :share-payload="sharePostPayload"
