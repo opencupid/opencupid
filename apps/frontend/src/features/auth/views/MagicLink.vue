@@ -10,6 +10,7 @@ import { bootstrapReady } from '@/lib/auth'
 import { tracker } from '@/lib/umami'
 import { loginRedirect, DEFAULT_LANDING } from '@/router/loginRedirect'
 import AuthLayout from '../components/AuthLayout.vue'
+import CaptchaWidget from '../components/CaptchaWidget.vue'
 import ViewTitle from '@/features/shared/ui/ViewTitle.vue'
 import ChevronLeftIcon from '@/assets/icons/arrows/arrow-single-left.svg'
 import IconMail from '@/assets/icons/interface/mail.svg'
@@ -39,7 +40,8 @@ const TokenParamSchema = z.object({
 // Mail gateways and link scanners prefetch (and often render) links in emails,
 // so verifying on every load would let them burn the single-use token. Only a
 // browser that requested the link (sendMagicLink stores authId) continues on
-// its own; anything else has to click Continue.
+// its own; anything else has to solve the captcha. A plain Continue button was
+// not enough: Gmail's click-time link checker clicks it.
 const hasToken = Boolean(route.query.token)
 const params = TokenParamSchema.safeParse(route.query)
 const requestedHere = params.success && Boolean(localStorage.getItem('authId'))
@@ -49,7 +51,7 @@ if (hasToken && !params.success) {
 }
 
 async function handleContinue() {
-  if (!params.success) return
+  if (!params.success || isLoading.value) return
   isLoading.value = true
   try {
     const res = await authStore.verifyToken(params.data.token)
@@ -140,19 +142,13 @@ function handleBackButton() {
         class="text-center"
       >
         <p class="fs-5 mb-4">{{ $t('auth.magic_link_prompt') }}</p>
-        <BButton
-          class="continue-button"
-          variant="primary"
-          size="lg"
-          :disabled="isLoading"
-          @click="handleContinue"
+        <BSpinner v-if="isLoading" />
+        <div
+          v-else
+          class="continue-captcha user-select-none"
         >
-          <BSpinner
-            v-if="isLoading"
-            small
-          />
-          {{ $t('auth.login') }}
-        </BButton>
+          <CaptchaWidget @update:payload="(payload) => payload && handleContinue()" />
+        </div>
       </div>
       <DevAutoLogin v-else-if="DevAutoLogin" />
       <div
@@ -194,5 +190,12 @@ function handleBackButton() {
 }
 :deep(.modal-body) {
   display: flex;
+}
+/* Keep the checkbox and its label together in the middle of the prompt. */
+.continue-captcha :deep(.altcha-main) {
+  justify-content: center;
+}
+.continue-captcha :deep(.altcha-label) {
+  flex-grow: 0;
 }
 </style>

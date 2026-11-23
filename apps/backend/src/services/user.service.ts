@@ -12,8 +12,12 @@ import type { UserIdentifier } from '@zod/user/user.dto'
 import { customAlphabet } from 'nanoid'
 import { nolookalikesSafe } from 'nanoid-dictionary'
 
+// Long enough for a link opened later, from another app's browser (e.g. a
+// sign-up started in a social app's in-app browser, finished from the mail app).
+const LOGIN_TOKEN_TTL_MS = 1000 * 60 * 120 // 120 minutes
+
 function getTokenExpiration() {
-  return new Date(Date.now() + 1000 * 60 * 15) // 15 minutes
+  return new Date(Date.now() + LOGIN_TOKEN_TTL_MS)
 }
 
 export class UserService {
@@ -60,14 +64,19 @@ export class UserService {
     return { user: userUpdated, isNewUser, success: true }
   }
 
+  /**
+   * Issues the login token emailed in a magic link. A user who asks again while
+   * their token is still valid gets the same token (with a fresh expiry), so
+   * every magic link they were sent keeps working instead of only the newest.
+   */
   async setLoginToken(
     authId: UserIdentifier,
-    otp: string,
     language: string,
     originDomain: string
   ): Promise<{
     user: User
     isNewUser: boolean
+    token: string
   }> {
     const email = canonicalizeEmail(authId.email)
     const userExists = await prisma.user.findUnique({ where: { email } })
@@ -75,6 +84,9 @@ export class UserService {
 
     if (userExists) {
       const isNewUser = userExists.isRegistrationConfirmed === false
+      const hasValidToken =
+        userExists.loginToken && userExists.loginTokenExp && userExists.loginTokenExp > new Date()
+      const otp = hasValidToken ? userExists.loginToken! : this.generateLoginToken()
       // Skip issuing a new login token for blocked or deactivated users. updateMany
       // (vs update) treats a no-match filter as a no-op instead of throwing P2025.
       await prisma.user.updateMany({
@@ -84,9 +96,10 @@ export class UserService {
           loginTokenExp: tokenExpiration,
         },
       })
-      return { user: userExists, isNewUser }
+      return { user: userExists, isNewUser, token: otp }
     }
 
+    const otp = this.generateLoginToken()
     const user = await prisma.user.create({
       data: {
         email,
@@ -97,7 +110,7 @@ export class UserService {
       },
     })
 
-    return { user, isNewUser: true }
+    return { user, isNewUser: true, token: otp }
   }
 
   async getUserById(userId: string): Promise<User | null> {

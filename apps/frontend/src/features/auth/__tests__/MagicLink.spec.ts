@@ -11,6 +11,7 @@ const previousDev = vi.hoisted(() => {
 
 import { useAuthStore } from '../stores/authStore'
 import MagicLink from '../views/MagicLink.vue'
+import CaptchaWidget from '../components/CaptchaWidget.vue'
 
 afterAll(() => {
   ;(import.meta.env as any).DEV = previousDev
@@ -58,15 +59,20 @@ const mountMagicLink = () =>
         $t: (key: string, params?: Record<string, unknown>) =>
           params ? `${key} ${JSON.stringify(params)}` : key,
       },
+      stubs: { CaptchaWidget: true },
     },
   })
 
-// Mount, then click Continue: the emailed link only lands on the page, the
-// token is verified by the explicit click.
+const solveCaptcha = async (wrapper: ReturnType<typeof mountMagicLink>, payload = 'solved') => {
+  wrapper.getComponent(CaptchaWidget).vm.$emit('update:payload', payload)
+  await flushPromises()
+}
+
+// Mount, then solve the captcha: the emailed link only lands on the page, the
+// token is verified once a human solves it.
 const mountAndContinue = async () => {
   const wrapper = mountMagicLink()
-  await wrapper.get('.continue-button').trigger('click')
-  await flushPromises()
+  await solveCaptcha(wrapper)
   return wrapper
 }
 
@@ -151,10 +157,34 @@ describe('MagicLink', () => {
     expect(verifyToken).not.toHaveBeenCalled()
     expect(push).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('auth.magic_link_prompt')
-    expect(wrapper.get('.continue-button').text()).toContain('auth.login')
+    expect(wrapper.findComponent(CaptchaWidget).exists()).toBe(true)
   })
 
-  it('continues without a click when this browser requested the link', async () => {
+  it('does not verify when the captcha is reset without a solution', async () => {
+    route.query = { token: '123456' }
+    const authStore = useAuthStore()
+    const verifyToken = vi.spyOn(authStore, 'verifyToken')
+
+    const wrapper = mountMagicLink()
+    await solveCaptcha(wrapper, '')
+
+    expect(verifyToken).not.toHaveBeenCalled()
+  })
+
+  it('verifies only once when the captcha reports a solution twice', async () => {
+    route.query = { token: '123456' }
+    const authStore = useAuthStore()
+    const verifyToken = vi.spyOn(authStore, 'verifyToken').mockReturnValue(new Promise(() => {}))
+
+    const wrapper = mountMagicLink()
+    wrapper.getComponent(CaptchaWidget).vm.$emit('update:payload', 'a')
+    wrapper.getComponent(CaptchaWidget).vm.$emit('update:payload', 'b')
+    await flushPromises()
+
+    expect(verifyToken).toHaveBeenCalledOnce()
+  })
+
+  it('continues without the captcha when this browser requested the link', async () => {
     route.query = { token: '123456' }
     localStorage.setItem('authId', 'test@example.com')
     const authStore = useAuthStore()
@@ -169,7 +199,7 @@ describe('MagicLink', () => {
     expect(push).toHaveBeenCalledWith('/browse')
   })
 
-  it('shows only a spinner, not the Continue prompt, while continuing on its own', async () => {
+  it('shows only a spinner, not the captcha prompt, while continuing on its own', async () => {
     route.query = { token: '123456' }
     localStorage.setItem('authId', 'test@example.com')
     const authStore = useAuthStore()
@@ -179,7 +209,7 @@ describe('MagicLink', () => {
     await flushPromises()
 
     expect(wrapper.find('.auto-continue-spinner').exists()).toBe(true)
-    expect(wrapper.find('.continue-button').exists()).toBe(false)
+    expect(wrapper.findComponent(CaptchaWidget).exists()).toBe(false)
     expect(wrapper.text()).not.toContain('auth.magic_link_prompt')
   })
 
@@ -195,7 +225,7 @@ describe('MagicLink', () => {
     expect(verifyToken).not.toHaveBeenCalled()
   })
 
-  it('verifies the token from the link when Continue is clicked', async () => {
+  it('verifies the token from the link once the captcha is solved', async () => {
     route.query = { token: '123456' }
     const authStore = useAuthStore()
     const verifyToken = vi

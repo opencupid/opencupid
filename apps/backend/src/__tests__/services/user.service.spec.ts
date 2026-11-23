@@ -92,13 +92,52 @@ describe('UserService.setLoginToken', () => {
   it('updates existing user and gates the update on isBlocked=false', async () => {
     const user = { id: 'u1', isRegistrationConfirmed: true }
     mockPrisma.user.findUnique.mockResolvedValue(user)
-    const res = await service.setLoginToken({ email: 'a@a.com' }, '123', 'en', 'test.local')
+    const res = await service.setLoginToken({ email: 'a@a.com' }, 'en', 'test.local')
     expect(res.user).toBe(user)
     expect(res.isNewUser).toBe(false)
+    expect(res.token).toHaveLength(6)
     expect(mockPrisma.user.updateMany).toHaveBeenCalledWith({
       where: { id: 'u1', isBlocked: false, isActive: true },
-      data: { loginToken: '123', loginTokenExp: expect.any(Date) },
+      data: { loginToken: res.token, loginTokenExp: expect.any(Date) },
     })
+  })
+
+  it('re-sends the still-valid token so earlier magic links keep working', async () => {
+    const user = {
+      id: 'u1',
+      isRegistrationConfirmed: true,
+      loginToken: 'KEEP42',
+      loginTokenExp: new Date(Date.now() + 60_000),
+    }
+    mockPrisma.user.findUnique.mockResolvedValue(user)
+    const res = await service.setLoginToken({ email: 'a@a.com' }, 'en', 'test.local')
+    expect(res.token).toBe('KEEP42')
+    const { data } = mockPrisma.user.updateMany.mock.calls[0][0]
+    expect(data.loginToken).toBe('KEEP42')
+    expect(data.loginTokenExp.getTime()).toBeGreaterThan(user.loginTokenExp.getTime())
+  })
+
+  it('issues a new token when the previous one has expired', async () => {
+    const user = {
+      id: 'u1',
+      isRegistrationConfirmed: true,
+      loginToken: 'OLD123',
+      loginTokenExp: new Date(Date.now() - 1000),
+    }
+    mockPrisma.user.findUnique.mockResolvedValue(user)
+    const res = await service.setLoginToken({ email: 'a@a.com' }, 'en', 'test.local')
+    expect(res.token).not.toBe('OLD123')
+    expect(res.token).toHaveLength(6)
+  })
+
+  it('makes the token valid for 120 minutes', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'u1', isRegistrationConfirmed: true })
+    const before = Date.now()
+    await service.setLoginToken({ email: 'a@a.com' }, 'en', 'test.local')
+    const { data } = mockPrisma.user.updateMany.mock.calls[0][0]
+    const ttl = data.loginTokenExp.getTime() - before
+    expect(ttl).toBeGreaterThanOrEqual(120 * 60_000 - 1000)
+    expect(ttl).toBeLessThanOrEqual(120 * 60_000 + 1000)
   })
 
   it('refuses to issue a login token to a blocked user', async () => {
@@ -108,7 +147,7 @@ describe('UserService.setLoginToken', () => {
     // accounts — see apps/backend/src/api/routes/auth.route.ts.
     const blockedUser = { id: 'u-blocked', isRegistrationConfirmed: true, isBlocked: true }
     mockPrisma.user.findUnique.mockResolvedValue(blockedUser)
-    await service.setLoginToken({ email: 'blocked@example.com' }, 'tok', 'en', 'test.local')
+    await service.setLoginToken({ email: 'blocked@example.com' }, 'en', 'test.local')
     expect(mockPrisma.user.updateMany).toHaveBeenCalledTimes(1)
     const call = mockPrisma.user.updateMany.mock.calls[0][0]
     expect(call.where).toEqual({ id: 'u-blocked', isBlocked: false, isActive: true })
@@ -117,8 +156,9 @@ describe('UserService.setLoginToken', () => {
   it('creates new user when missing', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
     mockPrisma.user.create.mockResolvedValue({ id: 'new' })
-    const res = await service.setLoginToken({ email: 'new@example.com' }, '999', 'en', 'test.local')
+    const res = await service.setLoginToken({ email: 'new@example.com' }, 'en', 'test.local')
     expect(res.isNewUser).toBe(true)
+    expect(res.token).toHaveLength(6)
     expect(mockPrisma.user.create).toHaveBeenCalled()
     expect(res.user.id).toBe('new')
   })
@@ -126,7 +166,7 @@ describe('UserService.setLoginToken', () => {
   it('normalizes email to lowercase when looking up user', async () => {
     const user = { id: 'u1', email: 'test@example.com', isRegistrationConfirmed: true }
     mockPrisma.user.findUnique.mockResolvedValue(user)
-    await service.setLoginToken({ email: 'Test@Example.COM' }, '123', 'en', 'test.local')
+    await service.setLoginToken({ email: 'Test@Example.COM' }, 'en', 'test.local')
     expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
       where: { email: 'test@example.com' },
     })
@@ -135,7 +175,7 @@ describe('UserService.setLoginToken', () => {
   it('canonicalizes Gmail dots and plus when looking up user', async () => {
     const user = { id: 'u1', email: 'jsmith@gmail.com', isRegistrationConfirmed: true }
     mockPrisma.user.findUnique.mockResolvedValue(user)
-    await service.setLoginToken({ email: 'J.Smith+promo@Gmail.com' }, '123', 'en', 'test.local')
+    await service.setLoginToken({ email: 'J.Smith+promo@Gmail.com' }, 'en', 'test.local')
     expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
       where: { email: 'jsmith@gmail.com' },
     })
@@ -144,7 +184,7 @@ describe('UserService.setLoginToken', () => {
   it('preserves dots for non-Gmail domains when looking up user', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
     mockPrisma.user.create.mockResolvedValue({ id: 'new' })
-    await service.setLoginToken({ email: 'Foo.Bar@Example.com' }, '123', 'en', 'test.local')
+    await service.setLoginToken({ email: 'Foo.Bar@Example.com' }, 'en', 'test.local')
     expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
       where: { email: 'foo.bar@example.com' },
     })
@@ -153,11 +193,11 @@ describe('UserService.setLoginToken', () => {
   it('normalizes email to lowercase when creating new user', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null)
     mockPrisma.user.create.mockResolvedValue({ id: 'new', email: 'new@example.com' })
-    await service.setLoginToken({ email: 'NEW@EXAMPLE.COM' }, '123', 'en', 'test.local')
+    await service.setLoginToken({ email: 'NEW@EXAMPLE.COM' }, 'en', 'test.local')
     expect(mockPrisma.user.create).toHaveBeenCalledWith({
       data: {
         email: 'new@example.com',
-        loginToken: '123',
+        loginToken: expect.stringMatching(/^.{6}$/),
         loginTokenExp: expect.any(Date),
         language: 'en',
         originDomain: 'test.local',
