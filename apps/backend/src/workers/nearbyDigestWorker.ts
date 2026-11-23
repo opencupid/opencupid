@@ -24,6 +24,7 @@ export async function processNearbyDigestJob(job: Job<NearbyDigestJobData>): Pro
   const cohort = profileIds ? `, ${profileIds.length} profile(s)` : ''
   await job.log(`Run ${runDate}${dryRun ? ' (dry run)' : ''}${cohort}`)
 
+  let reported = 0
   const count = await sendNearbyDigests({
     runDate,
     now,
@@ -31,6 +32,14 @@ export async function processNearbyDigestJob(job: Job<NearbyDigestJobData>): Pro
     profileIds,
     onRecipient: async (profileId, newCount) => {
       await job.log(`${dryRun ? 'would send' : 'queued'} digest for ${profileId}: ${newCount} new`)
+    },
+    onProgress: async (checked, total) => {
+      const percent = Math.floor((checked / total) * 100)
+      // One Redis write per percent rather than per profile.
+      if (percent > reported) {
+        reported = percent
+        await job.updateProgress(percent)
+      }
     },
   })
 

@@ -101,6 +101,8 @@ export interface NearbyDigestRun {
   /** Only consider these profiles; they still have to qualify. */
   profileIds?: string[]
   onRecipient?: (profileId: string, newCount: number) => Promise<void> | void
+  /** Called after each dormant profile is checked, whether or not it qualified. */
+  onProgress?: (checked: number, total: number) => Promise<void> | void
 }
 
 /**
@@ -120,28 +122,40 @@ export async function sendNearbyDigests({
   dryRun = false,
   profileIds,
   onRecipient,
+  onProgress,
 }: NearbyDigestRun): Promise<number> {
   const recipients = await findDormantRecipients(now, profileIds)
   let qualified = 0
 
-  for (const recipient of recipients) {
-    const newProfileIds = await newProfilesNear(recipient)
-    if (newProfileIds.length < MIN_NEW_PROFILES) continue
-    qualified++
-
-    if (!dryRun) {
-      await notifierService.notifyLoadedUser(
-        recipient.user,
-        'nearby_digest',
-        { path: '/browse', count: newProfileIds.length },
-        { dedupSuffix: runDate }
-      )
-      await prisma.nearbySignupNotification.create({
-        data: { profileId: recipient.id, newCount: newProfileIds.length, newProfileIds },
-      })
-    }
-    await onRecipient?.(recipient.id, newProfileIds.length)
+  for (const [i, recipient] of recipients.entries()) {
+    if (await digestFor(recipient, runDate, dryRun, onRecipient)) qualified++
+    await onProgress?.(i + 1, recipients.length)
   }
 
   return qualified
+}
+
+/** @returns whether the recipient qualified */
+async function digestFor(
+  recipient: Recipient,
+  runDate: string,
+  dryRun: boolean,
+  onRecipient: NearbyDigestRun['onRecipient']
+): Promise<boolean> {
+  const newProfileIds = await newProfilesNear(recipient)
+  if (newProfileIds.length < MIN_NEW_PROFILES) return false
+
+  if (!dryRun) {
+    await notifierService.notifyLoadedUser(
+      recipient.user,
+      'nearby_digest',
+      { path: '/browse', count: newProfileIds.length },
+      { dedupSuffix: runDate }
+    )
+    await prisma.nearbySignupNotification.create({
+      data: { profileId: recipient.id, newCount: newProfileIds.length, newProfileIds },
+    })
+  }
+  await onRecipient?.(recipient.id, newProfileIds.length)
+  return true
 }
