@@ -70,6 +70,7 @@ const DbMessageInConversationSchema = MessageSchema.pick({
   content: true,
   messageType: true,
   createdAt: true,
+  editedAt: true,
 }).extend({
   sender: ProfileSummarySchema,
   attachment: DbMessageAttachmentDTOSchema.nullable().optional(),
@@ -85,6 +86,7 @@ const MessageInConversationSchema = MessageSchema.pick({
   content: true,
   messageType: true,
   createdAt: true,
+  editedAt: true,
 }).extend({
   sender: MessageProfileRefSchema,
   attachment: MessageAttachmentDTOSchema.nullable().optional(),
@@ -197,6 +199,12 @@ export const SendMessagePayloadSchema = z
   })
 
 export type SendMessagePayload = z.infer<typeof SendMessagePayloadSchema>
+
+export const EditMessagePayloadSchema = z.object({
+  content: z.string().trim().min(1),
+})
+
+export type EditMessagePayload = z.infer<typeof EditMessagePayloadSchema>
 
 // Schema for voice message payload
 export const SendVoiceMessagePayloadSchema = z.object({

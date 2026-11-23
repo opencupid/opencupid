@@ -155,4 +155,28 @@ describe('MessageList', () => {
       expect(wrapper.find('.modal-stub').exists()).toBe(false)
     })
   })
+
+  it('offers editing only on the message it is told is editable, and relays the edit', async () => {
+    const BubbleStub = {
+      name: 'MessageBubble',
+      props: ['message', 'editable'],
+      emits: ['edit'],
+      template: '<div class="bubble-stub" />',
+    }
+    const wrapper = mount(MessageList, {
+      props: {
+        messages: [makeMessage({ id: 'a' }), makeMessage({ id: 'b', isMine: true })],
+        hasMore: false,
+        isLoadingMore: false,
+        editableMessageId: 'b',
+      },
+      global: { stubs: { MessageBubble: BubbleStub }, mocks: { $t: (k: string) => k } },
+    })
+
+    const bubbles = wrapper.findAllComponents(BubbleStub)
+    expect(bubbles.map((b) => b.props('editable'))).toEqual([false, true])
+
+    await bubbles[1]!.vm.$emit('edit')
+    expect(wrapper.emitted('edit')).toHaveLength(1)
+  })
 })

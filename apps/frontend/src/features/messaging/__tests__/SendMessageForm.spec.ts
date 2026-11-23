@@ -1,7 +1,7 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { ref } from 'vue'
+import { defineComponent, ref } from 'vue'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 
 vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({
@@ -13,10 +13,16 @@ vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({
 vi.mock('@/assets/icons/interface/call.svg', () => ({
   default: { template: '<span data-testid="icon-call" />' },
 }))
+vi.mock('@/assets/icons/interface/cross.svg', () => ({
+  default: { template: '<span />' },
+}))
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
 
 const toastError = vi.fn()
-vi.mock('vue-toastification', () => ({ useToast: () => ({ error: toastError }) }))
+const toastInfo = vi.fn()
+vi.mock('vue-toastification', () => ({
+  useToast: () => ({ error: toastError, info: toastInfo }),
+}))
 
 const apiPost = vi.fn()
 vi.mock('@/lib/api', () => ({
@@ -465,5 +471,169 @@ describe('SendMessageForm', () => {
     const wrapper = mountFormWithLanguages(['de', 'es'], ['en', 'fr'])
     const languageList = wrapper.findComponent({ name: 'LanguageList' })
     expect(languageList.props('languages')).toEqual([])
+  })
+
+  describe('editing the last message', () => {
+    // v-model capable textarea exposing `element` like BFormTextarea does.
+    const EditTextareaStub = defineComponent({
+      name: 'BFormTextarea',
+      props: ['modelValue'],
+      emits: ['update:modelValue'],
+      setup(_, { expose }) {
+        const element = ref<HTMLTextAreaElement>()
+        expose({ element, focus: () => element.value?.focus() })
+        return { element }
+      },
+      template:
+        '<textarea ref="element" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />',
+    })
+
+    const ownMessage = {
+      id: 'msg-1',
+      conversationId: 'conv-1',
+      senderId: 'me',
+      content: 'helo',
+      messageType: 'text/plain',
+      createdAt: new Date(),
+      editedAt: null,
+      sender: { id: 'me', publicName: 'Me', profileImages: [] },
+      isMine: true,
+      attachment: null,
+      images: [],
+    }
+
+    function mountEditForm(conversationId = 'conv-1') {
+      const store = useMessageStore()
+      store.activeConversation = { conversationId: 'conv-1' } as any
+      store.messages = [{ ...ownMessage }]
+      const wrapper = mount(SendMessageForm, {
+        props: { recipientProfile: mockRecipient, conversationId },
+        global: {
+          stubs: {
+            BFormTextarea: EditTextareaStub,
+            BButton: true,
+            BModal: true,
+            TagList: true,
+            LanguageList: true,
+            VoiceRecorder: VoiceRecorderStub,
+            VoiceMessage: true,
+            SendModeSelector: true,
+            ImageUpload: ImageUploadStub,
+          },
+          mocks: { $t: (key: string) => key },
+        },
+      })
+      const sendMessage = vi.spyOn(store, 'sendMessage')
+      const editMessage = vi.spyOn(store, 'editMessage')
+      return { wrapper, store, sendMessage, editMessage }
+    }
+
+    const textareaOf = (wrapper: ReturnType<typeof mount>) =>
+      wrapper.find('textarea').element as HTMLTextAreaElement
+
+    async function press(wrapper: ReturnType<typeof mount>, key: string) {
+      await wrapper.find('textarea').trigger('keydown', { key })
+      await flushPromises()
+    }
+
+    beforeEach(() => {
+      toastInfo.mockReset()
+    })
+
+    it('ArrowUp in an empty composer loads the last own message for editing', async () => {
+      const { wrapper } = mountEditForm()
+
+      await press(wrapper, 'ArrowUp')
+
+      expect(textareaOf(wrapper).value).toBe('helo')
+      expect(wrapper.find('[data-testid="edit-banner"]').exists()).toBe(true)
+      expect(wrapper.findComponent(ImageUploadStub).exists()).toBe(false)
+    })
+
+    it('ArrowUp does nothing while a draft is being typed', async () => {
+      const { wrapper, store } = mountEditForm()
+      await wrapper.find('textarea').setValue('draft')
+
+      await press(wrapper, 'ArrowUp')
+
+      expect(store.editingMessageId).toBeNull()
+      expect(textareaOf(wrapper).value).toBe('draft')
+    })
+
+    it('ArrowUp does nothing when the form is not for the open conversation', async () => {
+      const { wrapper, store } = mountEditForm('conv-other')
+
+      await press(wrapper, 'ArrowUp')
+
+      expect(store.editingMessageId).toBeNull()
+    })
+
+    it('sending in edit mode saves the edit instead of sending a new message', async () => {
+      useLocalStore().setSendMode('enter')
+      const { wrapper, sendMessage, editMessage } = mountEditForm()
+      editMessage.mockResolvedValue({ success: true, data: { ...ownMessage, content: 'hello' } })
+
+      await press(wrapper, 'ArrowUp')
+      await wrapper.find('textarea').setValue('hello')
+      await press(wrapper, 'Enter')
+
+      expect(editMessage).toHaveBeenCalledWith('msg-1', 'hello')
+      expect(sendMessage).not.toHaveBeenCalled()
+      expect(textareaOf(wrapper).value).toBe('')
+    })
+
+    it('leaves edit mode without a request when the text is unchanged', async () => {
+      useLocalStore().setSendMode('enter')
+      const { wrapper, store, editMessage } = mountEditForm()
+
+      await press(wrapper, 'ArrowUp')
+      await press(wrapper, 'Enter')
+
+      expect(editMessage).not.toHaveBeenCalled()
+      expect(store.editingMessageId).toBeNull()
+    })
+
+    it('Escape cancels the edit and brings the draft back', async () => {
+      const { wrapper, store } = mountEditForm()
+      await wrapper.find('textarea').setValue('draft')
+
+      // The pencil button starts editing even with a draft in the composer.
+      store.startEditing()
+      await flushPromises()
+      expect(textareaOf(wrapper).value).toBe('helo')
+
+      await press(wrapper, 'Escape')
+
+      expect(store.editingMessageId).toBeNull()
+      expect(textareaOf(wrapper).value).toBe('draft')
+      expect(wrapper.find('[data-testid="edit-banner"]').exists()).toBe(false)
+    })
+
+    it('keeps the typed text and tells the user when a reply ends the edit', async () => {
+      const { wrapper, store } = mountEditForm()
+      await press(wrapper, 'ArrowUp')
+      await wrapper.find('textarea').setValue('hello')
+
+      store.appendMessageIfNew({ ...ownMessage, id: 'reply', isMine: false })
+      await flushPromises()
+
+      expect(toastInfo).toHaveBeenCalledWith('messaging.edit_no_longer_possible')
+      expect(textareaOf(wrapper).value).toBe('hello')
+      expect(wrapper.find('[data-testid="edit-banner"]').exists()).toBe(false)
+    })
+
+    it('drops out of edit mode when the server refuses the edit', async () => {
+      useLocalStore().setSendMode('enter')
+      const { wrapper, store, editMessage } = mountEditForm()
+      editMessage.mockResolvedValue({ success: false, message: 'conflict', status: 409 })
+
+      await press(wrapper, 'ArrowUp')
+      await wrapper.find('textarea').setValue('hello')
+      await press(wrapper, 'Enter')
+
+      expect(store.editingMessageId).toBeNull()
+      expect(toastInfo).toHaveBeenCalledWith('messaging.edit_no_longer_possible')
+      expect(textareaOf(wrapper).value).toBe('hello')
+    })
   })
 })

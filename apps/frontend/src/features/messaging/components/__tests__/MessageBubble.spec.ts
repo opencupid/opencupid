@@ -30,6 +30,10 @@ vi.mock('@/features/images/components/ImageTag.vue', () => ({
   },
 }))
 
+vi.mock('@/assets/icons/interface/pencil-2.svg', () => ({
+  default: { template: '<span />' },
+}))
+
 import MessageBubble from '../MessageBubble.vue'
 import type { MessageDTO } from '@zod/messaging/messaging.dto'
 
@@ -40,6 +44,7 @@ const baseMessage = {
   content: 'Hello!',
   isMine: false,
   createdAt: new Date('2026-01-15T12:00:00.000Z'),
+  editedAt: null,
   messageType: 'text',
   attachment: null,
   images: [],
@@ -177,5 +182,34 @@ describe('MessageBubble', () => {
     })
     expect(wrapper.find('.voice-stub').exists()).toBe(true)
     expect(wrapper.find('.message-text').exists()).toBe(false)
+  })
+
+  describe('editing', () => {
+    const own = { ...baseMessage, isMine: true }
+
+    it('shows no edit button unless editable', () => {
+      const wrapper = mount(MessageBubble, { props: { message: own } })
+      expect(wrapper.find('[data-testid="message-edit-button"]').exists()).toBe(false)
+    })
+
+    it('emits edit when the edit button is clicked', async () => {
+      const wrapper = mount(MessageBubble, { props: { message: own, editable: true } })
+      await wrapper.find('[data-testid="message-edit-button"]').trigger('click')
+      expect(wrapper.emitted('edit')).toHaveLength(1)
+    })
+
+    it('marks edited messages', () => {
+      const wrapper = mount(MessageBubble, {
+        props: { message: { ...baseMessage, editedAt: new Date() } },
+      })
+      expect(wrapper.find('[data-testid="message-edited"]').text()).toContain('messaging.edited')
+    })
+
+    it('does not mark messages that were never edited', () => {
+      const wrapper = mount(MessageBubble, {
+        props: { message: { ...baseMessage, editedAt: null } },
+      })
+      expect(wrapper.find('[data-testid="message-edited"]').exists()).toBe(false)
+    })
   })
 })

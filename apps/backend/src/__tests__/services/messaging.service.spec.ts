@@ -814,3 +814,93 @@ describe('MessageService.sendWelcomeMessage', () => {
     expect(mockPrisma.conversation.create).not.toHaveBeenCalled()
   })
 })
+
+describe('MessageService.editMessage', () => {
+  const conversation = { status: 'ACCEPTED', profileAId: 'p1', profileBId: 'p2' }
+  const editableTarget = {
+    conversationId: 'c1',
+    messageType: 'text/plain',
+    attachment: null,
+    _count: { images: 0 },
+    conversation,
+  }
+  let tx: any
+
+  beforeEach(() => {
+    tx = mockPrisma
+    tx.$queryRaw = vi.fn().mockResolvedValue([])
+  })
+
+  it('updates content and editedAt of the latest own text message', async () => {
+    tx.message.findFirst.mockResolvedValueOnce(editableTarget).mockResolvedValueOnce({ id: 'm1' })
+    tx.message.update.mockResolvedValue({ id: 'm1', content: 'fixed' })
+
+    const res = await service.editMessage(tx, 'm1', 'p1', '  fixed  ')
+
+    expect(res).toEqual({ message: { id: 'm1', content: 'fixed' }, conversation })
+    const updateArgs = tx.message.update.mock.calls[0][0]
+    expect(updateArgs.where).toEqual({ id: 'm1' })
+    expect(updateArgs.data.content).toBe('fixed')
+    expect(updateArgs.data.editedAt).toBeInstanceOf(Date)
+    // Edits are not activity: the conversation's updatedAt must stay put.
+    expect(tx.conversation.update).not.toHaveBeenCalled()
+  })
+
+  it('only looks up messages sent by the editor in a conversation visible to them', async () => {
+    tx.message.findFirst.mockResolvedValueOnce(null)
+
+    await expect(service.editMessage(tx, 'm1', 'p1', 'x')).rejects.toMatchObject({
+      code: 'MESSAGE_NOT_FOUND',
+    })
+    const where = tx.message.findFirst.mock.calls[0][0].where
+    expect(where.id).toBe('m1')
+    expect(where.senderId).toBe('p1')
+    expect(where.conversation.OR).toBeDefined()
+    expect(tx.message.update).not.toHaveBeenCalled()
+  })
+
+  it('locks the conversation before checking for later messages', async () => {
+    tx.message.findFirst.mockResolvedValueOnce(editableTarget).mockResolvedValueOnce({ id: 'm1' })
+    tx.message.update.mockResolvedValue({ id: 'm1' })
+
+    await service.editMessage(tx, 'm1', 'p1', 'x')
+
+    expect(tx.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(tx.$queryRaw.mock.calls[0][0].join('?')).toMatch(/FOR UPDATE/)
+    expect(tx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      tx.message.findFirst.mock.invocationCallOrder[1]
+    )
+  })
+
+  it('rejects when a later message exists in the conversation', async () => {
+    tx.message.findFirst
+      .mockResolvedValueOnce(editableTarget)
+      .mockResolvedValueOnce({ id: 'reply' })
+
+    await expect(service.editMessage(tx, 'm1', 'p1', 'x')).rejects.toMatchObject({
+      code: 'MESSAGE_NOT_EDITABLE',
+    })
+    expect(tx.message.update).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['voice', { messageType: 'audio/voice', attachment: { id: 'a1' } }],
+    ['image', { _count: { images: 1 } }],
+  ])('rejects %s messages', async (_label, override) => {
+    tx.message.findFirst.mockResolvedValueOnce({ ...editableTarget, ...override })
+
+    await expect(service.editMessage(tx, 'm1', 'p1', 'x')).rejects.toMatchObject({
+      code: 'MESSAGE_NOT_EDITABLE',
+    })
+    expect(tx.message.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects whitespace-only content', async () => {
+    tx.message.findFirst.mockResolvedValueOnce(editableTarget)
+
+    await expect(service.editMessage(tx, 'm1', 'p1', '   ')).rejects.toMatchObject({
+      code: 'EMPTY_MESSAGE',
+    })
+    expect(tx.message.update).not.toHaveBeenCalled()
+  })
+})

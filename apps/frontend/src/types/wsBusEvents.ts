@@ -3,6 +3,7 @@ import type { InteractionEdge } from '@zod/interaction/interaction.dto'
 
 export type WSEvents = {
   'ws:new_message': MessageDTO
+  'ws:message_updated': MessageDTO
   'ws:new_like': void
   'ws:update_like': void
   'ws:new_match': InteractionEdge

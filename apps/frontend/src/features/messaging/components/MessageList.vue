@@ -10,10 +10,12 @@ const props = defineProps<{
   messages: MessageDTO[]
   hasMore: boolean
   isLoadingMore: boolean
+  editableMessageId?: string | null
 }>()
 
 const emit = defineEmits<{
   (e: 'load-older'): void
+  (e: 'edit'): void
 }>()
 
 const fullscreenImage = shallowRef<PublicImage | null>(null)
@@ -103,8 +105,10 @@ const handleScroll = () => {
       v-for="msg in messages"
       :key="msg.id"
       :message="msg"
+      :editable="msg.id === editableMessageId"
       class="mb-2 me-2 animate__animated animate__zoomIn"
       @image-click="openFullscreen"
+      @edit="emit('edit')"
     />
 
     <FullscreenImageModal v-model="showFullscreen">

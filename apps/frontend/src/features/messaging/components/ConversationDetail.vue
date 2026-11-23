@@ -56,7 +56,9 @@ async function handleBlockProfile() {
         :messages="messageStore.messages"
         :has-more="messageStore.hasMoreMessages"
         :is-loading-more="messageStore.isLoadingMoreMessages"
+        :editable-message-id="messageStore.editableMessage?.id"
         @load-older="messageStore.fetchOlderMessages"
+        @edit="messageStore.startEditing"
       />
     </div>
 

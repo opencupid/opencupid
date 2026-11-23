@@ -5,6 +5,7 @@ import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.d
 const mockApi = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
+  patch: vi.fn(),
 }))
 
 const mockBus = vi.hoisted(() => ({
@@ -101,6 +102,7 @@ describe('messageStore', () => {
         content: 'Reply from partner',
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
+        editedAt: null,
         isMine: false,
         images: [],
         sender: {
@@ -181,6 +183,7 @@ describe('messageStore', () => {
         content: 'New message',
         messageType: 'text/html',
         createdAt: new Date('2024-01-03'),
+        editedAt: null,
         isMine: false,
         images: [],
         sender: {
@@ -235,6 +238,7 @@ describe('messageStore', () => {
         content: 'Hello',
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
+        editedAt: null,
         isMine: false,
         images: [],
         sender: {
@@ -287,6 +291,7 @@ describe('messageStore', () => {
         content: 'Hello',
         messageType: 'text/html',
         createdAt: new Date('2024-01-02'),
+        editedAt: null,
         isMine: false,
         images: [],
         sender: {
@@ -558,6 +563,7 @@ describe('teardown', () => {
 
     // Bus listeners should be removed
     expect(mockBus.off).toHaveBeenCalledWith('ws:new_message', store.handleIncomingMessage)
+    expect(mockBus.off).toHaveBeenCalledWith('ws:message_updated', store.handleMessageUpdated)
     expect(mockBus.off).toHaveBeenCalledWith('profile:blocked', store.handleProfileBlocked)
   })
 })
@@ -967,5 +973,164 @@ describe('unread flag', () => {
     } as MessageDTO)
 
     expect(store.hasUnreadMessages).toBe(false)
+  })
+})
+
+describe('message editing', () => {
+  const createdAt = new Date('2024-01-02T10:00:00Z')
+
+  function makeMessage(overrides: Partial<MessageDTO> = {}): MessageDTO {
+    return {
+      id: 'msg-1',
+      conversationId: 'convo-1',
+      senderId: 'profile-1',
+      content: 'helo',
+      messageType: 'text/plain',
+      createdAt,
+      editedAt: null,
+      sender: { id: 'profile-1', publicName: 'Me', profileImages: [] },
+      isMine: true,
+      attachment: null,
+      images: [],
+      ...overrides,
+    }
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  describe('editableMessage', () => {
+    it('is the last message when it is my own text message', () => {
+      const store = useMessageStore()
+      store.messages = [makeMessage({ id: 'older' }), makeMessage()]
+      expect(store.editableMessage?.id).toBe('msg-1')
+    })
+
+    it.each([
+      ['the partner sent it', { isMine: false }],
+      ['it is a voice message', { messageType: 'audio/voice' }],
+      ['it carries images', { images: [{} as any] }],
+    ])('is null when %s', (_label, overrides) => {
+      const store = useMessageStore()
+      store.messages = [makeMessage(overrides)]
+      expect(store.editableMessage).toBeNull()
+    })
+
+    it('is null once someone replied after my message', () => {
+      const store = useMessageStore()
+      store.messages = [makeMessage(), makeMessage({ id: 'reply', isMine: false })]
+      expect(store.editableMessage).toBeNull()
+    })
+  })
+
+  describe('editingMessage', () => {
+    it('is set by startEditing and cleared by cancelEditing', () => {
+      const store = useMessageStore()
+      store.messages = [makeMessage()]
+
+      store.startEditing()
+      expect(store.editingMessage?.id).toBe('msg-1')
+
+      store.cancelEditing()
+      expect(store.editingMessage).toBeNull()
+    })
+
+    it('ends when a reply arrives in the active conversation', async () => {
+      const store = useMessageStore()
+      store.activeConversation = makeConvo('convo-1', 'Partner')
+      store.conversations = [store.activeConversation]
+      store.messages = [makeMessage()]
+      store.startEditing()
+
+      await store.handleIncomingMessage(makeMessage({ id: 'reply', isMine: false }))
+
+      expect(store.editingMessage).toBeNull()
+    })
+
+    it('is cleared when switching conversations', () => {
+      const store = useMessageStore()
+      store.messages = [makeMessage()]
+      store.startEditing()
+
+      store.resetActiveConversation()
+
+      expect(store.editingMessageId).toBeNull()
+    })
+  })
+
+  describe('editMessage', () => {
+    it('patches the message, replaces it in place and leaves edit mode', async () => {
+      const store = useMessageStore()
+      store.messages = [makeMessage()]
+      store.startEditing()
+      const edited = makeMessage({ content: 'hello', editedAt: new Date() })
+      mockApi.patch.mockResolvedValue({ data: { success: true, message: edited } })
+
+      const res = await store.editMessage('msg-1', 'hello')
+
+      expect(mockApi.patch).toHaveBeenCalledWith('/messages/message/msg-1', { content: 'hello' })
+      expect(res.success).toBe(true)
+      expect(store.messages).toEqual([edited])
+      expect(store.editingMessageId).toBeNull()
+    })
+
+    it('returns the error status and stays in edit mode when the request fails', async () => {
+      const store = useMessageStore()
+      store.messages = [makeMessage()]
+      store.startEditing()
+      mockApi.patch.mockRejectedValue({
+        isAxiosError: true,
+        response: { status: 409, data: { message: 'Only the latest message can be edited' } },
+      })
+
+      const res = await store.editMessage('msg-1', 'hello')
+
+      expect(res.success).toBe(false)
+      expect(!res.success && res.status).toBe(409)
+      expect(store.messages[0]!.content).toBe('helo')
+      expect(store.editingMessageId).toBe('msg-1')
+    })
+  })
+
+  describe('handleMessageUpdated (ws:message_updated)', () => {
+    it('is registered on initialize', async () => {
+      const store = useMessageStore()
+      store.initialized = true
+      await store.initialize()
+      expect(mockBus.on).toHaveBeenCalledWith('ws:message_updated', store.handleMessageUpdated)
+    })
+
+    it('replaces the message, keeping its isMine, and updates the preview without bumping', () => {
+      const store = useMessageStore()
+      const other = makeConvo('convo-0', 'Other')
+      const convo = {
+        ...makeConvo('convo-1', 'Partner'),
+        lastMessage: { content: 'helo', createdAt, messageType: 'text/plain', isMine: false },
+      }
+      store.conversations = [other, convo]
+      store.messages = [makeMessage({ isMine: false })]
+
+      // Broadcast payloads carry no isMine.
+      const { isMine: _omit, ...broadcast } = makeMessage({
+        content: 'hello',
+        createdAt: createdAt.toISOString() as any,
+      })
+      store.handleMessageUpdated(broadcast as MessageDTO)
+
+      expect(store.messages[0]).toMatchObject({ content: 'hello', isMine: false })
+      expect(store.conversations.map((c) => c.conversationId)).toEqual(['convo-0', 'convo-1'])
+      expect(store.conversations[1]!.lastMessage?.content).toBe('hello')
+    })
+
+    it('ignores updates for messages that are not loaded', () => {
+      const store = useMessageStore()
+      store.messages = [makeMessage()]
+
+      store.handleMessageUpdated(makeMessage({ id: 'elsewhere', content: 'x' }))
+
+      expect(store.messages).toEqual([makeMessage()])
+    })
   })
 })
