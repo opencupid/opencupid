@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import { loginRedirect, loginRoute } from '../loginRedirect'
+import { loginRedirect, loginRoute, utmQuery } from '../loginRedirect'
 
 const component = { template: '<div />' }
 const router = createRouter({
@@ -34,6 +34,28 @@ describe('loginRoute', () => {
 
   it('does not remember unauthenticated routes', () => {
     expect(loginRoute(router.resolve('/auth'))).toEqual({ name: 'Login', query: {} })
+  })
+
+  const utm = 'utm_source=notification&utm_medium=email&utm_campaign=nearby_digest'
+  const utmKeys = { utm_source: 'notification', utm_medium: 'email', utm_campaign: 'nearby_digest' }
+
+  it('moves UTM tags of the landing page onto Login', () => {
+    expect(loginRoute(router.resolve(`/browse?${utm}`))).toEqual({ name: 'Login', query: utmKeys })
+  })
+
+  it('moves UTM tags of a deep link onto Login and out of the redirect', () => {
+    expect(loginRoute(router.resolve(`/inbox/abc?tab=1&${utm}#m2`))).toEqual({
+      name: 'Login',
+      query: { ...utmKeys, redirect: '/inbox/abc?tab=1#m2' },
+    })
+  })
+})
+
+describe('utmQuery', () => {
+  it('keeps only utm_* keys', () => {
+    expect(utmQuery({ utm_campaign: 'new_like', tab: '1', redirect: '/inbox' })).toEqual({
+      utm_campaign: 'new_like',
+    })
   })
 })
 

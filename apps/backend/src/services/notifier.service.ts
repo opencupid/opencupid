@@ -6,6 +6,7 @@ import { tFor } from '@/lib/i18n'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
 import { hashEmail, signUnsubscribeToken, type UnsubscribeScope } from './email/unsubscribeToken'
+import { withUtm } from './email/utm'
 import { cleanMessageForNotification } from '@/utils/notificationText'
 
 type NotificationType =
@@ -32,6 +33,10 @@ const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
 // Bulk types go to the rate-limited emails-bulk queue; everything else is
 // transactional and sent without delay.
 const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder', 'nearby_digest'])
+
+// Call-to-action links of every other type carry UTM tags (campaign = type).
+// The login link is auth, not engagement, so it is left untagged.
+const UNTAGGED_TYPES: ReadonlySet<NotificationType> = new Set(['login_link'])
 
 type NarrowScope = Exclude<UnsubscribeScope, 'all'>
 
@@ -210,7 +215,7 @@ export class NotifierService {
         publicName: user.profile?.publicName || '',
         contentBody: t(`emails.${emailType}.contentBody`, contentVars),
         callToActionLabel: t(`emails.${emailType}.callToActionLabel`),
-        callToActionUrl: `${brand.frontendUrl}${args.path}`,
+        callToActionUrl: this.callToActionUrl(brand, emailType, args.path),
         fallbackHint: t(`emails.fallback_hint`),
         footer: t(`emails.${emailType}.footer`, { defaultValue: '' }),
         unsubscribeUrl: unsubscribe?.pageUrl,
@@ -239,6 +244,11 @@ export class NotifierService {
           ? t('emails.new_message.voice_message')
           : cleanMessageForNotification(preview.content, 100),
     }
+  }
+
+  private callToActionUrl(brand: Brand, emailType: NotificationType, path: string): string {
+    const url = `${brand.frontendUrl}${path}`
+    return UNTAGGED_TYPES.has(emailType) ? url : withUtm(url, emailType)
   }
 
   private buildUnsubscribe(

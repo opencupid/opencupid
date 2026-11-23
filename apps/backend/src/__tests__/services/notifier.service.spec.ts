@@ -147,7 +147,8 @@ describe('NotifierService', () => {
         publicName: 'Alice',
         contentBody: 'emails.new_like.contentBody-translated',
         callToActionLabel: 'emails.new_like.callToActionLabel-translated',
-        callToActionUrl: 'https://frontend.test/browse',
+        callToActionUrl:
+          'https://frontend.test/browse?utm_source=notification&utm_medium=email&utm_campaign=new_like',
         fallbackHint: 'emails.fallback_hint-translated',
         footer: 'emails.new_like.footer-translated',
         unsubscribeLabel: 'emails.unsubscribe_link-translated',
@@ -255,7 +256,8 @@ describe('NotifierService', () => {
           siteName: 'OpenCupid',
           publicName: 'Alice',
           contentBody: 'emails.welcome.contentBody-translated',
-          callToActionUrl: 'https://frontend.test/me',
+          callToActionUrl:
+            'https://frontend.test/me?utm_source=notification&utm_medium=email&utm_campaign=welcome',
         }),
       }),
       'welcome-user-1',
@@ -284,7 +286,8 @@ describe('NotifierService', () => {
         templateProps: expect.objectContaining({
           publicName: '',
           callToActionLabel: 'emails.welcome.callToActionLabel-translated',
-          callToActionUrl: 'https://frontend.test/me',
+          callToActionUrl:
+            'https://frontend.test/me?utm_source=notification&utm_medium=email&utm_campaign=welcome',
         }),
       }),
       'welcome-user-2',
@@ -350,7 +353,9 @@ describe('NotifierService', () => {
     expect(mockTFor).toHaveBeenCalledWith(otherBrand, 'en')
     expect(payload.brand).toEqual(otherBrand)
     expect(payload.templateProps.siteName).toBe('OtherSite')
-    expect(payload.templateProps.callToActionUrl).toBe('https://other.test/browse')
+    expect(payload.templateProps.callToActionUrl).toBe(
+      'https://other.test/browse?utm_source=notification&utm_medium=email&utm_campaign=new_like'
+    )
     expect(payload.templateProps.unsubscribeUrl).toMatch(/^https:\/\/other\.test\/unsubscribe\//)
     expect(payload.headers['List-Unsubscribe']).toMatch(
       /^<https:\/\/other\.test\/api\/unsubscribe\//
@@ -464,6 +469,47 @@ describe('NotifierService', () => {
     )
     expect(mockPrisma.nearbySignupOptOut.count).not.toHaveBeenCalled()
     expect(mockDispatchEmail).toHaveBeenCalledOnce()
+  })
+
+  describe('call-to-action UTM tags', () => {
+    const user = {
+      id: 'user-utm',
+      email: 'utm@example.com',
+      originDomain: 'frontend.test',
+      language: 'en',
+      emailNotificationsOptIn: true,
+      profile: null,
+    } as any
+
+    async function payloadFor(type: any, args: any) {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(user, type, args)
+      return mockDispatchEmail.mock.calls[0][0]
+    }
+
+    it('tags the link with the email type as campaign', async () => {
+      const payload = await payloadFor('nearby_digest', { path: '/browse', count: 3 })
+      const url = new URL(payload.templateProps.callToActionUrl)
+      expect(url.pathname).toBe('/browse')
+      expect(Object.fromEntries(url.searchParams)).toEqual({
+        utm_source: 'notification',
+        utm_medium: 'email',
+        utm_campaign: 'nearby_digest',
+      })
+    })
+
+    it('leaves the login link untagged', async () => {
+      const payload = await payloadFor('login_link', { path: '/magic-link?token=abc' })
+      expect(payload.templateProps.callToActionUrl).toBe(
+        'https://frontend.test/magic-link?token=abc'
+      )
+    })
+
+    it('does not tag unsubscribe links', async () => {
+      const payload = await payloadFor('new_like', { path: '/browse' })
+      expect(payload.templateProps.unsubscribeUrl).not.toContain('utm_')
+      expect(payload.headers['List-Unsubscribe']).not.toContain('utm_')
+    })
   })
 
   it('signs unsubscribe links for other types with the all scope', async () => {
