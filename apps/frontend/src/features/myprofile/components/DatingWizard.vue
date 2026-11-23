@@ -71,9 +71,6 @@ const handleFinish = async () => {
         @cancel="emit('close')"
       >
         <legend>{{ $t('onboarding.wizard.all_set') }}</legend>
-        <p class="text-muted">
-          {{ $t('onboarding.wizard.appear_message') }}
-        </p>
         <MatchPreview />
       </DatingWizardStepper>
     </section>

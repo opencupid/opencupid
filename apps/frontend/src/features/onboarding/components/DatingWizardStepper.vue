@@ -42,7 +42,7 @@ onMounted(async () => {
 
     <fieldset
       v-if="isCurrent('confirm')"
-      class="position-relative py-5 px-3"
+      class="position-relative pt-5 px-3"
     >
       <slot>
         <legend>{{ t('onboarding.wizard.all_set') }}</legend>
