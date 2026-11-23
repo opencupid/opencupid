@@ -3,7 +3,7 @@ import { nextTick, ref } from 'vue'
 
 import { type PublicProfile } from '@zod/profile/profile.dto'
 
-import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import ProfileMarker from './ProfileMarker.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 
 const showModal = defineModel<boolean>()
@@ -52,9 +52,10 @@ const handleModalShown = () => {
           class="d-flex align-items-center text-decoration-none text-reset"
           @click="showModal = false"
         >
-          <ProfileThumbnail
+          <ProfileMarker
             :profile="profile"
-            class="me-2"
+            :highlighted="profile.isDatingActive"
+            class="me-2 flex-shrink-0"
           />
           {{
             $t('messaging.send_message_to_user', {
