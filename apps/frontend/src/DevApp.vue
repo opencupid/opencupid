@@ -10,6 +10,7 @@ import EmailTemplate from '../../backend/src/services/email/EmailTemplate.vue'
       callToActionUrl="https://example.org/reset-password?token=abc123"
       callToActionLabel="Reset Password"
       fallbackHint="If the button doesn’t work, copy and paste this URL:"
+      fallbackUrl="https://example.org/reset-password?token=abc123"
       footer="If you didn’t request this, you can ignore this email."
     >
     </EmailTemplate>
