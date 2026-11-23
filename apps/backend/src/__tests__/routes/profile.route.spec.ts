@@ -81,6 +81,7 @@ beforeEach(async () => {
     getProfilePublicById: vi.fn(),
     getProfileByUserId: vi.fn(),
     updateCompleteProfile: vi.fn(),
+    updateProfileScalars: vi.fn(),
     getOptInSettingsByProfileId: vi.fn(),
     updateOptInSettingsByUserId: vi.fn(),
     updateScopes: vi.fn(),
@@ -275,6 +276,29 @@ describe('GET /blocked', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.profiles).toHaveLength(1)
+  })
+})
+
+describe('PATCH /me/dating-prefs', () => {
+  const body = { prefAgeMin: 30, prefAgeMax: 40, prefGender: ['female'], prefKids: [] }
+
+  it('updates prefs and evicts the cluster cache', async () => {
+    const handler = fastify.routes['PATCH /me/dating-prefs']
+    mockProfileService.updateProfileScalars.mockResolvedValue({ id: 'p1', ...body })
+
+    await handler(makeReq({ body }), reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.prefs).toMatchObject(body)
+    expect(mockClusterService.evict).toHaveBeenCalledWith('p1')
+  })
+
+  it('does not evict when the profile is missing', async () => {
+    const handler = fastify.routes['PATCH /me/dating-prefs']
+    mockProfileService.updateProfileScalars.mockResolvedValue(null)
+
+    await handler(makeReq({ body }), reply as any)
+    expect(reply.statusCode).toBe(404)
+    expect(mockClusterService.evict).not.toHaveBeenCalled()
   })
 })
 

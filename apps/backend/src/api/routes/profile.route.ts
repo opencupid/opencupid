@@ -167,6 +167,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const updated = await profileService.updateProfileScalars(req.user.userId, data)
       if (!updated) return sendError(reply, 404, 'Profile not found')
+      // Match highlights on the viewer's cached map index depend on these prefs.
+      clusterService.evict(updated.id)
       const prefs = mapProfileToDatingPreferencesDTO(updated)
       const response: UpdateDatingPreferencesResponse = { success: true, prefs }
       return reply.code(200).send(response)
