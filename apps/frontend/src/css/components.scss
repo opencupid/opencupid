@@ -284,9 +284,18 @@ main {
   }
 }
 
+// The label's hit area covers the whole row, padding included (Bootstrap's
+// .list-group-item is position: relative), so a tap anywhere on the row
+// toggles the input, as the pointer cursor promises.
 .list-group-item.clickable {
   .form-check-label {
     cursor: pointer;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+    }
   }
 }
 
