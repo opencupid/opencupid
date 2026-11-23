@@ -556,7 +556,11 @@
     "done_body": "You won't receive further notification emails from us.",
     "done_title": "You've been unsubscribed",
     "error_body": "This unsubscribe link is invalid or has expired. Please log in to manage your email preferences.",
-    "error_title": "Link invalid or expired"
+    "error_title": "Link invalid or expired",
+    "nearby_already_body": "You no longer receive emails about new people near you.",
+    "nearby_confirm_body": "You won't receive emails about new people joining near you. Other notification emails are not affected.",
+    "nearby_confirm_title": "Stop emails about new people near you?",
+    "nearby_done_body": "You won't receive emails about new people joining near you. Other notification emails are not affected."
   },
   "userContent": {
     "actions": {

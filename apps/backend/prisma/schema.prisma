@@ -217,6 +217,8 @@ model Profile {
   trustFlags       ProfileTrustFlag[]
   eventAttendances EventAttendance[]
 
+  nearbySignupOptOut NearbySignupOptOut?
+
   @@index([lat, lon])
 }
 
@@ -562,4 +564,11 @@ model AccountDeletionFeedback {
   reason    AccountDeletionReason
   comment   String?
   createdAt DateTime              @default(now())
+}
+
+/// A row means the profile opted out of nearby-signups emails.
+model NearbySignupOptOut {
+  profileId String   @id
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }

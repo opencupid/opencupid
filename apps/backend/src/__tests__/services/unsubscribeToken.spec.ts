@@ -33,8 +33,28 @@ describe('unsubscribeToken', () => {
     expect(verifyUnsubscribeToken(token)).toEqual({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
+      scope: 'all',
       iat: NOW,
     })
+  })
+
+  it('round-trips a narrow scope', () => {
+    const token = signUnsubscribeToken({
+      userId: 'user-1',
+      emailHash: hashEmail('alice@example.com'),
+      scope: 'nearby_signups',
+    })
+    expect(verifyUnsubscribeToken(token)?.scope).toBe('nearby_signups')
+  })
+
+  it("signs an 'all' token without a scope claim", () => {
+    const token = signUnsubscribeToken({
+      userId: 'user-1',
+      emailHash: hashEmail('alice@example.com'),
+      scope: 'all',
+    })
+    const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
+    expect(claims).not.toHaveProperty('scope')
   })
 
   it('rejects tokens tampered in the payload', () => {
