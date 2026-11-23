@@ -1,12 +1,35 @@
 import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
+import { BFormFile } from 'bootstrap-vue-next'
 import UploadButton from '../components/UploadButton.vue'
 
 vi.mock('@/assets/icons/files/avatar-upload.svg', () => ({ default: { name: 'AvatarUploadIcon' } }))
 vi.mock('@/assets/icons/interface/camera.svg', () => ({ default: { name: 'IconCamera2' } }))
 
 describe('UploadButton', () => {
+  // The hidden file input must not grab focus on mount: in the message
+  // composer it stole focus from the textarea on page load and every time
+  // leaving message-edit mode remounted the attach button.
+  it('does not take focus when mounted', async () => {
+    const other = document.createElement('textarea')
+    document.body.appendChild(other)
+    other.focus()
+
+    const wrapper = mount(UploadButton, {
+      attachTo: document.body,
+      global: {
+        components: { BFormFile },
+        stubs: { AvatarUploadIcon: true, IconCamera2: true },
+      },
+    })
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(document.activeElement).toBe(other)
+    wrapper.unmount()
+    other.remove()
+  })
+
   it('emits file:change on input', async () => {
     const wrapper = mount(UploadButton, {
       global: {

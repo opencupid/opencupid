@@ -29,7 +29,6 @@ const idAttr = computed(() => 'image-upload-input' + (captureAttr.value ?? ''))
       :id="idAttr"
       accept="image/jpeg,image/png"
       ref="fileInput"
-      autofocus
       @change="$emit('file:change', $event)"
       :plain="true"
       class="file-upload-input"
