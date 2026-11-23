@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.97.0
+
+### Minor Changes
+
+- ede379e: Profiles page: keep the sort order in the URL (`?sort=`) so it survives a reload, and refresh the list every 10 seconds while the browser tab is visible (pausing when hidden, refreshing immediately when it becomes visible again)
+
 ## 0.96.0
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @opencupid/ingress
 
+## 0.97.0
+
+### Patch Changes
+
+- 943be6e: Update Traefik base image from v3.6 to v3.7 and drop aliased request headers (`aliasHeadersStrategy: delete`)
+
 ## 0.96.0
 
 ## 0.95.0
