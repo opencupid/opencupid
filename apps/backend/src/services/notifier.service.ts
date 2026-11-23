@@ -27,7 +27,16 @@ const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
   'onboarding_reminder',
 ])
 
+// Bulk types go to the rate-limited emails-bulk queue; everything else is
+// transactional and sent without delay.
+const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder'])
+
 type NotifiableUser = User & { profile?: { publicName: string } | null }
+
+interface NotifyOptions {
+  /** Appended to the dispatch key, e.g. a run date, so one user can get one email per run. */
+  dedupSuffix?: string
+}
 
 /**
  * `path` is the call-to-action target relative to the recipient's brand
@@ -75,6 +84,16 @@ export class NotifierService {
   private constructDispatchKey<T extends NotificationType>(
     emailType: T,
     args: NotificationParams[T],
+    user: NotifiableUser,
+    dedupSuffix?: string
+  ): string {
+    const key = this.baseDispatchKey(emailType, args, user)
+    return dedupSuffix ? `${key}-${dedupSuffix}` : key
+  }
+
+  private baseDispatchKey<T extends NotificationType>(
+    emailType: T,
+    args: NotificationParams[T],
     user: NotifiableUser
   ): string {
     switch (emailType) {
@@ -115,7 +134,7 @@ export class NotifierService {
       },
     })
     if (!profile?.user) return
-    await this.notifyResolvedUser(profile.user, type, args)
+    await this.notifyLoadedUser(profile.user, type, args)
   }
 
   /**
@@ -131,7 +150,7 @@ export class NotifierService {
       where: { id: userId },
     })
     if (!user) return
-    await this.notifyResolvedUser(user, emailType, args)
+    await this.notifyLoadedUser(user, emailType, args)
   }
 
   private createEmailPayload<T extends NotificationType>(
@@ -218,15 +237,24 @@ export class NotifierService {
     }
   }
 
-  private async notifyResolvedUser<T extends NotificationType>(
+  /**
+   * Notify a user row the caller already loaded, e.g. from a bulk query,
+   * so no per-user lookup is needed.
+   */
+  async notifyLoadedUser<T extends NotificationType>(
     user: NotifiableUser,
     emailType: T,
-    args: NotificationParams[T]
+    args: NotificationParams[T],
+    { dedupSuffix }: NotifyOptions = {}
   ): Promise<void> {
     if (SUPPRESSIBLE_TYPES.has(emailType) && user.emailNotificationsOptIn === false) return
 
     const emailPayload = this.createEmailPayload(emailType, args, user)
-    await this.disp.dispatchEmail(emailPayload, this.constructDispatchKey(emailType, args, user))
+    await this.disp.dispatchEmail(
+      emailPayload,
+      this.constructDispatchKey(emailType, args, user, dedupSuffix),
+      { bulk: BULK_TYPES.has(emailType) }
+    )
   }
 }
 

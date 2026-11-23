@@ -3,7 +3,7 @@ import { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import { createBullBoard } from '@bull-board/api'
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
 import { FastifyAdapter } from '@bull-board/fastify'
-import { emailQueue } from '../queues/emailQueue'
+import { bulkEmailQueue, emailQueue } from '../queues/emailQueue'
 import { activityQueue } from '../queues/activityQueue'
 import { onboardingReminderQueue } from '../queues/onboardingReminderQueue'
 import { profileTrustQueue } from '../queues/profileTrustQueue'
@@ -21,6 +21,7 @@ const bullBoardPlugin: FastifyPluginAsync = async (fastify: FastifyInstance) => 
   createBullBoard({
     queues: [
       new BullMQAdapter(emailQueue),
+      new BullMQAdapter(bulkEmailQueue),
       new BullMQAdapter(activityQueue),
       new BullMQAdapter(onboardingReminderQueue),
       new BullMQAdapter(profileTrustQueue),

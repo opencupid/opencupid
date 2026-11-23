@@ -186,7 +186,8 @@ describe('NotifierService', () => {
 
     expect(mockDispatchEmail).toHaveBeenCalledWith(
       expect.objectContaining({ to: 'recipient@example.com' }),
-      'new_message-sender-profile-user-recipient'
+      'new_message-sender-profile-user-recipient',
+      { bulk: false }
     )
   })
 
@@ -254,7 +255,8 @@ describe('NotifierService', () => {
           callToActionUrl: 'https://frontend.test/me',
         }),
       }),
-      'welcome-user-1'
+      'welcome-user-1',
+      { bulk: false }
     )
   })
 
@@ -282,7 +284,8 @@ describe('NotifierService', () => {
           callToActionUrl: 'https://frontend.test/me',
         }),
       }),
-      'welcome-user-2'
+      'welcome-user-2',
+      { bulk: false }
     )
   })
 
@@ -366,5 +369,58 @@ describe('NotifierService', () => {
       service.notifyUser('user-unknown', 'login_link', { path: '/magic-link?token=abc' })
     ).rejects.toThrow('No brand for domain unknown.test')
     expect(mockDispatchEmail).not.toHaveBeenCalled()
+  })
+
+  describe('notifyLoadedUser', () => {
+    const loadedUser = {
+      id: 'user-loaded',
+      email: 'loaded@example.com',
+      originDomain: 'frontend.test',
+      language: 'en',
+      emailNotificationsOptIn: true,
+      profile: null,
+    } as any
+
+    it('dispatches without looking the user up again', async () => {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(loadedUser, 'welcome', { path: '/me' })
+
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled()
+      expect(mockDispatchEmail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'loaded@example.com' }),
+        'welcome-user-loaded',
+        { bulk: false }
+      )
+    })
+
+    it('sends onboarding reminders on the bulk queue', async () => {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(loadedUser, 'onboarding_reminder', { path: '/onboarding' })
+
+      expect(mockDispatchEmail).toHaveBeenCalledWith(
+        expect.anything(),
+        'onboarding_reminder-user-loaded',
+        { bulk: true }
+      )
+    })
+
+    it('keeps login links off the bulk queue', async () => {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(loadedUser, 'login_link', { path: '/magic-link?token=abc' })
+
+      expect(mockDispatchEmail.mock.calls[0][2]).toEqual({ bulk: false })
+    })
+
+    it('appends the dedup suffix to the dispatch key', async () => {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(
+        loadedUser,
+        'onboarding_reminder',
+        { path: '/onboarding' },
+        { dedupSuffix: '2026-11-23' }
+      )
+
+      expect(mockDispatchEmail.mock.calls[0][1]).toBe('onboarding_reminder-user-loaded-2026-11-23')
+    })
   })
 })

@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 let mockPrisma: any
-const { mockNotifyUser } = vi.hoisted(() => ({
-  mockNotifyUser: vi.fn(),
+const { mockNotifyLoadedUser } = vi.hoisted(() => ({
+  mockNotifyLoadedUser: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -13,7 +13,7 @@ vi.mock('@/lib/prisma', () => ({
 
 vi.mock('@/services/notifier.service', () => ({
   notifierService: {
-    notifyUser: mockNotifyUser,
+    notifyLoadedUser: mockNotifyLoadedUser,
   },
 }))
 
@@ -26,17 +26,12 @@ vi.mock('@/lib/appconfig', () => ({
 describe('sendOnboardingReminders', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.useFakeTimers()
 
     mockPrisma = {
       user: {
         findMany: vi.fn().mockResolvedValue([]),
       },
     }
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
   })
 
   async function importService() {
@@ -66,25 +61,41 @@ describe('sendOnboardingReminders', () => {
     expect(call.where.OR).toEqual([{ profile: null }, { profile: { isOnboarded: false } }])
   })
 
-  it('sends reminder for each matching user', async () => {
-    mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }])
-
+  it('loads each user with their public name', async () => {
     const sendOnboardingReminders = await importService()
-    const promise = sendOnboardingReminders(
+    await sendOnboardingReminders(
       new Date('2026-03-30T12:00:00Z'),
       new Date('2026-03-31T12:00:00Z')
     )
-    await vi.runAllTimersAsync()
-    const count = await promise
+
+    const call = mockPrisma.user.findMany.mock.calls[0][0]
+    expect(call.include).toEqual({ profile: { select: { publicName: true } } })
+  })
+
+  it('sends a reminder to each loaded user without waiting between them', async () => {
+    const users = [
+      { id: 'user-1', profile: null },
+      { id: 'user-2', profile: { publicName: 'Bob' } },
+    ]
+    mockPrisma.user.findMany.mockResolvedValue(users)
+    const onProgress = vi.fn()
+
+    const sendOnboardingReminders = await importService()
+    const count = await sendOnboardingReminders(
+      new Date('2026-03-30T12:00:00Z'),
+      new Date('2026-03-31T12:00:00Z'),
+      onProgress
+    )
 
     expect(count).toBe(2)
-    expect(mockNotifyUser).toHaveBeenCalledTimes(2)
-    expect(mockNotifyUser).toHaveBeenCalledWith('user-1', 'onboarding_reminder', {
+    expect(mockNotifyLoadedUser).toHaveBeenCalledTimes(2)
+    expect(mockNotifyLoadedUser).toHaveBeenCalledWith(users[0], 'onboarding_reminder', {
       path: '/onboarding',
     })
-    expect(mockNotifyUser).toHaveBeenCalledWith('user-2', 'onboarding_reminder', {
+    expect(mockNotifyLoadedUser).toHaveBeenCalledWith(users[1], 'onboarding_reminder', {
       path: '/onboarding',
     })
+    expect(onProgress).toHaveBeenLastCalledWith(2, 2, 'user-2')
   })
 
   it('returns 0 and sends nothing when no users match', async () => {
@@ -95,6 +106,6 @@ describe('sendOnboardingReminders', () => {
     )
 
     expect(count).toBe(0)
-    expect(mockNotifyUser).not.toHaveBeenCalled()
+    expect(mockNotifyLoadedUser).not.toHaveBeenCalled()
   })
 })
