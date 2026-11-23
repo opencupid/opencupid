@@ -803,7 +803,6 @@ describe('ProfileTrustService', () => {
       expect(txProfileFindFirst).toHaveBeenCalledWith({
         where: {
           id: 'sender',
-          isBlocked: false,
           isActive: true,
           user: { isBlocked: false, isActive: true },
         },

@@ -37,7 +37,6 @@ const baseProfile = {
   isDatingActive: false,
   isActive: true,
   isReported: false,
-  isBlocked: false,
   isOnboarded: true,
   gender: 'F',
   hasFace: false,

@@ -152,7 +152,6 @@ model Profile {
   isDatingActive      Boolean @default(false)
   isActive            Boolean @default(false)
   isReported          Boolean @default(false)
-  isBlocked           Boolean @default(false)
   isOnboarded         Boolean @default(false)
   isCallable          Boolean @default(true)
   hasFace             Boolean @default(false)
