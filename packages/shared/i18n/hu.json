@@ -23,7 +23,7 @@
     "captcha_verify": "Nézzük meg",
     "captcha_verifying": "Egy pillanat...",
     "login": "Tovább",
-    "magic_link_prompt": "Már majdnem bent vagy. Kattints a Tovább gombra a belépéshez.",
+    "magic_link_prompt": "Még egy gyors kérdés: emberi lény vagy?",
     "token_check_email": "Küldtünk egy bejelentkezési linket ide: {email}. Kattints a linkre az emailben a belépéshez.",
     "token_check_junk": "Ha nem érkezik meg, nézd meg a spam mappát is.",
     "token_check_messages": "Nézz rá az üzeneteidre",

@@ -69,7 +69,6 @@ beforeEach(async () => {
   mockUserService = {
     validateLoginToken: vi.fn(),
     setLoginToken: vi.fn(),
-    generateLoginToken: vi.fn().mockReturnValue('abc123'),
     getUserById: vi.fn(),
     bumpTokenVersion: vi.fn(),
     findByAuthId: vi.fn(),
@@ -308,6 +307,7 @@ describe('POST /send-magic-link', () => {
 
   it('sends token via email for new user and returns register status', async () => {
     mockUserService.setLoginToken.mockResolvedValue({
+      token: 'abc123',
       user: {
         id: 'user3',
         email: 'newuser@example.com',
@@ -326,10 +326,8 @@ describe('POST /send-magic-link', () => {
       },
     }
     await handler(req as any, reply as any)
-    expect(mockUserService.generateLoginToken).toHaveBeenCalled()
     expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
       expect.any(Object),
-      'abc123',
       'en',
       'fallback.example'
     )
@@ -344,6 +342,7 @@ describe('POST /send-magic-link', () => {
 
   it("records the brand of the request host as a new user's originDomain", async () => {
     mockUserService.setLoginToken.mockResolvedValue({
+      token: 'abc123',
       user: { id: 'user7', email: 'n@example.com', language: 'en' },
       isNewUser: true,
     })
@@ -354,7 +353,6 @@ describe('POST /send-magic-link', () => {
     await handler(req as any, reply as any)
     expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
       expect.any(Object),
-      'abc123',
       'en',
       'other.example'
     )
@@ -371,6 +369,7 @@ describe('POST /send-magic-link', () => {
     "on %s, stores language '%s' as '%s' (the brand's fallback when unsupported)",
     async (hostname, language, stored) => {
       mockUserService.setLoginToken.mockResolvedValue({
+        token: 'abc123',
         user: { id: 'user8', email: 'n@example.com', language: stored },
         isNewUser: true,
       })
@@ -378,7 +377,6 @@ describe('POST /send-magic-link', () => {
       await handler(req as any, reply as any)
       expect(mockUserService.setLoginToken).toHaveBeenCalledWith(
         expect.any(Object),
-        'abc123',
         stored,
         hostname
       )
@@ -397,6 +395,7 @@ describe('POST /send-magic-link', () => {
 
   it('sends token via email for existing user and returns login status', async () => {
     mockUserService.setLoginToken.mockResolvedValue({
+      token: 'abc123',
       user: {
         id: 'user4',
         email: 'existing@example.com',
@@ -415,7 +414,6 @@ describe('POST /send-magic-link', () => {
       },
     }
     await handler(req as any, reply as any)
-    expect(mockUserService.generateLoginToken).toHaveBeenCalled()
     expect(notifier.notifyUser).toHaveBeenCalledWith('user4', 'login_link', {
       path: '/magic-link?token=abc123',
     })
@@ -427,6 +425,7 @@ describe('POST /send-magic-link', () => {
 
   it('carries the redirect deep link in the magic-link path', async () => {
     mockUserService.setLoginToken.mockResolvedValue({
+      token: 'abc123',
       user: { id: 'user4', email: 'existing@example.com', language: 'en' },
       isNewUser: false,
     })
@@ -467,6 +466,7 @@ describe('POST /send-magic-link', () => {
     appConfig.NODE_ENV = 'production'
     try {
       mockUserService.setLoginToken.mockResolvedValue({
+        token: 'abc123',
         user: {
           id: 'user5',
           email: 'crossbrand@example.com',
@@ -510,6 +510,7 @@ describe('POST /send-magic-link', () => {
       originDomain: 'fallback.example',
     })
     mockUserService.setLoginToken.mockResolvedValue({
+      token: 'abc123',
       user: {
         id: 'user6',
         email: 'match@example.com',
@@ -542,6 +543,7 @@ describe('POST /send-magic-link', () => {
       originDomain: '',
     })
     mockUserService.setLoginToken.mockResolvedValue({
+      token: 'abc123',
       user: {
         id: 'user7',
         email: 'empty@example.com',
@@ -569,6 +571,7 @@ describe('POST /send-magic-link', () => {
   it('does not set __o cookie for a non-existent (new) user', async () => {
     mockUserService.findByAuthId.mockResolvedValue(null)
     mockUserService.setLoginToken.mockResolvedValue({
+      token: 'abc123',
       user: {
         id: 'user8',
         email: 'brand-new@example.com',

@@ -255,15 +255,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })
       }
 
-      const token = userService.generateLoginToken()
-
       // A new user belongs to the brand they signed up on. In dev the vite
       // proxy rewrites Host to localhost (changeOrigin), which is the dev brand.
       // A language without translations becomes that brand's fallback locale.
       const brand = brandForHost(req.hostname)
-      const { user, isNewUser } = await userService.setLoginToken(
+      const { user, isNewUser, token } = await userService.setLoginToken(
         { email },
-        token,
         normalizeLocale(language, brand.fallbackLocale),
         brand.domain
       )
