@@ -6,7 +6,7 @@ vi.mock('@/services/nearbyDigest.service', () => ({ sendNearbyDigests: mockSend 
 import { jobDataSchema, processNearbyDigestJob } from '../../workers/nearbyDigestWorker'
 
 function fakeJob(data: unknown) {
-  return { data, log: vi.fn() } as any
+  return { data, log: vi.fn(), updateProgress: vi.fn() } as any
 }
 
 beforeEach(() => {
@@ -58,5 +58,18 @@ describe('nearbyDigestWorker', () => {
     expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({ dryRun: true }))
     expect(job.log).toHaveBeenCalledWith('would send digest for profile-1: 4 new')
     expect(job.log).toHaveBeenLastCalledWith('Done — 1 digest(s)')
+  })
+
+  it('reports progress as a percentage, once per percent', async () => {
+    mockSend.mockImplementation(async ({ onProgress }) => {
+      for (let checked = 1; checked <= 400; checked++) await onProgress(checked, 400)
+      return 0
+    })
+    const job = fakeJob({})
+
+    await processNearbyDigestJob(job)
+
+    const percents = job.updateProgress.mock.calls.map(([p]: [number]) => p)
+    expect(percents).toEqual(Array.from({ length: 100 }, (_, i) => i + 1))
   })
 })

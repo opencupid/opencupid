@@ -183,6 +183,21 @@ describe('sendNearbyDigests', () => {
     expect(mockPrisma.profile.findMany).toHaveBeenCalledTimes(1)
   })
 
+  it('reports progress after every checked profile, qualified or not', async () => {
+    const qualifies = recipient({ id: 'near' })
+    const tooFew = recipient({ id: 'far', lat: 0, lon: 0 })
+    mockRun([qualifies, tooFew], [neighbour('a', 1), neighbour('b', 1), neighbour('c', 1)])
+    const onProgress = vi.fn()
+
+    const count = await sendNearbyDigests({ runDate: '2026-11-23', now: NOW, onProgress })
+
+    expect(count).toBe(1)
+    expect(onProgress.mock.calls).toEqual([
+      [1, 2],
+      [2, 2],
+    ])
+  })
+
   it('reports but neither sends nor writes on a dry run', async () => {
     mockRun([recipient()], [neighbour('a', 1), neighbour('b', 1), neighbour('c', 1)])
     const onRecipient = vi.fn()
