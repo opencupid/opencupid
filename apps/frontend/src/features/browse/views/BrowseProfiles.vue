@@ -97,7 +97,7 @@ const { selectedLayers, lastMapBounds, lastMapZoom, clusterFeatures } =
 // first render — i.e. before initialMapCenter resolves and the map mounts.
 const isMapReady = ref(false)
 // Height of the nearby-content panel over the map's bottom edge, which the
-// map's zoom/locate controls sit above.
+// map's zoom controls sit above.
 const nearbyPanelHeight = ref(0)
 function onMapReady() {
   isMapReady.value = true
@@ -114,12 +114,6 @@ const initialMapCenter = computed<[number, number]>(() => {
 const highlightedLocation = ref<[number, number] | null>(null)
 function onLocationSet(point: GeoPoint) {
   highlightedLocation.value = [point.lat, point.lon]
-}
-
-// The map's locate button: same as the search bar's home button.
-function onLocateHome() {
-  const point = toGeoPoint(viewerProfile.value?.location)
-  if (point) onLocationSet(point)
 }
 
 // Per-kind dispatch for marker icons and popup components. The discriminator
@@ -492,7 +486,6 @@ onMounted(async () => {
           @bounds:changed="onBoundsChanged"
           @map:ready="onMapReady"
           @cluster:max-zoom="onMaxZoomCluster"
-          @locate="onLocateHome"
         />
 
         <NearbyFeatures

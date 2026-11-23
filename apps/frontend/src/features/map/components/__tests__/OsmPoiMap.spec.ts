@@ -1011,12 +1011,6 @@ describe('OsmPoiMap', () => {
       expect(mapInstance().zoomOut).toHaveBeenCalledOnce()
     })
 
-    it('forwards the locate button as a locate event', async () => {
-      const wrapper = await mountMap()
-      wrapper.findComponent({ name: 'MapControls' }).vm.$emit('locate')
-      expect(wrapper.emitted('locate')).toHaveLength(1)
-    })
-
     it('places the controls above the given bottom inset', async () => {
       const wrapper = await mountMap({ controlsBottomInset: 120 })
       const style = (wrapper.element as HTMLElement).style

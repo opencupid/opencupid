@@ -1,44 +1,26 @@
 <script setup lang="ts">
-import { useI18n } from '@/lib/i18n'
-
-import IconLocate from '@/assets/icons/interface/target-2.svg'
-
-const { t } = useI18n()
-
 const emit = defineEmits<{
   (e: 'zoom:in'): void
   (e: 'zoom:out'): void
-  (e: 'locate'): void
 }>()
 </script>
 
 <template>
-  <div class="map-controls d-flex flex-column align-items-end gap-2">
+  <div class="map-controls map-control-group d-flex flex-column">
     <button
       type="button"
-      class="map-control-btn map-control-group map-control-locate"
-      :title="t('profiles.browse.filters.locate_button_title')"
-      @click="emit('locate')"
+      class="map-control-btn map-control-zoom-in"
+      @click="emit('zoom:in')"
     >
-      <IconLocate class="svg-icon-md" />
+      +
     </button>
-
-    <div class="map-control-group d-flex flex-column">
-      <button
-        type="button"
-        class="map-control-btn map-control-zoom-in"
-        @click="emit('zoom:in')"
-      >
-        +
-      </button>
-      <button
-        type="button"
-        class="map-control-btn map-control-zoom-out"
-        @click="emit('zoom:out')"
-      >
-        −
-      </button>
-    </div>
+    <button
+      type="button"
+      class="map-control-btn map-control-zoom-out"
+      @click="emit('zoom:out')"
+    >
+      −
+    </button>
   </div>
 </template>
 
