@@ -498,6 +498,12 @@ describe('NotifierService', () => {
       })
     })
 
+    it('keeps the copy-paste fallback URL untagged', async () => {
+      const payload = await payloadFor('nearby_digest', { path: '/browse', count: 3 })
+      expect(payload.templateProps.callToActionUrl).toContain('utm_campaign=nearby_digest')
+      expect(payload.templateProps.fallbackUrl).toBe('https://frontend.test/browse')
+    })
+
     it('leaves the login link untagged', async () => {
       const payload = await payloadFor('login_link', { path: '/magic-link?token=abc' })
       expect(payload.templateProps.callToActionUrl).toBe(

@@ -34,7 +34,7 @@ const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
 // transactional and sent without delay.
 const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder', 'nearby_digest'])
 
-// Call-to-action links of every other type carry UTM tags (campaign = type).
+// Call-to-action buttons of every other type carry UTM tags (campaign = type).
 // The login link is auth, not engagement, so it is left untagged.
 const UNTAGGED_TYPES: ReadonlySet<NotificationType> = new Set(['login_link'])
 
@@ -204,6 +204,8 @@ export class NotifierService {
       ...user,
     }
 
+    const pageUrl = `${brand.frontendUrl}${args.path}`
+
     // emailType maps 1:1 to the i18n key under `emails.*` (e.g. emails.new_message.subject).
     return {
       to: user.email,
@@ -215,8 +217,9 @@ export class NotifierService {
         publicName: user.profile?.publicName || '',
         contentBody: t(`emails.${emailType}.contentBody`, contentVars),
         callToActionLabel: t(`emails.${emailType}.callToActionLabel`),
-        callToActionUrl: this.callToActionUrl(brand, emailType, args.path),
+        callToActionUrl: this.callToActionUrl(emailType, pageUrl),
         fallbackHint: t(`emails.fallback_hint`),
+        fallbackUrl: pageUrl,
         footer: t(`emails.${emailType}.footer`, { defaultValue: '' }),
         unsubscribeUrl: unsubscribe?.pageUrl,
         unsubscribeLabel: unsubscribe?.label,
@@ -246,9 +249,9 @@ export class NotifierService {
     }
   }
 
-  private callToActionUrl(brand: Brand, emailType: NotificationType, path: string): string {
-    const url = `${brand.frontendUrl}${path}`
-    return UNTAGGED_TYPES.has(emailType) ? url : withUtm(url, emailType)
+  // Only the button is tagged; a copied link should stay clean.
+  private callToActionUrl(emailType: NotificationType, pageUrl: string): string {
+    return UNTAGGED_TYPES.has(emailType) ? pageUrl : withUtm(pageUrl, emailType)
   }
 
   private buildUnsubscribe(

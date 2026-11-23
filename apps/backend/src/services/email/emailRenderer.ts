@@ -54,13 +54,14 @@ ${bodyInner}
  * synthesizes a text part by stripping our markup — which repeats the CTA
  * URL once per occurrence in the HTML (button, then fallback hint). Here the
  * URL appears exactly once, and `fallbackHint` is dropped: "if the button
- * doesn't work" describes nothing in a plain-text body.
+ * doesn't work" describes nothing in a plain-text body. It is the untagged
+ * `fallbackUrl`: there is no button here, and the URL is often copied.
  */
 export function renderEmailText(props: EmailTemplateProps): string {
   const blocks = [
     props.siteName,
     props.contentBody,
-    `${props.callToActionLabel}: ${props.callToActionUrl}`,
+    `${props.callToActionLabel}: ${props.fallbackUrl}`,
     props.footer,
     props.unsubscribeUrl ? `${props.unsubscribeLabel}: ${props.unsubscribeUrl}` : undefined,
   ]
