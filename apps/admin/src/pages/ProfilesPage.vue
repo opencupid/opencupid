@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { formatTimeAgoIntl } from '@vueuse/core'
+import { useRoute, useRouter } from 'vue-router'
+import { formatTimeAgoIntl, useDocumentVisibility, useIntervalFn } from '@vueuse/core'
 import { useApi, apiRequest } from '../composables/useApi'
 import {
   flagProfile,
@@ -88,6 +88,8 @@ interface UsersResponse {
   pageSize: number
 }
 
+const route = useRoute()
+const router = useRouter()
 const { call, loading, error } = useApi()
 const pageTab = ref<'profiles' | 'users'>('profiles')
 const profiles = ref<AdminProfile[]>([])
@@ -116,7 +118,14 @@ const sortOptions: { value: ProfileSort; label: string }[] = [
   { value: 'created', label: 'Date created' },
   { value: 'lastActive', label: 'Last active' },
 ]
-const selectedSort = ref<ProfileSort>('created')
+// Kept in the URL (?sort=) so the choice survives a reload; 'created' is the
+// default and is left out of the URL.
+const selectedSort = computed<ProfileSort>({
+  get: () => (route.query.sort === 'lastActive' ? 'lastActive' : 'created'),
+  set: (sort) => {
+    router.replace({ query: { ...route.query, sort: sort === 'created' ? undefined : sort } })
+  },
+})
 
 function formatRelative(date: string) {
   return formatTimeAgoIntl(new Date(date), { locale: 'en' })
@@ -130,9 +139,9 @@ async function fetchCountries() {
 const hasMore = computed(() => profiles.value.length < total.value)
 const loadingMore = ref(false)
 
-function buildParams() {
+function buildParams(p = page.value) {
   return {
-    page: page.value,
+    page: p,
     pageSize,
     search: search.value || undefined,
     country: selectedCountry.value || undefined,
@@ -142,6 +151,7 @@ function buildParams() {
 }
 
 async function fetchProfiles() {
+  listGeneration++
   const res = await call<ProfilesResponse>('/admin/profiles', { params: buildParams() })
   if (res) {
     profiles.value = res.profiles
@@ -162,6 +172,7 @@ async function appendProfiles() {
 
 async function loadMore() {
   if (loadingMore.value || loading.value || !hasMore.value) return
+  listGeneration++
   page.value++
   await appendProfiles()
 }
@@ -175,9 +186,9 @@ const usersError = ref<string | null>(null)
 const usersLoadingMore = ref(false)
 const usersHasMore = computed(() => users.value.length < usersTotal.value)
 
-function buildUsersParams() {
+function buildUsersParams(p = usersPage.value) {
   return {
-    page: usersPage.value,
+    page: p,
     pageSize,
     search: search.value || undefined,
     hasProfile: 'false',
@@ -185,6 +196,7 @@ function buildUsersParams() {
 }
 
 async function fetchUsers() {
+  listGeneration++
   usersLoading.value = true
   usersError.value = null
   try {
@@ -200,6 +212,7 @@ async function fetchUsers() {
 
 async function loadMoreUsers() {
   if (usersLoadingMore.value || usersLoading.value || !usersHasMore.value) return
+  listGeneration++
   usersPage.value++
   usersLoadingMore.value = true
   try {
@@ -210,6 +223,68 @@ async function loadMoreUsers() {
     usersLoadingMore.value = false
   }
 }
+
+// Background refresh: re-fetch every page loaded so far (keeping the
+// infinite-scroll position) without the "Loading..." placeholder. Any
+// foreground fetch bumps listGeneration, so a refresh that resolves after one
+// started is dropped instead of overwriting newer data.
+let listGeneration = 0
+
+async function refreshList() {
+  const generation = listGeneration
+  if (pageTab.value === 'profiles') {
+    if (loading.value || loadingMore.value) return
+    try {
+      const pages = await Promise.all(
+        Array.from({ length: page.value }, (_, i) =>
+          apiRequest<ProfilesResponse>('/admin/profiles', { params: buildParams(i + 1) })
+        )
+      )
+      const last = pages[pages.length - 1]
+      if (!last || generation !== listGeneration) return
+      profiles.value = pages.flatMap((r) => r.profiles)
+      total.value = last.total
+      error.value = null
+    } catch (err) {
+      if (generation === listGeneration) {
+        error.value = err instanceof Error ? err.message : 'failed to refresh profiles'
+      }
+    }
+  } else {
+    if (usersLoading.value || usersLoadingMore.value) return
+    try {
+      const pages = await Promise.all(
+        Array.from({ length: usersPage.value }, (_, i) =>
+          apiRequest<UsersResponse>('/admin/users', { params: buildUsersParams(i + 1) })
+        )
+      )
+      const last = pages[pages.length - 1]
+      if (!last || generation !== listGeneration) return
+      users.value = pages.flatMap((r) => r.users)
+      usersTotal.value = last.total
+      usersError.value = null
+    } catch (err) {
+      if (generation === listGeneration) {
+        usersError.value = err instanceof Error ? err.message : 'failed to refresh users'
+      }
+    }
+  }
+}
+
+const REFRESH_INTERVAL_MS = 10_000
+const visibility = useDocumentVisibility()
+const refreshTimer = useIntervalFn(refreshList, REFRESH_INTERVAL_MS, { immediate: false })
+
+// Poll only while the browser tab is visible; refresh right away when it
+// becomes visible again.
+watch(visibility, (state) => {
+  if (state === 'visible') {
+    refreshList()
+    refreshTimer.resume()
+  } else {
+    refreshTimer.pause()
+  }
+})
 
 function switchTab(tab: 'profiles' | 'users') {
   if (pageTab.value === tab) return
@@ -774,7 +849,7 @@ async function sendBulkMessage() {
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
-const route = useRoute()
+watch(selectedSort, resetAndFetch)
 
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
@@ -782,6 +857,7 @@ onMounted(() => {
   fetchOrigins()
   fetchProfiles()
   fetchUsers()
+  if (visibility.value === 'visible') refreshTimer.resume()
 
   observer = new IntersectionObserver(
     ([entry]) => {
@@ -926,7 +1002,6 @@ onUnmounted(() => {
         style="max-width: 200px"
         aria-label="Sort profiles"
         data-testid="profile-sort"
-        @change="resetAndFetch"
       >
         <option
           v-for="opt in sortOptions"

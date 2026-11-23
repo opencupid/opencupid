@@ -1,10 +1,21 @@
-import { mount, flushPromises } from '@vue/test-utils'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ref } from 'vue'
+import { mount, flushPromises, enableAutoUnmount } from '@vue/test-utils'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { reactive, ref } from 'vue'
 
-const mockRoute = { query: {} as Record<string, string | undefined> }
+const mockRoute = reactive({ query: {} as Record<string, string | undefined> })
+const routerReplaceMock = vi.fn(({ query }: { query: Record<string, string | undefined> }) => {
+  mockRoute.query = query
+  return Promise.resolve()
+})
 vi.mock('vue-router', () => ({
   useRoute: () => mockRoute,
+  useRouter: () => ({ replace: routerReplaceMock }),
+}))
+
+const visibility = ref<DocumentVisibilityState>('visible')
+vi.mock('@vueuse/core', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@vueuse/core')>()),
+  useDocumentVisibility: () => visibility,
 }))
 
 const useApiCall = vi.fn()
@@ -90,10 +101,19 @@ function usersResponse(users: any[]) {
   return { success: true, users, total: users.length, page: 1, pageSize: 25 }
 }
 
+// Mounted pages keep polling (and watching the shared visibility ref), so
+// none may outlive its test.
+enableAutoUnmount(afterEach)
+
 describe('ProfilesPage', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     mockRoute.query = {}
+    visibility.value = 'visible'
     // /admin/profiles/countries + /admin/users/origins + /admin/profiles list
     useApiCall.mockImplementation((path: string) => {
       if (path === '/admin/profiles/countries') {
@@ -271,8 +291,112 @@ describe('ProfilesPage', () => {
     await wrapper.find('[data-testid="profile-sort"]').setValue('lastActive')
     await flushPromises()
 
+    expect(routerReplaceMock).toHaveBeenCalledWith({ query: { sort: 'lastActive' } })
     expect(useApiCall).toHaveBeenLastCalledWith('/admin/profiles', {
       params: expect.objectContaining({ sort: 'lastActive', page: 1 }),
+    })
+  })
+
+  it('restores the sort order from the URL on load', async () => {
+    mockRoute.query = { sort: 'lastActive' }
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+
+    expect(useApiCall).toHaveBeenCalledWith('/admin/profiles', {
+      params: expect.objectContaining({ sort: 'lastActive', page: 1 }),
+    })
+    expect((wrapper.find('[data-testid="profile-sort"]').element as HTMLSelectElement).value).toBe(
+      'lastActive'
+    )
+  })
+
+  it('drops the default sort from the URL, keeping other query params', async () => {
+    mockRoute.query = { sort: 'lastActive', profileId: 'p1' }
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+
+    await wrapper.find('[data-testid="profile-sort"]').setValue('created')
+    await flushPromises()
+
+    expect(routerReplaceMock).toHaveBeenCalledWith({
+      query: { sort: undefined, profileId: 'p1' },
+    })
+  })
+
+  describe('background refresh', () => {
+    const refreshCalls = () =>
+      apiRequestMock.mock.calls.filter(([path]) => path === '/admin/profiles')
+
+    beforeEach(() => {
+      vi.useFakeTimers()
+      apiRequestMock.mockImplementation((path: string) => {
+        if (path === '/admin/users') return Promise.resolve(usersResponse([baseUserRow]))
+        if (path === '/admin/profiles') {
+          return Promise.resolve(listResponse([{ ...baseProfile, publicName: 'Alice v2' }]))
+        }
+        return Promise.resolve({ success: true, profile: { ...baseDetail, trustFlags: [] } })
+      })
+    })
+
+    it('re-fetches the list every 10 seconds without the loading placeholder', async () => {
+      const wrapper = mount(ProfilesPage)
+      await flushPromises()
+      expect(refreshCalls()).toHaveLength(0)
+
+      await vi.advanceTimersByTimeAsync(10_000)
+
+      expect(refreshCalls()).toHaveLength(1)
+      expect(refreshCalls()[0]![1]).toEqual({
+        params: expect.objectContaining({ page: 1, sort: 'created' }),
+      })
+      expect(wrapper.text()).toContain('Alice v2')
+
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(refreshCalls()).toHaveLength(2)
+    })
+
+    it('pauses while the tab is hidden and refreshes as soon as it is shown', async () => {
+      const wrapper = mount(ProfilesPage)
+      await flushPromises()
+
+      visibility.value = 'hidden'
+      await flushPromises()
+      await vi.advanceTimersByTimeAsync(30_000)
+      expect(refreshCalls()).toHaveLength(0)
+
+      visibility.value = 'visible'
+      await flushPromises()
+      expect(refreshCalls()).toHaveLength(1)
+
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(refreshCalls()).toHaveLength(2)
+    })
+
+    it('does not start polling when mounted in a hidden tab', async () => {
+      visibility.value = 'hidden'
+      const wrapper = mount(ProfilesPage)
+      await flushPromises()
+
+      await vi.advanceTimersByTimeAsync(30_000)
+      expect(refreshCalls()).toHaveLength(0)
+    })
+
+    it('refreshes the "Not onboarded" list when that tab is shown', async () => {
+      const wrapper = mount(ProfilesPage)
+      await flushPromises()
+      await wrapper
+        .findAll('.nav-link')
+        .find((b) => b.text().includes('Not onboarded'))!
+        .trigger('click')
+      await flushPromises()
+      apiRequestMock.mockClear()
+
+      await vi.advanceTimersByTimeAsync(10_000)
+
+      expect(apiRequestMock).toHaveBeenCalledWith('/admin/users', {
+        params: expect.objectContaining({ page: 1, hasProfile: 'false' }),
+      })
+      expect(refreshCalls()).toHaveLength(0)
     })
   })
 
