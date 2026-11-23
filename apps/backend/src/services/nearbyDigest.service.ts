@@ -37,9 +37,10 @@ export function boundingBox(lat: number, lon: number, km: number) {
   }
 }
 
-async function findDormantRecipients(now: Date) {
+async function findDormantRecipients(now: Date, profileIds?: string[]) {
   const profiles = await prisma.profile.findMany({
     where: {
+      ...(profileIds ? { id: { in: profileIds } } : {}),
       isActive: true,
       isOnboarded: true,
       lat: { not: null },
@@ -97,6 +98,8 @@ export interface NearbyDigestRun {
   now?: Date
   /** Log who would qualify without sending or writing anything. */
   dryRun?: boolean
+  /** Only consider these profiles; they still have to qualify. */
+  profileIds?: string[]
   onRecipient?: (profileId: string, newCount: number) => Promise<void> | void
 }
 
@@ -115,9 +118,10 @@ export async function sendNearbyDigests({
   runDate,
   now = new Date(),
   dryRun = false,
+  profileIds,
   onRecipient,
 }: NearbyDigestRun): Promise<number> {
-  const recipients = await findDormantRecipients(now)
+  const recipients = await findDormantRecipients(now, profileIds)
   let qualified = 0
 
   for (const recipient of recipients) {

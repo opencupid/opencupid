@@ -25,6 +25,19 @@ describe('nearbyDigestWorker', () => {
     expect(() => jobDataSchema.parse({ dryRun: 'false' })).toThrow()
   })
 
+  it('rejects an empty cohort, which would read as everyone', () => {
+    expect(() => jobDataSchema.parse({ profileIds: [] })).toThrow()
+  })
+
+  it('passes a cohort through and logs its size', async () => {
+    const job = fakeJob({ profileIds: ['p1', 'p2'] })
+
+    await processNearbyDigestJob(job)
+
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({ profileIds: ['p1', 'p2'] }))
+    expect(job.log).toHaveBeenCalledWith('Run 2026-11-23, 2 profile(s)')
+  })
+
   it("passes today's UTC date as the run date", async () => {
     await processNearbyDigestJob(fakeJob({}))
 

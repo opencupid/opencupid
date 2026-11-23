@@ -93,6 +93,23 @@ describe('sendNearbyDigests', () => {
     expect(include.nearbySignupNotifications.take).toBe(MAX_SENDS_PER_SPELL)
   })
 
+  it('considers every profile when no cohort is given', async () => {
+    mockRun([], [])
+    await sendNearbyDigests({ runDate: '2026-11-23', now: NOW })
+
+    expect(mockPrisma.profile.findMany.mock.calls[0][0].where).not.toHaveProperty('id')
+  })
+
+  it('narrows a cohort run to the given profiles without relaxing eligibility', async () => {
+    mockRun([], [])
+    await sendNearbyDigests({ runDate: '2026-11-23', now: NOW, profileIds: ['p1', 'p2'] })
+
+    const { where } = mockPrisma.profile.findMany.mock.calls[0][0]
+    expect(where.id).toEqual({ in: ['p1', 'p2'] })
+    expect(where.nearbySignupOptOut).toEqual({ is: null })
+    expect(where.AND).toContainEqual({ user: { isActive: true, emailNotificationsOptIn: true } })
+  })
+
   it('looks for new neighbours with the browse filter, blocklist, reference time and box', async () => {
     const lastDigest = new Date('2026-11-16T09:00:00Z')
     mockRun([recipient({ nearbySignupNotifications: [{ sentAt: lastDigest }] })], [])
