@@ -218,7 +218,10 @@ const handleKeyPress = (event: KeyboardEvent) => {
     event.preventDefault()
     handleSendMessage()
   } else if (event.key === 'Escape' && isEditing.value) {
+    // Esc cancels the edit only; the panel/modal around the conversation
+    // listens for Esc on its own element and would close too.
     event.preventDefault()
+    event.stopPropagation()
     exitEditMode()
   } else if (
     event.key === 'ArrowUp' &&

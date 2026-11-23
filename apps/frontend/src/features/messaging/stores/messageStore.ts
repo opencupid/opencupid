@@ -159,7 +159,6 @@ export const useMessageStore = defineStore('message', {
           } satisfies EditMessagePayload)
         )
         this.handleMessageUpdated(res.data.message)
-        this.editingMessageId = null
         return storeSuccess(res.data.message)
       } catch (error: any) {
         this.error = storeError(error)

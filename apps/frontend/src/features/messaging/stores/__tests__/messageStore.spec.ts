@@ -1061,7 +1061,7 @@ describe('message editing', () => {
   })
 
   describe('editMessage', () => {
-    it('patches the message, replaces it in place and leaves edit mode', async () => {
+    it('patches the message and replaces it in place', async () => {
       const store = useMessageStore()
       store.messages = [makeMessage()]
       store.startEditing()
@@ -1073,7 +1073,8 @@ describe('message editing', () => {
       expect(mockApi.patch).toHaveBeenCalledWith('/messages/message/msg-1', { content: 'hello' })
       expect(res.success).toBe(true)
       expect(store.messages).toEqual([edited])
-      expect(store.editingMessageId).toBeNull()
+      // Leaving edit mode is the composer's job: it also restores the draft.
+      expect(store.editingMessageId).toBe('msg-1')
     })
 
     it('returns the error status and stays in edit mode when the request fails', async () => {

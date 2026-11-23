@@ -25,8 +25,12 @@ vi.mock('vue-toastification', () => ({
 }))
 
 const apiPost = vi.fn()
+const apiPatch = vi.fn()
 vi.mock('@/lib/api', () => ({
-  api: { post: (...args: unknown[]) => apiPost(...args) },
+  api: {
+    post: (...args: unknown[]) => apiPost(...args),
+    patch: (...args: unknown[]) => apiPatch(...args),
+  },
   safeApiCall: (fn: () => unknown) => fn(),
 }))
 
@@ -550,6 +554,16 @@ describe('SendMessageForm', () => {
       expect(wrapper.findComponent(ImageUploadStub).exists()).toBe(false)
     })
 
+    it('lets Escape through to the surrounding panel when not editing', async () => {
+      const { wrapper } = mountEditForm()
+      const outerEscape = vi.fn()
+      wrapper.element.addEventListener('keydown', outerEscape)
+
+      await press(wrapper, 'Escape')
+
+      expect(outerEscape).toHaveBeenCalledTimes(1)
+    })
+
     it('ArrowUp does nothing while a draft is being typed', async () => {
       const { wrapper, store } = mountEditForm()
       await wrapper.find('textarea').setValue('draft')
@@ -570,8 +584,11 @@ describe('SendMessageForm', () => {
 
     it('sending in edit mode saves the edit instead of sending a new message', async () => {
       useLocalStore().setSendMode('enter')
-      const { wrapper, sendMessage, editMessage } = mountEditForm()
-      editMessage.mockResolvedValue({ success: true, data: { ...ownMessage, content: 'hello' } })
+      const { wrapper, store, sendMessage, editMessage } = mountEditForm()
+      // Real store action, only the HTTP call is faked.
+      apiPatch.mockResolvedValue({
+        data: { success: true, message: { ...ownMessage, content: 'hello', editedAt: new Date() } },
+      })
 
       await press(wrapper, 'ArrowUp')
       await wrapper.find('textarea').setValue('hello')
@@ -579,7 +596,11 @@ describe('SendMessageForm', () => {
 
       expect(editMessage).toHaveBeenCalledWith('msg-1', 'hello')
       expect(sendMessage).not.toHaveBeenCalled()
+      expect(store.messages[0]!.content).toBe('hello')
+      expect(store.editingMessageId).toBeNull()
       expect(textareaOf(wrapper).value).toBe('')
+      // A successful save is not a conflict.
+      expect(toastInfo).not.toHaveBeenCalled()
     })
 
     it('leaves edit mode without a request when the text is unchanged', async () => {
@@ -602,8 +623,13 @@ describe('SendMessageForm', () => {
       await flushPromises()
       expect(textareaOf(wrapper).value).toBe('helo')
 
+      // Stands in for the panel/modal that closes on Esc bubbling to it.
+      const outerEscape = vi.fn()
+      wrapper.element.addEventListener('keydown', outerEscape)
+
       await press(wrapper, 'Escape')
 
+      expect(outerEscape).not.toHaveBeenCalled()
       expect(store.editingMessageId).toBeNull()
       expect(textareaOf(wrapper).value).toBe('draft')
       expect(wrapper.find('[data-testid="edit-banner"]').exists()).toBe(false)
