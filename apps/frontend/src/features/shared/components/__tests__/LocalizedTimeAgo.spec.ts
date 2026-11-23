@@ -35,6 +35,24 @@ describe('LocalizedTimeAgo', () => {
     expect(mount(LocalizedTimeAgo, { props: { time: daysAgo(14) } }).text()).toBe('2 hete')
   })
 
+  it('says "just now" for a message sent this instant', () => {
+    expect(mount(LocalizedTimeAgo, { props: { time: NOW } }).text()).toBe('uicomponents.just_now')
+  })
+
+  it('says "just now" for a server timestamp slightly ahead of the browser clock', () => {
+    const ahead = new Date(NOW.getTime() + 400)
+    expect(mount(LocalizedTimeAgo, { props: { time: ahead } }).text()).toBe('uicomponents.just_now')
+  })
+
+  it('switches from "just now" to minutes once a minute has passed', async () => {
+    const wrapper = mount(LocalizedTimeAgo, { props: { time: NOW } })
+    expect(wrapper.text()).toBe('uicomponents.just_now')
+
+    await vi.advanceTimersByTimeAsync(90_000)
+
+    expect(wrapper.text()).toBe('1 minute ago')
+  })
+
   it('exposes timeAgo via scoped slot', () => {
     const wrapper = mount(LocalizedTimeAgo, {
       props: { time: daysAgo(90) },
