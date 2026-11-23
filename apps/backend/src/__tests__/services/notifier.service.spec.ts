@@ -371,6 +371,88 @@ describe('NotifierService', () => {
     expect(mockDispatchEmail).not.toHaveBeenCalled()
   })
 
+  describe('nearby_digest', () => {
+    const digestUser = {
+      id: 'user-digest',
+      email: 'digest@example.com',
+      originDomain: 'frontend.test',
+      language: 'en',
+      emailNotificationsOptIn: true,
+      profile: { publicName: 'Dora' },
+    } as any
+
+    async function sendDigest() {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(
+        digestUser,
+        'nearby_digest',
+        { path: '/browse', count: 4 },
+        { dedupSuffix: '2026-11-23' }
+      )
+      return mockDispatchEmail.mock.calls[0]
+    }
+
+    it('goes on the bulk queue with one dispatch key per user per run', async () => {
+      const [, key, opts] = await sendDigest()
+      expect(key).toBe('nearby_digest-user-digest-2026-11-23')
+      expect(opts).toEqual({ bulk: true })
+    })
+
+    it('passes count to the ICU plural in the body', async () => {
+      const t = vi.fn((key: string) => key)
+      mockGetFixedT.mockReturnValue(t)
+      await sendDigest()
+      const call = t.mock.calls.find(([key]) => key === 'emails.nearby_digest.contentBody') as any
+      expect(call[1]).toMatchObject({ count: 4 })
+    })
+
+    it('carries an unsubscribe link scoped to nearby-signups emails', async () => {
+      const [payload] = await sendDigest()
+      const { verifyUnsubscribeToken } = await import('../../services/email/unsubscribeToken')
+      const token = payload.templateProps.unsubscribeUrl.split('/unsubscribe/')[1].split('?')[0]
+      expect(verifyUnsubscribeToken(token)?.scope).toBe('nearby_signups')
+      expect(payload.headers['List-Unsubscribe']).toContain(token)
+    })
+
+    it('labels the footer link with what it stops', async () => {
+      const t = vi.fn((key: string) => key)
+      mockGetFixedT.mockReturnValue(t)
+      const [payload] = await sendDigest()
+      expect(payload.templateProps.unsubscribeLabel).toBe('emails.unsubscribe_link_nearby_signups')
+    })
+
+    it('is suppressed when the user turned off notification email', async () => {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(
+        { ...digestUser, emailNotificationsOptIn: false },
+        'nearby_digest',
+        {
+          path: '/browse',
+          count: 4,
+        }
+      )
+      expect(mockDispatchEmail).not.toHaveBeenCalled()
+    })
+  })
+
+  it('signs unsubscribe links for other types with the all scope', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-like',
+      email: 'like@example.com',
+      originDomain: 'frontend.test',
+      language: 'en',
+      emailNotificationsOptIn: true,
+      profile: null,
+    })
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyUser('user-like', 'new_like', { path: '/browse' })
+
+    const [payload] = mockDispatchEmail.mock.calls[0]
+    const { verifyUnsubscribeToken } = await import('../../services/email/unsubscribeToken')
+    const token = payload.templateProps.unsubscribeUrl.split('/unsubscribe/')[1].split('?')[0]
+    expect(verifyUnsubscribeToken(token)?.scope).toBe('all')
+  })
+
   describe('notifyLoadedUser', () => {
     const loadedUser = {
       id: 'user-loaded',

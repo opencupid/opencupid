@@ -87,6 +87,11 @@
       "footer": "If you didn't request this, you can ignore this email.",
       "subject": "Your login link"
     },
+    "nearby_digest": {
+      "callToActionLabel": "See who's new",
+      "contentBody": "Hey there, {count, plural, one {# new person has} other {# new people have}} joined {siteName} near you since your last visit. Take a look and say hello!",
+      "subject": "New people joined near you"
+    },
     "new_like": {
       "callToActionLabel": "Find out who",
       "contentBody": "Hey there, someone smiled at you.",
@@ -109,6 +114,7 @@
       "subject": "Forgot your profile?"
     },
     "unsubscribe_link": "Unsubscribe from these emails",
+    "unsubscribe_link_nearby_signups": "Stop emails about new people near you",
     "welcome": {
       "callToActionLabel": "Go connect with people",
       "contentBody": "Hey there, welcome aboard!",

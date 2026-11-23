@@ -217,7 +217,9 @@ model Profile {
   trustFlags       ProfileTrustFlag[]
   eventAttendances EventAttendance[]
 
-  nearbySignupOptOut NearbySignupOptOut?
+  // Nearby signups digest
+  nearbySignupNotifications NearbySignupNotification[]
+  nearbySignupOptOut        NearbySignupOptOut?
 
   @@index([lat, lon])
 }
@@ -563,6 +565,21 @@ model AccountDeletionFeedback {
   reason    AccountDeletionReason
   comment   String?
   createdAt DateTime              @default(now())
+}
+
+/// One row per nearby-signups digest email sent. Append-only; the next run's
+/// reference time and the per-dormancy cap are derived from these rows.
+model NearbySignupNotification {
+  id            String   @id @default(cuid())
+  profileId     String
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  sentAt        DateTime @default(now())
+  /// How many new nearby profiles triggered the email.
+  newCount      Int
+  /// Snapshot of who was counted, for attribution; not a relation.
+  newProfileIds String[] @default([])
+
+  @@index([profileId, sentAt])
 }
 
 /// A row means the profile opted out of nearby-signups emails.

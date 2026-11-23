@@ -24,6 +24,7 @@ export { ProfileActivitySummaryScalarFieldEnumSchema } from './ProfileActivitySu
 export { ProfileTrustFlagScalarFieldEnumSchema } from './ProfileTrustFlagScalarFieldEnumSchema';
 export { MessageTemplateScalarFieldEnumSchema } from './MessageTemplateScalarFieldEnumSchema';
 export { AccountDeletionFeedbackScalarFieldEnumSchema } from './AccountDeletionFeedbackScalarFieldEnumSchema';
+export { NearbySignupNotificationScalarFieldEnumSchema } from './NearbySignupNotificationScalarFieldEnumSchema';
 export { NearbySignupOptOutScalarFieldEnumSchema } from './NearbySignupOptOutScalarFieldEnumSchema';
 export { SortOrderSchema } from './SortOrderSchema';
 export { QueryModeSchema } from './QueryModeSchema';

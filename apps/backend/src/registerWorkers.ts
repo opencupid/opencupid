@@ -11,6 +11,7 @@ import {
   type OnboardingReminderJobData,
 } from '@/workers/onboardingReminderWorker'
 import { processProfileTrustJob } from '@/workers/profileTrustWorker'
+import { processNearbyDigestJob, type NearbyDigestJobData } from '@/workers/nearbyDigestWorker'
 import type { ProfileTrustJobData } from '@/queues/profileTrustQueue'
 
 /** One bulk email per 15 s keeps reminder and digest runs under the SMTP provider's rate limit. */
@@ -42,6 +43,14 @@ export function registerWorkers(): Worker[] {
       'onboarding-reminder',
       async (job: Job<OnboardingReminderJobData>) => {
         await processOnboardingReminderJob(job)
+      },
+      { connection }
+    ),
+
+    new Worker<NearbyDigestJobData>(
+      'nearby-digest',
+      async (job: Job<NearbyDigestJobData>) => {
+        await processNearbyDigestJob(job)
       },
       { connection }
     ),

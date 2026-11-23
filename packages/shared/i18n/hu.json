@@ -87,6 +87,11 @@
       "footer": "Ha nem Te kérted ezt az emailt, nyugodtan hagyd figyelmen kívül.",
       "subject": "Belépő link"
     },
+    "nearby_digest": {
+      "callToActionLabel": "Megnézem az újakat",
+      "contentBody": "Szia, a legutóbbi látogatásod óta {count, plural, other {# új ember}} csatlakozott a közeledben. Nézz körül, és köszönj nekik!",
+      "subject": "Új emberek csatlakoztak a közeledben"
+    },
     "new_like": {
       "callToActionLabel": "Megnyitom",
       "contentBody": "Szia, valaki Rád mosolygott!'",
@@ -112,6 +117,7 @@
       "subject": "Elkezdett regisztráció"
     },
     "unsubscribe_link": "Leiratkozás az értesítő levelekről",
+    "unsubscribe_link_nearby_signups": "Leiratkozás a közeledben csatlakozó új emberekről szóló levelekről",
     "welcome": {
       "callToActionLabel": "Kapcsolódj",
       "contentBody": "Üdv a közösségben!",

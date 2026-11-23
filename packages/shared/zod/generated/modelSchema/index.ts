@@ -23,4 +23,5 @@ export * from './ProfileActivitySummarySchema';
 export * from './ProfileTrustFlagSchema';
 export * from './MessageTemplateSchema';
 export * from './AccountDeletionFeedbackSchema';
+export * from './NearbySignupNotificationSchema';
 export * from './NearbySignupOptOutSchema';

@@ -17,6 +17,7 @@ vi.mock('@/workers/emailWorker.processor', () => ({ processEmailJob: vi.fn() }))
 vi.mock('@/workers/activityWorker', () => ({ processActivityDistillJob: vi.fn() }))
 vi.mock('@/workers/onboardingReminderWorker', () => ({ processOnboardingReminderJob: vi.fn() }))
 vi.mock('@/workers/profileTrustWorker', () => ({ processProfileTrustJob: vi.fn() }))
+vi.mock('@/workers/nearbyDigestWorker', () => ({ processNearbyDigestJob: vi.fn() }))
 
 import { registerWorkers, BULK_EMAIL_INTERVAL_MS } from '../registerWorkers'
 
