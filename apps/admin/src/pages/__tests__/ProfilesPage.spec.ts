@@ -356,7 +356,7 @@ describe('ProfilesPage', () => {
     })
 
     it('pauses while the tab is hidden and refreshes as soon as it is shown', async () => {
-      const wrapper = mount(ProfilesPage)
+      mount(ProfilesPage)
       await flushPromises()
 
       visibility.value = 'hidden'
@@ -374,7 +374,7 @@ describe('ProfilesPage', () => {
 
     it('does not start polling when mounted in a hidden tab', async () => {
       visibility.value = 'hidden'
-      const wrapper = mount(ProfilesPage)
+      mount(ProfilesPage)
       await flushPromises()
 
       await vi.advanceTimersByTimeAsync(30_000)
