@@ -6,9 +6,15 @@ experimental:
     jwt:
       moduleName: github.com/legege/jwt-validation-middleware
 
+global:
+  # Drop request headers whose name aliases a canonical one (e.g.
+  # X_Admin_Authenticated for X-Admin-Authenticated), so header-managing
+  # middlewares like public-sanitize@file can't be bypassed.
+  aliasHeadersStrategy: delete
+
 entryPoints:
   web:
-    address: ":80"
+    address: ':80'
     http:
       redirections:
         entryPoint:
@@ -16,7 +22,7 @@ entryPoints:
           scheme: https
 
   websecure:
-    address: ":443"
+    address: ':443'
     http:
       tls:
         certResolver: letsencrypt
