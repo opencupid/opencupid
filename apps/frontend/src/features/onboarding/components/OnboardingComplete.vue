@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import IconOkHand from '@/assets/icons/hand_gestures/ok.svg'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import MatchPreview from './MatchPreview.vue'
 
 const { t } = useI18n()
+const profileStore = useOwnerProfileStore()
 
 const emit = defineEmits<{
   (e: 'browse'): void
@@ -31,6 +34,7 @@ const emit = defineEmits<{
 
     <!-- Right: CTAs -->
     <div class="d-flex flex-column gap-3 flex-grow-1 w-100">
+      <MatchPreview v-if="profileStore.profile?.isDatingActive" />
       <!-- Browse CTA -->
       <div class="d-flex flex-column align-items-center align-items-md-start gap-2">
         <BButton
