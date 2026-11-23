@@ -1,5 +1,11 @@
 # @opencupid/admin
 
+## 0.96.0
+
+### Patch Changes
+
+- 9dfc1ae: Drop the unused `Profile.isBlocked` column; blocking is `User.isBlocked` only. The admin profile panel no longer shows a "Blocked" row that always read "No".
+
 ## 0.95.0
 
 ## 0.94.0

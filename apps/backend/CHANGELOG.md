@@ -1,5 +1,23 @@
 # backend
 
+## 0.96.0
+
+### Minor Changes
+
+- 0a4fe58: Unsubscribe tokens can carry a narrow scope: a `nearby_signups` token turns off only nearby-signups emails, and the unsubscribe page says so. Tokens without a scope still turn off all notification email.
+- 76f143a: Weekly nearby signups digest: dormant users (not seen for 30+ days) get an email when at least 3 new people joined within 25 km since their last visit, at most 3 times per dormant spell. The email's unsubscribe link stops only this digest.
+- 7836d6f: Let members edit their last message in a conversation until someone replies: pencil button on hover or the Up arrow key loads it into the composer, and the edit updates live on both sides without sending a new push or email notification.
+- 7f99fdc: Nearby digest: run for chosen profiles only (`profileIds` job option) for a live test cohort; weekly schedule disabled until the test checks out
+- 83c1cc3: Call-to-action links in notification emails carry UTM tags (`utm_source=notification`, `utm_medium=email`, `utm_campaign=<email type>`) so Umami attributes visits to the email. Only the button is tagged: the copy-paste link and the plain-text part show the clean URL, and the login link is left untagged. A logged-out click keeps the tags on the login page, so Umami counts it there.
+
+### Patch Changes
+
+- 9dfc1ae: Drop the unused `Profile.isBlocked` column; blocking is `User.isBlocked` only. The admin profile panel no longer shows a "Blocked" row that always read "No".
+- 5a50d2b: Unsubscribe links now stay valid for 7 days instead of 2, so a link in a weekly email still works until the next one.
+- d98cf6b: The notifier checks the nearby-signups opt-out before sending a nearby digest email, not only the digest's recipient query.
+- 70af398: Extract the browse social-map visibility filter as `socialVisibleWhere` for reuse.
+- e158ad4: Send bulk email (onboarding reminders) through a rate-limited `emails-bulk` queue, one email per 15 s, instead of sleeping between sends; login links and other transactional email stay unthrottled
+
 ## 0.95.0
 
 ### Patch Changes

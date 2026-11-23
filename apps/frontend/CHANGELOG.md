@@ -1,5 +1,20 @@
 # frontend
 
+## 0.96.0
+
+### Minor Changes
+
+- 0a4fe58: Unsubscribe tokens can carry a narrow scope: a `nearby_signups` token turns off only nearby-signups emails, and the unsubscribe page says so. Tokens without a scope still turn off all notification email.
+- 7836d6f: Let members edit their last message in a conversation until someone replies: pencil button on hover or the Up arrow key loads it into the composer, and the edit updates live on both sides without sending a new push or email notification.
+- 83c1cc3: Call-to-action links in notification emails carry UTM tags (`utm_source=notification`, `utm_medium=email`, `utm_campaign=<email type>`) so Umami attributes visits to the email. Only the button is tagged: the copy-paste link and the plain-text part show the clean URL, and the login link is left untagged. A logged-out click keeps the tags on the login page, so Umami counts it there.
+
+### Patch Changes
+
+- 523ec36: Show "just now" instead of "in 0 seconds" on messages and posts that were just sent.
+- b72655c: Umami no longer receives the magic-link login token or the unsubscribe token: a `data-before-send` hook removes them from each event's URL and referrer.
+- 27fe90c: Remove the locate button from the browse map controls; the search bar's home button covers the same action
+- 27fe90c: Fix map zoom/locate controls sitting partly under the nearby panel on mobile browsers, where the map was sized to `100vh` instead of the visible viewport
+
 ## 0.95.0
 
 ### Minor Changes
