@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, type Ref } from 'vue'
 import { storeToRefs } from 'pinia'
-import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
 import type { OwnerProfile } from '@zod/profile/profile.dto'
 import type { GenderType } from '@zod/generated/inputTypeSchemas/GenderSchema'
 import IconSearch from '@/assets/icons/interface/search.svg'
@@ -38,10 +38,11 @@ const likerGender = computed<GenderType | undefined>(() => {
       {{ $t('matches.anonymous_like_hint') }}
     </p>
     <div class="d-flex flex-column align-items-center justify-content-center gap-1 mb-2">
-      <ProfileThumbnail
+      <ProfileMarker
         v-if="viewerProfile"
         :profile="viewerProfile"
-        class="owner-thumb dating-eligible-highlight mb-2"
+        highlighted
+        class="mb-2"
       />
       <RouterLink
         to="/browse"
@@ -61,10 +62,5 @@ const likerGender = computed<GenderType | undefined>(() => {
 
 :deep(.popover-hint) {
   min-width: 12rem;
-}
-
-.owner-thumb {
-  width: 2.5rem;
-  height: 2.5rem;
 }
 </style>
