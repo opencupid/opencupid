@@ -1,34 +1,73 @@
 import { FastifyPluginAsync } from 'fastify'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { rateLimitConfig, sendError } from '../helpers'
-import { hashEmail, verifyUnsubscribeToken } from '@/services/email/unsubscribeToken'
+import {
+  hashEmail,
+  verifyUnsubscribeToken,
+  type UnsubscribeScope,
+} from '@/services/email/unsubscribeToken'
 
-type UnsubscribeResult =
-  | { success: true; alreadyUnsubscribed: boolean }
+type TokenUser = Prisma.UserGetPayload<{
+  select: {
+    id: true
+    email: true
+    emailNotificationsOptIn: true
+    profile: { select: { id: true; nearbySignupOptOut: { select: { profileId: true } } } }
+  }
+}>
+
+/** How each unsubscribe scope reads and turns off its own switch. */
+const SCOPES: Record<
+  UnsubscribeScope,
+  {
+    isOff: (user: TokenUser) => boolean
+    turnOff: (user: TokenUser) => Promise<unknown>
+  }
+> = {
+  all: {
+    isOff: (user) => !user.emailNotificationsOptIn,
+    turnOff: (user) =>
+      prisma.user.update({ where: { id: user.id }, data: { emailNotificationsOptIn: false } }),
+  },
+  nearby_signups: {
+    isOff: (user) => !!user.profile?.nearbySignupOptOut,
+    turnOff: (user) =>
+      prisma.nearbySignupOptOut.upsert({
+        where: { profileId: user.profile!.id },
+        create: { profileId: user.profile!.id },
+        update: {},
+      }),
+  },
+}
+
+type Resolved =
+  | { success: true; user: TokenUser; scope: UnsubscribeScope }
   | { success: false; code: 'INVALID_TOKEN' | 'USER_NOT_FOUND' }
 
-async function applyUnsubscribe(token: string): Promise<UnsubscribeResult> {
+/** Verify the token and load its user; the token's email fingerprint must still match. */
+async function resolveToken(token: string): Promise<Resolved> {
   const payload = verifyUnsubscribeToken(token)
   if (!payload) return { success: false, code: 'INVALID_TOKEN' }
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true, emailNotificationsOptIn: true },
+    select: {
+      id: true,
+      email: true,
+      emailNotificationsOptIn: true,
+      profile: { select: { id: true, nearbySignupOptOut: { select: { profileId: true } } } },
+    },
   })
   if (!user) return { success: false, code: 'USER_NOT_FOUND' }
   if (hashEmail(user.email) !== payload.emailHash) {
     return { success: false, code: 'INVALID_TOKEN' }
   }
-
-  if (!user.emailNotificationsOptIn) {
-    return { success: true, alreadyUnsubscribed: true }
+  // Nearby-signups tokens are only issued to profiles; without one there is nothing to switch.
+  if (payload.scope === 'nearby_signups' && !user.profile) {
+    return { success: false, code: 'USER_NOT_FOUND' }
   }
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { emailNotificationsOptIn: false },
-  })
-  return { success: true, alreadyUnsubscribed: false }
+  return { success: true, user, scope: payload.scope }
 }
 
 const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
@@ -46,8 +85,8 @@ const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /:token
    * RFC 8058 one-click unsubscribe endpoint. Mail providers POST here with a
-   * body of `List-Unsubscribe=One-Click`. Disables notification emails for the
-   * user whose identity is encoded in the signed token.
+   * body of `List-Unsubscribe=One-Click`. Turns off the token's scope (all
+   * notification email, or nearby-signups digests only) for its user.
    */
   fastify.post<{ Params: { token: string } }>(
     '/:token',
@@ -57,15 +96,15 @@ const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (req, reply) => {
-      const result = await applyUnsubscribe(req.params.token)
-      if (!result.success) {
-        const status = result.code === 'INVALID_TOKEN' ? 400 : 404
-        return sendError(reply, status, result.code)
+      const resolved = await resolveToken(req.params.token)
+      if (!resolved.success) {
+        return sendError(reply, resolved.code === 'INVALID_TOKEN' ? 400 : 404, resolved.code)
       }
-      return reply.code(200).send({
-        success: true,
-        alreadyUnsubscribed: result.alreadyUnsubscribed,
-      })
+
+      const { user, scope } = resolved
+      const alreadyUnsubscribed = SCOPES[scope].isOff(user)
+      if (!alreadyUnsubscribed) await SCOPES[scope].turnOff(user)
+      return reply.code(200).send({ success: true, alreadyUnsubscribed, scope })
     }
   )
 
@@ -84,20 +123,15 @@ const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (req, reply) => {
-      const payload = verifyUnsubscribeToken(req.params.token)
-      if (!payload) return sendError(reply, 400, 'INVALID_TOKEN')
+      const resolved = await resolveToken(req.params.token)
+      // A token whose user is gone reads as invalid here, as before.
+      if (!resolved.success) return sendError(reply, 400, 'INVALID_TOKEN')
 
-      const user = await prisma.user.findUnique({
-        where: { id: payload.userId },
-        select: { email: true, emailNotificationsOptIn: true },
-      })
-      if (!user || hashEmail(user.email) !== payload.emailHash) {
-        return sendError(reply, 400, 'INVALID_TOKEN')
-      }
-
+      const { user, scope } = resolved
       return reply.code(200).send({
         success: true,
-        alreadyUnsubscribed: !user.emailNotificationsOptIn,
+        alreadyUnsubscribed: SCOPES[scope].isOff(user),
+        scope,
       })
     }
   )

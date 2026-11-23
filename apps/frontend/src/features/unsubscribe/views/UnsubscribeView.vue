@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AuthLayout from '@/features/auth/components/AuthLayout.vue'
 import { useI18nStore } from '@/store/i18nStore'
-import { useUnsubscribeStore } from '../stores/unsubscribeStore'
+import { useUnsubscribeStore, type UnsubscribeStatus } from '../stores/unsubscribeStore'
 
 type Status = 'loading' | 'confirm' | 'done' | 'already' | 'error'
 
@@ -14,7 +14,25 @@ const i18nStore = useI18nStore()
 const unsubscribeStore = useUnsubscribeStore()
 
 const status = ref<Status>('loading')
+const scope = ref<UnsubscribeStatus['scope']>('all')
 const submitting = ref(false)
+
+// A nearby-signups link only stops those emails, so the page says so.
+const copy = computed(() =>
+  scope.value === 'nearby_signups'
+    ? {
+        confirmTitle: 'unsubscribe.nearby_confirm_title',
+        confirmBody: 'unsubscribe.nearby_confirm_body',
+        doneBody: 'unsubscribe.nearby_done_body',
+        alreadyBody: 'unsubscribe.nearby_already_body',
+      }
+    : {
+        confirmTitle: 'unsubscribe.confirm_title',
+        confirmBody: 'unsubscribe.confirm_body',
+        doneBody: 'unsubscribe.done_body',
+        alreadyBody: 'unsubscribe.already_body',
+      }
+)
 const token = String(route.params.token ?? '')
 
 // Apply the locale carried by the email URL before the page renders any text.
@@ -32,11 +50,12 @@ onMounted(async () => {
     return
   }
   const res = await unsubscribeStore.getStatus(token)
-  if (!res.success) {
+  if (!res.success || !res.data) {
     status.value = 'error'
     return
   }
-  status.value = res.data?.alreadyUnsubscribed ? 'already' : 'confirm'
+  scope.value = res.data.scope
+  status.value = res.data.alreadyUnsubscribed ? 'already' : 'confirm'
 })
 
 async function confirmUnsubscribe() {
@@ -58,8 +77,8 @@ async function confirmUnsubscribe() {
       </template>
 
       <template v-else-if="status === 'confirm'">
-        <h1 class="fs-4 mb-3">{{ t('unsubscribe.confirm_title') }}</h1>
-        <p class="text-muted mb-4">{{ t('unsubscribe.confirm_body') }}</p>
+        <h1 class="fs-4 mb-3">{{ t(copy.confirmTitle) }}</h1>
+        <p class="text-muted mb-4">{{ t(copy.confirmBody) }}</p>
         <BButton
           variant="primary"
           :disabled="submitting"
@@ -71,12 +90,12 @@ async function confirmUnsubscribe() {
 
       <template v-else-if="status === 'done'">
         <h1 class="fs-4 mb-3">{{ t('unsubscribe.done_title') }}</h1>
-        <p class="text-muted">{{ t('unsubscribe.done_body') }}</p>
+        <p class="text-muted">{{ t(copy.doneBody) }}</p>
       </template>
 
       <template v-else-if="status === 'already'">
         <h1 class="fs-4 mb-3">{{ t('unsubscribe.already_title') }}</h1>
-        <p class="text-muted">{{ t('unsubscribe.already_body') }}</p>
+        <p class="text-muted">{{ t(copy.alreadyBody) }}</p>
       </template>
 
       <template v-else>

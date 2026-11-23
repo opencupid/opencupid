@@ -6,6 +6,8 @@ import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 const UnsubscribeStatusSchema = z.object({
   success: z.literal(true),
   alreadyUnsubscribed: z.boolean(),
+  /** What the link turns off: all notification email, or nearby-signups emails only. */
+  scope: z.enum(['all', 'nearby_signups']),
 })
 
 export type UnsubscribeStatus = z.infer<typeof UnsubscribeStatusSchema>

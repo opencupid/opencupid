@@ -554,7 +554,11 @@
     "done_body": "Mostantól nem küldünk neked értesítő e-maileket.",
     "done_title": "Sikeresen leiratkoztál",
     "error_body": "Ez a leiratkozási link érvénytelen vagy lejárt. Kérjük, jelentkezz be a beállítások módosításához.",
-    "error_title": "Érvénytelen vagy lejárt link"
+    "error_title": "Érvénytelen vagy lejárt link",
+    "nearby_already_body": "Már nem küldünk neked e-mailt a közeledben csatlakozó új emberekről.",
+    "nearby_confirm_body": "Nem fogsz e-mailt kapni a közeledben csatlakozó új emberekről. A többi értesítő e-mailt ez nem érinti.",
+    "nearby_confirm_title": "Leiratkozol a közeledben csatlakozó új emberekről szóló e-mailekről?",
+    "nearby_done_body": "Mostantól nem küldünk neked e-mailt a közeledben csatlakozó új emberekről. A többi értesítő e-mailt ez nem érinti."
   },
   "userContent": {
     "actions": {
