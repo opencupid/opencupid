@@ -546,7 +546,10 @@ onMounted(async () => {
 @import 'bootstrap/scss/mixins';
 
 .list-view {
-  height: 100vh;
+  // dvh, not vh: on mobile 100vh is the viewport with the browser toolbar
+  // retracted, so the map ran under the visible bottom edge while the
+  // fixed-position nearby panel (and the controls inset above it) did not.
+  height: 100dvh;
 }
 // The wrapper grows with its content (on phones the owner controls stack
 // into a tall column), so it must not paint or catch clicks itself: only
