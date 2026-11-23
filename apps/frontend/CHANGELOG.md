@@ -1,5 +1,20 @@
 # frontend
 
+## 0.95.0
+
+### Minor Changes
+
+- a1902e2: Dating wizard: clearer intro copy, and the recap step previews how matches look on the map
+- a1f996e: Onboarding: clearer dating-step copy, and the recap page shows how a dating match looks on the map and how to smile at them
+
+### Patch Changes
+
+- c877a77: Message dialog header shows the recipient as their map marker, with the match heart for potential dating matches
+- 2620844: Hungarian copy calls the dating feature "Párkereső" everywhere
+- bb38958: Map markers pick up a changed dating-match highlight after the viewer updates their dating preferences, without a reload
+- b122ca7: Radio and checkbox list rows (relationship status, kids, gender, pronouns, dating preferences) toggle on a tap anywhere in the row
+- 3aec2d5: Received-like avatars reuse the map's profile marker, so they show the match heart again
+
 ## 0.94.0
 
 ## 0.93.0

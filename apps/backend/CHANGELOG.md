@@ -1,5 +1,11 @@
 # backend
 
+## 0.95.0
+
+### Patch Changes
+
+- 8eda731: Saving dating preferences refreshes the map's match highlights immediately instead of after up to 30 minutes
+
 ## 0.94.0
 
 ### Minor Changes
