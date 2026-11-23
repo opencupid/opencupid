@@ -17,6 +17,7 @@ vi.mock('../../queues/emailQueue', () => ({ emailQueue: {}, bulkEmailQueue: {} }
 vi.mock('../../queues/activityQueue', () => ({ activityQueue: {} }))
 vi.mock('../../queues/onboardingReminderQueue', () => ({ onboardingReminderQueue: {} }))
 vi.mock('../../queues/profileTrustQueue', () => ({ profileTrustQueue: {} }))
+vi.mock('../../queues/nearbyDigestQueue', () => ({ nearbyDigestQueue: {} }))
 
 import bullBoardPlugin from '../../plugins/bull-board'
 

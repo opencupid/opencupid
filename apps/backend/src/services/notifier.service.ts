@@ -5,7 +5,7 @@ import { brandFor, type Brand } from '@/lib/brand'
 import { tFor } from '@/lib/i18n'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
-import { hashEmail, signUnsubscribeToken } from './email/unsubscribeToken'
+import { hashEmail, signUnsubscribeToken, type UnsubscribeScope } from './email/unsubscribeToken'
 import { cleanMessageForNotification } from '@/utils/notificationText'
 
 type NotificationType =
@@ -15,6 +15,7 @@ type NotificationType =
   | 'new_like'
   | 'new_match'
   | 'onboarding_reminder'
+  | 'nearby_digest'
 
 // login_link is auth/transactional — always sent and never carries an
 // unsubscribe link or List-Unsubscribe header. Every other type is a
@@ -25,11 +26,24 @@ const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
   'new_like',
   'new_match',
   'onboarding_reminder',
+  'nearby_digest',
 ])
 
 // Bulk types go to the rate-limited emails-bulk queue; everything else is
 // transactional and sent without delay.
-const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder'])
+const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder', 'nearby_digest'])
+
+// What an email's unsubscribe link turns off; any type not listed turns off
+// all notification email (User.emailNotificationsOptIn).
+const UNSUBSCRIBE_SCOPES: Partial<Record<NotificationType, UnsubscribeScope>> = {
+  nearby_digest: 'nearby_signups',
+}
+
+// The footer link says what it turns off.
+const UNSUBSCRIBE_LABEL_KEYS: Record<UnsubscribeScope, string> = {
+  all: 'emails.unsubscribe_link',
+  nearby_signups: 'emails.unsubscribe_link_nearby_signups',
+}
 
 type NotifiableUser = User & { profile?: { publicName: string } | null }
 
@@ -59,6 +73,8 @@ interface NotificationParams {
   new_like: { path: string }
   new_match: { name: string; path: string }
   onboarding_reminder: { path: string }
+  /** count drives the ICU plural in emails.nearby_digest.contentBody. */
+  nearby_digest: { path: string; count: number }
 }
 
 export class NotifierService {
@@ -99,6 +115,7 @@ export class NotifierService {
     switch (emailType) {
       case 'welcome':
       case 'onboarding_reminder':
+      case 'nearby_digest':
         return `${emailType}-${user.id}`
       case 'new_message': {
         const { senderId } = args as NotificationParams['new_message']
@@ -163,7 +180,9 @@ export class NotifierService {
     const t = tFor(brand, user.language)
 
     const suppressible = SUPPRESSIBLE_TYPES.has(emailType)
-    const unsubscribe = suppressible ? this.buildUnsubscribe(brand, user, t) : undefined
+    const unsubscribe = suppressible
+      ? this.buildUnsubscribe(brand, user, t, UNSUBSCRIBE_SCOPES[emailType] ?? 'all')
+      : undefined
     const contentVars: Record<string, unknown> = {
       siteName,
       ...args,
@@ -216,11 +235,13 @@ export class NotifierService {
   private buildUnsubscribe(
     brand: Brand,
     user: NotifiableUser,
-    t: TFunction
+    t: TFunction,
+    scope: UnsubscribeScope
   ): { pageUrl: string; apiUrl: string; label: string } {
     const token = signUnsubscribeToken({
       userId: user.id,
       emailHash: hashEmail(user.email),
+      scope,
     })
     // The page (footer link) lives on the SPA so the user gets a confirmation UI.
     // The API URL goes in the List-Unsubscribe header where mail providers POST
@@ -233,7 +254,7 @@ export class NotifierService {
     return {
       pageUrl: `${brand.frontendUrl}/unsubscribe/${token}?lang=${lang}`,
       apiUrl: `${brand.frontendUrl}/api/unsubscribe/${token}`,
-      label: t('emails.unsubscribe_link', { defaultValue: 'Unsubscribe from these emails' }),
+      label: t(UNSUBSCRIBE_LABEL_KEYS[scope], { defaultValue: 'Unsubscribe from these emails' }),
     }
   }
 

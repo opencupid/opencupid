@@ -8,6 +8,7 @@ import { registerWorkers } from './registerWorkers'
 import { registerDistillJob } from './queues/activityQueue'
 import { registerOnboardingReminderJob } from './queues/onboardingReminderQueue'
 import { registerProfileTrustJobs } from './queues/profileTrustQueue'
+import { registerNearbyDigestJob } from './queues/nearbyDigestQueue'
 
 async function main() {
   const app = Fastify({
@@ -29,6 +30,7 @@ async function main() {
     registerDistillJob(),
     registerOnboardingReminderJob(),
     registerProfileTrustJobs(),
+    registerNearbyDigestJob(),
   ])
 
   app.listen({ port: appConfig.WORKER_PORT, host: '0.0.0.0' }, (err) => {
