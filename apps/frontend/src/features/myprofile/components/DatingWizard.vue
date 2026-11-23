@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import DatingWizardStepper from '@/features/onboarding/components/DatingWizardStepper.vue'
 import IconCupid from '@/assets/images/app/cupid.svg'
+import MatchPreview from '@/features/onboarding/components/MatchPreview.vue'
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -73,6 +74,7 @@ const handleFinish = async () => {
         <p class="text-muted">
           {{ $t('onboarding.wizard.appear_message') }}
         </p>
+        <MatchPreview />
       </DatingWizardStepper>
     </section>
   </div>
