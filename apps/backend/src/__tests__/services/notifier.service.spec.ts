@@ -60,6 +60,9 @@ describe('NotifierService', () => {
       profile: {
         findUnique: vi.fn(),
       },
+      nearbySignupOptOut: {
+        count: vi.fn().mockResolvedValue(0),
+      },
     }
 
     mockGetFixedT.mockReset()
@@ -433,6 +436,34 @@ describe('NotifierService', () => {
       )
       expect(mockDispatchEmail).not.toHaveBeenCalled()
     })
+
+    it('is suppressed when the user opted out of nearby-signups emails', async () => {
+      mockPrisma.nearbySignupOptOut.count.mockResolvedValue(1)
+      await sendDigest()
+      expect(mockPrisma.nearbySignupOptOut.count).toHaveBeenCalledWith({
+        where: { profile: { userId: 'user-digest' } },
+      })
+      expect(mockDispatchEmail).not.toHaveBeenCalled()
+    })
+  })
+
+  it('does not check the nearby-signups opt-out for other types', async () => {
+    mockPrisma.nearbySignupOptOut.count.mockResolvedValue(1)
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyLoadedUser(
+      {
+        id: 'user-like',
+        email: 'like@example.com',
+        originDomain: 'frontend.test',
+        language: 'en',
+        emailNotificationsOptIn: true,
+        profile: null,
+      } as any,
+      'new_like',
+      { path: '/browse' }
+    )
+    expect(mockPrisma.nearbySignupOptOut.count).not.toHaveBeenCalled()
+    expect(mockDispatchEmail).toHaveBeenCalledOnce()
   })
 
   it('signs unsubscribe links for other types with the all scope', async () => {
