@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
-import { loginRedirect, loginRoute, utmQuery } from '../loginRedirect'
+import { loginRedirect, loginRoute } from '../loginRedirect'
 
 const component = { template: '<div />' }
 const router = createRouter({
@@ -47,14 +47,6 @@ describe('loginRoute', () => {
     expect(loginRoute(router.resolve(`/inbox/abc?tab=1&${utm}#m2`))).toEqual({
       name: 'Login',
       query: { ...utmKeys, redirect: '/inbox/abc?tab=1#m2' },
-    })
-  })
-})
-
-describe('utmQuery', () => {
-  it('keeps only utm_* keys', () => {
-    expect(utmQuery({ utm_campaign: 'new_like', tab: '1', redirect: '/inbox' })).toEqual({
-      utm_campaign: 'new_like',
     })
   })
 })

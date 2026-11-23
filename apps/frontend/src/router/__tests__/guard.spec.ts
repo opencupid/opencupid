@@ -38,14 +38,6 @@ describe('router auth guard', () => {
     })
   })
 
-  it('keeps UTM tags when sending a logged-in visitor of a public page to Browse', async () => {
-    authStore.isLoggedIn = true
-    await router.push('/auth?utm_campaign=new_like&foo=bar')
-
-    expect(router.currentRoute.value.name).toBe('Browse')
-    expect(router.currentRoute.value.query).toEqual({ utm_campaign: 'new_like' })
-  })
-
   it('sends a logged-out visitor of the landing page to a plain Login', async () => {
     authStore.isLoggedIn = true
     await router.push('/me')

@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
-import { loginRoute, utmQuery } from './loginRedirect'
+import { loginRoute } from './loginRedirect'
 
 import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 // LoginView stays eager so the form renders on first paint without a chunk
@@ -138,7 +138,7 @@ router.beforeEach(async (to) => {
   }
 
   if (!to.meta.requiresAuth && authStore.isLoggedIn && to.name !== 'Unsubscribe') {
-    return { name: 'Browse', query: utmQuery(to.query) }
+    return { name: 'Browse' }
   }
 })
 
