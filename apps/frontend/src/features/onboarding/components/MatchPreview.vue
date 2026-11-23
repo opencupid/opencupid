@@ -68,7 +68,8 @@ onMounted(async () => {
     <p class="text-center mb-0">
       {{ $t('onboarding.confirmation.match_preview_hint') }}
     </p>
-    <div class="popover bs-popover-top position-relative mw-100">
+    <!-- Below md the copy of the popover takes too much room; the button alone shows the gesture. -->
+    <div class="popover bs-popover-top position-relative mw-100 d-none d-md-block">
       <div class="popover-arrow"></div>
       <div class="popover-header d-flex">
         <span class="flex-grow-1">{{ $t('interactions.send_a_like') }}</span>
