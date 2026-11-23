@@ -206,6 +206,9 @@ export function useMapController(
     // added on first sighting and removed when their id leaves the viewport.
     pois = new DiffableLayer<MapPoi>(pointLayer, {
       create: (item) => createPoiMarker(item),
+      // Exception: the match highlight follows the viewer's dating prefs.
+      shouldUpdate: (prev, next) => prev.highlighted !== next.highlighted,
+      apply: (marker, item) => marker.setIcon(poiIcon(item, markerConfig!.resolveIcon)),
     })
 
     // Clusters share the immutable-per-id contract with POIs: cluster_id

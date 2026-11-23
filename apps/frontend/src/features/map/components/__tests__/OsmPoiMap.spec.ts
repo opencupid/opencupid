@@ -733,24 +733,18 @@ describe('OsmPoiMap', () => {
       expect(pointLayerInstance.removeLayer).toHaveBeenCalled()
     })
 
-    it('does not update existing POI markers when fields change between batches', async () => {
-      // Per-session contract: POI data is treated as immutable per id —
-      // the GUI is not expected to reflect mid-session DB changes. Existing
-      // markers are never re-rendered, only added on first sighting and
-      // removed when their id leaves the viewport.
-      const item0 = { ...items[0], highlighted: false }
-      const wrapper = await mountMap({ items: [item0] })
+    it('re-renders a POI icon when its match highlight changes', async () => {
+      // POI data is otherwise immutable per id, but the highlight follows
+      // the viewer's dating prefs, so a refetch can flip it.
+      const wrapper = await mountMap({ items: [{ ...items[0], highlighted: false }] })
+      await flushPromises()
+      const setIcon = (L.marker as any).mock.results[0].value.setIcon
+
+      await wrapper.setProps({ items: [{ ...items[0], highlighted: true }] })
       await flushPromises()
 
-      const markerInstance = (L.marker as any).mock.results[0].value
-
-      // Same id, different highlighted. Pre-fix this would have fired
-      // DiffableLayer.shouldUpdate → apply → setIcon. Now nothing happens.
-      const item0Highlighted = { ...items[0], highlighted: true }
-      await wrapper.setProps({ items: [item0Highlighted] })
-      await flushPromises()
-
-      expect(markerInstance.setIcon).not.toHaveBeenCalled()
+      expect(setIcon).toHaveBeenCalledTimes(1)
+      expect(setIcon.mock.calls[0][0].html).toContain('highlighted')
       expect((L.marker as any).mock.calls.length).toBe(1)
     })
 

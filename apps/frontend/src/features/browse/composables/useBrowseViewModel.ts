@@ -78,8 +78,11 @@ export function useBrowseViewModel() {
     const out: MapPoi[] = []
     for (const f of clusterFeatures.value) {
       if (f.type !== 'point' || f.kind !== 'profile') continue
-      live.add(f.id)
-      out.push(memoBy(profileCache, f.id, f))
+      // A refetch after a dating-preference change can flip the match
+      // highlight; key on it so that change reaches the map.
+      const key = `${f.id}:${f.highlighted}`
+      live.add(key)
+      out.push(memoBy(profileCache, key, f))
     }
     for (const id of profileCache.keys()) if (!live.has(id)) profileCache.delete(id)
     return out

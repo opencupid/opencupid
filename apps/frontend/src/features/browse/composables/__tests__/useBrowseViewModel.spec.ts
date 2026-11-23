@@ -85,6 +85,31 @@ describe('useBrowseViewModel', () => {
     expect(vm.profilePois.value[0]!.hasPost).toBe(true)
   })
 
+  it('hands over a fresh profile POI when its match highlight changes', () => {
+    const store = useFindProfileStore()
+    const p1 = {
+      type: 'point' as const,
+      kind: 'profile' as const,
+      id: 'p1',
+      lat: 47.1,
+      lon: 18.6,
+      publicName: 'Alice',
+      image: null,
+      highlighted: false,
+    }
+    store.clusterFeatures = [p1]
+    const vm = useBrowseViewModel()
+    const first = vm.profilePois.value[0]
+
+    // Same data again (a pan/zoom refetch): the memoised object is reused.
+    store.clusterFeatures = [{ ...p1 }]
+    expect(vm.profilePois.value[0]).toBe(first)
+
+    // A refetch after a dating-preference change flips the highlight.
+    store.clusterFeatures = [{ ...p1, highlighted: true }]
+    expect(vm.profilePois.value[0]!.highlighted).toBe(true)
+  })
+
   it('derives post POIs from cluster features', () => {
     const store = useFindProfileStore()
     store.clusterFeatures = [
