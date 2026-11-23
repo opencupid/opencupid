@@ -113,3 +113,18 @@ describe('ProfileMatchService.findNewProfilesAnywhere', () => {
     expect(call.where.user).toEqual({ isBlocked: false })
   })
 })
+
+describe('socialVisibleWhere', () => {
+  it('is the browse map filter with hidden profiles excluded', async () => {
+    mockPrisma.profile.findMany.mockResolvedValue(mockProfiles)
+    const { socialVisibleWhere } = await import('../../services/profileMatch.service')
+
+    await service.findSocialProfilesWithLocation(mockProfileId)
+    const { OR, ...browseWhere } = {
+      ...mockPrisma.profile.findMany.mock.calls[0][0].where,
+    }
+
+    expect(OR).toContainEqual({ isHiddenFromResults: false })
+    expect(socialVisibleWhere).toEqual({ ...browseWhere, isHiddenFromResults: false })
+  })
+})

@@ -22,6 +22,24 @@ const statusFlags = {
   ...notBlockedUserWhere,
 } satisfies Prisma.ProfileWhereInput
 
+/** Social profiles placed on the map, before the hidden-from-results rule. */
+const socialOnMapWhere = {
+  ...statusFlags,
+  isSocialActive: true,
+  lat: { not: null },
+  lon: { not: null },
+} satisfies Prisma.ProfileWhereInput
+
+/**
+ * Profiles that browse shows on the social map to other people. Shared with
+ * the nearby signups digest so the email only counts people the user can find.
+ * Combine with blocklistWhereClause(viewerId) for a specific viewer.
+ */
+export const socialVisibleWhere = {
+  ...socialOnMapWhere,
+  isHiddenFromResults: false,
+} satisfies Prisma.ProfileWhereInput
+
 export class ProfileMatchService {
   async findNewProfilesAnywhere(
     profileId: string,
@@ -80,10 +98,7 @@ export class ProfileMatchService {
 
     return await prisma.profile.findMany({
       where: {
-        ...statusFlags,
-        isSocialActive: true,
-        lat: { not: null },
-        lon: { not: null },
+        ...socialOnMapWhere,
         OR: [{ id: profileId }, { isHiddenFromResults: false }],
         ...tagFilter,
         ...blocklistWhereClause(profileId),
