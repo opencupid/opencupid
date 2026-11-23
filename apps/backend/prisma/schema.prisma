@@ -373,6 +373,7 @@ model Message {
   content        String
   messageType    String             @default("text/plain") // 'text/plain', 'audio/voice'
   createdAt      DateTime           @default(now())
+  editedAt       DateTime?
   attachment     MessageAttachment?
   images         MessageImage[]
 

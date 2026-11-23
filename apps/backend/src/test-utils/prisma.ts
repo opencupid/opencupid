@@ -68,6 +68,7 @@ export function createMockPrisma() {
       findFirst: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     tag: {
       findMany: vi.fn(),

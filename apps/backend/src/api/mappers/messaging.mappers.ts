@@ -110,6 +110,7 @@ export function mapMessageToDTO(m: MessageWithSender, currentProfileId?: string)
     content: m.content,
     messageType: m.messageType,
     createdAt: m.createdAt,
+    editedAt: m.editedAt,
     sender: mapMessageProfileRef(m.sender),
     attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
     images: m.images.map((j) => toPublicImage(j.image)),

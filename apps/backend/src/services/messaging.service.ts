@@ -12,6 +12,8 @@ import { ImageService } from './image.service'
 export const MessagingErrorCodes = {
   CONVERSATION_BLOCKED: 'CONVERSATION_BLOCKED',
   EMPTY_MESSAGE: 'EMPTY_MESSAGE',
+  MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
+  MESSAGE_NOT_EDITABLE: 'MESSAGE_NOT_EDITABLE',
 } as const
 
 export type MessagingErrorCode = (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
@@ -482,6 +484,79 @@ export class MessageService {
     })
 
     return { message, isDuplicate: false }
+  }
+
+  /**
+   * Replaces the text of the editor's own message. Only the latest message of
+   * the conversation can be edited — once anyone has written after it, it is
+   * part of the history. Text messages only: voice and image messages keep
+   * their content.
+   *
+   * Edits are not activity: the conversation keeps its updatedAt (no inbox
+   * re-ordering) and the message keeps its createdAt (no unread change).
+   */
+  async editMessage(
+    tx: Prisma.TransactionClient,
+    messageId: string,
+    editorProfileId: string,
+    content: string
+  ): Promise<{
+    message: MessageWithSender
+    conversation: Pick<Conversation, 'status' | 'profileAId' | 'profileBId'>
+  }> {
+    const target = await tx.message.findFirst({
+      where: {
+        id: messageId,
+        senderId: editorProfileId,
+        conversation: inboxVisibleConversationWhere(editorProfileId),
+      },
+      select: {
+        conversationId: true,
+        messageType: true,
+        attachment: { select: { id: true } },
+        _count: { select: { images: true } },
+        conversation: { select: { status: true, profileAId: true, profileBId: true } },
+      },
+    })
+    if (!target) {
+      throw new MessagingError(MessagingErrorCodes.MESSAGE_NOT_FOUND, 'Message not found')
+    }
+    if (target.messageType !== 'text/plain' || target.attachment || target._count.images > 0) {
+      throw new MessagingError(
+        MessagingErrorCodes.MESSAGE_NOT_EDITABLE,
+        'Only text messages can be edited'
+      )
+    }
+
+    const cleanContent = content.trim()
+    if (!cleanContent) {
+      throw new MessagingError(MessagingErrorCodes.EMPTY_MESSAGE, 'Message content cannot be empty')
+    }
+
+    // Serialize against sendMessage, which updates this row in the same
+    // transaction that inserts a reply: a reply committed before the lock is
+    // granted is visible to the latest-message check below.
+    await tx.$queryRaw`SELECT id FROM "Conversation" WHERE id = ${target.conversationId} FOR UPDATE`
+
+    const latest = await tx.message.findFirst({
+      where: { conversationId: target.conversationId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    })
+    if (latest?.id !== messageId) {
+      throw new MessagingError(
+        MessagingErrorCodes.MESSAGE_NOT_EDITABLE,
+        'Only the latest message can be edited'
+      )
+    }
+
+    const message = await tx.message.update({
+      where: { id: messageId },
+      data: { content: cleanContent, editedAt: new Date() },
+      include: messageWithSenderInclude,
+    })
+
+    return { message, conversation: target.conversation }
   }
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {

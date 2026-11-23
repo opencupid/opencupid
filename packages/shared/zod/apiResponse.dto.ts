@@ -93,6 +93,10 @@ export type SendMessageResponse = ApiSuccess<{
   message: MessageDTO
 }>
 
+export type EditMessageResponse = ApiSuccess<{
+  message: MessageDTO
+}>
+
 export type InitiateConversationResponse = ApiSuccess<{}>
 
 export type InteractionEdgesResponse = ApiSuccess<{ edges: InteractionEdge[] }>

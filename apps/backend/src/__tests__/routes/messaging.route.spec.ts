@@ -28,6 +28,8 @@ vi.mock('../../services/messaging.service', () => {
   const MessagingErrorCodes = {
     CONVERSATION_BLOCKED: 'CONVERSATION_BLOCKED',
     EMPTY_MESSAGE: 'EMPTY_MESSAGE',
+    MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
+    MESSAGE_NOT_EDITABLE: 'MESSAGE_NOT_EDITABLE',
   } as const
   class MessagingError extends Error {
     readonly code: (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
@@ -136,6 +138,7 @@ beforeEach(async () => {
     acceptConversationOnReply: vi.fn(),
     promoteConversation: vi.fn(),
     sendMessage: vi.fn(),
+    editMessage: vi.fn(),
     findConversationSummaryByPartner: vi.fn(),
     hasMutualLike: vi.fn(),
   }
@@ -1500,5 +1503,93 @@ describe('GET /conversations/by-profile/:profileId', () => {
       reply as any
     )
     expect(reply.statusCode).toBe(500)
+  })
+})
+
+describe('PATCH /message/:id', () => {
+  const messageId = 'ck1234567890abcd12345679'
+  const recipientId = 'ck1234567890abcd12345678'
+  const edited = { id: messageId, senderId: 'p1', content: 'fixed' }
+
+  const edit = (body: any = { content: 'fixed' }, session: any = { profileId: 'p1' }) =>
+    fastify.routes['PATCH /message/:id'](
+      { session, params: { id: messageId }, body } as any,
+      reply as any
+    )
+
+  it('returns 401 when session missing', async () => {
+    await edit(undefined, {})
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns 400 for empty content', async () => {
+    await edit({ content: '   ' })
+    expect(reply.statusCode).toBe(400)
+    expect(mockMessageService.editMessage).not.toHaveBeenCalled()
+  })
+
+  it('edits the message, returns it, and broadcasts the update to the recipient', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    mockMessageService.editMessage.mockResolvedValue({
+      message: edited,
+      conversation: { status: 'ACCEPTED', profileAId: recipientId, profileBId: 'p1' },
+    })
+
+    await edit()
+
+    expect(mockMessageService.editMessage).toHaveBeenCalledWith(
+      fastify.prisma,
+      messageId,
+      'p1',
+      'fixed'
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.message).toMatchObject({ id: messageId, isMine: true })
+    expect(broadcastToProfile).toHaveBeenCalledWith(
+      fastify,
+      recipientId,
+      expect.objectContaining({ type: 'ws:message_updated' })
+    )
+  })
+
+  it('never sends web push or email for an edit, even when the recipient is offline', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    ;(broadcastToProfile as any).mockReturnValue(false)
+    mockMessageService.editMessage.mockResolvedValue({
+      message: edited,
+      conversation: { status: 'ACCEPTED', profileAId: 'p1', profileBId: recipientId },
+    })
+
+    await edit()
+
+    expect(reply.statusCode).toBe(200)
+    expect(mockWebPushService.send).not.toHaveBeenCalled()
+    expect(mockNotifierService.notifyProfile).not.toHaveBeenCalled()
+  })
+
+  it('does not reveal edits in a PENDING conversation to the recipient', async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    mockMessageService.editMessage.mockResolvedValue({
+      message: edited,
+      conversation: { status: 'PENDING', profileAId: 'p1', profileBId: recipientId },
+    })
+
+    await edit()
+
+    expect(reply.statusCode).toBe(200)
+    expect(broadcastToProfile).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['MESSAGE_NOT_FOUND', 404],
+    ['MESSAGE_NOT_EDITABLE', 409],
+    ['EMPTY_MESSAGE', 400],
+  ])('maps %s to %i', async (code, status) => {
+    const { MessagingError } = await import('../../services/messaging.service')
+    mockMessageService.editMessage.mockRejectedValue(new MessagingError(code as any, 'nope'))
+
+    await edit()
+
+    expect(reply.statusCode).toBe(status)
   })
 })

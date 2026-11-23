@@ -6,6 +6,7 @@ import { bus } from '@/lib/bus'
 import type {
   ConversationOrDraft,
   ConversationSummary,
+  EditMessagePayload,
   MessageDTO,
   MessageInConversation,
   SendMessagePayload,
@@ -17,6 +18,7 @@ import type {
   ConversationResponse,
   MarkConversationReadResponse,
   SendMessageResponse,
+  EditMessageResponse,
 } from '@zod/apiResponse.dto'
 import { storeError, type StoreError, type StoreResponse, storeSuccess } from '@/store/helpers'
 
@@ -39,6 +41,18 @@ type MessageStoreState = {
   conversationCursor: string | null
   hasMoreConversations: boolean
   isLoadingMoreConversations: boolean
+  // Message whose text is loaded into the composer for editing.
+  editingMessageId: string | null
+}
+
+// Mirrors the backend edit rule: own text message with no attachments.
+function isEditableMessage(message: MessageDTO): boolean {
+  return (
+    !!message.isMine &&
+    message.messageType === 'text/plain' &&
+    !message.attachment &&
+    message.images.length === 0
+  )
 }
 
 export const useMessageStore = defineStore('message', {
@@ -59,7 +73,22 @@ export const useMessageStore = defineStore('message', {
     conversationCursor: null,
     hasMoreConversations: false,
     isLoadingMoreConversations: false,
+    editingMessageId: null,
   }),
+
+  getters: {
+    // Only the latest message of the open conversation can be edited, and only
+    // until anyone writes after it.
+    editableMessage(state): MessageDTO | null {
+      const last = state.messages[state.messages.length - 1]
+      return last && isEditableMessage(last) ? last : null
+    },
+    // Null as soon as the message stops being editable (e.g. a reply arrived).
+    editingMessage(): MessageDTO | null {
+      const editable = this.editableMessage
+      return editable && editable.id === this.editingMessageId ? editable : null
+    },
+  },
 
   actions: {
     async handleIncomingMessage(message: MessageDTO) {
@@ -91,6 +120,51 @@ export const useMessageStore = defineStore('message', {
     appendMessageIfNew(message: MessageDTO) {
       if (!this.messages.find((m) => m.id === message.id)) {
         this.messages.push(message)
+      }
+    },
+
+    // Applies an edited message in place. Edits don't bump the conversation:
+    // they are not new activity.
+    handleMessageUpdated(message: MessageDTO) {
+      const index = this.messages.findIndex((m) => m.id === message.id)
+      if (index !== -1) {
+        // Keep the viewer-relative isMine of the loaded copy: broadcasts omit it.
+        this.messages[index] = { ...message, isMine: this.messages[index]!.isMine }
+      }
+      // The edited message is by definition the latest one, i.e. the preview.
+      const isPreviewOf = (c: ConversationSummary) =>
+        c.conversationId === message.conversationId &&
+        !!c.lastMessage &&
+        new Date(c.lastMessage.createdAt).getTime() === new Date(message.createdAt).getTime()
+      this.conversations = this.conversations.map((c) =>
+        isPreviewOf(c) ? { ...c, lastMessage: { ...c.lastMessage!, content: message.content } } : c
+      )
+    },
+
+    startEditing() {
+      this.editingMessageId = this.editableMessage?.id ?? null
+    },
+
+    cancelEditing() {
+      this.editingMessageId = null
+    },
+
+    async editMessage(messageId: string, content: string): Promise<StoreResponse<MessageDTO>> {
+      try {
+        this.isSending = true
+        this.error = null
+        const res = await safeApiCall(() =>
+          api.patch<EditMessageResponse>(`/messages/message/${messageId}`, {
+            content,
+          } satisfies EditMessagePayload)
+        )
+        this.handleMessageUpdated(res.data.message)
+        return storeSuccess(res.data.message)
+      } catch (error: any) {
+        this.error = storeError(error)
+        return this.error
+      } finally {
+        this.isSending = false
       }
     },
 
@@ -389,6 +463,7 @@ export const useMessageStore = defineStore('message', {
 
     async setActiveConversation(convo: ConversationSummary | null) {
       this.activeConversation = convo
+      this.editingMessageId = null
       if (this.activeConversation) {
         await this.fetchMessagesForConversation(this.activeConversation.conversationId)
       }
@@ -400,6 +475,7 @@ export const useMessageStore = defineStore('message', {
       this.messageCursor = null
       this.hasMoreMessages = false
       this.isLoadingMoreMessages = false
+      this.editingMessageId = null
     },
 
     async handleProfileBlocked() {
@@ -427,11 +503,13 @@ export const useMessageStore = defineStore('message', {
         await this.fetchConversations()
       }
       bus.on('ws:new_message', this.handleIncomingMessage)
+      bus.on('ws:message_updated', this.handleMessageUpdated)
       bus.on('profile:blocked', this.handleProfileBlocked)
     },
 
     teardown() {
       bus.off('ws:new_message', this.handleIncomingMessage)
+      bus.off('ws:message_updated', this.handleMessageUpdated)
       bus.off('profile:blocked', this.handleProfileBlocked)
       this.$reset()
     },

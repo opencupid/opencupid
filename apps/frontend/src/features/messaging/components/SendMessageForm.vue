@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect, computed, inject, useId, type Ref } from 'vue'
+import { ref, watch, watchEffect, computed, inject, nextTick, useId, type Ref } from 'vue'
 import { funnel } from 'remeda'
+import type { BFormTextarea } from 'bootstrap-vue-next'
 import { useI18n } from 'vue-i18n'
 
 import { useLocalStore } from '@/store/localStore'
@@ -13,6 +14,7 @@ import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 import IconCall from '@/assets/icons/interface/call.svg'
 import IconSend from '@/assets/icons/interface/send.svg'
 import IconPhoto from '@/assets/icons/interface/photo.svg'
+import IconCross from '@/assets/icons/interface/cross.svg'
 import SendModeSelector from './SendModeSelector.vue'
 import { useToast } from 'vue-toastification'
 import VoiceRecorder from './VoiceRecorder.vue'
@@ -127,15 +129,19 @@ const pendingVoiceAttachment = computed<MessageAttachmentDTO | null>(() => {
 const localStore = useLocalStore()
 const debouncer = funnel<[string], string>(
   (val: string) => {
-    localStore.setMessageDraft(props.recipientProfile.id, content.value)
+    localStore.setMessageDraft(props.recipientProfile.id, val)
   },
   {
+    reducer: (_previous, val) => val,
     minQuietPeriodMs: 3000,
   }
 )
 
-// Watch message input field and save draft in localStore
-watch(content, (val) => debouncer.call(val))
+// Watch message input field and save draft in localStore. While editing, the
+// textarea holds the edited message, not the draft.
+watch(content, (val) => {
+  if (!isEditing.value) debouncer.call(val)
+})
 
 watchEffect(() => {
   // Load the draft message from local store when the component is mounted
@@ -143,7 +149,7 @@ watchEffect(() => {
   if (draft) content.value = draft
 })
 
-const textarea = ref<HTMLTextAreaElement>()
+const textarea = ref<InstanceType<typeof BFormTextarea>>()
 
 // Give focus to textarea - expose method to parent which can call it
 // when it's rendered or when needed
@@ -156,16 +162,83 @@ defineExpose({
 // Send mode preference
 const sendMode = computed(() => localStore.getSendMode)
 
+// Editing reuses this textarea: entering edit mode puts the draft aside and
+// loads the message text; leaving it brings the draft back.
+const canEditHere = computed(
+  () =>
+    props.conversationId !== null &&
+    props.conversationId === messageStore.activeConversation?.conversationId
+)
+const editingMessage = computed(() => (canEditHere.value ? messageStore.editingMessage : null))
+const isEditing = computed(() => editingMessage.value !== null)
+// Non-null exactly while this form is in edit mode.
+const draftBeforeEdit = ref<string | null>(null)
+
+watch(
+  () => editingMessage.value?.id,
+  async (id, previousId) => {
+    if (id && !previousId) {
+      draftBeforeEdit.value = content.value
+      content.value = editingMessage.value!.content
+      await nextTick()
+      const el = textarea.value?.element
+      el?.focus()
+      el?.setSelectionRange(content.value.length, content.value.length)
+    } else if (!id && previousId && draftBeforeEdit.value !== null) {
+      // Edit mode ended without this form finishing it: someone wrote after
+      // the message. Keep the typed text so it can be sent as a new message.
+      draftBeforeEdit.value = null
+      toast.info(t('messaging.edit_no_longer_possible'))
+    }
+  }
+)
+
+function exitEditMode() {
+  content.value = draftBeforeEdit.value ?? ''
+  draftBeforeEdit.value = null
+  messageStore.cancelEditing()
+  focusTextarea()
+}
+
+async function handleSaveEdit() {
+  const message = editingMessage.value
+  if (!message || !canSend.value) return
+  const trimmedContent = content.value.trim()
+  if (trimmedContent === message.content) return exitEditMode()
+
+  const result = await messageStore.editMessage(message.id, trimmedContent)
+  if (result.success) return exitEditMode()
+  // The server no longer allows the edit (a reply landed first): drop out of
+  // edit mode, the watcher above keeps the text.
+  if (result.status === 404 || result.status === 409) messageStore.cancelEditing()
+}
+
 const handleKeyPress = (event: KeyboardEvent) => {
   if (sendMode.value === 'enter' && event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
     handleSendMessage()
+  } else if (event.key === 'Escape' && isEditing.value) {
+    // Esc cancels the edit only; the panel/modal around the conversation
+    // listens for Esc on its own element and would close too.
+    event.preventDefault()
+    event.stopPropagation()
+    exitEditMode()
+  } else if (
+    event.key === 'ArrowUp' &&
+    !isEditing.value &&
+    content.value === '' &&
+    canEditHere.value &&
+    messageStore.editableMessage
+  ) {
+    event.preventDefault()
+    messageStore.startEditing()
   }
 }
 
 const canSend = computed(() => content.value.trim() !== '')
 
 async function handleSendMessage() {
+  if (isEditing.value) return handleSaveEdit()
   if (!canSend.value) return
   const trimmedContent = content.value.trim()
   isSending.value = true
@@ -258,6 +331,23 @@ function handleVoiceRecordingError(error: string) {
            causes jumps with translateY/margin approaches. -->
 
       <div>
+        <div
+          v-if="isEditing"
+          class="d-flex align-items-center justify-content-between small text-muted mb-1"
+          data-testid="edit-banner"
+        >
+          <span>{{ $t('messaging.editing_message') }}</span>
+          <button
+            type="button"
+            class="btn btn-link btn-sm p-0 text-muted"
+            data-testid="edit-cancel"
+            :title="$t('messaging.cancel_edit')"
+            :aria-label="$t('messaging.cancel_edit')"
+            @click="exitEditMode"
+          >
+            <IconCross class="svg-icon" />
+          </button>
+        </div>
         <BFormTextarea
           id="content-input"
           ref="textarea"
@@ -273,7 +363,10 @@ function handleVoiceRecordingError(error: string) {
           :disabled="messageStore.isSending || isVoiceActive"
         />
         <div class="d-flex justify-content-between align-items-start">
-          <div class="d-flex align-items-center gap-2">
+          <div
+            v-if="!isEditing"
+            class="d-flex align-items-center gap-2"
+          >
             <!-- Unified voice recorder (left) -->
             <VoiceRecorder
               ref="voiceRecorderRef"
@@ -309,7 +402,7 @@ function handleVoiceRecordingError(error: string) {
           <div
             v-if="!isVoiceActive"
             data-testid="send-controls"
-            class="d-flex align-items-center gap-2"
+            class="d-flex align-items-center gap-2 ms-auto"
           >
             <BButton
               v-if="sendMode === 'click'"
@@ -317,10 +410,14 @@ function handleVoiceRecordingError(error: string) {
               size="md"
               @click="handleSendMessage"
               :disabled="!canSend || isVoiceActive || isSending"
-              :title="$t('messaging.send_message_button')"
+              :title="
+                isEditing ? $t('messaging.save_edit_button') : $t('messaging.send_message_button')
+              "
             >
               <IconSend class="svg-icon" />
-              {{ $t('messaging.send_message_button') }}
+              {{
+                isEditing ? $t('messaging.save_edit_button') : $t('messaging.send_message_button')
+              }}
             </BButton>
             <small
               v-else

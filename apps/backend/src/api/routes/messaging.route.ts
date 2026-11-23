@@ -23,11 +23,13 @@ import type {
   MarkConversationReadResponse,
   ConversationByProfileResponse,
   SendMessageResponse,
+  EditMessageResponse,
 } from '@zod/apiResponse.dto'
 import type { ConversationDraftSummary } from '@zod/messaging/messaging.dto'
 import { ProfileService } from '@/services/profile.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
 import {
+  EditMessagePayloadSchema,
   SendMessagePayloadSchema,
   SendVoiceMessagePayloadSchema,
 } from '@zod/messaging/messaging.dto'
@@ -71,6 +73,8 @@ const ConversationListQuerySchema = z.object({
 const MESSAGING_ERROR_STATUS: Record<MessagingErrorCode, number> = {
   [MessagingErrorCodes.CONVERSATION_BLOCKED]: 403,
   [MessagingErrorCodes.EMPTY_MESSAGE]: 400,
+  [MessagingErrorCodes.MESSAGE_NOT_FOUND]: 404,
+  [MessagingErrorCodes.MESSAGE_NOT_EDITABLE]: 409,
 }
 
 const messageRoutes: FastifyPluginAsync = async (fastify) => {
@@ -487,6 +491,59 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             senderProfileId,
             recipientProfileId: profileId,
             messageDTO,
+          })
+        }
+      } catch (error) {
+        if (error instanceof MessagingError) {
+          return sendError(reply, MESSAGING_ERROR_STATUS[error.code], error.message)
+        }
+        throw error
+      }
+    }
+  )
+
+  /**
+   * PATCH /message/:id
+   * Replaces the text of the sender's own latest message in a conversation.
+   * The recipient is updated over WebSocket only — an edit is not a new
+   * message, so it never triggers web push or email.
+   * @param {string} id - Message ID (CUID)
+   * @body {string} content - New message text
+   * @returns {EditMessageResponse} { message }
+   */
+  fastify.patch(
+    '/message/:id',
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 30) },
+    async (req, reply) => {
+      const editorProfileId = req.session.profileId
+      if (!editorProfileId) return sendError(reply, 401, 'Profile not found.')
+
+      const id = IdLookupParamsSchema.safeParse(req.params)
+      if (!id.success) return sendError(reply, 404, 'Message not found')
+
+      const body = EditMessagePayloadSchema.safeParse(req.body)
+      if (!body.success) return sendError(reply, 400, 'Invalid parameters')
+
+      try {
+        const { message, conversation } = await fastify.prisma.$transaction((tx) =>
+          messageService.editMessage(tx, id.data.id, editorProfileId, body.data.content)
+        )
+
+        const response: EditMessageResponse = {
+          success: true,
+          message: mapMessageToDTO(message, editorProfileId),
+        }
+        reply.code(200).send(response)
+
+        // A PENDING conversation is invisible to the recipient until promoted.
+        const recipientProfileId =
+          conversation.profileAId === editorProfileId
+            ? conversation.profileBId
+            : conversation.profileAId
+        if (recipientProfileId && conversation.status !== 'PENDING') {
+          broadcastToProfile(fastify, recipientProfileId, {
+            type: 'ws:message_updated',
+            payload: mapMessageToDTO(message),
           })
         }
       } catch (error) {

@@ -11,6 +11,7 @@ export const MessageSchema = z.object({
   content: z.string(),
   messageType: z.string(),
   createdAt: z.coerce.date(),
+  editedAt: z.coerce.date().nullable(),
 })
 
 export type Message = z.infer<typeof MessageSchema>

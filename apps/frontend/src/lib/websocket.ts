@@ -76,6 +76,7 @@ export async function connectWebSocket(): Promise<void> {
             bus.emit('ws:update_like')
             break
           case 'ws:new_message':
+          case 'ws:message_updated':
           case 'ws:new_match':
           case 'ws:app_notification':
             bus.emit(data.type, data.payload)
