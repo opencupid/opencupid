@@ -164,7 +164,7 @@ export function useMapController(
       maxZoom: MAP_MAX_ZOOM,
       preferCanvas: true,
       trackResize: false,
-      // Zoom and locate buttons are rendered by MapControls.vue.
+      // Zoom buttons are rendered by MapControls.vue.
       zoomControl: false,
     })
 

@@ -18,7 +18,6 @@ const emit = defineEmits<{
   (e: 'map:ready', map: LMap): void
   (e: 'bounds:changed', payload: BoundsWithZoom): void
   (e: 'cluster:max-zoom'): void
-  (e: 'locate'): void
 }>()
 
 const mapEl = ref<HTMLDivElement | null>(null)
@@ -44,7 +43,6 @@ const { popupItem, popupFullData, popupTarget, zoomIn, zoomOut } = useMapControl
       class="osm-poi-map-controls"
       @zoom:in="zoomIn"
       @zoom:out="zoomOut"
-      @locate="emit('locate')"
     />
 
     <!--
