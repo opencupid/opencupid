@@ -103,6 +103,16 @@ describe('unsubscribeToken', () => {
     expect(verifyUnsubscribeToken(token)).not.toBeNull()
   })
 
+  it('still accepts a link from a weekly email six days after it was sent', () => {
+    const token = signUnsubscribeToken({
+      userId: 'user-1',
+      emailHash: hashEmail('alice@example.com'),
+      scope: 'nearby_signups',
+    })
+    vi.setSystemTime((NOW + 6 * 24 * 60 * 60) * 1000)
+    expect(verifyUnsubscribeToken(token)?.scope).toBe('nearby_signups')
+  })
+
   it('hashEmail is stable, lowercase- and whitespace-normalized', () => {
     expect(hashEmail('Alice@Example.com')).toBe(hashEmail('  alice@example.com  '))
     expect(hashEmail('alice@example.com')).not.toBe(hashEmail('bob@example.com'))
