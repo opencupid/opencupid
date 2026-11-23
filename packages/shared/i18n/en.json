@@ -518,6 +518,7 @@
       "install": "Install",
       "message": "Install this app on your device."
     },
+    "just_now": "just now",
     "loading": {
       "loading": "Loading..."
     },
