@@ -33,10 +33,19 @@ const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
 // transactional and sent without delay.
 const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder', 'nearby_digest'])
 
+type NarrowScope = Exclude<UnsubscribeScope, 'all'>
+
 // What an email's unsubscribe link turns off; any type not listed turns off
 // all notification email (User.emailNotificationsOptIn).
-const UNSUBSCRIBE_SCOPES: Partial<Record<NotificationType, UnsubscribeScope>> = {
+const UNSUBSCRIBE_SCOPES: Partial<Record<NotificationType, NarrowScope>> = {
   nearby_digest: 'nearby_signups',
+}
+
+// Whether the user turned off a narrow scope; checked before every send of a
+// type in that scope, like emailNotificationsOptIn is for all of them.
+const OPTED_OUT_OF: Record<NarrowScope, (userId: string) => Promise<boolean>> = {
+  nearby_signups: async (userId) =>
+    (await prisma.nearbySignupOptOut.count({ where: { profile: { userId } } })) > 0,
 }
 
 // The footer link says what it turns off.
@@ -269,6 +278,8 @@ export class NotifierService {
     { dedupSuffix }: NotifyOptions = {}
   ): Promise<void> {
     if (SUPPRESSIBLE_TYPES.has(emailType) && user.emailNotificationsOptIn === false) return
+    const scope = UNSUBSCRIBE_SCOPES[emailType]
+    if (scope && (await OPTED_OUT_OF[scope](user.id))) return
 
     const emailPayload = this.createEmailPayload(emailType, args, user)
     await this.disp.dispatchEmail(
