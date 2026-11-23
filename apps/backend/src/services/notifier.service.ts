@@ -6,6 +6,7 @@ import { tFor } from '@/lib/i18n'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
 import { hashEmail, signUnsubscribeToken, type UnsubscribeScope } from './email/unsubscribeToken'
+import { withUtm } from './email/utm'
 import { cleanMessageForNotification } from '@/utils/notificationText'
 
 type NotificationType =
@@ -32,6 +33,10 @@ const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
 // Bulk types go to the rate-limited emails-bulk queue; everything else is
 // transactional and sent without delay.
 const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder', 'nearby_digest'])
+
+// Call-to-action buttons of every other type carry UTM tags (campaign = type).
+// The login link is auth, not engagement, so it is left untagged.
+const UNTAGGED_TYPES: ReadonlySet<NotificationType> = new Set(['login_link'])
 
 type NarrowScope = Exclude<UnsubscribeScope, 'all'>
 
@@ -199,6 +204,8 @@ export class NotifierService {
       ...user,
     }
 
+    const pageUrl = `${brand.frontendUrl}${args.path}`
+
     // emailType maps 1:1 to the i18n key under `emails.*` (e.g. emails.new_message.subject).
     return {
       to: user.email,
@@ -210,8 +217,9 @@ export class NotifierService {
         publicName: user.profile?.publicName || '',
         contentBody: t(`emails.${emailType}.contentBody`, contentVars),
         callToActionLabel: t(`emails.${emailType}.callToActionLabel`),
-        callToActionUrl: `${brand.frontendUrl}${args.path}`,
+        callToActionUrl: this.callToActionUrl(emailType, pageUrl),
         fallbackHint: t(`emails.fallback_hint`),
+        fallbackUrl: pageUrl,
         footer: t(`emails.${emailType}.footer`, { defaultValue: '' }),
         unsubscribeUrl: unsubscribe?.pageUrl,
         unsubscribeLabel: unsubscribe?.label,
@@ -239,6 +247,11 @@ export class NotifierService {
           ? t('emails.new_message.voice_message')
           : cleanMessageForNotification(preview.content, 100),
     }
+  }
+
+  // Only the button is tagged; a copied link should stay clean.
+  private callToActionUrl(emailType: NotificationType, pageUrl: string): string {
+    return UNTAGGED_TYPES.has(emailType) ? pageUrl : withUtm(pageUrl, emailType)
   }
 
   private buildUnsubscribe(

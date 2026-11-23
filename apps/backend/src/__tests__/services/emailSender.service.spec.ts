@@ -35,6 +35,7 @@ const payload: EmailPayload = {
     callToActionLabel: 'Belépek',
     callToActionUrl: 'https://example.com/magic-link?token=abc',
     fallbackHint: 'Ha a gomb nem működik, másold ki ezt a címsorba:',
+    fallbackUrl: 'https://example.com/magic-link?token=abc',
     footer: 'Ha nem Te kérted, hagyd figyelmen kívül.',
   },
 }

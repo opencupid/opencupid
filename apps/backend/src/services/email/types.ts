@@ -5,8 +5,11 @@ export type EmailTemplateProps = {
   publicName: string
   contentBody: string
   callToActionLabel: string
+  /** The button's link; may carry UTM tags. */
   callToActionUrl: string
   fallbackHint: string
+  /** The same page, untagged, for the copy-paste link and the plain-text part. */
+  fallbackUrl: string
   footer?: string
   unsubscribeUrl?: string
   unsubscribeLabel?: string

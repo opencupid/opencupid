@@ -21,6 +21,7 @@ const defaultProps: EmailTemplateProps = {
   callToActionLabel: 'Get Started',
   callToActionUrl: 'https://example.com/start',
   fallbackHint: 'If the button does not work, copy and paste the URL.',
+  fallbackUrl: 'https://example.com/start',
   footer: 'You received this because you signed up.',
 }
 const defaultPayload: EmailPayload = {
@@ -115,6 +116,7 @@ describe('renderEmail', () => {
       callToActionLabel: 'Click Me',
       callToActionUrl: 'https://example.com/action',
       fallbackHint: 'Fallback hint text',
+      fallbackUrl: 'https://example.com/action',
     }
     const result = await renderEmail(SimpleComponent, {
       to: 'bob@example.com',
@@ -136,6 +138,7 @@ describe('renderEmail', () => {
       callToActionLabel: 'Go',
       callToActionUrl: 'https://example.com',
       fallbackHint: 'Fallback hint text',
+      fallbackUrl: 'https://example.com',
     }
     const result = await renderEmail(SimpleComponent, {
       to: 'carol@example.com',
@@ -196,6 +199,16 @@ describe('renderEmailText', () => {
     const result = renderEmailText({ ...defaultProps, contentBody: 'Log in.' })
     const occurrences = result.split(defaultProps.callToActionUrl).length - 1
     expect(occurrences).toBe(1)
+  })
+
+  it('uses the untagged fallback URL, since a text URL is often copied', () => {
+    const result = renderEmailText({
+      ...defaultProps,
+      callToActionUrl: 'https://example.com/start?utm_source=notification',
+      fallbackUrl: 'https://example.com/start',
+    })
+    expect(result).toContain(`${defaultProps.callToActionLabel}: https://example.com/start\n`)
+    expect(result).not.toContain('utm_')
   })
 
   it('omits the fallback hint, which describes a button that does not exist in text', () => {

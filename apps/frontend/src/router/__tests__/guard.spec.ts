@@ -28,6 +28,16 @@ describe('router auth guard', () => {
     expect(router.currentRoute.value.query).toEqual({ redirect: '/inbox/abc' })
   })
 
+  it('keeps UTM tags when sending a logged-out visitor to Login', async () => {
+    await router.push('/browse?utm_source=notification&utm_campaign=nearby_digest')
+
+    expect(router.currentRoute.value.name).toBe('Login')
+    expect(router.currentRoute.value.query).toEqual({
+      utm_source: 'notification',
+      utm_campaign: 'nearby_digest',
+    })
+  })
+
   it('sends a logged-out visitor of the landing page to a plain Login', async () => {
     authStore.isLoggedIn = true
     await router.push('/me')

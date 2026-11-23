@@ -35,6 +35,20 @@ describe('loginRoute', () => {
   it('does not remember unauthenticated routes', () => {
     expect(loginRoute(router.resolve('/auth'))).toEqual({ name: 'Login', query: {} })
   })
+
+  const utm = 'utm_source=notification&utm_medium=email&utm_campaign=nearby_digest'
+  const utmKeys = { utm_source: 'notification', utm_medium: 'email', utm_campaign: 'nearby_digest' }
+
+  it('moves UTM tags of the landing page onto Login', () => {
+    expect(loginRoute(router.resolve(`/browse?${utm}`))).toEqual({ name: 'Login', query: utmKeys })
+  })
+
+  it('moves UTM tags of a deep link onto Login and out of the redirect', () => {
+    expect(loginRoute(router.resolve(`/inbox/abc?tab=1&${utm}#m2`))).toEqual({
+      name: 'Login',
+      query: { ...utmKeys, redirect: '/inbox/abc?tab=1#m2' },
+    })
+  })
 })
 
 describe('loginRedirect', () => {

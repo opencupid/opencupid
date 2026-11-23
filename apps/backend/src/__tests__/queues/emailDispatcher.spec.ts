@@ -31,6 +31,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
         contentBody: 'Hello',
         siteName: 'OpenCupid',
         fallbackHint: 'If the button does not work, copy and paste the URL.',
+        fallbackUrl: 'https://example.com/app',
         footer: 'If you did not request this, ignore this email.',
       },
     }
@@ -59,6 +60,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
         contentBody: 'Reset link',
         siteName: 'Gaia',
         fallbackHint: 'If the button does not work, copy and paste the URL.',
+        fallbackUrl: 'https://example.com/reset',
         footer: 'Need help? Contact support.',
       },
     }
@@ -85,6 +87,7 @@ describe('EmailDispatcher.dispatchEmail', () => {
         contentBody: 'Finish your profile',
         siteName: 'OpenCupid',
         fallbackHint: 'If the button does not work, copy and paste the URL.',
+        fallbackUrl: 'https://example.com/onboarding',
         footer: '',
       },
     }

@@ -71,10 +71,10 @@ defineProps<EmailTemplateProps>()
                       {{ fallbackHint }}
                       <br />
                       <a
-                        :href="callToActionUrl"
+                        :href="fallbackUrl"
                         class="link"
                       >
-                        {{ callToActionUrl }}
+                        {{ fallbackUrl }}
                       </a>
                     </p>
                   </td>
