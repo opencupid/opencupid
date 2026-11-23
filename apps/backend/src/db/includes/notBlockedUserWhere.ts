@@ -11,8 +11,7 @@ import { type Prisma } from '@prisma/client'
  * - Lookups of one specific profile or its content (the public profile page
  *   and its content list) don't apply it, so a blocked user's profile is
  *   still reachable by direct link.
- * - Profile.isBlocked and User.isActive are separate flags and aren't
- *   checked here.
+ * - User.isActive is a separate flag and isn't checked here.
  */
 export const notBlockedUserWhere = {
   user: { isBlocked: false },

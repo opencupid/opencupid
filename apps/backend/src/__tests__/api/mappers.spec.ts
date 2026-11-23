@@ -78,7 +78,6 @@ describe('mappers', () => {
       isDatingActive: true,
       isActive: true,
       isReported: false,
-      isBlocked: false,
       isOnboarded: true,
       userId: 'ckbbbbbbbbbbbbbb',
       work: 'Developer',

@@ -38,7 +38,6 @@ export type ClearFlagResult = 'cleared' | 'not_found' | 'already_cleared'
  * spammer's messages would be delivered (and emailed) once the flags age out.
  */
 export const releasableSenderWhere = {
-  isBlocked: false,
   isActive: true,
   user: { isBlocked: false, isActive: true },
 } satisfies Prisma.ProfileWhereInput

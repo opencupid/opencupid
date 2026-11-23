@@ -698,7 +698,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             isDatingActive: true,
             isActive: true,
             isReported: true,
-            isBlocked: true,
             isOnboarded: true,
             gender: true,
             hasFace: true,

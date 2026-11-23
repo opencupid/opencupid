@@ -23,7 +23,6 @@ export const ProfileSchema = z.object({
   isDatingActive: z.boolean(),
   isActive: z.boolean(),
   isReported: z.boolean(),
-  isBlocked: z.boolean(),
   isOnboarded: z.boolean(),
   isCallable: z.boolean(),
   hasFace: z.boolean(),

@@ -24,7 +24,6 @@ interface AdminProfile {
   isDatingActive: boolean
   isActive: boolean
   isReported: boolean
-  isBlocked: boolean
   isOnboarded: boolean
   gender: string | null
   hasFace: boolean
@@ -1258,8 +1257,6 @@ onUnmounted(() => {
                   <dd class="col-sm-8">{{ selectedProfile.isActive ? 'Yes' : 'No' }}</dd>
                   <dt class="col-sm-4">Reported</dt>
                   <dd class="col-sm-8">{{ selectedProfile.isReported ? 'Yes' : 'No' }}</dd>
-                  <dt class="col-sm-4">Blocked</dt>
-                  <dd class="col-sm-8">{{ selectedProfile.isBlocked ? 'Yes' : 'No' }}</dd>
                   <dt class="col-sm-4">Activity Segment</dt>
                   <dd class="col-sm-8">{{ selectedProfile.activitySummary?.segment || '—' }}</dd>
                 </dl>

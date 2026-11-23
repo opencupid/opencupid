@@ -42,7 +42,6 @@ async function findDormantRecipients(now: Date) {
     where: {
       isActive: true,
       isOnboarded: true,
-      isBlocked: false,
       lat: { not: null },
       lon: { not: null },
       AND: [notBlockedUserWhere, { user: { isActive: true, emailNotificationsOptIn: true } }],
