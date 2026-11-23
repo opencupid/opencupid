@@ -288,4 +288,70 @@ describe('umami', () => {
       expect(track).toHaveBeenCalledTimes(2)
     })
   })
+
+  describe('redacting secrets before send', () => {
+    const origin = window.location.origin
+
+    it('registers the before-send hook on window before adding the script', async () => {
+      setConfig(ENABLED)
+      const appended: Array<{ hook: unknown; attr: string | null }> = []
+      const realAppend = document.head.appendChild.bind(document.head)
+      vi.spyOn(document.head, 'appendChild').mockImplementation((node: any) => {
+        appended.push({ hook: window.umamiBeforeSend, attr: node.getAttribute('data-before-send') })
+        return realAppend(node)
+      })
+      const { initUmami } = await import('../umami')
+      initUmami()
+      expect(appended).toEqual([{ hook: expect.any(Function), attr: 'umamiBeforeSend' }])
+      vi.restoreAllMocks()
+    })
+
+    it.each([
+      [
+        'the magic-link token, keeping other params',
+        `${origin}/magic-link?token=abc123&redirect=%2Finbox`,
+        `${origin}/magic-link?redirect=%2Finbox`,
+      ],
+      [
+        'a token that is the only param',
+        `${origin}/magic-link?token=abc123`,
+        `${origin}/magic-link`,
+      ],
+      [
+        'the unsubscribe token in the path, keeping the query',
+        `${origin}/unsubscribe/eyJhbGciOi.payload.sig?lang=hu`,
+        `${origin}/unsubscribe/:token?lang=hu`,
+      ],
+      ['a relative URL', '/magic-link?token=abc&redirect=%2Fme', '/magic-link?redirect=%2Fme'],
+    ])('removes %s', async (_label, input, expected) => {
+      const { redactUrl } = await import('../umami')
+      expect(redactUrl(input)).toBe(expected)
+    })
+
+    it.each([
+      ['a page with UTM tags', `${origin}/browse?utm_source=notification&utm_campaign=new_like`],
+      ['an external referrer', 'https://mail.example.com/inbox?token=theirs'],
+      ['an empty referrer', ''],
+      ['a URL whose encoding URL() would normalize', `${origin}/browse?tags=a%2Cb&q=x+y`],
+    ])('leaves %s unchanged', async (_label, input) => {
+      const { redactUrl } = await import('../umami')
+      expect(redactUrl(input)).toBe(input)
+    })
+
+    it('redacts both url and referrer and keeps the rest of the payload', async () => {
+      setConfig(ENABLED)
+      const { initUmami } = await import('../umami')
+      initUmami()
+      const payload = {
+        website: 'abc-123',
+        url: `${origin}/inbox`,
+        referrer: `${origin}/magic-link?token=abc123&redirect=%2Finbox`,
+        title: 'Inbox',
+      }
+      expect(window.umamiBeforeSend!('event', payload)).toEqual({
+        ...payload,
+        referrer: `${origin}/magic-link?redirect=%2Finbox`,
+      })
+    })
+  })
 })

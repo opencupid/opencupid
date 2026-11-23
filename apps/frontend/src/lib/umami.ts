@@ -9,6 +9,46 @@ interface UmamiInstance {
 declare global {
   interface Window {
     umami?: UmamiInstance
+    umamiBeforeSend?: (type: string, payload: UmamiPayload) => UmamiPayload
+  }
+}
+
+interface UmamiPayload {
+  url?: string
+  referrer?: string
+  [key: string]: unknown
+}
+
+// Secrets that appear in our own URLs: the magic-link login token (query) and
+// the signed unsubscribe token (path). Umami stores the full URL of every
+// event and sends the previous page as the referrer on SPA navigations.
+const SECRET_QUERY_KEYS = ['token']
+const SECRET_PATHS = [/^(\/unsubscribe\/)[^/]+/]
+
+/** `url` with login and unsubscribe tokens removed; other URLs unchanged. */
+export function redactUrl(url: string): string {
+  if (!url) return url
+  let parsed: URL
+  try {
+    parsed = new URL(url, window.location.origin)
+  } catch {
+    return url
+  }
+  if (parsed.origin !== window.location.origin) return url
+  const keys = SECRET_QUERY_KEYS.filter((key) => parsed.searchParams.has(key))
+  const paths = SECRET_PATHS.filter((pattern) => pattern.test(parsed.pathname))
+  if (!keys.length && !paths.length) return url
+  for (const key of keys) parsed.searchParams.delete(key)
+  for (const pattern of paths) parsed.pathname = parsed.pathname.replace(pattern, '$1:token')
+  return url.startsWith('/') ? parsed.pathname + parsed.search + parsed.hash : parsed.toString()
+}
+
+/** Umami `data-before-send` hook: redacts the event's URL and referrer. */
+function beforeSend(_type: string, payload: UmamiPayload): UmamiPayload {
+  return {
+    ...payload,
+    ...(payload.url !== undefined && { url: redactUrl(payload.url) }),
+    ...(payload.referrer !== undefined && { referrer: redactUrl(payload.referrer) }),
   }
 }
 
@@ -25,9 +65,12 @@ export function initUmami() {
     return
   }
 
+  // The tracker looks the hook up on window by name, so it must exist first.
+  window.umamiBeforeSend = beforeSend
   const script = document.createElement('script')
   script.src = `${__APP_CONFIG__.UMAMI_URL}/script.js`
   script.setAttribute('data-website-id', __APP_CONFIG__.UMAMI_WEBSITE_ID)
+  script.setAttribute('data-before-send', 'umamiBeforeSend')
   script.setAttribute('data-performance', 'true')
   script.addEventListener('load', () => resolveReady(window.umami), { once: true })
   script.addEventListener('error', () => resolveReady(undefined), { once: true })
