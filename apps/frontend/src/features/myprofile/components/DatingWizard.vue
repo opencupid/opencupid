@@ -4,22 +4,27 @@ import { ref } from 'vue'
 import { useMyProfileViewModel } from '../composables/useMyProfileViewModel'
 import DatingWizardStepper from '@/features/onboarding/components/DatingWizardStepper.vue'
 import IconCupid from '@/assets/images/app/cupid.svg'
+import MatchPreview from '@/features/onboarding/components/MatchPreview.vue'
 
 const emit = defineEmits<{
   (e: 'close'): void
+  (e: 'finished'): void
 }>()
 
 const showIntro = ref(true)
+// The recap's match preview reads the saved profile, so the wizard saves
+// on reaching the recap rather than on Finish.
+const saved = ref(false)
 
 const { formData, datingPrefs, updateProfile, persistDatingPrefs, updateScopes } =
   useMyProfileViewModel(false)
 
-const handleFinish = async () => {
+const handleCompleted = async () => {
   const res = await updateProfile()
   if (!res.success) return
   await persistDatingPrefs()
   await updateScopes({ isDatingActive: true })
-  emit('close')
+  saved.value = true
 }
 </script>
 
@@ -66,13 +71,11 @@ const handleFinish = async () => {
         v-if="formData"
         v-model="formData"
         v-model:datingPrefs="datingPrefs"
-        @finished="handleFinish"
+        @completed="handleCompleted"
+        @finished="emit('finished')"
         @cancel="emit('close')"
       >
-        <legend>{{ $t('onboarding.wizard.all_set') }}</legend>
-        <p class="text-muted">
-          {{ $t('onboarding.wizard.appear_message') }}
-        </p>
+        <MatchPreview v-if="saved" />
       </DatingWizardStepper>
     </section>
   </div>

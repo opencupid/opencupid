@@ -13,7 +13,9 @@ import { onMounted } from 'vue'
 
 const { t } = useI18n()
 
-defineEmits<{
+const emit = defineEmits<{
+  // Advanced onto the recap step: everything has been filled in.
+  (e: 'completed'): void
   (e: 'finished'): void
   (e: 'cancel'): void
 }>()
@@ -26,13 +28,17 @@ const { datingWizardSteps } = useWizardSteps(formData.value, datingPrefs.value)
 const { current, isFirst, isLast, goToNext, goToPrevious, isCurrent } =
   useStepper(datingWizardSteps)
 
+const handleNext = () => {
+  goToNext()
+  if (isLast.value) emit('completed')
+}
+
 onMounted(async () => {
   await useBootstrap().bootstrap()
 })
 </script>
 
 <template>
-
   <div class="flex-grow-1 d-flex flex-column justify-content-center w-100">
     <DatingSteps
       v-model="formData"
@@ -42,31 +48,26 @@ onMounted(async () => {
 
     <fieldset
       v-if="isCurrent('confirm')"
-      class="position-relative py-5 px-3"
+      class="position-relative pt-5 px-3"
     >
-      <slot>
-        <legend>{{ t('onboarding.wizard.all_set') }}</legend>
-        <p class="text-muted">
-          {{ t('onboarding.wizard.appear_message') }}
-        </p>
-      </slot>
+      <slot />
     </fieldset>
   </div>
 
   <div class="mt-1 mt-md-3 d-flex flex-column justify-content-end align-items-center">
     <div class="mb-2">
-        <BButton
+      <BButton
         v-if="!isFirst && !isLast"
         @click="goToPrevious"
         variant="secondary"
         class="px-3 px-md-5 me-2"
         pill
       >
-        {{ t('onboarding.wizard.previous') }} 
+        {{ t('onboarding.wizard.previous') }}
       </BButton>
       <BButton
         v-if="!isLast"
-        @click="goToNext"
+        @click="handleNext"
         :disabled="!current.state"
         variant="primary"
         class="px-3 px-md-5"

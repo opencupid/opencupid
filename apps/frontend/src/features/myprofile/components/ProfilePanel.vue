@@ -151,6 +151,7 @@ function handleClose() {
     <DatingWizard
       v-else-if="subView === 'datingwizard'"
       @close="router.replace({ name: 'Me' })"
+      @finished="handleClose"
     />
   </div>
 </template>

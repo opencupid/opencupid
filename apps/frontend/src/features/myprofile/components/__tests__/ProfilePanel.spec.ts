@@ -81,7 +81,7 @@ const globalConfig = {
       template: '<div data-testid="post-list" />',
     },
     DatingPrefs: { name: 'DatingPrefs', template: '<div />', emits: ['close'] },
-    DatingWizard: { name: 'DatingWizard', template: '<div />', emits: ['close'] },
+    DatingWizard: { name: 'DatingWizard', template: '<div />', emits: ['close', 'finished'] },
     ProfileImage: { template: '<span />' },
     ColorModeToggle: { name: 'ColorModeToggle', template: '<span />' },
     IconSetting2: { template: '<span />' },
@@ -165,5 +165,19 @@ describe('ProfilePanel', () => {
     const wrapper = mount(ProfilePanel, { global: globalConfig })
     await wrapper.findComponent({ name: 'Settings' }).vm.$emit('close')
     expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
+  })
+
+  it('closes the drawer when the dating wizard finishes', async () => {
+    mockSubView.value = 'datingwizard'
+    const wrapper = mount(ProfilePanel, { global: globalConfig })
+    await wrapper.findComponent({ name: 'DatingWizard' }).vm.$emit('finished')
+    expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
+  })
+
+  it('returns to my profile when the dating wizard is cancelled', async () => {
+    mockSubView.value = 'datingwizard'
+    const wrapper = mount(ProfilePanel, { global: globalConfig })
+    await wrapper.findComponent({ name: 'DatingWizard' }).vm.$emit('close')
+    expect(mockReplace).toHaveBeenCalledWith({ name: 'Me' })
   })
 })

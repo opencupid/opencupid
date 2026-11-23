@@ -318,11 +318,9 @@
     "welcome_subtitle": "Adj meg néhány infót magadról.",
     "welcome_title": "Légy üdvözölve nálunk.",
     "wizard": {
-      "all_set": "Minden kész!",
-      "appear_message": "Ezt az infókat bármikor megváltoztathatod a profil oldaladon.",
       "cancel": "Inkább mégse",
       "continue": "Tovább",
-      "dating_intro_text": "Most először használod a Társkereső módot. Kérjük, tölts ki néhány dolgot magadról, hogy mások megismerhessenek. Ezeket az információkat bármikor szerkesztheted a profilbeállításaidban.",
+      "dating_intro_text": "Most először használod a Társkereső módot. Írj néhány dolgot, amit szívesen elmondanál magadról. Ezeket csak azok fogják látni, akik szintén párt keresnek, és megegyeznek a preferenciáitok. Később is bármikor változtathatod a profilodon.",
       "dating_modal_title": "Társkereső profilom",
       "finish": "Befejezés",
       "next": "Tovább",
