@@ -460,7 +460,9 @@ onMounted(async () => {
           :trigger="isNoOneAround"
           :payload="shareInvitePayload"
         >
-          {{ t('profiles.browse.no_results_cta_title') }}
+          {{
+            t('profiles.browse.no_results_cta_title', { city: viewerProfile?.location.cityName })
+          }}
         </InviteCtaShareDialog>
 
         <MapPlaceholder

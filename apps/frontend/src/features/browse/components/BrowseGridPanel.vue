@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, inject, ref, watch, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useInfiniteScroll, useIntersectionObserver } from '@vueuse/core'
 import type { UserContentKind } from '@shared/maps'
 import type { PublicTag } from '@zod/tag/tag.dto'
 import type { BrowseListItem } from '@zod/browse/browseList.dto'
+import type { OwnerProfile } from '@zod/profile/profile.dto'
 
 import BrowseGridCard from './BrowseGridCard.vue'
 import BrowseGridFilters from './BrowseGridFilters.vue'
@@ -30,6 +31,8 @@ const props = defineProps<{
   availableTags: PublicTag[]
   sharePayload: SharePayload
 }>()
+
+const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
 
 const kinds = defineModel<UserContentKind[]>('kinds', { required: true })
 
@@ -230,7 +233,7 @@ const shareOpen = ref(false)
       v-model:open="shareOpen"
       :payload="sharePayload"
     >
-      {{ t('profiles.browse.no_results_cta_title') }}
+      {{ t('profiles.browse.no_results_cta_title', { city: viewerProfile?.location.cityName }) }}
     </ShareSheet>
   </section>
 </template>
