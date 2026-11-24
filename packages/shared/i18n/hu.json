@@ -412,7 +412,7 @@
         "types_label": "Tartalomtípusok"
       },
       "invite_button": "Megosztás",
-      "no_results_cta_title": "A környékeden még nem találtunk komákat. Hívd meg pár barátodat?"
+      "no_results_cta_title": "Nem találtunk tagokat a környékeden. Hívj meg valakit {city} közeléből!"
     },
     "forms": {
       "age_range": "Korosztály",
