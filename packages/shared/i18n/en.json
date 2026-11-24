@@ -412,6 +412,8 @@
     },
     "forms": {
       "age_range": "Age range",
+      "city_search_failed": "Due to a temporary error this isn't working right now, sorry. Please try again a little later!",
+      "city_search_no_match": "No matching place found. Try the nearest larger town.",
       "city_search_placeholder": "Search locations",
       "city_start_typing": "Start typing to search for your city",
       "dating_mode": "Dating mode",

@@ -416,6 +416,8 @@
     },
     "forms": {
       "age_range": "Korosztály",
+      "city_search_failed": "Átmeneti hiba miatt ez most éppen nem működik, elnézést kérünk. Próbáld újra egy kicsit később!",
+      "city_search_no_match": "Nem találtunk ilyen települést. Próbáld a legközelebbi nagyobb település nevével.",
       "city_search_placeholder": "Helyek keresése",
       "city_start_typing": "Kezdd el beírni a városod nevét",
       "dating_mode": "Párkereső mód",

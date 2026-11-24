@@ -44,6 +44,13 @@ const geocoder = useGeocoder()
 const showHint = ref(false)
 const options = computed(() => geocoder.results.value)
 const isLoading = computed(() => geocoder.isLoading.value)
+const searchFeedback = computed(() => {
+  if (geocoder.status.value === 'error')
+    return { text: t('profiles.forms.city_search_failed'), class: 'text-danger' }
+  if (geocoder.status.value === 'empty')
+    return { text: t('profiles.forms.city_search_no_match'), class: 'text-muted' }
+  return null
+})
 
 const selected = computed<GeocodingResult | null>({
   get() {
@@ -135,6 +142,14 @@ onUnmounted(() => {
       :class="{ 'opacity-0': !showHint }"
     >
       <!-- <small>{{ t('profiles.forms.city_start_typing') }}</small> -->
+    </div>
+    <div
+      v-if="searchFeedback"
+      class="form-text search-feedback"
+      :class="searchFeedback.class"
+      role="status"
+    >
+      {{ searchFeedback.text }}
     </div>
   </div>
 </template>
