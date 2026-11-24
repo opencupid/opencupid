@@ -188,7 +188,7 @@ vi.mock('@/features/app/composables/useNotificationState', () => ({
   }),
 }))
 const ownerProfileState = vi.hoisted(() => ({
-  profile: { id: 'me', publicName: 'Test', profileImages: [], hasFace: true },
+  profile: { id: 'me', publicName: 'Test', profileImages: [], hasFace: true, isOnboarded: true },
 }))
 vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
   useOwnerProfileStore: () => ownerProfileState,
@@ -501,6 +501,32 @@ describe('BrowseProfiles view', () => {
     const map = wrapper.findComponent({ name: 'OsmPoiMap' })
     expect(map.props('highlightedLocation')).toEqual([51.5, -0.1])
   })
+  describe('onboarding redirect', () => {
+    beforeEach(() => {
+      ownerProfileState.profile.isOnboarded = true
+    })
+
+    it('replaces the browse history entry with Onboarding for a profile not yet onboarded', async () => {
+      ownerProfileState.profile.isOnboarded = false
+      mountComponent()
+      await vi.waitFor(() => expect(mockReplace).toHaveBeenCalledWith({ name: 'Onboarding' }))
+
+      // A pushed entry would leave /browse behind /onboarding: the back button
+      // would land on it and bounce into a fresh wizard.
+      expect(mockPush).not.toHaveBeenCalledWith({ name: 'Onboarding' })
+      ownerProfileState.profile.isOnboarded = true
+    })
+
+    it('stays on browse for an onboarded profile', async () => {
+      mountComponent()
+      await nextTick()
+      await nextTick()
+
+      expect(mockReplace).not.toHaveBeenCalledWith({ name: 'Onboarding' })
+      expect(mockPush).not.toHaveBeenCalledWith({ name: 'Onboarding' })
+    })
+  })
+
   describe('browse grid', () => {
     const bounds = { south: 47, north: 48, west: 18.5, east: 19.5 }
     const profileItem = {

@@ -390,7 +390,7 @@ function handleMarkerSelect(id: string) {
 // ── Onboarding guard ───────────────────────────────────────────────
 function checkOnboarding(): boolean {
   if (ownerProfileStore.profile && !ownerProfileStore.profile.isOnboarded) {
-    router.push({ name: 'Onboarding' })
+    router.replace({ name: 'Onboarding' })
     return true
   }
   return false

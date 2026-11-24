@@ -28,7 +28,7 @@ async function handleContinue() {
 
     const res = await authStore.verifyToken(data.token)
     if (res.success) {
-      await router.push(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
+      await router.replace(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
     } else {
       error.value = res.message ?? 'Token verification failed'
     }
