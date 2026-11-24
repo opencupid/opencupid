@@ -395,6 +395,17 @@ main {
     @include button-variant($night-600, $night-600);
   }
 
+  // User-content type tints (see $*-light-dark in theme.scss).
+  .btn-event-light {
+    @include button-variant($event-light-dark, $event-light-dark);
+  }
+  .btn-community-light {
+    @include button-variant($community-light-dark, $community-light-dark);
+  }
+  .btn-post-light {
+    @include button-variant($post-light-dark, $post-light-dark);
+  }
+
   // Accents as foreground colours — see $theme-colors-on-dark.
   @each $name, $color in $theme-colors-on-dark {
     .text-#{$name},
