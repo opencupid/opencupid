@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 const authStore = vi.hoisted(() => ({ isLoggedIn: true }))
 vi.mock('@/features/auth/stores/authStore', () => ({ useAuthStore: () => authStore }))
+vi.mock('@/lib/onboardedHint', () => ({ isKnownOnboarded: () => true }))
 
 const stub = vi.hoisted(() => ({ default: { template: '<div />' } }))
 vi.mock('@/features/app/views/OnboardingLayout.vue', () => stub)
+vi.mock('@/features/onboarding/views/Onboarding.vue', () => stub)
 vi.mock('@/features/auth/views/LoginView.vue', () => stub)
 vi.mock('@/features/auth/views/MagicLink.vue', () => stub)
 vi.mock('@/features/browse/views/BrowseProfiles.vue', () => stub)

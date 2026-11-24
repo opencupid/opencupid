@@ -387,15 +387,6 @@ function handleMarkerSelect(id: string) {
   else handleProfileSelect({ id })
 }
 
-// ── Onboarding guard ───────────────────────────────────────────────
-function checkOnboarding(): boolean {
-  if (ownerProfileStore.profile && !ownerProfileStore.profile.isOnboarded) {
-    router.push({ name: 'Onboarding' })
-    return true
-  }
-  return false
-}
-
 // ── Lifecycle ──────────────────────────────────────────────────────
 const isInitialized = ref(false)
 
@@ -409,7 +400,6 @@ async function initialize() {
 }
 
 onActivated(async () => {
-  if (checkOnboarding()) return
   if (!isInitialized.value) {
     await initialize()
   }
@@ -417,7 +407,6 @@ onActivated(async () => {
 
 onMounted(async () => {
   await useBootstrap().bootstrap()
-  if (checkOnboarding()) return
   await initialize()
 })
 </script>

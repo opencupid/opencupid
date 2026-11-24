@@ -14,7 +14,6 @@ import OnboardWizard from '@/features/onboarding/components/OnboardWizard.vue'
 import OnboardingComplete from '@/features/onboarding/components/OnboardingComplete.vue'
 
 import { useI18nStore } from '@/store/i18nStore'
-import { useBootstrap } from '@/lib/bootstrap'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { tracker } from '@/lib/umami'
 import { useMessageStore } from '../../messaging/stores/messageStore'
@@ -59,14 +58,7 @@ const handleWizardFinish = async () => {
   await useMessageStore().fetchConversations()
 }
 
-onMounted(async () => {
-  await useBootstrap().bootstrap()
-
-  if (profileStore.profile?.isOnboarded) {
-    router.push({ name: 'Me' })
-    return
-  }
-
+onMounted(() => {
   tracker.track('onboarding-started')
 })
 </script>

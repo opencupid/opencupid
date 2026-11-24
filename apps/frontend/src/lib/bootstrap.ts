@@ -12,16 +12,15 @@ import { useUserStore } from '../store/userStore'
 
 export const useBootstrap = defineStore('bootstrap', () => {
   // Singleton promise — subsequent calls to bootstrap() return the same promise
-  // so that parallel callers (router guard, UserHome.onMounted, etc.) all wait
+  // so that parallel callers (router guard, BrowseProfiles.onMounted, etc.) all wait
   // for the same fetch rather than firing duplicate requests.
   //
-  // WHY NOT call bootstrap() in the router beforeEach guard?
-  // The guard runs synchronously before every navigation and awaiting a profile
-  // fetch there would block first paint by hundreds of milliseconds on slow
-  // connections. Instead, bootstrap() is called fire-and-forget from app.ts
-  // and also awaited lazily inside UserHome.onMounted. Components that need the
-  // profile simply await bootstrap() — if it's already resolved they get back
-  // instantly; if it's still in-flight they join the existing promise.
+  // bootstrap() starts fire-and-forget at startup (lib/auth.ts, on auth:login).
+  // The router guard awaits it only for a profile this device has not yet seen
+  // onboarded (lib/onboardedHint.ts), so returning users' first paint never
+  // waits on the profile fetch. Components that need the profile simply await
+  // bootstrap() — if it's already resolved they get back instantly; if it's
+  // still in-flight they join the existing promise.
   const bootstrapPromise = ref<Promise<void> | null>(null)
   const isBootstrapped = ref(false)
 
@@ -58,7 +57,7 @@ export const useBootstrap = defineStore('bootstrap', () => {
   // Resets the singleton promise so bootstrap() re-fetches the profile for the
   // newly authenticated user. verifyToken awaits this before returning, which
   // guarantees the profile is in the store before router.push('/browse')
-  // fires — preventing the race where BrowseProfiles.onMounted reads a null profile.
+  // fires — preventing the race where the router guard reads a null profile.
   async function onLogin() {
     isBootstrapped.value = false
     bootstrapPromise.value = null

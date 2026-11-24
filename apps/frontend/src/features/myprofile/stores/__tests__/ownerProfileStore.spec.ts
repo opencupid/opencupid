@@ -5,13 +5,28 @@ vi.mock('@/lib/bus', () => ({
   bus: { emit: vi.fn(), on: vi.fn() },
 }))
 
-const { get, patch } = vi.hoisted(() => ({
+const { get, patch, post, recordOnboarded } = vi.hoisted(() => ({
   get: vi.fn(),
   patch: vi.fn(),
+  post: vi.fn(),
+  recordOnboarded: vi.fn(),
+}))
+
+vi.mock('@/lib/onboardedHint', () => ({ recordOnboarded }))
+
+// Pass profiles through unvalidated: these tests are about what the store does
+// with the server's answer, not about the profile schema.
+vi.mock('@zod/profile/profile.dto', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  OwnerProfileSchema: { parse: (p: unknown) => p },
+}))
+vi.mock('@zod/profile/profile.form', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  CreateProfileFormToPayloadTransform: { parse: (p: unknown) => p },
 }))
 
 vi.mock('@/lib/api', () => ({
-  api: { get, patch },
+  api: { get, patch, post },
   safeApiCall: async (fn: () => Promise<unknown>) => fn(),
   isApiOnline: vi.fn(),
 }))
@@ -136,5 +151,40 @@ describe('ownerProfileStore.refreshHasFace', () => {
     await older
 
     expect(store.profile?.hasFace).toBe(true)
+  })
+})
+
+describe('ownerProfileStore onboarded hint', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    get.mockReset()
+    post.mockReset()
+    recordOnboarded.mockReset()
+  })
+
+  it.each([true, false])('records the fetched profile (isOnboarded=%s)', async (isOnboarded) => {
+    const profile = { id: 'p1', isOnboarded }
+    get.mockResolvedValue({ data: { profile } })
+
+    await useOwnerProfileStore().fetchOwnerProfile()
+
+    expect(recordOnboarded).toHaveBeenCalledWith(profile)
+  })
+
+  it('records the profile created by onboarding', async () => {
+    const profile = { id: 'p1', isOnboarded: true }
+    post.mockResolvedValue({ data: { profile } })
+
+    await useOwnerProfileStore().createOwnerProfile({} as never)
+
+    expect(recordOnboarded).toHaveBeenCalledWith(profile)
+  })
+
+  it('records nothing when the fetch fails', async () => {
+    get.mockRejectedValue(new Error('offline'))
+
+    await useOwnerProfileStore().fetchOwnerProfile()
+
+    expect(recordOnboarded).not.toHaveBeenCalled()
   })
 })

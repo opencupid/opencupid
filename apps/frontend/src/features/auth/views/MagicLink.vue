@@ -59,9 +59,9 @@ async function handleContinue() {
       error.value = ''
       // Wait for the orchestrator to finish bootstrapping (owner profile
       // fetched, stores initialized) before navigating into the
-      // authenticated UI. Prevents BrowseProfiles.onMounted from reading a
-      // null profile and silently skipping the /onboarding redirect for
-      // freshly registered users. bootstrapReady() rejects on bootstrap
+      // authenticated UI. Prevents the router's onboarding branch from
+      // reading the pre-login bootstrap result and sending a freshly
+      // registered user to /browse. bootstrapReady() rejects on bootstrap
       // failure — caught below so we surface a user-visible error instead
       // of dropping the user into a half-mounted authenticated shell.
       try {

@@ -1,9 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, loadRouteLocation } from 'vue-router'
+import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
 
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 import { loginRoute } from './loginRedirect'
+import { isKnownOnboarded } from '@/lib/onboardedHint'
 
 import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 // LoginView stays eager so the form renders on first paint without a chunk
@@ -66,12 +67,9 @@ const routes: Array<RouteRecordRaw> = [
 
   // ── Onboarding shell ──────────────────────────────────────────────────
   // Top-level sibling of '/' (NOT a child) so that navigating between
-  // /onboarding and /browse causes the other layout to unmount. This is
-  // how we guarantee that AppShell's KeepAlive cache cannot survive across
-  // the onboarding boundary: when a fresh-registration user is redirected
-  // from BrowseProfiles.onMounted → /onboarding, AppShellLayout unmounts and
-  // takes the cached (broken-state) AppShell with it. On completion →
-  // /browse, OnboardingLayout unmounts and a fresh AppShellLayout mounts.
+  // /onboarding and /browse causes the other layout to unmount, and AppShell's
+  // KeepAlive cache cannot survive across the onboarding boundary. Which of
+  // the two a user gets is decided in router.beforeEach below.
   {
     path: '/onboarding',
     component: OnboardingLayout,
@@ -140,7 +138,36 @@ router.beforeEach(async (to) => {
   if (!to.meta.requiresAuth && authStore.isLoggedIn && to.name !== 'Unsubscribe') {
     return { name: 'Browse' }
   }
+
+  if (!to.meta.requiresAuth) return
+
+  // Onboarding branch. Decided here, before anything renders, so the wrong
+  // layout never paints and the route that was left never stays in history.
+  // A profile this device has seen onboarded is routed at once; otherwise the
+  // navigation waits for the profile.
+  const onboarded = isKnownOnboarded(authStore.profileId) || (await fetchIsOnboarded(to))
+  if (onboarded === false && to.name !== 'Onboarding') {
+    return { name: 'Onboarding', replace: true }
+  }
+  if (onboarded && to.name === 'Onboarding') {
+    return { name: 'Browse', replace: true }
+  }
 })
+
+/**
+ * Waits for the owner profile and returns its onboarding state, or undefined
+ * when it could not be loaded. The route's lazy components load meanwhile:
+ * the router would otherwise only fetch them after this guard returns.
+ */
+async function fetchIsOnboarded(to: RouteLocationNormalized): Promise<boolean | undefined> {
+  const [{ useBootstrap }, { useOwnerProfileStore }] = await Promise.all([
+    import('@/lib/bootstrap'),
+    import('@/features/myprofile/stores/ownerProfileStore'),
+    loadRouteLocation(to),
+  ])
+  await useBootstrap().bootstrap()
+  return useOwnerProfileStore().profile?.isOnboarded
+}
 
 import { setPreviousUrl } from './history'
 
