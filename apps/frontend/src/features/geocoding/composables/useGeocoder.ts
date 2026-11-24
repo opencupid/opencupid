@@ -45,20 +45,16 @@ export function useGeocoder() {
       const data = await providerSearch(query, lang, signal, bias)
       if (!signal.aborted) {
         results.value = data.slice(0, take)
-        if (data.length === 0) {
-          Sentry.captureMessage('Geocoder returned no results', {
-            level: 'info',
-            tags: { feature: 'geocoding', outcome: 'empty' },
-            extra: { query, lang, bias },
-          })
-        }
       }
       return results.value
     } catch (err) {
       if (err instanceof Error && err.name === 'CanceledError') {
         return results.value
       }
-      console.error('Geocoding search failed:', err)
+      Sentry.captureException(err, {
+        tags: { feature: 'geocoding', outcome: 'error', op: 'search' },
+        extra: { query, lang },
+      })
       results.value = []
       return results.value
     } finally {

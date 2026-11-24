@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockProviderSearch = vi.hoisted(() => vi.fn())
-const mockCaptureMessage = vi.hoisted(() => vi.fn())
+const mockCaptureException = vi.hoisted(() => vi.fn())
 
 vi.mock('../../providers/photon', () => ({
   searchPhoton: mockProviderSearch,
@@ -9,7 +9,7 @@ vi.mock('../../providers/photon', () => ({
 }))
 
 vi.mock('@sentry/vue', () => ({
-  captureMessage: mockCaptureMessage,
+  captureException: mockCaptureException,
 }))
 
 import { useGeocoder } from '../useGeocoder'
@@ -17,7 +17,7 @@ import { useGeocoder } from '../useGeocoder'
 describe('useGeocoder', () => {
   beforeEach(() => {
     mockProviderSearch.mockReset()
-    mockCaptureMessage.mockReset()
+    mockCaptureException.mockReset()
   })
 
   it('returns results from the geocoder', async () => {
@@ -77,9 +77,9 @@ describe('useGeocoder', () => {
     expect(geocoder.results.value).toEqual([])
   })
 
-  it('catches errors and returns empty results', async () => {
-    mockProviderSearch.mockRejectedValue(new Error('Network error'))
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('reports provider failures to Sentry and returns empty results', async () => {
+    const error = new Error('Network error')
+    mockProviderSearch.mockRejectedValue(error)
 
     const geocoder = useGeocoder()
     const results = await geocoder.search('Berlin', 'en')
@@ -87,7 +87,10 @@ describe('useGeocoder', () => {
     expect(results).toEqual([])
     expect(geocoder.results.value).toEqual([])
     expect(geocoder.isLoading.value).toBe(false)
-    consoleSpy.mockRestore()
+    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+      tags: { feature: 'geocoding', outcome: 'error', op: 'search' },
+      extra: { query: 'Berlin', lang: 'en' },
+    })
   })
 
   it('passes a distinct AbortSignal instance to each provider call', async () => {
@@ -190,43 +193,24 @@ describe('useGeocoder', () => {
     expect(geocoder.results.value).toHaveLength(3)
   })
 
-  it('reports an empty geocoder result to Sentry', async () => {
+  it('does not report empty results to Sentry', async () => {
     mockProviderSearch.mockResolvedValue([])
 
     const geocoder = useGeocoder()
     await geocoder.search('Atlantis', 'en')
 
-    expect(mockCaptureMessage).toHaveBeenCalledTimes(1)
-    expect(mockCaptureMessage).toHaveBeenCalledWith(
-      'Geocoder returned no results',
-      expect.objectContaining({
-        level: 'info',
-        tags: { feature: 'geocoding', outcome: 'empty' },
-        extra: expect.objectContaining({ query: 'Atlantis', lang: 'en' }),
-      })
-    )
-  })
-
-  it('does not report to Sentry when results are non-empty', async () => {
-    mockProviderSearch.mockResolvedValue([{ name: 'Berlin', country: 'DE', lat: 52.5, lon: 13.4 }])
-
-    const geocoder = useGeocoder()
-    await geocoder.search('Berlin', 'en')
-
-    expect(mockCaptureMessage).not.toHaveBeenCalled()
+    expect(mockCaptureException).not.toHaveBeenCalled()
   })
 
   it('does not treat a CanceledError as a real failure', async () => {
     const canceledError = Object.assign(new Error('canceled'), { name: 'CanceledError' })
     mockProviderSearch.mockRejectedValue(canceledError)
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const geocoder = useGeocoder()
     const results = await geocoder.search('Berlin', 'en')
 
-    expect(consoleSpy).not.toHaveBeenCalled()
+    expect(mockCaptureException).not.toHaveBeenCalled()
     expect(results).toEqual([])
-    consoleSpy.mockRestore()
   })
 
   it('setResults mutates results reactively', () => {

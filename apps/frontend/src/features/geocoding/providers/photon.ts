@@ -16,6 +16,8 @@ const SUPPORTED_LANGS = ['en', 'de']
 const OSM_TAG_FILTERS = ['place:city', 'place:town', 'place:village', 'place:hamlet']
 /** How far (km) reverse lookups look for a settlement. */
 const REVERSE_RADIUS_KM = 15
+/** Fail a hung request instead of leaving the spinner running forever. */
+const REQUEST_TIMEOUT_MS = 10_000
 
 /** Language plus the settlement filters shared by search and reverse lookups. */
 function placeParams(lang: string): URLSearchParams {
@@ -68,6 +70,7 @@ export const searchPhoton: GeocodingProvider = async (query, lang, signal?, bias
   const res = await axios.get<FeatureCollection<Point, PhotonProperties>>(`${PHOTON_URL}/api/`, {
     params,
     signal,
+    timeout: REQUEST_TIMEOUT_MS,
   })
 
   return (res.data.features ?? []).filter(isAllowedCountry).map(toResult)
@@ -83,6 +86,7 @@ export const reversePhoton: ReverseGeocodingProvider = async (point, lang, signa
   const res = await axios.get<FeatureCollection<Point, PhotonProperties>>(`${PHOTON_URL}/reverse`, {
     params,
     signal,
+    timeout: REQUEST_TIMEOUT_MS,
   })
 
   const match = (res.data.features ?? []).find(isAllowedCountry)

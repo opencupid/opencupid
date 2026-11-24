@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { ref, nextTick } from 'vue'
 
-const { mockReverse } = vi.hoisted(() => ({ mockReverse: vi.fn() }))
+const { mockReverse, mockCaptureException } = vi.hoisted(() => ({
+  mockReverse: vi.fn(),
+  mockCaptureException: vi.fn(),
+}))
 
 vi.mock('../useGeocoder', () => ({ reverseGeocode: mockReverse }))
+vi.mock('@sentry/vue', () => ({ captureException: mockCaptureException }))
 vi.mock('vue-i18n', async () => {
   const { ref } = await import('vue')
   const locale = ref('en')
@@ -23,6 +27,7 @@ describe('useAreaName', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     mockReverse.mockReset()
+    mockCaptureException.mockReset()
     clearAreaNameCache()
   })
 
@@ -113,9 +118,15 @@ describe('useAreaName', () => {
     await settle()
     expect(name.value).toBeNull()
 
-    mockReverse.mockRejectedValueOnce(new Error('network'))
+    expect(mockCaptureException).not.toHaveBeenCalled()
+
+    const error = new Error('network')
+    mockReverse.mockRejectedValueOnce(error)
     bounds.value = { south: 46, north: 46.2, west: 18, east: 18.2 }
     await settle()
     expect(name.value).toBeNull()
+    expect(mockCaptureException).toHaveBeenCalledWith(error, {
+      tags: { feature: 'geocoding', outcome: 'error', op: 'reverse' },
+    })
   })
 })
