@@ -2,6 +2,7 @@ import { ref, type Ref } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
 import type { MapBounds } from '@/features/map/types/map.types'
+import * as Sentry from '@sentry/vue'
 import { reverseGeocode } from './useGeocoder'
 
 const CACHE_LIMIT = 200
@@ -47,6 +48,9 @@ export function useAreaName(bounds: Ref<MapBounds | null>, enabled: Ref<boolean>
         name.value = found
       } catch (err) {
         if (current.signal.aborted || (err instanceof Error && err.name === 'CanceledError')) return
+        Sentry.captureException(err, {
+          tags: { feature: 'geocoding', outcome: 'error', op: 'reverse' },
+        })
         name.value = null
       }
     },
