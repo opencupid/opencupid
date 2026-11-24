@@ -143,6 +143,7 @@ describe('POST /verify-token', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('jwt-token')
+    expect(reply.payload.isNewUser).toBe(false)
     expect(reply.payload.refreshToken).toBeUndefined()
     expect(mockRefreshTokenService.create).toHaveBeenCalledWith('user1', 'profile1', 0)
     expect(reply.cookies[0].name).toBe('__session')
@@ -236,6 +237,7 @@ describe('POST /verify-token', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('jwt-token2')
+    expect(reply.payload.isNewUser).toBe(true)
     expect(reply.payload.refreshToken).toBeUndefined()
   })
 

@@ -110,7 +110,7 @@ export type AuthResponse<T> = ApiSuccess<T> | (ApiError & { code: AuthErrorCodes
 export type GetUserSettingsResponse = ApiSuccess<{ user: SettingsUser }>
 export type UpdateUserLanguageResponse = ApiSuccess<{}>
 export type SendMagicLinkResponse = ApiSuccess<{ user: LoginUser; status: string }>
-export type VerifyTokenSuccess = AuthResponse<{ token: string }>
+export type VerifyTokenSuccess = AuthResponse<{ token: string; isNewUser: boolean }>
 export interface VerifyTokenFailure {
   success: false
   status: string

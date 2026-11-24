@@ -109,7 +109,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         setRefreshCookie(reply, refreshToken)
         setOriginCookie(reply, user.originDomain)
 
-        const response: VerifyTokenResponse = { success: true, token: jwt }
+        const response: VerifyTokenResponse = { success: true, token: jwt, isNewUser }
         reply.code(200).send(response)
       } catch (error) {
         return reply.code(500).send({ code: 'AUTH_INTERNAL_ERROR' })

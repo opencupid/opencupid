@@ -42,6 +42,9 @@ vi.mock('@/lib/bus', async () => {
   return { bus: mitt() }
 })
 
+const { mockTrack } = vi.hoisted(() => ({ mockTrack: vi.fn() }))
+vi.mock('@/lib/umami', () => ({ tracker: { track: mockTrack } }))
+
 vi.mock('@/lib/bootstrap', () => ({
   useBootstrap: () => ({ onLogin: vi.fn().mockResolvedValue(undefined) }),
 }))
@@ -250,6 +253,7 @@ describe('authStore localStorage auth flow', () => {
       data: {
         success: true,
         token,
+        isNewUser: false,
       },
     })
 
@@ -260,6 +264,28 @@ describe('authStore localStorage auth flow', () => {
     expect(res.success).toBe(true)
     expect(localStorage.getItem('authId')).toBeNull()
   })
+
+  it.each([
+    [true, 1],
+    [false, 0],
+  ])(
+    'verifyToken with isNewUser=%s tracks onboarding-started %i time(s)',
+    async (isNewUser, times) => {
+      mockTrack.mockClear()
+      const token = makeJwt({
+        userId: 'u1',
+        profileId: 'p1',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      })
+      mockApi.post.mockResolvedValue({ data: { success: true, token, isNewUser } })
+
+      await useAuthStore().verifyToken('123456')
+
+      expect(mockTrack.mock.calls.filter(([name]) => name === 'onboarding-started')).toHaveLength(
+        times
+      )
+    }
+  )
 
   it('setAuthState does not write token to localStorage', () => {
     const store = useAuthStore()

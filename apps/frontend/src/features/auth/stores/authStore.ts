@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import Cookies from 'universal-cookie'
 import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
+import { tracker } from '@/lib/umami'
 import type { UserRoleType } from '@zod/generated/inputTypeSchemas/UserRoleSchema'
 
 import { LoginUserSchema } from '@zod/user/user.dto'
@@ -135,6 +136,9 @@ export const useAuthStore = defineStore('auth', {
           if (this.userId) {
             bus.emit('auth:login', { userId: this.userId })
           }
+          // First confirmed login of a new account, so it fires once per user,
+          // however many tabs, reloads or visits the onboarding takes.
+          if (res.data.isNewUser) tracker.track('onboarding-started')
           this.loginUser = null
           localStorage.removeItem('authId')
         } else {
