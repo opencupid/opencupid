@@ -213,6 +213,58 @@ describe('useGeocoder', () => {
     expect(results).toEqual([])
   })
 
+  describe('status', () => {
+    it('is idle before any search', () => {
+      expect(useGeocoder().status.value).toBe('idle')
+    })
+
+    it('is found when the provider returns results', async () => {
+      mockProviderSearch.mockResolvedValue([
+        { name: 'Berlin', country: 'DE', lat: 52.5, lon: 13.4 },
+      ])
+      const geocoder = useGeocoder()
+      await geocoder.search('Berlin', 'en')
+      expect(geocoder.status.value).toBe('found')
+    })
+
+    it('is empty when the provider returns nothing', async () => {
+      mockProviderSearch.mockResolvedValue([])
+      const geocoder = useGeocoder()
+      await geocoder.search('Atlantis', 'en')
+      expect(geocoder.status.value).toBe('empty')
+    })
+
+    it('is error when the provider fails', async () => {
+      mockProviderSearch.mockRejectedValue(new Error('Network error'))
+      const geocoder = useGeocoder()
+      await geocoder.search('Berlin', 'en')
+      expect(geocoder.status.value).toBe('error')
+    })
+
+    it('stays idle while a search is in flight and resets on clear', async () => {
+      mockProviderSearch.mockRejectedValueOnce(new Error('Network error'))
+      const geocoder = useGeocoder()
+      await geocoder.search('Berlin', 'en')
+      expect(geocoder.status.value).toBe('error')
+
+      mockProviderSearch.mockReturnValueOnce(new Promise(() => {}))
+      geocoder.search('Bern', 'en')
+      expect(geocoder.status.value).toBe('idle')
+
+      geocoder.clear()
+      expect(geocoder.status.value).toBe('idle')
+    })
+
+    it('does not change on a cancelled request', async () => {
+      mockProviderSearch.mockRejectedValue(
+        Object.assign(new Error('canceled'), { name: 'CanceledError' })
+      )
+      const geocoder = useGeocoder()
+      await geocoder.search('Berlin', 'en')
+      expect(geocoder.status.value).toBe('idle')
+    })
+  })
+
   it('setResults mutates results reactively', () => {
     const geocoder = useGeocoder()
     expect(geocoder.results.value).toEqual([])

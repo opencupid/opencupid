@@ -8,6 +8,9 @@ import type { GeocodingResult } from '../types'
 
 export type { GeocodingResult }
 
+/** Outcome of the latest search; `idle` while none has finished. */
+export type GeocoderStatus = 'idle' | 'found' | 'empty' | 'error'
+
 // Provider seam — swap here to change geocoding backend app-wide.
 const providerSearch = searchPhoton
 /** Nearest settlement to a point, from the same provider as `search`. */
@@ -18,6 +21,7 @@ export function useGeocoder() {
 
   const results = ref<GeocodingResult[]>([])
   const isLoading = ref(false)
+  const status = ref<GeocoderStatus>('idle')
   const hasResults = computed(() => results.value.length > 0)
 
   async function search(
@@ -26,6 +30,7 @@ export function useGeocoder() {
     locationBias?: LocationDTO | null,
     take = 5
   ): Promise<GeocodingResult[]> {
+    status.value = 'idle'
     if (!query) {
       abortController?.abort()
       abortController = null
@@ -45,6 +50,7 @@ export function useGeocoder() {
       const data = await providerSearch(query, lang, signal, bias)
       if (!signal.aborted) {
         results.value = data.slice(0, take)
+        status.value = data.length > 0 ? 'found' : 'empty'
       }
       return results.value
     } catch (err) {
@@ -56,6 +62,7 @@ export function useGeocoder() {
         extra: { query, lang },
       })
       results.value = []
+      status.value = 'error'
       return results.value
     } finally {
       if (!signal.aborted) {
@@ -73,7 +80,8 @@ export function useGeocoder() {
     abortController = null
     results.value = []
     isLoading.value = false
+    status.value = 'idle'
   }
 
-  return { results, isLoading, hasResults, search, setResults, clear }
+  return { results, isLoading, hasResults, status, search, setResults, clear }
 }

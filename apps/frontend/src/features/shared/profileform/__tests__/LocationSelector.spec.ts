@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { ref, computed } from 'vue'
 
@@ -7,6 +7,7 @@ vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k, locale: ref(
 // Each call to useGeocoder() returns its own refs, mirroring the per-instance
 // contract of the production composable so two LocationSelector mounts can't
 // silently share state in tests.
+const geocoderStatus = ref('idle')
 vi.mock('@/features/geocoding/composables/useGeocoder', () => ({
   useGeocoder: () => {
     const results = ref<unknown[]>([])
@@ -16,6 +17,7 @@ vi.mock('@/features/geocoding/composables/useGeocoder', () => ({
       results,
       isLoading,
       hasResults,
+      status: geocoderStatus,
       search: vi.fn(),
       setResults: vi.fn((items: unknown[]) => {
         results.value = items
@@ -66,5 +68,40 @@ describe('LocationSelectorComponent', () => {
     })
     const multiselect = wrapper.findComponent({ name: 'Multiselect' })
     expect(multiselect.exists() || wrapper.html()).toBeTruthy()
+  })
+
+  describe('search feedback', () => {
+    beforeEach(() => {
+      geocoderStatus.value = 'idle'
+    })
+
+    const mountSelector = () =>
+      mount(LocationSelectorComponent, {
+        props: { modelValue: { country: '', cityName: '' } as any },
+        global: { mocks: { $t: (k: string) => k } },
+      })
+
+    it('shows nothing while idle or after a match', async () => {
+      const wrapper = mountSelector()
+      expect(wrapper.find('.search-feedback').exists()).toBe(false)
+
+      geocoderStatus.value = 'found'
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('.search-feedback').exists()).toBe(false)
+    })
+
+    it('tells the user when the search failed', async () => {
+      geocoderStatus.value = 'error'
+      const feedback = mountSelector().find('.search-feedback')
+      expect(feedback.text()).toBe('profiles.forms.city_search_failed')
+      expect(feedback.classes()).toContain('text-danger')
+    })
+
+    it('tells the user when no place matched', async () => {
+      geocoderStatus.value = 'empty'
+      const feedback = mountSelector().find('.search-feedback')
+      expect(feedback.text()).toBe('profiles.forms.city_search_no_match')
+      expect(feedback.classes()).toContain('text-muted')
+    })
   })
 })
