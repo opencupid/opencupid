@@ -18,7 +18,7 @@ withDefaults(
   }>(),
   {
     triggerClass: 'btn-icon-lg btn-shadow',
-    actionClass: 'btn-icon-lg btn-shadow btn-light ',
+    actionClass: 'btn-icon-lg btn-shadow',
   }
 )
 
@@ -42,7 +42,7 @@ defineEmits<{
     </template>
     <BButton
       :class="actionClass"
-      variant="outline-primary"
+      variant="post-light"
       :title="$t('posts.actions.create_advert_cta_title')"
       @click="$emit('create:post')"
     >
@@ -50,7 +50,7 @@ defineEmits<{
     </BButton>
     <BButton
       :class="actionClass"
-      variant="outline-primary"
+      variant="event-light"
       :title="$t('posts.actions.create_event_cta_title')"
       @click="$emit('create:event')"
     >
@@ -58,7 +58,7 @@ defineEmits<{
     </BButton>
     <BButton
       :class="actionClass"
-      variant="outline-primary"
+      variant="community-light"
       :title="$t('posts.actions.create_community_cta_title')"
       @click="$emit('create:community')"
     >
