@@ -1,5 +1,14 @@
 # frontend
 
+## 0.97.1
+
+### Patch Changes
+
+- 11a5723: Tell the user when city search fails or finds no matching place, instead of showing nothing
+- f94c153: Mention the viewer's city in the "no one around" invite prompt and fix the Hungarian wording
+- cf23a5a: Report city search and area-name lookup failures to GlitchTip, time out hung Photon requests after 10 s, and stop reporting empty city search results
+- ddcdf59: Give the add-content speed-dial buttons solid backgrounds in the post/event/community type colours instead of transparent outlines
+
 ## 0.97.0
 
 ### Minor Changes
