@@ -12,6 +12,7 @@ import { useMessageStore } from '../stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
 import { useCallStore } from '@/features/videocall/stores/callStore'
 import * as callsApi from '@/features/videocall/api/calls.api'
+import { tracker } from '@/lib/umami'
 import { useInboxRouteState } from './useInboxRouteState'
 
 // View model for the conversation-detail screen. Owns route → data resolution
@@ -151,6 +152,7 @@ export function useConversationDetailViewModel() {
     const isCallable = checkbox.checked
     try {
       await callsApi.updateCallable(c.conversationId, isCallable)
+      tracker.track('call-callable-toggled', { callable: isCallable })
     } catch {
       checkbox.checked = !isCallable
     }

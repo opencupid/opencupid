@@ -26,6 +26,9 @@ vi.mock('@/lib/bus', () => ({
 
 vi.mock('../../api/calls.api', () => mockCallsApi)
 
+const mockTrack = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/umami', () => ({ tracker: { track: mockTrack } }))
+
 import { useCallStore } from '../callStore'
 
 describe('callStore', () => {
@@ -212,6 +215,93 @@ describe('callStore', () => {
       expect(mockBus.off).toHaveBeenCalledWith('ws:call_accepted', expect.any(Function))
       expect(mockBus.off).toHaveBeenCalledWith('ws:call_declined', expect.any(Function))
       expect(mockBus.off).toHaveBeenCalledWith('ws:call_cancelled', expect.any(Function))
+    })
+  })
+
+  describe('analytics', () => {
+    const incoming = {
+      conversationId: 'c1',
+      roomName: 'room-1',
+      caller: { id: 'p1', publicName: 'A' },
+    }
+
+    async function startOutgoing(store: ReturnType<typeof useCallStore>) {
+      mockCallsApi.initiateCall.mockResolvedValue({ data: { roomName: 'room-1' } })
+      mockCallsApi.cancelCall.mockResolvedValue({})
+      await store.initiateCall('c1')
+    }
+
+    it('tracks call-initiated on success and call-initiate-failed on error', async () => {
+      const store = useCallStore()
+      await startOutgoing(store)
+      expect(mockTrack).toHaveBeenCalledWith('call-initiated')
+
+      store.endCall()
+      mockCallsApi.initiateCall.mockRejectedValue(new Error('NOT_CALLABLE'))
+      await store.initiateCall('c1')
+      expect(mockTrack).toHaveBeenCalledWith('call-initiate-failed')
+    })
+
+    it('tracks caller cancellation and ring timeout with a reason', async () => {
+      const store = useCallStore()
+      await startOutgoing(store)
+      await store.cancelCall()
+      expect(mockTrack).toHaveBeenCalledWith('call-cancelled', { reason: 'caller' })
+
+      await startOutgoing(store)
+      await vi.advanceTimersByTimeAsync(30_000)
+      expect(mockTrack).toHaveBeenCalledWith('call-cancelled', { reason: 'timeout' })
+    })
+
+    it('tracks the callee side: incoming, accepted, declined, missed', async () => {
+      const store = useCallStore()
+      mockCallsApi.acceptCall.mockResolvedValue({})
+      mockCallsApi.declineCall.mockResolvedValue({})
+
+      store.handleIncomingCall(incoming)
+      expect(mockTrack).toHaveBeenCalledWith('call-incoming')
+      await store.acceptCall()
+      expect(mockTrack).toHaveBeenCalledWith('call-accepted')
+      store.endCall()
+
+      store.handleIncomingCall(incoming)
+      await store.declineCall()
+      expect(mockTrack).toHaveBeenCalledWith('call-declined')
+
+      store.handleIncomingCall(incoming)
+      store.handleCallCancelled({ conversationId: 'c1' })
+      expect(mockTrack).toHaveBeenCalledWith('call-missed')
+    })
+
+    it('tracks the caller side: connected and declined by partner', async () => {
+      const store = useCallStore()
+      await startOutgoing(store)
+      store.handleCallAccepted({ conversationId: 'c1', roomName: 'room-1' })
+      expect(mockTrack).toHaveBeenCalledWith('call-connected')
+      store.endCall()
+
+      await startOutgoing(store)
+      store.handleCallDeclined({ conversationId: 'c1' })
+      expect(mockTrack).toHaveBeenCalledWith('call-declined-by-partner')
+    })
+
+    it('tracks call-ended once with the connected duration', async () => {
+      const store = useCallStore()
+      await startOutgoing(store)
+      store.handleCallAccepted({ conversationId: 'c1', roomName: 'room-1' })
+      vi.advanceTimersByTime(95_400)
+
+      store.endCall()
+      store.endCall()
+
+      const ended = mockTrack.mock.calls.filter(([name]) => name === 'call-ended')
+      expect(ended).toEqual([['call-ended', { durationSec: 95 }]])
+    })
+
+    it('does not track call-ended when no call was connected', () => {
+      const store = useCallStore()
+      store.endCall()
+      expect(mockTrack).not.toHaveBeenCalledWith('call-ended', expect.anything())
     })
   })
 })

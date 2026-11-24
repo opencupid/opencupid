@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { bus } from '@/lib/bus'
+import { tracker } from '@/lib/umami'
 import * as callsApi from '../api/calls.api'
 
 export type CallStatus = 'idle' | 'calling' | 'ringing' | 'active'
@@ -11,6 +12,7 @@ export const useCallStore = defineStore('call', () => {
   const roomName = ref<string | null>(null)
   const callerInfo = ref<{ id: string; publicName: string } | null>(null)
   const timeoutHandle = ref<ReturnType<typeof setTimeout> | null>(null)
+  let connectedAt: number | null = null
 
   const RING_TIMEOUT_MS = 30_000
 
@@ -21,6 +23,12 @@ export const useCallStore = defineStore('call', () => {
     conversationId.value = null
     roomName.value = null
     callerInfo.value = null
+    connectedAt = null
+  }
+
+  function markConnected() {
+    status.value = 'active'
+    connectedAt = Date.now()
   }
 
   async function initiateCall(convoId: string) {
@@ -31,12 +39,14 @@ export const useCallStore = defineStore('call', () => {
       conversationId.value = convoId
       roomName.value = res.data.roomName
       status.value = 'calling'
+      tracker.track('call-initiated')
 
       // Auto-cancel after 30s
       timeoutHandle.value = setTimeout(() => {
-        cancelCall()
+        cancelCall('timeout')
       }, RING_TIMEOUT_MS)
     } catch {
+      tracker.track('call-initiate-failed')
       reset()
     }
   }
@@ -46,7 +56,8 @@ export const useCallStore = defineStore('call', () => {
 
     try {
       await callsApi.acceptCall(conversationId.value)
-      status.value = 'active'
+      tracker.track('call-accepted')
+      markConnected()
     } catch {
       reset()
     }
@@ -54,6 +65,7 @@ export const useCallStore = defineStore('call', () => {
 
   async function declineCall() {
     if (status.value !== 'ringing' || !conversationId.value) return
+    tracker.track('call-declined')
 
     try {
       await callsApi.declineCall(conversationId.value)
@@ -62,8 +74,9 @@ export const useCallStore = defineStore('call', () => {
     }
   }
 
-  async function cancelCall() {
+  async function cancelCall(reason: 'caller' | 'timeout' = 'caller') {
     if (status.value !== 'calling' || !conversationId.value) return
+    tracker.track('call-cancelled', { reason })
 
     try {
       await callsApi.cancelCall(conversationId.value)
@@ -73,6 +86,9 @@ export const useCallStore = defineStore('call', () => {
   }
 
   function endCall() {
+    if (status.value === 'active' && connectedAt !== null) {
+      tracker.track('call-ended', { durationSec: Math.round((Date.now() - connectedAt) / 1000) })
+    }
     reset()
   }
 
@@ -86,6 +102,7 @@ export const useCallStore = defineStore('call', () => {
     roomName.value = payload.roomName
     callerInfo.value = payload.caller
     status.value = 'ringing'
+    tracker.track('call-incoming')
   }
 
   function handleCallAccepted(payload: { conversationId: string; roomName: string }) {
@@ -93,16 +110,19 @@ export const useCallStore = defineStore('call', () => {
     clearTimeout(timeoutHandle.value!)
     timeoutHandle.value = null
     roomName.value = payload.roomName
-    status.value = 'active'
+    tracker.track('call-connected')
+    markConnected()
   }
 
   function handleCallDeclined(_payload: { conversationId: string }) {
     if (status.value !== 'calling') return
+    tracker.track('call-declined-by-partner')
     reset()
   }
 
   function handleCallCancelled(_payload: { conversationId: string }) {
     if (status.value !== 'ringing') return
+    tracker.track('call-missed')
     reset()
   }
 

@@ -27,6 +27,9 @@ vi.mock('extendable-media-recorder-wav-encoder', () => ({
   connect: vi.fn(),
 }))
 
+const mockTrack = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/umami', () => ({ tracker: { track: mockTrack } }))
+
 const playMock = vi.fn().mockResolvedValue(undefined)
 vi.stubGlobal(
   'Audio',
@@ -163,5 +166,39 @@ describe('useVoiceRecorder warning beep', () => {
 
     recorder.reset()
     expect(recorder.stoppedAtMax.value).toBe(false)
+  })
+})
+
+describe('useVoiceRecorder analytics', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.clearAllMocks()
+    Object.defineProperty(navigator, 'mediaDevices', {
+      value: { getUserMedia: vi.fn() },
+      writable: true,
+      configurable: true,
+    })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('tracks voice-record-started when recording starts', async () => {
+    const recorder = await mountRecorder(60)
+    await startMockRecording(recorder)
+    expect(mockTrack).toHaveBeenCalledWith('voice-record-started')
+  })
+
+  it('tracks voice-record-failed with the error name when the mic is unavailable', async () => {
+    const recorder = await mountRecorder(60)
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValue(
+      Object.assign(new Error('denied'), { name: 'NotAllowedError' })
+    )
+
+    await recorder.startRecording()
+
+    expect(mockTrack).toHaveBeenCalledWith('voice-record-failed', { reason: 'NotAllowedError' })
+    expect(mockTrack).not.toHaveBeenCalledWith('voice-record-started')
   })
 })

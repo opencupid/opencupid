@@ -23,6 +23,9 @@ vi.mock('@/lib/bus', () => ({
   bus: mockBus,
 }))
 
+const mockTrack = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/umami', () => ({ tracker: { track: mockTrack } }))
+
 import { useMessageStore } from '../messageStore'
 
 function makeConvo(conversationId: string, partnerName: string): ConversationSummary {
@@ -441,6 +444,17 @@ describe('sendVoiceMessage', () => {
     expect(result).toEqual({ success: true, data: expect.objectContaining({ id: 'voice-1' }) })
     expect(mockApi.post).toHaveBeenCalledWith('/messages/voice', expect.any(FormData))
     expect(store.isSending).toBe(false)
+    expect(mockTrack).toHaveBeenCalledWith('voice-message-sent', { durationSec: 5 })
+  })
+
+  it('does not track voice-message-sent when the send fails', async () => {
+    const store = useMessageStore()
+    mockApi.post.mockRejectedValue(new Error('network'))
+
+    const blob = new Blob(['audio'], { type: 'audio/webm' })
+    await store.sendVoiceMessage('partner-convo-1', blob, 5)
+
+    expect(mockTrack).not.toHaveBeenCalled()
   })
 })
 

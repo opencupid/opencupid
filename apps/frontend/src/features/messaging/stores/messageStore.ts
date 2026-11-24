@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 
 import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
+import { tracker } from '@/lib/umami'
 
 import type {
   ConversationOrDraft,
@@ -452,7 +453,10 @@ export const useMessageStore = defineStore('message', {
         const res = await safeApiCall(() =>
           api.post<SendMessageResponse>('/messages/voice', formData)
         )
-        return this.handleSendResponse(res)
+        const result = this.handleSendResponse(res)
+        if (result.success)
+          tracker.track('voice-message-sent', { durationSec: Math.round(duration) })
+        return result
       } catch (error: any) {
         this.error = storeError(error)
         return this.error

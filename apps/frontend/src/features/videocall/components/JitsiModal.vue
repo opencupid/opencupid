@@ -2,6 +2,7 @@
 import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import { useCallStore } from '../stores/callStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import { tracker } from '@/lib/umami'
 
 const callStore = useCallStore()
 const ownerProfileStore = useOwnerProfileStore()
@@ -43,6 +44,7 @@ async function startJitsi() {
     await loadJitsiScript()
   } catch {
     console.error('[Jitsi] Failed to load external API script')
+    tracker.track('call-jitsi-load-failed')
     callStore.endCall()
     return
   }

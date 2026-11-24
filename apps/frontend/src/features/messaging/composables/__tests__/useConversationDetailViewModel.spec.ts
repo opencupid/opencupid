@@ -56,9 +56,13 @@ vi.mock('@/features/videocall/stores/callStore', () => ({
   useCallStore: () => mockCallStore,
 }))
 
+const mockUpdateCallable = vi.hoisted(() => vi.fn())
 vi.mock('@/features/videocall/api/calls.api', () => ({
-  updateCallable: vi.fn(),
+  updateCallable: mockUpdateCallable,
 }))
+
+const mockTrack = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/umami', () => ({ tracker: { track: mockTrack } }))
 
 import { useConversationDetailViewModel } from '../useConversationDetailViewModel'
 
@@ -288,5 +292,42 @@ describe('useConversationDetailViewModel — unmount cleanup', () => {
     wrapper.unmount()
 
     expect(mockMessageStore.resetActiveConversation).toHaveBeenCalled()
+  })
+})
+
+describe('useConversationDetailViewModel — toggleCallable', () => {
+  async function mountPersisted() {
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'c1' }
+    mockMessageStore.activeConversation = makePersistedSummary('c1', 'p1')
+    const vm = mountVm()
+    await vi.waitFor(() => expect(vm.persistedConversation.value).not.toBeNull())
+    return vm
+  }
+
+  function checkboxEvent(checked: boolean) {
+    const input = document.createElement('input')
+    input.type = 'checkbox'
+    input.checked = checked
+    return { target: input } as unknown as Event
+  }
+
+  it('tracks call-callable-toggled after a successful update', async () => {
+    const vm = await mountPersisted()
+    mockUpdateCallable.mockResolvedValue({})
+
+    await vm.toggleCallable(checkboxEvent(false))
+
+    expect(mockUpdateCallable).toHaveBeenCalledWith('c1', false)
+    expect(mockTrack).toHaveBeenCalledWith('call-callable-toggled', { callable: false })
+  })
+
+  it('does not track when the update fails', async () => {
+    const vm = await mountPersisted()
+    mockUpdateCallable.mockRejectedValue(new Error('fail'))
+
+    await vm.toggleCallable(checkboxEvent(false))
+
+    expect(mockTrack).not.toHaveBeenCalled()
   })
 })

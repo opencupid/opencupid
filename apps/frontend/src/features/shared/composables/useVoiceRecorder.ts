@@ -2,6 +2,7 @@ import { ref, onUnmounted, readonly } from 'vue'
 import { MediaRecorder, register, type IMediaRecorder } from 'extendable-media-recorder'
 import { connect } from 'extendable-media-recorder-wav-encoder'
 import voiceRecordingEndUrl from '@/assets/audio/voice-recording-end.mp3'
+import { tracker } from '@/lib/umami'
 
 export type RecordingState = 'idle' | 'recording' | 'paused' | 'completed' | 'error'
 
@@ -43,6 +44,7 @@ export function useVoiceRecorder(maxDuration: number) {
   const startRecording = async () => {
     if (!checkSupport()) {
       error.value = 'Voice recording not supported in this browser'
+      tracker.track('voice-record-failed', { reason: 'unsupported' })
       state.value = 'error'
       return false
     }
@@ -107,10 +109,12 @@ export function useVoiceRecorder(maxDuration: number) {
 
       // Start duration timer
       startDurationTimer()
+      tracker.track('voice-record-started')
 
       return true
     } catch (err: any) {
       console.error('Failed to start recording:', err)
+      tracker.track('voice-record-failed', { reason: err?.name ?? 'unknown' })
 
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         error.value =

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
+import { tracker } from '@/lib/umami'
 
 import IconPlay from '@/assets/icons/interface/play.svg'
 import IconPause from '@/assets/icons/interface/pause.svg'
@@ -16,6 +17,7 @@ const currentTime = ref(0)
 const audioDuration = ref(0)
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+let playTracked = false
 
 // Precompute stable waveform bar heights so they don't re-randomize on render
 const waveformHeights = Array.from({ length: 20 }, () => Math.random() * 16 + 4)
@@ -74,6 +76,10 @@ const togglePlayback = () => {
       error.value = 'Failed to play voice message'
     })
     isPlaying.value = true
+    if (!playTracked) {
+      playTracked = true
+      tracker.track('voice-message-played', { mine: !!props.isMine })
+    }
   }
 }
 
