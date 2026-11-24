@@ -35,7 +35,7 @@ const error = ref('')
 const router = useRouter()
 
 const handleGoToProfile = async () => {
-  router.replace({ name: 'Me' })
+  router.push({ name: 'Me' })
 }
 
 const handleGoToBrowse = () => {
