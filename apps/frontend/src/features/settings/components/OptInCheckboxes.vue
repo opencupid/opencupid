@@ -98,6 +98,10 @@ async function handleOptInChange(event: Event, patch: UpdateProfileOptInPayload)
     </div>
   </fieldset>
 
+  <!--
+    Video call settings temporarily hidden to fix the settings dialog layout on
+    mobile screens. Re-enable once the dialog layout is properly fixed.
+
   <fieldset class="mb-2 mb-md-">
     <legend class="h6">{{ t('calls.section_title') }}</legend>
 
@@ -121,4 +125,5 @@ async function handleOptInChange(event: Event, patch: UpdateProfileOptInPayload)
       <div class="form-hint">{{ t('settings.calls_opt_in_hint') }}</div>
     </div>
   </fieldset>
+  -->
 </template>

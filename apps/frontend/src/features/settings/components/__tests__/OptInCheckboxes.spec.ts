@@ -61,33 +61,40 @@ describe('OptInCheckboxes', () => {
     })
   })
 
-  describe('callable checkbox', () => {
-    it('calls persistOwnerProfile when toggled', async () => {
-      const wrapper = mountComponent()
-      const store = useOwnerProfileStore()
-      store.updateOptInSettings = vi.fn().mockResolvedValue({ success: true })
-
-      const checkbox = wrapper.find('#callable-opt-in')
-      ;(checkbox.element as HTMLInputElement).checked = false
-      await checkbox.trigger('change')
-
-      expect(store.updateOptInSettings).toHaveBeenCalledWith({ isCallable: false })
-    })
-
-    it('reverts checkbox on failure', async () => {
-      const wrapper = mountComponent()
-      const store = useOwnerProfileStore()
-      store.updateOptInSettings = vi.fn().mockResolvedValue({ success: false, message: 'err' })
-
-      const checkbox = wrapper.find('#callable-opt-in')
-      const input = checkbox.element as HTMLInputElement
-      input.checked = false
-      await checkbox.trigger('change')
-      await Promise.resolve()
-
-      expect(input.checked).toBe(true)
-    })
+  // Video call settings are temporarily hidden (see OptInCheckboxes.vue).
+  // Re-enable these tests together with the section.
+  it('does not render the callable checkbox while calls settings are hidden', () => {
+    const wrapper = mountComponent()
+    expect(wrapper.find('#callable-opt-in').exists()).toBe(false)
   })
+
+  // describe('callable checkbox', () => {
+  //   it('calls persistOwnerProfile when toggled', async () => {
+  //     const wrapper = mountComponent()
+  //     const store = useOwnerProfileStore()
+  //     store.updateOptInSettings = vi.fn().mockResolvedValue({ success: true })
+  //
+  //     const checkbox = wrapper.find('#callable-opt-in')
+  //     ;(checkbox.element as HTMLInputElement).checked = false
+  //     await checkbox.trigger('change')
+  //
+  //     expect(store.updateOptInSettings).toHaveBeenCalledWith({ isCallable: false })
+  //   })
+  //
+  //   it('reverts checkbox on failure', async () => {
+  //     const wrapper = mountComponent()
+  //     const store = useOwnerProfileStore()
+  //     store.updateOptInSettings = vi.fn().mockResolvedValue({ success: false, message: 'err' })
+  //
+  //     const checkbox = wrapper.find('#callable-opt-in')
+  //     const input = checkbox.element as HTMLInputElement
+  //     input.checked = false
+  //     await checkbox.trigger('change')
+  //     await Promise.resolve()
+  //
+  //     expect(input.checked).toBe(true)
+  //   })
+  // })
 
   describe('newsletter checkbox', () => {
     it('calls ownerProfileStore.updateOptInSettings when toggled', async () => {
@@ -127,9 +134,7 @@ describe('OptInCheckboxes', () => {
   describe('disabled prop', () => {
     it('forwards disabled prop to checkboxes', () => {
       const wrapper = mountComponent({ props: { disabled: true } })
-      const callable = wrapper.find('#callable-opt-in').element as HTMLInputElement
       const newsletter = wrapper.find('#newsletter-opt-in').element as HTMLInputElement
-      expect(callable.disabled).toBe(true)
       expect(newsletter.disabled).toBe(true)
     })
   })
