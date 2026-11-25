@@ -71,7 +71,7 @@ export function useMessagingViewModel() {
 
   return {
     // Store state
-    conversations: computed(() => messageStore.conversations),
+    conversations: computed(() => messageStore.sortedConversations),
     activeConversation: computed(() => messageStore.activeConversation),
     isLoading: computed(() => messageStore.isLoading),
     isLoadingMoreConversations: computed(() => messageStore.isLoadingMoreConversations),
@@ -90,6 +90,8 @@ export function useMessagingViewModel() {
     // Handlers
     handleSelectConvo,
     handleMatchSelect,
+    setArchived: (convo: ConversationSummary, isArchived: boolean) =>
+      messageStore.setArchived(convo, isArchived),
     fetchConversations: () => messageStore.fetchConversations(),
     fetchMoreConversations: () => messageStore.fetchMoreConversations(),
 

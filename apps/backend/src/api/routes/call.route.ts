@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { rateLimitConfig, sendError } from '../helpers'
 import { CallService } from '@/services/call.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { broadcastNewMessage } from '@/services/messageBroadcast'
 import { mapMessageToDTO } from '@/api/mappers/messaging.mappers'
 import { WebPushService } from '@/services/webpush.service'
 
@@ -40,11 +41,19 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
       if (!body.success) return sendError(reply, 400, 'Invalid parameters')
 
       try {
-        const { roomName, calleeProfileId, callerPublicName } = await fastify.prisma.$transaction(
-          async (tx) => {
+        const { roomName, calleeProfileId, callerPublicName, isMutedForCallee } =
+          await fastify.prisma.$transaction(async (tx) => {
             return await callService.initiateCall(tx, body.data.conversationId, profileId)
-          }
-        )
+          })
+
+        const response = {
+          success: true,
+          conversationId: body.data.conversationId,
+          roomName,
+        }
+
+        // The callee is not alerted; to the caller it looks like an unanswered call.
+        if (isMutedForCallee) return reply.code(200).send(response)
 
         // Notify callee via WS, fall back to push notification if offline
         const isWsBroadcasted = broadcastToProfile(fastify, calleeProfileId, {
@@ -64,11 +73,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
             })
         }
 
-        return reply.code(200).send({
-          success: true,
-          conversationId: body.data.conversationId,
-          roomName,
-        })
+        return reply.code(200).send(response)
       } catch (error: any) {
         fastify.log.error(error)
         return sendError(reply, 403, error?.error || 'Failed to initiate call')
@@ -168,10 +173,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           const messageDTO = mapMessageToDTO(missedMsg)
 
           for (const p of conversation.participants) {
-            broadcastToProfile(fastify, p.profileId, {
-              type: 'ws:new_message',
-              payload: messageDTO,
-            })
+            await broadcastNewMessage(fastify, p.profileId, messageDTO)
           }
         }
 
@@ -230,10 +232,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           const messageDTO = mapMessageToDTO(cancelMissedMsg)
 
           for (const p of conversation.participants) {
-            broadcastToProfile(fastify, p.profileId, {
-              type: 'ws:new_message',
-              payload: messageDTO,
-            })
+            await broadcastNewMessage(fastify, p.profileId, messageDTO)
           }
         }
 

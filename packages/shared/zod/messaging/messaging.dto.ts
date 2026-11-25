@@ -103,6 +103,12 @@ const MessageDTOSchema = MessageInConversationSchema.extend({
 })
 export type MessageDTO = z.infer<typeof MessageDTOSchema>
 
+// A message pushed to a participant's open sessions.
+export type IncomingMessageDTO = MessageDTO & {
+  // Whether this participant has archived (muted) the conversation.
+  isArchived: boolean
+}
+
 const MessageInConversationSummarySchema = MessageSchema.pick({
   content: true,
   messageType: true,
@@ -205,6 +211,14 @@ export const EditMessagePayloadSchema = z.object({
 })
 
 export type EditMessagePayload = z.infer<typeof EditMessagePayloadSchema>
+
+export const ArchiveConversationPayloadSchema = z.object({
+  isArchived: z.boolean(),
+  // createdAt of the last message the client has seen, null if there is none.
+  lastMessageAt: z.coerce.date().nullable(),
+})
+
+export type ArchiveConversationPayload = z.infer<typeof ArchiveConversationPayloadSchema>
 
 // Schema for voice message payload
 export const SendVoiceMessagePayloadSchema = z.object({

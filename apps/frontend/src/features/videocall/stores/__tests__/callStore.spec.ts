@@ -190,6 +190,18 @@ describe('callStore', () => {
       store.handleCallCancelled({ conversationId: 'c1' })
       expect(store.status).toBe('idle')
     })
+
+    it('keeps ringing when a call in another conversation is cancelled', () => {
+      const store = useCallStore()
+      store.handleIncomingCall({
+        conversationId: 'c1',
+        roomName: 'room-1',
+        caller: { id: 'p1', publicName: 'Alice' },
+      })
+
+      store.handleCallCancelled({ conversationId: 'c2' })
+      expect(store.status).toBe('ringing')
+    })
   })
 
   describe('initialize / teardown', () => {

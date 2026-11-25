@@ -162,6 +162,7 @@ beforeEach(async () => {
       wasCreated: true,
     }),
     acceptConversationOnReply: vi.fn(),
+    isConversationArchived: vi.fn().mockResolvedValue(false),
     promoteConversation: vi.fn(),
     sendMessage: vi.fn().mockResolvedValue({
       message: {

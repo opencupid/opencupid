@@ -201,11 +201,12 @@ describe('MessageService.listConversationsForProfile', () => {
     })
   })
 
-  it('orders conversations by updatedAt desc without status grouping', async () => {
+  it('orders archived conversations last, then by updatedAt desc without status grouping', async () => {
     mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
     await service.listConversationsForProfile('p1')
     const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
     expect(args.orderBy).toEqual([
+      { isArchived: 'asc' },
       { conversation: { updatedAt: 'desc' } },
       { conversationId: 'desc' },
     ])
@@ -214,6 +215,7 @@ describe('MessageService.listConversationsForProfile', () => {
   const participantRows = (count: number) =>
     Array.from({ length: count }, (_, i) => ({
       conversationId: `c${i}`,
+      isArchived: false,
       conversation: { updatedAt: new Date(2026, 0, 1, 0, 0, count - i) },
     }))
 
@@ -227,6 +229,7 @@ describe('MessageService.listConversationsForProfile', () => {
     expect(page.conversations).toEqual(rows.slice(0, 20))
     expect(page.hasMore).toBe(true)
     expect(page.nextCursor).toEqual({
+      isArchived: false,
       updatedAt: rows[19].conversation.updatedAt,
       conversationId: 'c19',
     })
@@ -244,20 +247,82 @@ describe('MessageService.listConversationsForProfile', () => {
   it('continues strictly after the cursor position, keeping the visibility filter', async () => {
     mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
     const updatedAt = new Date('2026-01-02T03:04:05.678Z')
-    await service.listConversationsForProfile('p1', { updatedAt, conversationId: 'c19' })
+    await service.listConversationsForProfile('p1', {
+      isArchived: false,
+      updatedAt,
+      conversationId: 'c19',
+    })
     const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
     expect(args.where.OR).toEqual([
-      { conversation: { updatedAt: { lt: updatedAt } } },
-      { conversation: { updatedAt }, conversationId: { lt: 'c19' } },
+      { isArchived: false, conversation: { updatedAt: { lt: updatedAt } } },
+      { isArchived: false, conversation: { updatedAt }, conversationId: { lt: 'c19' } },
+      { isArchived: true },
     ])
     expect(args.where.profileId).toBe('p1')
     expect(args.where.conversation.OR).toHaveLength(2)
+  })
+
+  it('does not return to unarchived conversations once the cursor is among the archived', async () => {
+    mockPrisma.conversationParticipant.findMany.mockResolvedValue([])
+    const updatedAt = new Date('2026-01-02T03:04:05.678Z')
+    await service.listConversationsForProfile('p1', {
+      isArchived: true,
+      updatedAt,
+      conversationId: 'c19',
+    })
+    const args = mockPrisma.conversationParticipant.findMany.mock.calls[0][0]
+    expect(args.where.OR).toEqual([
+      { isArchived: true, conversation: { updatedAt: { lt: updatedAt } } },
+      { isArchived: true, conversation: { updatedAt }, conversationId: { lt: 'c19' } },
+    ])
+  })
+})
+
+describe('MessageService.archiveConversation / unarchiveConversation', () => {
+  it("archives only the caller's participation, marks it read, and skips when a newer message exists", async () => {
+    const lastMessageAt = new Date('2026-01-02T03:04:05.678Z')
+    await service.archiveConversation('c1', 'p1', lastMessageAt)
+    expect(mockPrisma.conversationParticipant.updateMany).toHaveBeenCalledWith({
+      where: {
+        conversationId: 'c1',
+        profileId: 'p1',
+        conversation: { messages: { none: { createdAt: { gt: lastMessageAt } } } },
+      },
+      data: { isArchived: true, lastReadAt: expect.any(Date) },
+    })
+  })
+
+  it('skips when any message exists and the client saw none', async () => {
+    await service.archiveConversation('c1', 'p1', null)
+    const args = mockPrisma.conversationParticipant.updateMany.mock.calls[0][0]
+    expect(args.where.conversation).toEqual({ messages: { none: {} } })
+  })
+
+  it('reports whether a participant has archived the conversation', async () => {
+    mockPrisma.conversationParticipant.findFirst.mockResolvedValueOnce({ id: 'cp1' })
+    expect(await service.isConversationArchived('c1', 'p1')).toBe(true)
+    mockPrisma.conversationParticipant.findFirst.mockResolvedValueOnce(null)
+    expect(await service.isConversationArchived('c1', 'p1')).toBe(false)
+  })
+
+  it('unarchives without touching lastReadAt', async () => {
+    await service.unarchiveConversation('c1', 'p1')
+    expect(mockPrisma.conversationParticipant.updateMany).toHaveBeenCalledWith({
+      where: { conversationId: 'c1', profileId: 'p1' },
+      data: { isArchived: false },
+    })
   })
 })
 
 describe('MessageService.hasUnreadConversations', () => {
   beforeEach(() => {
     mockPrisma.$queryRaw = vi.fn()
+  })
+
+  it('does not count archived conversations', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([])
+    await service.hasUnreadConversations('p1')
+    expect(mockPrisma.$queryRaw.mock.calls[0][0].join('?')).toContain('AND NOT cp."isArchived"')
   })
 
   it('is false without a visibility lookup when nothing is unread', async () => {
@@ -720,8 +785,24 @@ describe('MessageService.sendMessage (new primitive)', () => {
       conversation: {
         update: vi.fn().mockResolvedValue(undefined),
       },
+      conversationParticipant: { updateMany: vi.fn() },
     }
   }
+
+  it('unarchives the conversation for the sender only', async () => {
+    const tx = txForSend({})
+    await service.sendMessage(tx, 'c1', 'bob', 'hi', 'text/plain')
+    expect(tx.conversationParticipant.updateMany).toHaveBeenCalledWith({
+      where: { conversationId: 'c1', profileId: 'bob', isArchived: true },
+      data: { isArchived: false },
+    })
+  })
+
+  it('does not unarchive on a duplicate send', async () => {
+    const tx = txForSend({ duplicate: builtMsg })
+    await service.sendMessage(tx, 'c1', 'bob', 'hi', 'text/plain')
+    expect(tx.conversationParticipant.updateMany).not.toHaveBeenCalled()
+  })
 
   it('writes a message and returns isDuplicate: false', async () => {
     const tx = txForSend({})

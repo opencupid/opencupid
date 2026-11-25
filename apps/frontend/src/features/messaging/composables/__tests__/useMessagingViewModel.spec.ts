@@ -18,6 +18,8 @@ const mockMessageStore = vi.hoisted(() => ({
   initialized: true,
   suppressMessageNotifications: false,
   conversations: [],
+  sortedConversations: [],
+  setArchived: vi.fn(),
   activeConversation: null,
   isLoading: false,
   hasMoreConversations: false,
@@ -146,5 +148,13 @@ describe('useMessagingViewModel – conversation paging', () => {
   it('fetchMoreConversations delegates to the store', async () => {
     await mountVm().fetchMoreConversations()
     expect(mockMessageStore.fetchMoreConversations).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('useMessagingViewModel – archiving', () => {
+  it('setArchived delegates to the store', async () => {
+    const convo = { conversationId: 'c1' } as never
+    await mountVm().setArchived(convo, true)
+    expect(mockMessageStore.setArchived).toHaveBeenCalledWith(convo, true)
   })
 })

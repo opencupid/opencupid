@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import type { ConversationSummary, MessageDTO } from '@zod/messaging/messaging.dto'
+import type {
+  ConversationSummary,
+  IncomingMessageDTO,
+  MessageDTO,
+} from '@zod/messaging/messaging.dto'
 
 const mockApi = vi.hoisted(() => ({
   get: vi.fn(),
@@ -95,7 +99,8 @@ describe('messageStore', () => {
       store.conversations = [existingConvo]
 
       // Incoming message from partner
-      const incomingMessage: MessageDTO = {
+      const incomingMessage: IncomingMessageDTO = {
+        isArchived: false,
         id: 'msg-2',
         conversationId: 'convo-1',
         senderId: 'partner-profile-1',
@@ -176,7 +181,8 @@ describe('messageStore', () => {
 
       store.conversations = [convo1, convo2]
 
-      const incomingMessage: MessageDTO = {
+      const incomingMessage: IncomingMessageDTO = {
+        isArchived: false,
         id: 'msg-1',
         conversationId: 'convo-2',
         senderId: 'partner-2',
@@ -231,7 +237,8 @@ describe('messageStore', () => {
       store.conversations = [convo]
       store.activeConversation = null
 
-      const incomingMessage: MessageDTO = {
+      const incomingMessage: IncomingMessageDTO = {
+        isArchived: false,
         id: 'msg-1',
         conversationId: 'convo-1',
         senderId: 'partner-1',
@@ -284,7 +291,8 @@ describe('messageStore', () => {
       store.conversations = [convo]
       store.activeConversation = null
 
-      const incomingMessage: MessageDTO = {
+      const incomingMessage: IncomingMessageDTO = {
+        isArchived: false,
         id: 'msg-1',
         conversationId: 'convo-1',
         senderId: 'partner-1',
@@ -858,7 +866,7 @@ describe('conversation list pagination', () => {
       data: { success: true, conversation: makeConvo('c99', 'Zed') },
     })
 
-    await store.handleIncomingMessage({ id: 'm1', conversationId: 'c99' } as MessageDTO)
+    await store.handleIncomingMessage({ id: 'm1', conversationId: 'c99' } as IncomingMessageDTO)
 
     expect(mockApi.get).toHaveBeenCalledTimes(1)
     expect(mockApi.get).toHaveBeenCalledWith('/messages/conversations/c99')
@@ -938,7 +946,7 @@ describe('unread flag', () => {
       id: 'm1',
       conversationId: 'c2',
       senderId: 'partner-c2',
-    } as MessageDTO)
+    } as IncomingMessageDTO)
     resolveMarkRead({
       data: { success: true, conversation: makeConvo('c1', 'Alice'), hasUnread: false },
     })
@@ -956,7 +964,7 @@ describe('unread flag', () => {
       id: 'm1',
       conversationId: 'c1',
       senderId: 'partner-c1',
-    } as MessageDTO)
+    } as IncomingMessageDTO)
 
     expect(store.hasUnreadMessages).toBe(true)
   })
@@ -970,7 +978,7 @@ describe('unread flag', () => {
       id: 'm1',
       conversationId: 'c1',
       senderId: 'profile-1',
-    } as MessageDTO)
+    } as IncomingMessageDTO)
 
     expect(store.hasUnreadMessages).toBe(false)
   })
@@ -1044,7 +1052,10 @@ describe('message editing', () => {
       store.messages = [makeMessage()]
       store.startEditing()
 
-      await store.handleIncomingMessage(makeMessage({ id: 'reply', isMine: false }))
+      await store.handleIncomingMessage({
+        ...makeMessage({ id: 'reply', isMine: false }),
+        isArchived: false,
+      })
 
       expect(store.editingMessage).toBeNull()
     })
@@ -1133,5 +1144,218 @@ describe('message editing', () => {
 
       expect(store.messages).toEqual([makeMessage()])
     })
+  })
+})
+
+describe('archived conversations', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  const convo = (id: string, isArchived: boolean, day: string): ConversationSummary => {
+    const c = makeConvo(id, id)
+    return {
+      ...c,
+      isArchived,
+      conversation: { ...c.conversation, updatedAt: new Date(day) },
+    }
+  }
+  const order = () => useMessageStore().sortedConversations.map((c) => c.conversationId)
+
+  it('sorts archived conversations last, most recently active first within each group', () => {
+    const store = useMessageStore()
+    store.conversations = [
+      convo('a', true, '2024-01-04'),
+      convo('b', false, '2024-01-01'),
+      convo('c', false, '2024-01-03'),
+      convo('d', true, '2024-01-05'),
+    ]
+    expect(order()).toEqual(['c', 'b', 'd', 'a'])
+  })
+
+  it('setArchived sends the last seen message time and applies the response', async () => {
+    const store = useMessageStore()
+    const target = convo('a', false, '2024-01-04')
+    store.conversations = [target, convo('b', false, '2024-01-01')]
+    store.hasUnreadMessages = true
+    mockApi.patch.mockResolvedValue({
+      data: { success: true, conversation: { ...target, isArchived: true }, hasUnread: false },
+    })
+
+    await store.setArchived(target, true)
+
+    expect(mockApi.patch).toHaveBeenCalledWith('/messages/conversations/a/archived', {
+      isArchived: true,
+      lastMessageAt: null,
+    })
+    expect(order()).toEqual(['b', 'a'])
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+
+  it('keeps the conversation when the request fails', async () => {
+    const store = useMessageStore()
+    const target = convo('a', false, '2024-01-04')
+    store.conversations = [target]
+    mockApi.patch.mockRejectedValue(new Error('offline'))
+
+    await store.setArchived(target, true)
+
+    expect(store.conversations[0]!.isArchived).toBe(false)
+    expect(store.error).not.toBeNull()
+  })
+
+  const incoming = (overrides: Partial<IncomingMessageDTO> = {}) =>
+    ({
+      id: 'm1',
+      conversationId: 'a',
+      senderId: 'partner-a',
+      createdAt: new Date('2024-01-05'),
+      isArchived: true,
+      ...overrides,
+    }) as IncomingMessageDTO
+
+  const deferredPatch = () => {
+    let resolve!: (value: unknown) => void
+    mockApi.patch.mockReturnValue(new Promise((r) => (resolve = r)))
+    return (conversation: ConversationSummary) =>
+      resolve({ data: { success: true, conversation, hasUnread: false } })
+  }
+
+  it('a message arriving before the hide response is applied stays muted and leaves no unread flag', async () => {
+    const store = useMessageStore()
+    const target = convo('a', false, '2024-01-04')
+    store.conversations = [target]
+    store.hasUnreadMessages = true
+    const respond = deferredPatch()
+    const archiving = store.setArchived(target, true)
+
+    await store.handleIncomingMessage(incoming())
+    respond({ ...target, isArchived: true })
+    await archiving
+
+    expect(store.conversations[0]!.isArchived).toBe(true)
+    expect(store.conversations[0]!.lastMessage).toMatchObject({ id: 'm1' })
+    expect(store.hasUnreadMessages).toBe(false)
+    expect(mockBus.emit).not.toHaveBeenCalled()
+  })
+
+  it('a hide response arriving after a newer own reply does not hide the conversation again', async () => {
+    const store = useMessageStore()
+    const target = convo('a', false, '2024-01-04')
+    store.conversations = [target]
+    const respond = deferredPatch()
+    const archiving = store.setArchived(target, true)
+
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: { ...target, lastMessage: { createdAt: new Date('2024-01-06') } },
+        message: { id: 'm2', conversationId: 'a' },
+      },
+    })
+    await store.sendMessage('partner-a', 'Hi')
+    respond({ ...target, isArchived: true })
+    await archiving
+
+    expect(store.conversations[0]!.isArchived).toBe(false)
+  })
+
+  it('an unhide response is applied even if a message arrived in the meantime', async () => {
+    const store = useMessageStore()
+    const target = convo('a', true, '2024-01-04')
+    store.conversations = [target]
+    const respond = deferredPatch()
+    const unarchiving = store.setArchived(target, false)
+
+    await store.handleIncomingMessage(incoming())
+    respond({ ...target, isArchived: false })
+    await unarchiving
+
+    expect(store.conversations[0]!.isArchived).toBe(false)
+    expect(store.conversations[0]!.lastMessage).toMatchObject({ id: 'm1' })
+  })
+
+  it('a message archived elsewhere is muted and syncs the stale copy of this session', async () => {
+    const store = useMessageStore()
+    store.conversations = [convo('a', false, '2024-01-01'), convo('b', false, '2024-01-02')]
+
+    await store.handleIncomingMessage(incoming())
+
+    expect(order()).toEqual(['b', 'a'])
+    expect(store.conversations[0]!.lastMessage).toMatchObject({ id: 'm1' })
+    expect(store.hasUnreadMessages).toBe(false)
+    expect(mockBus.emit).not.toHaveBeenCalled()
+  })
+
+  it('a message unarchived elsewhere notifies and syncs the stale copy of this session', async () => {
+    const store = useMessageStore()
+    store.conversations = [convo('a', true, '2024-01-01'), convo('b', false, '2024-01-02')]
+    const message = incoming({ isArchived: false })
+
+    await store.handleIncomingMessage(message)
+
+    expect(order()).toEqual(['a', 'b'])
+    expect(store.hasUnreadMessages).toBe(true)
+    expect(mockBus.emit).toHaveBeenCalledWith('notification:new_message', message)
+  })
+
+  it('mutes an archived conversation outside the loaded pages, even if its summary fails to load', async () => {
+    const store = useMessageStore()
+    mockApi.get.mockResolvedValueOnce({
+      data: { success: true, conversation: convo('a', true, '2024-01-03') },
+    })
+    await store.handleIncomingMessage(incoming())
+
+    store.conversations = []
+    mockApi.get.mockRejectedValueOnce(new Error('offline'))
+    await store.handleIncomingMessage(incoming())
+
+    expect(store.hasUnreadMessages).toBe(false)
+    expect(mockBus.emit).not.toHaveBeenCalled()
+  })
+
+  it('an own missed-call notice unarchives', async () => {
+    const store = useMessageStore()
+    store.suppressMessageNotifications = true
+    store.conversations = [convo('a', true, '2024-01-01'), convo('b', false, '2024-01-02')]
+
+    await store.handleIncomingMessage(incoming({ senderId: 'profile-1', isArchived: false }))
+
+    expect(order()).toEqual(['a', 'b'])
+    expect(store.hasUnreadMessages).toBe(false)
+  })
+
+  it('an own reply unarchives', async () => {
+    const store = useMessageStore()
+    store.conversations = [convo('b', false, '2024-01-02'), convo('a', true, '2024-01-01')]
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: convo('a', false, '2024-01-03'),
+        message: { id: 'm1', conversationId: 'a' },
+      },
+    })
+
+    await store.sendMessage('partner-a', 'Hi')
+
+    expect(order()).toEqual(['a', 'b'])
+  })
+
+  it('a late markAsRead response does not undo archiving', async () => {
+    const store = useMessageStore()
+    store.conversations = [convo('a', true, '2024-01-01')]
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: { ...convo('a', false, '2024-01-01'), lastReadAt: new Date('2024-02-01') },
+        hasUnread: false,
+      },
+    })
+
+    await store.markAsRead('a')
+
+    expect(store.conversations[0]!.isArchived).toBe(true)
+    expect(store.conversations[0]!.lastReadAt).toEqual(new Date('2024-02-01'))
   })
 })

@@ -250,6 +250,8 @@
     "edit_no_longer_possible": "Közben válasz érkezett, ezért az üzenet már nem szerkeszthető. A szöveged az üzenetmezőben maradt.",
     "edited": "szerkesztve",
     "editing_message": "Üzenet szerkesztése",
+    "hide": "Elrejtés",
+    "hide_hint": "Beszélgetés elrejtése",
     "loading_older_messages": "Régebbi üzenetek betöltése…",
     "message_input_placeholder": "...",
     "message_sent_success": "Az üzeneted megérkezett a postafiókjába.",
@@ -265,6 +267,8 @@
     "send_mode_click": "Kattintással küldés",
     "send_mode_press_enter": "Enter-rel küldés",
     "their_turn": "Ő jön",
+    "unhide": "Megjelenítés",
+    "unhide_hint": "Beszélgetés megjelenítése",
     "unknown_sender": "Valaki",
     "voice": {
       "cancel": "Mégse",

@@ -5,6 +5,7 @@ import {
   MessageService,
   MessagingError,
   MessagingErrorCodes,
+  type ConversationCursor,
   type MessagingErrorCode,
 } from '@/services/messaging.service'
 import { computeSendOutcome, type SendOutcome } from '@/services/messaging.stateMachine'
@@ -21,6 +22,7 @@ import type {
   ConversationsResponse,
   ConversationResponse,
   MarkConversationReadResponse,
+  ArchiveConversationResponse,
   ConversationByProfileResponse,
   SendMessageResponse,
   EditMessageResponse,
@@ -28,7 +30,9 @@ import type {
 import type { ConversationDraftSummary } from '@zod/messaging/messaging.dto'
 import { ProfileService } from '@/services/profile.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { broadcastNewMessage } from '@/services/messageBroadcast'
 import {
+  ArchiveConversationPayloadSchema,
   EditMessagePayloadSchema,
   SendMessagePayloadSchema,
   SendVoiceMessagePayloadSchema,
@@ -53,17 +57,29 @@ const MessageListQuerySchema = z.object({
   take: z.coerce.number().int().min(1).max(50).optional(),
 })
 
-// Opaque to clients: `<conversation.updatedAt ISO>_<conversationId>`, as issued
-// in ConversationsResponse.nextCursor.
+const ConversationCursorSchema = z.object({
+  isArchived: z.boolean(),
+  updatedAt: z.iso.datetime().transform((value) => new Date(value)),
+  conversationId: z.string().cuid(),
+})
+
+// The cursor is opaque to clients: they send back ConversationsResponse.nextCursor.
+function encodeConversationCursor(cursor: ConversationCursor): string {
+  return JSON.stringify(cursor)
+}
+
 const ConversationListQuerySchema = z.object({
   cursor: z
     .string()
-    .transform((value) => value.split('_'))
-    .pipe(z.tuple([z.iso.datetime(), z.string().cuid()]))
-    .transform(([updatedAt, conversationId]) => ({
-      updatedAt: new Date(updatedAt),
-      conversationId,
-    }))
+    .transform((value, ctx): unknown => {
+      try {
+        return JSON.parse(value)
+      } catch {
+        ctx.addIssue({ code: 'custom', message: 'Malformed cursor' })
+        return z.NEVER
+      }
+    })
+    .pipe(ConversationCursorSchema)
     .optional(),
 })
 
@@ -221,7 +237,8 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
   /*
    * Fans out a newly-written message to the recipient: WebSocket broadcast
-   * first, and only if that misses do we fall back to webpush + email. The
+   * first, and only if that misses do we fall back to webpush + email, unless
+   * the recipient has archived (and thereby muted) the conversation. The
    * notifier renders the email preview in the recipient's language.
    */
   async function fireNewMessageNotifications(args: {
@@ -231,12 +248,12 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   }): Promise<void> {
     const { senderProfileId, recipientProfileId, messageDTO } = args
 
-    const isWsBroadcasted = broadcastToProfile(fastify, recipientProfileId, {
-      type: 'ws:new_message',
-      payload: messageDTO,
-    })
-
-    if (isWsBroadcasted) return
+    const { isDelivered, isArchived } = await broadcastNewMessage(
+      fastify,
+      recipientProfileId,
+      messageDTO
+    )
+    if (isDelivered || isArchived) return
 
     if (WebPushService.isWebPushConfigured()) {
       webPushService.send(messageDTO, recipientProfileId).catch((err) => {
@@ -293,7 +310,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * GET /conversations
    * Returns one page of conversations for the authenticated profile, most recently
-   * active first, with latest message summaries.
+   * active first and archived ones last, with latest message summaries.
    * @query {string} [cursor] - nextCursor of the previous page
    * @returns {ConversationsResponse} { conversations, nextCursor, hasMore, hasUnread }
    */
@@ -314,9 +331,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         conversations: page.conversations.map((p) =>
           mapConversationParticipantToSummary(p, profileId)
         ),
-        nextCursor: page.nextCursor
-          ? `${page.nextCursor.updatedAt.toISOString()}_${page.nextCursor.conversationId}`
-          : null,
+        nextCursor: page.nextCursor ? encodeConversationCursor(page.nextCursor) : null,
         hasMore: page.hasMore,
         hasUnread,
       }
@@ -451,6 +466,55 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (error) {
         fastify.log.error(error)
         return sendError(reply, 500, 'Failed to mark conversation as read')
+      }
+    }
+  )
+
+  /**
+   * PATCH /conversations/:id/archived
+   * Archives or unarchives a conversation for the current profile. Archiving also
+   * marks it as read; it is a no-op if a message newer than lastMessageAt exists.
+   * @param {string} id - Conversation ID (CUID)
+   * @body {boolean} isArchived - New archived status
+   * @body {string|null} lastMessageAt - createdAt of the last message the client has seen
+   * @returns {ArchiveConversationResponse} Current conversation summary and inbox-wide unread flag
+   */
+  fastify.patch(
+    '/conversations/:id/archived',
+    { onRequest: [fastify.authenticate] },
+    async (req, reply) => {
+      const profileId = req.session.profileId
+      if (!profileId) return sendError(reply, 401, 'Profile not found.')
+
+      const id = IdLookupParamsSchema.safeParse(req.params)
+      if (!id.success) return sendError(reply, 404, 'Conversation not found')
+      const conversationId = id.data.id
+
+      const body = ArchiveConversationPayloadSchema.safeParse(req.body)
+      if (!body.success) return sendError(reply, 400, 'Invalid parameters')
+
+      try {
+        if (body.data.isArchived) {
+          await messageService.archiveConversation(
+            conversationId,
+            profileId,
+            body.data.lastMessageAt
+          )
+        } else {
+          await messageService.unarchiveConversation(conversationId, profileId)
+        }
+        const updated = await messageService.getInboxConversationSummary(conversationId, profileId)
+        if (!updated) return sendError(reply, 404, 'Conversation not found')
+
+        const response: ArchiveConversationResponse = {
+          success: true,
+          conversation: mapConversationParticipantToSummary(updated, profileId),
+          hasUnread: await messageService.hasUnreadConversations(profileId),
+        }
+        return reply.code(200).send(response)
+      } catch (error) {
+        fastify.log.error(error)
+        return sendError(reply, 500, 'Failed to archive conversation')
       }
     }
   )

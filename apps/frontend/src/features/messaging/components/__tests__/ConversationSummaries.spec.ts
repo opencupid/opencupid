@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('vue-i18n', () => ({ useI18n: () => ({ t: (k: string) => k }) }))
+vi.mock('@/assets/icons/interface/cross.svg', () => ({ default: { template: '<div />' } }))
+vi.mock('@/assets/icons/interface/unhide.svg', () => ({ default: { template: '<div />' } }))
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -16,6 +18,7 @@ function makeConvo(overrides: Partial<ConversationSummary> = {}): ConversationSu
     conversationId: 'c1',
     lastReadAt: new Date().toISOString(),
     isMuted: false,
+    isArchived: false,
     canReply: true,
     isCallable: true,
     myIsCallable: true,
@@ -131,5 +134,47 @@ describe('ConversationSummaries', () => {
 
     await wrapper.setProps({ loadingMore: true })
     expect(wrapper.find('[data-testid="conversations-loading-more"]').exists()).toBe(true)
+  })
+
+  const mountWith = (overrides: Partial<ConversationSummary>) =>
+    mount(ConversationSummaries, {
+      props: { conversations: [makeConvo(overrides)], activeConversation: null, loading: false },
+      ...globalMocks,
+    })
+
+  it('offers to hide whatever the turn status, without opening the conversation', async () => {
+    for (const overrides of [{}, { canReply: false }, { lastMessage: null }]) {
+      const wrapper = mountWith(overrides)
+      const button = wrapper.find('.archive-button')
+      expect(button.attributes('aria-label')).toBe('messaging.hide_hint')
+      await button.trigger('click')
+      expect(wrapper.emitted('convo:archive')![0]).toEqual([
+        expect.objectContaining({ conversationId: 'c1' }),
+        true,
+      ])
+      expect(wrapper.emitted('convo:select')).toBeUndefined()
+    }
+  })
+
+  it('offers to unhide a hidden conversation, faded and without turn badge', async () => {
+    const wrapper = mountWith({ isArchived: true })
+    expect(wrapper.find('.faded').exists()).toBe(true)
+    expect(wrapper.find('.turn-badge').exists()).toBe(false)
+    await wrapper.find('.archive-button').trigger('click')
+    expect(wrapper.emitted('convo:archive')![0]![1]).toBe(false)
+  })
+
+  it('does not offer to hide admin-initiated conversations', () => {
+    expect(mountWith({ isAdminInitiator: true }).find('.archive-button').exists()).toBe(false)
+  })
+
+  it('opens hidden conversations, but not those that cannot be replied to', async () => {
+    const hidden = mountWith({ isArchived: true })
+    await hidden.find('.convo-item').trigger('click')
+    expect(hidden.emitted('convo:select')).toHaveLength(1)
+
+    const theirs = mountWith({ canReply: false })
+    await theirs.find('.convo-item').trigger('click')
+    expect(theirs.emitted('convo:select')).toBeUndefined()
   })
 })

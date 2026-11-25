@@ -1,7 +1,11 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
-import { messageWithSenderInclude, type MessageWithSender } from './messaging.service'
+import {
+  messageWithSenderInclude,
+  unarchiveForSender,
+  type MessageWithSender,
+} from './messaging.service'
 
 export class CallService {
   private static instance: CallService
@@ -50,6 +54,8 @@ export class CallService {
       roomName,
       calleeProfileId: calleeParticipant.profileId,
       callerPublicName: callerParticipant.profile.publicName,
+      // An archived conversation is muted for its participant.
+      isMutedForCallee: calleeParticipant.isArchived,
     }
   }
 
@@ -80,6 +86,7 @@ export class CallService {
       },
       include: messageWithSenderInclude,
     })
+    await unarchiveForSender(tx, conversationId, callerProfileId)
     return { message, isDuplicate: false }
   }
 

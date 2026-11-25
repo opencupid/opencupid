@@ -4,9 +4,11 @@ import { api, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
 
 import type {
+  ArchiveConversationPayload,
   ConversationOrDraft,
   ConversationSummary,
   EditMessagePayload,
+  IncomingMessageDTO,
   MessageDTO,
   MessageInConversation,
   SendMessagePayload,
@@ -17,6 +19,7 @@ import type {
   ConversationsResponse,
   ConversationResponse,
   MarkConversationReadResponse,
+  ArchiveConversationResponse,
   SendMessageResponse,
   EditMessageResponse,
 } from '@zod/apiResponse.dto'
@@ -77,6 +80,15 @@ export const useMessageStore = defineStore('message', {
   }),
 
   getters: {
+    // Same order as the server's pages: archived last, most recently active first.
+    sortedConversations(state): ConversationSummary[] {
+      return [...state.conversations].sort(
+        (a, b) =>
+          Number(a.isArchived) - Number(b.isArchived) ||
+          new Date(b.conversation.updatedAt).getTime() -
+            new Date(a.conversation.updatedAt).getTime()
+      )
+    },
     // Only the latest message of the open conversation can be edited, and only
     // until anyone writes after it.
     editableMessage(state): MessageDTO | null {
@@ -91,7 +103,7 @@ export const useMessageStore = defineStore('message', {
   },
 
   actions: {
-    async handleIncomingMessage(message: MessageDTO) {
+    async handleIncomingMessage(message: IncomingMessageDTO) {
       // Update conversation summary (and bump it to top)
       const known = this.conversations.find((c) => c.conversationId === message.conversationId)
       // When we receive a message, it means the conversation is now in ACCEPTED state
@@ -99,12 +111,19 @@ export const useMessageStore = defineStore('message', {
       // A conversation outside the loaded pages is fetched on its own, so the
       // pages already scrolled through stay in place.
       const convo: ConversationSummary | null = known
-        ? { ...known, lastMessage: message, canReply: true }
+        ? {
+            ...known,
+            lastMessage: message,
+            canReply: true,
+            isArchived: message.isArchived,
+            conversation: { ...known.conversation, updatedAt: message.createdAt },
+          }
         : await this.fetchConversation(message.conversationId)
       if (convo) {
         this.bumpConversation(convo)
-        // Missed-call notices are broadcast to their sender as well.
-        if (message.senderId !== convo.profileId) {
+        // Missed-call notices are broadcast to their sender as well. Archived
+        // conversations are muted.
+        if (message.senderId !== convo.profileId && !message.isArchived) {
           this.hasUnreadMessages = true
           this.unreadRevision++
         }
@@ -112,7 +131,7 @@ export const useMessageStore = defineStore('message', {
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
         this.appendMessageIfNew(message)
-      } else if (!this.suppressMessageNotifications) {
+      } else if (!this.suppressMessageNotifications && !message.isArchived) {
         bus.emit('notification:new_message', message)
       }
     },
@@ -398,12 +417,43 @@ export const useMessageStore = defineStore('message', {
           api.post<MarkConversationReadResponse>(`/messages/conversations/${convoId}/mark-read`)
         )
         if (updateConvo.data.success) {
-          const updatedConvo: ConversationSummary = updateConvo.data.conversation
-          this.updateConvo(updatedConvo)
+          // Only the read marker: the rest of the snapshot may be older than an
+          // archive or an incoming message applied in the meantime.
+          const { lastReadAt } = updateConvo.data.conversation
+          const known = this.conversations.find((c) => c.conversationId === convoId)
+          if (known) known.lastReadAt = lastReadAt
           this.applyServerUnread(updateConvo.data.hasUnread, unreadRevision)
         }
       } catch (error: any) {
         console.error('Failed to mark conversation as read:', error)
+      }
+    },
+
+    async setArchived(convo: ConversationSummary, isArchived: boolean) {
+      const unreadRevision = this.unreadRevision
+      try {
+        this.error = null
+        const res = await safeApiCall(() =>
+          api.patch<ArchiveConversationResponse>(
+            `/messages/conversations/${convo.conversationId}/archived`,
+            {
+              isArchived,
+              lastMessageAt: convo.lastMessage?.createdAt ?? null,
+            } satisfies ArchiveConversationPayload
+          )
+        )
+        // A message sent or received while the request was in flight brought a
+        // newer state than this snapshot, except that an unarchived one stands:
+        // nothing but the viewer archives.
+        const current = this.conversations.find((c) => c.conversationId === convo.conversationId)
+        if (current?.lastMessage?.createdAt === convo.lastMessage?.createdAt) {
+          this.updateConvo(res.data.conversation)
+        } else if (current && !res.data.conversation.isArchived) {
+          current.isArchived = false
+        }
+        this.applyServerUnread(res.data.hasUnread, unreadRevision)
+      } catch (error: any) {
+        this.error = storeError(error)
       }
     },
 

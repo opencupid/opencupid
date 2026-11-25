@@ -12,6 +12,20 @@ vi.mock('../../services/call.service', () => ({
   CallService: { getInstance: () => mockCallService },
 }))
 
+const mockSendCallNotification = vi.hoisted(() => vi.fn())
+vi.mock('../../services/webpush.service', () => ({
+  WebPushService: {
+    getInstance: () => ({ sendCallNotification: mockSendCallNotification }),
+    isWebPushConfigured: () => true,
+  },
+}))
+
+vi.mock('../../services/messaging.service', () => ({
+  MessageService: {
+    getInstance: () => ({ isConversationArchived: vi.fn().mockResolvedValue(false) }),
+  },
+}))
+
 vi.mock('../../utils/wsUtils', () => ({
   broadcastToProfile: vi.fn(() => true),
 }))
@@ -78,6 +92,44 @@ describe('POST / (initiate call)', () => {
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.roomName).toBe('room-123')
+  })
+})
+
+describe('POST / (initiate call) – alerting the callee', () => {
+  const call = async (isMutedForCallee: boolean, isOnline: boolean) => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    vi.mocked(broadcastToProfile).mockClear().mockReturnValueOnce(isOnline)
+    mockSendCallNotification.mockReset().mockResolvedValue(undefined)
+    mockCallService.initiateCall.mockResolvedValue({
+      roomName: 'room-123',
+      calleeProfileId: 'p2',
+      callerPublicName: 'Alice',
+      isMutedForCallee,
+    })
+    await fastify.routes['POST /'](
+      {
+        session: { profileId: 'p1' },
+        body: { conversationId: 'ck1234567890abcd12345678' },
+      } as any,
+      reply as any
+    )
+    return {
+      rings: vi.mocked(broadcastToProfile).mock.calls.length,
+      pushes: mockSendCallNotification.mock.calls.length,
+    }
+  }
+
+  it('rings an online callee and pushes to an offline one', async () => {
+    expect(await call(false, true)).toEqual({ rings: 1, pushes: 0 })
+    expect(await call(false, false)).toEqual({ rings: 1, pushes: 1 })
+  })
+
+  it('neither rings nor pushes when muted, with the same response to the caller', async () => {
+    await call(false, true)
+    const unmuted = reply.payload
+    expect(await call(true, false)).toEqual({ rings: 0, pushes: 0 })
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual(unmuted)
   })
 })
 
