@@ -18,6 +18,7 @@ afterAll(() => {
 })
 
 const push = vi.fn()
+const replace = vi.fn()
 const resolve = vi.fn((path: string) => ({
   fullPath: path,
   meta: { requiresAuth: !path.startsWith('/auth') },
@@ -38,7 +39,7 @@ vi.mock('@/lib/auth', () => ({
 
 vi.mock('vue-router', () => ({
   useRoute: () => route,
-  useRouter: () => ({ push, resolve }),
+  useRouter: () => ({ push, replace, resolve }),
 }))
 
 vi.mock('vue-i18n', () => ({
@@ -91,6 +92,7 @@ describe('MagicLink', () => {
     route.query = {}
     localStorage.clear()
     push.mockReset()
+    replace.mockReset()
     track.mockReset()
     bootstrapReady.mockReset()
     bootstrapReady.mockResolvedValue(undefined)
@@ -104,7 +106,7 @@ describe('MagicLink', () => {
 
     await mountAndContinue()
 
-    expect(push).toHaveBeenCalledWith('/browse')
+    expect(replace).toHaveBeenCalledWith('/browse')
   })
 
   it('redirects to the deep link carried by the magic link', async () => {
@@ -114,7 +116,7 @@ describe('MagicLink', () => {
 
     await mountAndContinue()
 
-    expect(push).toHaveBeenCalledWith('/inbox/abc')
+    expect(replace).toHaveBeenCalledWith('/inbox/abc')
   })
 
   it.each(['//evil.example', 'https://evil.example', '/auth'])(
@@ -126,7 +128,7 @@ describe('MagicLink', () => {
 
       await mountAndContinue()
 
-      expect(push).toHaveBeenCalledWith('/browse')
+      expect(replace).toHaveBeenCalledWith('/browse')
     }
   )
 
@@ -156,6 +158,7 @@ describe('MagicLink', () => {
 
     expect(verifyToken).not.toHaveBeenCalled()
     expect(push).not.toHaveBeenCalled()
+    expect(replace).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('auth.magic_link_prompt')
     expect(wrapper.findComponent(CaptchaWidget).exists()).toBe(true)
   })
@@ -196,7 +199,7 @@ describe('MagicLink', () => {
     await flushPromises()
 
     expect(verifyToken).toHaveBeenCalledWith('123456')
-    expect(push).toHaveBeenCalledWith('/browse')
+    expect(replace).toHaveBeenCalledWith('/browse')
   })
 
   it('shows only a spinner, not the captcha prompt, while continuing on its own', async () => {
@@ -342,6 +345,7 @@ describe('MagicLink', () => {
 
     expect(track).toHaveBeenCalledWith('auth-bootstrap-failed')
     expect(push).not.toHaveBeenCalled()
+    expect(replace).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('auth.token_unknown_error')
     consoleError.mockRestore()
   })

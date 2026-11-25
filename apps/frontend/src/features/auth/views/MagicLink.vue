@@ -72,7 +72,7 @@ async function handleContinue() {
         error.value = t('auth.token_unknown_error')
         return
       }
-      await router.push(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
+      await router.replace(loginRedirect(router, route.query.redirect) ?? DEFAULT_LANDING)
       return
     }
     tracker.track(`auth-token-failed:${res.code}`)

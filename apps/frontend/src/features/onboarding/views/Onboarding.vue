@@ -39,7 +39,7 @@ const handleGoToProfile = async () => {
 }
 
 const handleGoToBrowse = () => {
-  router.push({ name: 'Browse' })
+  router.replace({ name: 'Browse' })
 }
 
 const handleWizardFinish = async () => {
@@ -63,7 +63,7 @@ onMounted(async () => {
   await useBootstrap().bootstrap()
 
   if (profileStore.profile?.isOnboarded) {
-    router.push({ name: 'Me' })
+    router.replace({ name: 'Me' })
     return
   }
 
