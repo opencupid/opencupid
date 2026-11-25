@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { REFRESH_MAX_AGE } from '@shared/session'
 import { MockReply } from '../../test-utils/fastify'
 
 vi.mock('@/lib/appconfig', () => ({
@@ -50,6 +51,13 @@ describe('session cookies', () => {
       expect(reply.cookies.map((c) => c.opts.domain)).toEqual([domain, domain])
       expect(reply.clearedCookies.map((c) => c.opts.domain)).toEqual([domain, domain])
     }
+  })
+
+  it('keeps the session cookie as long as the refresh cookie, which is unusable without it', () => {
+    const reply = replyFor('gaians.test')
+    setSessionCookie(reply as any, 'jwt')
+    setRefreshCookie(reply as any, 'refresh')
+    expect(reply.cookies.map((c) => c.opts.maxAge)).toEqual([REFRESH_MAX_AGE, REFRESH_MAX_AGE])
   })
 
   it('refuses to set a cookie for a host no brand serves', () => {

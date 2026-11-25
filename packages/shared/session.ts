@@ -1,9 +1,14 @@
 /** Cookie name for the JWT session — shared between frontend and backend. */
 export const SESSION_COOKIE = '__session'
-export const SESSION_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
 /** Cookie name for the opaque refresh token (httpOnly, not readable by JS). */
 export const REFRESH_COOKIE = '__refresh'
+
+/**
+ * Lifetime of the refresh token and of both cookies. The session cookie has to
+ * last this long too, not just as long as the JWT in it: a refresh reads the
+ * user from the expired JWT, so a refresh token is useless without it.
+ */
 export const REFRESH_MAX_AGE = 60 * 60 * 24 * 90 // 90 days
 
 /**

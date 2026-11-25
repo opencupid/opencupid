@@ -104,8 +104,8 @@ export default fp(async (fastify: FastifyInstance) => {
 
     // Refresh the session cookie on every authenticated request. Two
     // jobs in one call:
-    //   1. Sliding TTL — resets Max-Age to 30d so active users stay
-    //      logged in as long as they keep using the app.
+    //   1. Sliding TTL — resets Max-Age so active users stay logged in
+    //      as long as they keep using the app.
     //   2. Phase 0 Bearer → cookie migration — clients that sent only
     //      an `Authorization: Bearer` header now carry a proper cookie
     //      on their next request.
