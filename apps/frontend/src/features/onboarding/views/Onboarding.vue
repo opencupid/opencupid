@@ -34,10 +34,6 @@ const error = ref('')
 
 const router = useRouter()
 
-const handleGoToProfile = async () => {
-  router.push({ name: 'Me' })
-}
-
 const handleGoToBrowse = () => {
   router.replace({ name: 'Browse' })
 }
@@ -98,7 +94,6 @@ onMounted(async () => {
             v-else
             class="animate__animated animate__fadeIn"
             @browse="handleGoToBrowse"
-            @profile="handleGoToProfile"
           />
         </div>
       </OnboardWizard>

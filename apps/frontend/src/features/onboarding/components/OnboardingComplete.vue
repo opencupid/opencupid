@@ -9,7 +9,6 @@ const profileStore = useOwnerProfileStore()
 
 const emit = defineEmits<{
   (e: 'browse'): void
-  (e: 'profile'): void
 }>()
 </script>
 
