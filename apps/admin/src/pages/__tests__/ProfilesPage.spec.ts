@@ -71,10 +71,13 @@ const baseDetail = {
 const baseUser = {
   id: 'u1',
   email: 'a@b.com',
-  phonenumber: null,
   isActive: true,
   isBlocked: false,
-  roles: ['user'],
+  newsletterOptIn: true,
+  emailNotificationsOptIn: false,
+  isPushNotificationEnabled: true,
+  pushSubscriptionCount: 2,
+  nearbySignupOptOut: true,
   createdAt: '2026-01-02T00:00:00Z',
   lastSeenAt: null,
   language: 'en',
@@ -781,6 +784,30 @@ describe('ProfilesPage', () => {
     expect(wrapper.text()).toContain('a@b.com')
     expect((wrapper.find('#editUserOrigin').element as HTMLSelectElement).value).toBe('example.org')
     expect(wrapper.find('#editUserActive').exists()).toBe(true)
+  })
+
+  it('User tab shows the email and push opt-in flags and no Phone/Roles rows', async () => {
+    const wrapper = mount(ProfilesPage)
+    await flushPromises()
+    await wrapper.find('tbody tr').trigger('click')
+    await flushPromises()
+    const tabs = wrapper.findAll('.nav-tabs .nav-link')
+    await tabs.filter((t) => t.text() === 'User')[0].trigger('click')
+    await flushPromises()
+
+    const optIns = wrapper.find('[data-testid="user-optins"]')
+    const rows = Object.fromEntries(
+      optIns.findAll('dt').map((dt, i) => [dt.text(), optIns.findAll('dd')[i].text()])
+    )
+    expect(rows['Newsletter']).toBe('Yes')
+    expect(rows['Email notifications']).toBe('No')
+    expect(rows['Nearby signup emails']).toBe('No')
+    expect(rows['Push notifications']).toContain('Yes')
+    expect(rows['Push notifications']).toContain('2 subscribed devices')
+
+    const labels = wrapper.findAll('.modal-body dt').map((dt) => dt.text())
+    expect(labels).not.toContain('Phone')
+    expect(labels).not.toContain('Roles')
   })
 
   it('Activity tab lazily loads and lists interaction counts', async () => {
