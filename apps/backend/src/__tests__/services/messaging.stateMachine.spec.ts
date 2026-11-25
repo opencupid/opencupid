@@ -50,9 +50,7 @@ describe('computeSendOutcome', () => {
     expect(computeSendOutcome(convo('ACCEPTED', 'alice'), false, 'alice', false, false)).toBe(
       'reply'
     )
-    expect(computeSendOutcome(convo('ACCEPTED', 'alice'), false, 'bob', false, false)).toBe(
-      'reply'
-    )
+    expect(computeSendOutcome(convo('ACCEPTED', 'alice'), false, 'bob', false, false)).toBe('reply')
   })
 
   it('existing INITIATED, sender = initiator, NOT admin → blocked', () => {
@@ -73,30 +71,30 @@ describe('computeSendOutcome', () => {
     )
   })
 
-  describe('isAdminBroadcast capability (#1377)', () => {
+  describe('canFollowUp capability (#1377)', () => {
     // Override semantics: admin-broadcast bypasses the self-initiated INITIATED
     // anti-spam rule, but does NOT override BLOCKED/ARCHIVED/DISCARDED — those
     // represent recipient choices that admin must respect.
 
-    it('existing INITIATED, sender = initiator, isAdminBroadcast → reply (override)', () => {
+    it('existing INITIATED, sender = initiator, canFollowUp → reply (override)', () => {
       expect(computeSendOutcome(convo('INITIATED', 'alice'), false, 'alice', false, true)).toBe(
         'reply'
       )
     })
 
-    it('does NOT override BLOCKED, even when isAdminBroadcast', () => {
+    it('does NOT override BLOCKED, even when canFollowUp', () => {
       expect(computeSendOutcome(convo('BLOCKED', 'alice'), false, 'alice', false, true)).toBe(
         'blocked'
       )
     })
 
-    it('does NOT override ARCHIVED, even when isAdminBroadcast', () => {
+    it('does NOT override ARCHIVED, even when canFollowUp', () => {
       expect(computeSendOutcome(convo('ARCHIVED', 'alice'), false, 'alice', false, true)).toBe(
         'blocked'
       )
     })
 
-    it('does NOT override DISCARDED, even when isAdminBroadcast', () => {
+    it('does NOT override DISCARDED, even when canFollowUp', () => {
       expect(computeSendOutcome(convo('DISCARDED', 'alice'), false, 'alice', false, true)).toBe(
         'blocked'
       )
@@ -121,7 +119,7 @@ describe('computeSendOutcome', () => {
       // The override only applies to self-initiated INITIATED. When the admin
       // sender is the *recipient* of a user-initiated INITIATED (e.g. user
       // messaged the welcome sender first and got no reply), the regular reply
-      // semantic wins — isAdminBroadcast is not consulted on this branch.
+      // semantic wins — canFollowUp is not consulted on this branch.
       expect(computeSendOutcome(convo('INITIATED', 'alice'), false, 'bob', false, true)).toBe(
         'accepted_on_reply'
       )

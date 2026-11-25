@@ -15,6 +15,7 @@ import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileSt
 import DatingSteps from '../components/DatingSteps.vue'
 import LocationSelectorComponent from '@/features/shared/profileform/LocationSelector.vue'
 import BackButton from '../components/BackButton.vue'
+import OnboardingHelp from '../components/OnboardingHelp.vue'
 import PublicNameInput from '@/features/shared/profileform/PublicNameInput.vue'
 import LogoutButton from '@/features/auth/components/LogoutButton.vue'
 
@@ -334,6 +335,8 @@ const siteName = __APP_CONFIG__.SITE_NAME
         </ul>
       </div> -->
     </div>
+
+    <OnboardingHelp :step="index" />
   </div>
 </template>
 

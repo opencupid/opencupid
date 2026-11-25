@@ -19,16 +19,16 @@ export type SendOutcome =
  * | existing PENDING AND sender ≠ initiator                            | 'accept_and_promote_pending'  |
  * | existing INITIATED AND sender ≠ initiator                          | 'accepted_on_reply'           |
  * | existing ACCEPTED                                                  | 'reply'                       |
- * | existing INITIATED AND sender = initiator AND NOT isAdminBroadcast | 'blocked'                     |
- * | existing INITIATED AND sender = initiator AND isAdminBroadcast     | 'reply'                       |
+ * | existing INITIATED AND sender = initiator AND NOT canFollowUp      | 'blocked'                     |
+ * | existing INITIATED AND sender = initiator AND canFollowUp          | 'reply'                       |
  * | BLOCKED / ARCHIVED / DISCARDED                                     | 'blocked'                     |
  *
  * The self-initiated INITIATED block is an anti-spam rule for human users — don't
- * pile messages onto an unresponsive contact. Admin broadcast traffic legitimately
- * needs to follow up with the same recipients (e.g. announcements after the
- * welcome message), so isAdminBroadcast=true bypasses that one rule. It does NOT
- * override BLOCKED / ARCHIVED / DISCARDED — admins must not be able to override
- * a recipient's explicit block.
+ * pile messages onto an unresponsive contact. Traffic to or from the system
+ * sender legitimately needs to follow up (admin announcements after the welcome
+ * message, a second help request before the first is answered), so
+ * canFollowUp=true bypasses that one rule. It does NOT override BLOCKED /
+ * ARCHIVED / DISCARDED — a recipient's explicit block always stands.
  *
  * The PENDING-non-initiator branch deliberately ignores `senderIsQuarantined`
  * and promotes via `accept_and_promote_pending` even when both parties are in
@@ -46,7 +46,7 @@ export function computeSendOutcome(
   wasCreated: boolean,
   senderProfileId: string,
   senderIsQuarantined: boolean,
-  isAdminBroadcast: boolean
+  canFollowUp: boolean
 ): SendOutcome {
   if (wasCreated) {
     return senderIsQuarantined ? 'pending' : 'new_conversation'
@@ -60,7 +60,7 @@ export function computeSendOutcome(
       return 'accept_and_promote_pending'
 
     case 'INITIATED':
-      if (isAdminBroadcast && isInitiator) return 'reply'
+      if (canFollowUp && isInitiator) return 'reply'
       if (!isInitiator) return 'accepted_on_reply'
       return 'blocked'
 

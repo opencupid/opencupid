@@ -167,8 +167,18 @@ export type ConversationParticipantWithConversationSummary =
     include: {
       conversation: {
         include: {
-          profileA: { include: { profileImages: { include: { image: true } } } }
-          profileB: { include: { profileImages: { include: { image: true } } } }
+          profileA: {
+            include: {
+              user: { select: { email: true } }
+              profileImages: { include: { image: true } }
+            }
+          }
+          profileB: {
+            include: {
+              user: { select: { email: true } }
+              profileImages: { include: { image: true } }
+            }
+          }
           participants: {
             select: {
               profileId: true
@@ -205,6 +215,12 @@ export const SendMessagePayloadSchema = z
   })
 
 export type SendMessagePayload = z.infer<typeof SendMessagePayloadSchema>
+
+export const HelpRequestPayloadSchema = z.object({
+  content: z.string().trim().min(1),
+})
+
+export type HelpRequestPayload = z.infer<typeof HelpRequestPayloadSchema>
 
 export const EditMessagePayloadSchema = z.object({
   content: z.string().trim().min(1),

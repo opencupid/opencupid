@@ -423,6 +423,35 @@ describe('sendMessage', () => {
   })
 })
 
+describe('sendHelpRequest', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('posts the message and adds the conversation to the inbox', async () => {
+    const store = useMessageStore()
+    mockApi.post.mockResolvedValue({
+      data: {
+        success: true,
+        conversation: makeConvo('convo-help', 'Admin'),
+        message: { id: 'msg-1', conversationId: 'convo-help', content: 'Stuck' },
+      },
+    })
+
+    const result = await store.sendHelpRequest('Stuck')
+
+    expect(mockApi.post).toHaveBeenCalledWith('/messages/help', { content: 'Stuck' })
+    expect(result.success).toBe(true)
+    expect(store.conversations[0]!.conversationId).toBe('convo-help')
+  })
+
+  it('returns a StoreError when the request fails', async () => {
+    mockApi.post.mockRejectedValue(new Error('down'))
+    expect(await useMessageStore().sendHelpRequest('Stuck')).toMatchObject({ success: false })
+  })
+})
+
 describe('sendVoiceMessage', () => {
   beforeEach(() => {
     setActivePinia(createPinia())

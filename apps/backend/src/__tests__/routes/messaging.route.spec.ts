@@ -93,7 +93,8 @@ vi.mock('@/lib/appconfig', () => ({
     FRONTEND_URL: 'http://test',
     MEDIA_UPLOAD_DIR: '/tmp/test-media',
     VOICE_MESSAGE_MAX_DURATION: 120,
-  },
+    ADMIN_PROFILE_ID: 'ckadmin0000000000000000000',
+  } as { ADMIN_PROFILE_ID?: string },
 }))
 
 vi.mock('@/lib/media', () => ({
@@ -634,6 +635,116 @@ describe('POST /message', () => {
     await expect(
       handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
     ).rejects.toThrow('Conversation summary not found')
+  })
+})
+
+describe('messages to the system profile', () => {
+  const ADMIN = 'ckadmin0000000000000000000'
+  const post = (route: string, body: unknown, session: unknown = { profileId: 'p1' }) =>
+    fastify.routes[route]({ session, body } as any, reply as any)
+
+  const mockConvo = (status: string, wasCreated: boolean) => {
+    mockMessageService.resolveConversation.mockResolvedValue({
+      convo: {
+        id: 'conv1',
+        status,
+        initiatorProfileId: 'p1',
+        profileAId: ADMIN,
+        profileBId: 'p1',
+      },
+      wasCreated,
+    })
+  }
+
+  beforeEach(async () => {
+    const { broadcastToProfile } = await import('../../utils/wsUtils')
+    ;(broadcastToProfile as any).mockReturnValue(false)
+    mockTrustService.hasTrustFlag.mockResolvedValue(true)
+    mockMessageService.sendMessage.mockResolvedValue({
+      message: { id: 'm1', conversationId: 'conv1', senderId: 'p1', content: 'I am stuck' },
+      isDuplicate: false,
+    })
+    mockMessageService.getConversationSummary.mockResolvedValue({ conversation: {} })
+  })
+
+  describe.each([
+    { route: 'POST /help', body: { content: ' I am stuck ' } },
+    { route: 'POST /message', body: { profileId: ADMIN, content: 'I am stuck' } },
+  ])('$route', ({ route, body }) => {
+    it('delivers and notifies despite the sender quarantine', async () => {
+      mockConvo('INITIATED', true)
+      await post(route, body)
+
+      expect(reply.statusCode).toBe(200)
+      expect(mockMessageService.resolveConversation).toHaveBeenCalledWith(
+        fastify.prisma,
+        'p1',
+        ADMIN,
+        { createAsPending: false }
+      )
+      expect(mockMessageService.sendMessage.mock.calls[0].slice(1, 5)).toEqual([
+        'conv1',
+        'p1',
+        'I am stuck',
+        'text/plain',
+      ])
+      expect(mockNotifierService.notifyProfile).toHaveBeenCalledWith(
+        ADMIN,
+        'new_message',
+        expect.objectContaining({ senderId: 'p1', path: '/inbox' })
+      )
+    })
+
+    it('maps the notification for the system profile, which sees nameless senders by email', async () => {
+      const { mapMessageToDTO } = await import('../../api/mappers/messaging.mappers')
+      mockConvo('INITIATED', true)
+      await post(route, body)
+      expect(mapMessageToDTO).toHaveBeenCalledWith(expect.objectContaining({ id: 'm1' }), ADMIN)
+    })
+
+    it('accepts a second message before the first one is answered', async () => {
+      mockConvo('INITIATED', false)
+      await post(route, body)
+      expect(reply.statusCode).toBe(200)
+      expect(mockNotifierService.notifyProfile).toHaveBeenCalledTimes(1)
+    })
+
+    it('returns 403 when the conversation is blocked', async () => {
+      mockConvo('BLOCKED', false)
+      await post(route, body)
+      expect(reply.statusCode).toBe(403)
+      expect(mockMessageService.sendMessage).not.toHaveBeenCalled()
+    })
+  })
+
+  it('still holds a quarantined sender’s message to any other profile', async () => {
+    mockConvo('PENDING', true)
+    await post('POST /message', { profileId: 'ck1234567890abcd12345678', content: 'hi' })
+    expect(mockMessageService.resolveConversation).toHaveBeenCalledWith(
+      fastify.prisma,
+      'p1',
+      'ck1234567890abcd12345678',
+      { createAsPending: true }
+    )
+    expect(mockNotifierService.notifyProfile).not.toHaveBeenCalled()
+  })
+
+  it('POST /help returns 401 when session missing', async () => {
+    await post('POST /help', { content: 'hi' }, {})
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it.each([{}, { content: '   ' }])('POST /help returns 400 for %o', async (body) => {
+    await post('POST /help', body)
+    expect(reply.statusCode).toBe(400)
+  })
+
+  it('POST /help returns 503 when no system profile is configured', async () => {
+    const { appConfig } = await import('@/lib/appconfig')
+    appConfig.ADMIN_PROFILE_ID = undefined
+    await post('POST /help', { content: 'hi' })
+    appConfig.ADMIN_PROFILE_ID = ADMIN
+    expect(reply.statusCode).toBe(503)
   })
 })
 

@@ -79,6 +79,7 @@ const stubComponents = {
   DatingSteps: { template: '<div />' },
   LocationSelectorComponent: { template: '<div />' },
   BackButton: { template: '<div />' },
+  OnboardingHelp: { name: 'OnboardingHelp', props: ['step'], template: '<div />' },
   PublicNameInput: { template: '<div />' },
   LogoutButton: { template: '<div />' },
   IconSun: { template: '<div />' },
@@ -211,6 +212,17 @@ describe('OnboardWizard TagCloud integration', () => {
 
     expect(formData.tags).toHaveLength(1)
     expect(formData.tags[0].id).toBe('t1')
+  })
+})
+
+describe('OnboardWizard help', () => {
+  it('tells the help button which step the user is on', async () => {
+    const { wrapper } = mountWizard()
+    const help = wrapper.getComponent({ name: 'OnboardingHelp' })
+    expect(help.props('step')).toBe(0)
+
+    await wrapper.find('button').trigger('click')
+    expect(help.props('step')).toBe(1)
   })
 })
 

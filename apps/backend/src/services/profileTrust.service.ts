@@ -3,7 +3,6 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { MessageService } from '@/services/messaging.service'
 import { notifierService } from '@/services/notifier.service'
-import { appConfig } from '@/lib/appconfig'
 import { logger } from '@/lib/logger'
 
 // Tunable threshold — number of active INITIATED+PENDING conversations (sender = profile)
@@ -314,9 +313,6 @@ export class ProfileTrustService {
    */
   private async notifyReleased(senderId: string, released: ReleasedConversation[]) {
     for (const { conversationId, recipientId } of released) {
-      // A quarantined user's reply to the system sender is held the same way;
-      // releasing it must not email the admin account.
-      if (recipientId === appConfig.ADMIN_PROFILE_ID) continue
       try {
         const message = await prisma.message.findFirst({
           where: { conversationId, senderId },

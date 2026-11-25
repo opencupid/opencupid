@@ -31,6 +31,20 @@ export function mapMessageProfileRef(profile: {
   }
 }
 
+/**
+ * A profile's name as the viewer sees it. Profiles have no name until onboarding
+ * is finished, but can already message the system profile (ADMIN_PROFILE_ID),
+ * which sees their email address instead. Nobody else ever does.
+ */
+function nameForViewer(
+  profile: { publicName: string; user: { email: string } },
+  viewerProfileId: string | undefined
+): string {
+  const isSystemViewer =
+    viewerProfileId !== undefined && viewerProfileId === appConfig.ADMIN_PROFILE_ID
+  return profile.publicName || (isSystemViewer ? profile.user.email : '')
+}
+
 function mapConversationMeta(c: { id: string; updatedAt: Date; createdAt: Date }) {
   return {
     id: c.id,
@@ -73,7 +87,7 @@ export function mapConversationParticipantToSummary(
 
   // Tombstone: partner's account was closed — empty placeholder for frontend to handle
   const partnerProfile: MessageProfileRef = partner
-    ? mapMessageProfileRef(partner)
+    ? mapMessageProfileRef({ ...partner, publicName: nameForViewer(partner, currentProfileId) })
     : { id: '', publicName: '', profileImages: [] }
   const isCallable = !!partner && partnerState?.isCallable !== false && partner.isCallable !== false
 
@@ -111,7 +125,10 @@ export function mapMessageToDTO(m: MessageWithSender, currentProfileId?: string)
     messageType: m.messageType,
     createdAt: m.createdAt,
     editedAt: m.editedAt,
-    sender: mapMessageProfileRef(m.sender),
+    sender: mapMessageProfileRef({
+      ...m.sender,
+      publicName: nameForViewer(m.sender, currentProfileId),
+    }),
     attachment: m.attachment ? mapAttachmentDTO(m.attachment) : null,
     images: m.images.map((j) => toPublicImage(j.image)),
     ...(currentProfileId !== undefined && { isMine: m.senderId === currentProfileId }),

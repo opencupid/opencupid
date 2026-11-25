@@ -37,6 +37,7 @@ const conversationSummaryInclude = {
       // sender as a participant until the trust flag clears.
       profileA: {
         include: {
+          user: { select: { email: true } },
           profileImages: {
             include: { image: true },
             orderBy: { position: 'asc' as const },
@@ -46,6 +47,7 @@ const conversationSummaryInclude = {
       },
       profileB: {
         include: {
+          user: { select: { email: true } },
           profileImages: {
             include: { image: true },
             orderBy: { position: 'asc' as const },
@@ -77,6 +79,7 @@ export const messageWithSenderInclude = {
     select: {
       id: true,
       publicName: true,
+      user: { select: { email: true } },
       profileImages: {
         include: { image: true },
         orderBy: { position: 'asc' },

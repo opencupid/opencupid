@@ -8,6 +8,7 @@ import type {
   ConversationOrDraft,
   ConversationSummary,
   EditMessagePayload,
+  HelpRequestPayload,
   IncomingMessageDTO,
   MessageDTO,
   MessageInConversation,
@@ -478,6 +479,17 @@ export const useMessageStore = defineStore('message', {
         return this.error
       } finally {
         this.isSending = false
+      }
+    },
+
+    async sendHelpRequest(content: string): Promise<StoreResponse<MessageDTO> | StoreError> {
+      try {
+        const res = await safeApiCall(() =>
+          api.post<SendMessageResponse>('/messages/help', { content } satisfies HelpRequestPayload)
+        )
+        return this.handleSendResponse(res)
+      } catch (error: unknown) {
+        return storeError(error)
       }
     },
 
