@@ -110,7 +110,12 @@ export default fp(async (fastify: FastifyInstance) => {
     //      on their next request.
     // Only runs after the full auth chain succeeds, so failed-auth
     // responses don't re-stamp a cookie the client can't use.
-    setSessionCookie(reply, sessionId)
+    //
+    // A pending token is never re-stamped: finishing onboarding replaces it, and
+    // a response to a request sent before that could arrive afterwards and put
+    // the old token back. So its cookie has no sliding TTL: a user who hasn't
+    // finished onboarding 30 days after login has to log in again.
+    if (!req.user.pending) setSessionCookie(reply, sessionId)
 
     const session = sess
     req.session = session

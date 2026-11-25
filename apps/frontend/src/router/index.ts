@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/features/auth/stores/authStore'
 import { bus } from '@/lib/bus'
 import { loginRoute } from './loginRedirect'
+import { onboardingRedirect } from './onboardingGate'
 
 import OnboardingLayout from '@/features/app/views/OnboardingLayout.vue'
 // LoginView stays eager so the form renders on first paint without a chunk
@@ -68,10 +69,9 @@ const routes: Array<RouteRecordRaw> = [
   // Top-level sibling of '/' (NOT a child) so that navigating between
   // /onboarding and /browse causes the other layout to unmount. This is
   // how we guarantee that AppShell's KeepAlive cache cannot survive across
-  // the onboarding boundary: when a fresh-registration user is redirected
-  // from BrowseProfiles.onMounted → /onboarding, AppShellLayout unmounts and
-  // takes the cached (broken-state) AppShell with it. On completion →
-  // /browse, OnboardingLayout unmounts and a fresh AppShellLayout mounts.
+  // the onboarding boundary: on completion → /browse, OnboardingLayout
+  // unmounts and a fresh AppShellLayout mounts. Users who haven't finished
+  // onboarding are sent here by onboardingRedirect() in router.beforeEach.
   {
     path: '/onboarding',
     component: OnboardingLayout,
@@ -140,6 +140,8 @@ router.beforeEach(async (to) => {
   if (!to.meta.requiresAuth && authStore.isLoggedIn && to.name !== 'Unsubscribe') {
     return { name: 'Browse' }
   }
+
+  return onboardingRedirect(to)
 })
 
 import { setPreviousUrl } from './history'

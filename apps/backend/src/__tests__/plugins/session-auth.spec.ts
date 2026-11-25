@@ -1,0 +1,121 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import Fastify, { type FastifyInstance } from 'fastify'
+import cookie from '@fastify/cookie'
+
+vi.mock('@/lib/appconfig', () => ({
+  appConfig: {
+    NODE_ENV: 'development',
+    REDIS_URL: 'redis://test',
+    JWT_SECRET: 'test-secret-test-secret',
+    brands: [{ domain: 'localhost', siteName: 'Test' }],
+  },
+}))
+
+const store = vi.hoisted(() => new Map<string, string>())
+vi.mock('ioredis', () => ({
+  default: class {
+    get = async (key: string) => store.get(key) ?? null
+    multi() {
+      const tx: any = {
+        set: (key: string, value: string) => (store.set(key, value), tx),
+        del: (key: string) => (store.delete(key), tx),
+        expire: () => tx,
+        sadd: () => tx,
+        srem: () => tx,
+        exec: async () => [],
+      }
+      return tx
+    }
+  },
+}))
+
+import sessionAuth from '../../plugins/session-auth'
+import { createSessionJwt, setSessionCookie } from '../../lib/session'
+import type { SessionData } from '@zod/user/user.dto'
+
+const profileId = 'cmc7t45x400086w39gj30pzn3'
+const session: SessionData = {
+  userId: 'cmc7t45x400086w39gj30pzn4',
+  profileId,
+  tokenVersion: 0,
+  lang: 'en',
+  roles: [],
+  hasActiveProfile: false,
+  profile: { id: profileId, isDatingActive: false, isSocialActive: false, isActive: false },
+}
+
+let fastify: FastifyInstance
+let releaseSlow: () => void
+let slowStarted: Promise<void>
+
+beforeEach(async () => {
+  store.clear()
+  fastify = Fastify()
+  await fastify.register(cookie)
+  await fastify.register(sessionAuth)
+
+  let markStarted: () => void
+  slowStarted = new Promise((resolve) => (markStarted = resolve))
+  const slow = new Promise<void>((resolve) => (releaseSlow = resolve))
+  fastify.register(async (app) => {
+    app.get('/ping', { onRequest: [app.authenticate] }, async () => ({ ok: true }))
+    app.get('/slow', { onRequest: [app.authenticate] }, async () => {
+      markStarted()
+      await slow
+      return { ok: true }
+    })
+    app.post('/finish', { onRequest: [app.authenticate] }, async (req, reply) => {
+      setSessionCookie(reply, await createSessionJwt(fastify, req.session, true))
+      return { ok: true }
+    })
+  })
+  await fastify.ready()
+})
+
+afterEach(async () => {
+  await fastify.close()
+})
+
+const send = (method: 'GET' | 'POST', url: string, jwt: string) =>
+  fastify.inject({ method, url, cookies: { __session: jwt } })
+const sessionCookie = (res: { cookies: { name: string; value: string }[] }) =>
+  res.cookies.filter((c) => c.name === '__session').map((c) => c.value)
+
+describe('session cookie re-stamp', () => {
+  it('slides the cookie of an onboarded user', async () => {
+    const jwt = await createSessionJwt(fastify, session, true)
+    const res = await send('GET', '/ping', jwt)
+    expect(res.statusCode).toBe(200)
+    expect(sessionCookie(res)).toEqual([jwt])
+  })
+
+  it('accepts a pending token but does not re-stamp it', async () => {
+    const jwt = await createSessionJwt(fastify, session, false)
+    const res = await send('GET', '/ping', jwt)
+    expect(res.statusCode).toBe(200)
+    expect(sessionCookie(res)).toEqual([])
+  })
+
+  it('lets a request in flight across the replacement finish without restoring the old token', async () => {
+    const pending = await createSessionJwt(fastify, session, false)
+
+    const inFlight = send('GET', '/slow', pending)
+    await slowStarted
+    const finished = await send('POST', '/finish', pending)
+    releaseSlow()
+    const late = await inFlight
+
+    const [replacement, ...rest] = sessionCookie(finished)
+    expect(rest).toEqual([])
+    expect(replacement).not.toBe(pending)
+    expect(fastify.jwt.decode<object>(replacement!)).not.toHaveProperty('pending')
+
+    expect(late.statusCode).toBe(200)
+    expect(sessionCookie(late)).toEqual([])
+
+    // The old session still serves requests sent before the browser had the new
+    // cookie, and the new one works.
+    expect((await send('GET', '/ping', pending)).statusCode).toBe(200)
+    expect((await send('GET', '/ping', replacement!)).statusCode).toBe(200)
+  })
+})

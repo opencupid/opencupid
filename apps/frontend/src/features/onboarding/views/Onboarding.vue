@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { loadRouteLocation, useRouter } from 'vue-router'
 
 import { type CreateProfileForm, CreateProfileFormSchema } from '@zod/profile/profile.form'
 import {
@@ -43,6 +43,11 @@ const handleGoToBrowse = () => {
 }
 
 const handleWizardFinish = async () => {
+  // The app shell hasn't been loaded yet: fetch it while the confirmation is on
+  // screen, so leaving for Browse doesn't wait for it. If that fails, the
+  // navigation itself loads it again.
+  loadRouteLocation(router.resolve({ name: 'Browse' })).catch(() => {})
+
   // handle the case where the user changes this flag
   // after filling data info datingPrefs and then changing the
   // toggle afterwards. We'll leave the prefs empty

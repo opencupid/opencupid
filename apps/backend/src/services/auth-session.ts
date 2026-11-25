@@ -2,11 +2,11 @@ import type { User } from '@zod/generated'
 import { SessionProfileSchema, type SessionData, type SessionProfile } from '@zod/user/user.dto'
 import { ProfileService } from '@/services/profile.service'
 
-type SessionResult = { sessionData: SessionData; profileId: string }
+type SessionResult = { sessionData: SessionData; profileId: string; isOnboarded: boolean }
 
 function buildSessionData(user: User, profile: SessionProfile): SessionData {
   // TODO clean up duplicated and dead fields from this shape
-  // e.g. profileId profile.id , 
+  // e.g. profileId profile.id ,
   // remove isSocialActive, roles
   return {
     userId: user.id,
@@ -32,7 +32,11 @@ export async function createNewUserSession(user: User): Promise<SessionResult> {
   const profileService = ProfileService.getInstance()
   const profile = await profileService.initializeProfiles(user.id)
   const sessionProfile = SessionProfileSchema.parse(profile)
-  return { sessionData: buildSessionData(user, sessionProfile), profileId: profile.id }
+  return {
+    sessionData: buildSessionData(user, sessionProfile),
+    profileId: profile.id,
+    isOnboarded: profile.isOnboarded,
+  }
 }
 
 /**
@@ -44,5 +48,9 @@ export async function getExistingUserSession(user: User): Promise<SessionResult 
   const profile = await profileService.getProfileByUserId(user.id)
   if (!profile) return null
   const sessionProfile = SessionProfileSchema.parse(profile)
-  return { sessionData: buildSessionData(user, sessionProfile), profileId: profile.id }
+  return {
+    sessionData: buildSessionData(user, sessionProfile),
+    profileId: profile.id,
+    isOnboarded: profile.isOnboarded,
+  }
 }

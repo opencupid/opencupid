@@ -26,6 +26,7 @@ import type {
 import { JwtPayload } from '@zod/user/user.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
 import {
+  createSessionJwt,
   setSessionCookie,
   setRefreshCookie,
   clearSessionCookie,
@@ -90,15 +91,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           : await getExistingUserSession(user)
         if (!session) return sendError(reply, 404, 'Profile not found')
 
-        // TODO: profileId in JWT and refresh token is redundant with session data — remove in follow-up
-        const payload: JwtPayload = {
-          userId: user.id,
-          profileId: session.profileId,
-          tokenVersion: user.tokenVersion,
-        }
-        const jwt = fastify.jwt.sign(payload)
-        await fastify.createSession(jwt, session.sessionData)
+        const jwt = await createSessionJwt(fastify, session.sessionData, session.isOnboarded)
 
+        // TODO: profileId in the refresh token is redundant with session data — remove in follow-up
         const refreshToken = await refreshTokenService.create(
           user.id,
           session.profileId,
@@ -179,14 +174,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       const session = await getExistingUserSession(user)
       if (!session) return sendUnauthorizedError(reply, 'Profile not found')
 
-      // Issue new JWT and refresh token
-      const newPayload: JwtPayload = {
-        userId: user.id,
-        profileId: session.profileId,
-        tokenVersion: user.tokenVersion,
-      }
-      const newJwt = fastify.jwt.sign(newPayload)
-
+      // Issue new JWT and refresh token.
       // The new JWT replaces the old one — delete its session so it can't be
       // reused (a not-yet-expired JWT would otherwise stay valid). Delete
       // before creating: a refresh in the same second as issuance signs an
@@ -200,7 +188,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       // tokenVersion; session-auth compares the JWT only against the session
       // copy, never the DB.
       await fastify.deleteSession(expiredJwt, jwtPayload.userId)
-      await fastify.createSession(newJwt, session.sessionData)
+      const newJwt = await createSessionJwt(fastify, session.sessionData, session.isOnboarded)
 
       const newRefreshToken = await refreshTokenService.create(
         user.id,
