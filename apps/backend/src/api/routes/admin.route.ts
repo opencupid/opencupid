@@ -30,6 +30,7 @@ import { ImageService } from '@/services/image.service'
 import { computeHiddenFromResults } from '@/services/profileVisibility.service'
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
+import adminStatisticsRoutes from './admin/statistics.route'
 
 /**
  * Rows attributable to the system sender (ADMIN_PROFILE_ID) — welcome messages
@@ -71,6 +72,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
   // Child plugins inherit the admin-header hook above.
   fastify.register(adminEventRoutes, { prefix: '/events' })
   fastify.register(adminImageRoutes, { prefix: '/images' })
+  fastify.register(adminStatisticsRoutes, { prefix: '/statistics' })
 
   const imageService = ImageService.getInstance()
 

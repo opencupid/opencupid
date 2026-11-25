@@ -1,6 +1,10 @@
 import { prisma } from '../lib/prisma'
 
-import { type DbProfileWithImages, DatingEligibleProfileSchema } from '@zod/profile/profile.db'
+import {
+  type DatingEligibleProfile,
+  type DbProfileWithImages,
+  DatingEligibleProfileSchema,
+} from '@zod/profile/profile.db'
 
 import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { notBlockedUserWhere } from '@/db/includes/notBlockedUserWhere'
@@ -16,7 +20,8 @@ const defaultOrderBy: OrderBy = {
   updatedAt: 'desc',
 }
 
-const statusFlags = {
+/** Profiles that count as members: active, onboarded and not admin-blocked. */
+export const statusFlags = {
   isActive: true,
   isOnboarded: true,
   ...notBlockedUserWhere,
@@ -165,23 +170,22 @@ export class ProfileMatchService {
     const b = DatingEligibleProfileSchema.safeParse(rows[1])
     if (!a.success || !b.success) return false
 
-    const ageA = calculateAge(a.data.birthday)
-    const ageB = calculateAge(b.data.birthday)
-
-    const aMatchesB =
-      isAgeCompatible(ageB, a.data.prefAgeMin, a.data.prefAgeMax) &&
-      a.data.prefGender.includes(b.data.gender) &&
-      (a.data.prefKids.length === 0 ||
-        (b.data.hasKids != null && a.data.prefKids.includes(b.data.hasKids)))
-
-    const bMatchesA =
-      isAgeCompatible(ageA, b.data.prefAgeMin, b.data.prefAgeMax) &&
-      b.data.prefGender.includes(a.data.gender) &&
-      (b.data.prefKids.length === 0 ||
-        (a.data.hasKids != null && b.data.prefKids.includes(a.data.hasKids)))
-
-    return aMatchesB && bMatchesA
+    return areMutuallyCompatible(a.data, b.data)
   }
+}
+
+/** Whether each profile fits the other's age, gender and kids preferences. */
+export function areMutuallyCompatible(a: DatingEligibleProfile, b: DatingEligibleProfile): boolean {
+  return acceptsCandidate(a, b) && acceptsCandidate(b, a)
+}
+
+function acceptsCandidate(viewer: DatingEligibleProfile, candidate: DatingEligibleProfile) {
+  return (
+    isAgeCompatible(calculateAge(candidate.birthday), viewer.prefAgeMin, viewer.prefAgeMax) &&
+    viewer.prefGender.includes(candidate.gender) &&
+    (viewer.prefKids.length === 0 ||
+      (candidate.hasKids != null && viewer.prefKids.includes(candidate.hasKids)))
+  )
 }
 
 export function subtractYears(date: Date, years: number): Date {
