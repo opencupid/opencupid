@@ -4,13 +4,8 @@ import { SESSION_COOKIE } from '@shared/session'
 import { parseJwtPayload } from '@/lib/jwt'
 import { utmQuery } from './loginRedirect'
 
-/**
- * Whether the session JWT marks the user as not finished with onboarding.
- *
- * Read from the cookie rather than from a store: the backend replaces the JWT
- * when onboarding completes, and the cookie is current as soon as that response
- * arrives, in every tab.
- */
+// Reads the cookie, not a store: the backend replaces the JWT when onboarding
+// completes, and the cookie is current at once, in every tab.
 function isOnboardingPending(): boolean {
   const token = new Cookies().get<string | undefined>(SESSION_COOKIE)
   return token !== undefined && parseJwtPayload(token)?.pending === true
@@ -19,14 +14,8 @@ function isOnboardingPending(): boolean {
 /**
  * The redirect to Onboarding for a user who hasn't finished it, if `to` needs
  * one. Must stay synchronous: the app mounts after the first navigation, so
- * waiting for the API here would leave the user on the splash.
- *
- * Only a pending token redirects. A JWT can be out of date (onboarding finished
- * on another device), which Onboarding.vue corrects once the profile is loaded.
- *
- * Replaces the history entry, so going back during the wizard doesn't land on a
- * page that redirects here again. UTM tags are carried over for Umami, as in
- * `loginRoute`.
+ * waiting for the API would leave the user on the splash. A token that is out of
+ * date is corrected by Onboarding.vue.
  */
 export function onboardingRedirect(
   to: Pick<RouteLocationNormalized, 'name' | 'meta' | 'query'>

@@ -13,6 +13,7 @@ function createMockRedis() {
   }
   return {
     get: vi.fn(),
+    set: vi.fn(),
     eval: vi.fn(),
     multi: vi.fn(() => chain),
     _chain: chain,
@@ -97,23 +98,21 @@ describe('SessionService.patch', () => {
     await service.patch('sess1', { lang: 'hu' })
 
     // Zod reorders keys when parsing, so compare as parsed objects
-    const storedJson = redis._chain.set.mock.calls[0][1]
+    const storedJson = redis.set.mock.calls[0]![1]
     expect(JSON.parse(storedJson)).toEqual({ ...sessionData, lang: 'hu' })
-    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
-    expect(redis._chain.expire).toHaveBeenCalledWith(`user:${sessionData.userId}:sessions`, 2592000)
   })
 
-  it('does not recreate a session deleted since it was read', async () => {
+  it('does not recreate a session deleted since it was read, nor change its TTL', async () => {
     redis.get.mockResolvedValue(JSON.stringify(sessionData))
     await service.patch('sess1', { lang: 'hu' })
-    expect(redis._chain.set).toHaveBeenCalledWith('session:sess1', expect.any(String), 'XX')
+    expect(redis.set).toHaveBeenCalledWith('session:sess1', expect.any(String), 'KEEPTTL', 'XX')
   })
 
   it('does nothing when session does not exist', async () => {
     redis.get.mockResolvedValue(null)
     await service.patch('missing', { lang: 'hu' })
 
-    expect(redis.multi).not.toHaveBeenCalled()
+    expect(redis.set).not.toHaveBeenCalled()
   })
 })
 
@@ -134,6 +133,7 @@ describe('SessionService.replace', () => {
     expect(redis._chain.copy).toHaveBeenCalledWith('session:old', 'session:new', 'REPLACE')
     expect(redis._chain.sadd).toHaveBeenCalledWith('user:user1:sessions', 'new')
     expect(redis._chain.expire).toHaveBeenCalledWith('session:new', 2592000)
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:old', 60)
     expect(redis._chain.del).not.toHaveBeenCalled()
   })
 

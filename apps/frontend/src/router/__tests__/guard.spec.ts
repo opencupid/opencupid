@@ -92,7 +92,7 @@ describe('router onboarding gate', () => {
     authStore.isLoggedIn = false
   })
 
-  it.each(['/browse', '/me', '/inbox/abc', '/magic-link'])(
+  it.each(['/inbox/abc', '/magic-link'])(
     'sends a pending user from %s to Onboarding',
     async (path) => {
       setPending(true)

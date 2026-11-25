@@ -96,7 +96,7 @@ export default fp(async (fastify: FastifyInstance) => {
       if (req.user.tokenVersion !== sess.tokenVersion) {
         return sendUnauthorizedError(reply, 'Token revoked')
       }
-      await sessionService.refreshTtl(sessionId, sess.userId)
+      if (!req.user.pending) await sessionService.refreshTtl(sessionId, sess.userId)
     } catch (err) {
       req.log.error({ err, sessionId }, 'Redis error during authenticated request')
       return sendServiceUnavailableError(reply, 'Session lookup failed')
@@ -112,10 +112,8 @@ export default fp(async (fastify: FastifyInstance) => {
     // Only runs after the full auth chain succeeds, so failed-auth
     // responses don't re-stamp a cookie the client can't use.
     //
-    // A pending token is never re-stamped: finishing onboarding replaces it, and
-    // a response to a request sent before that could arrive afterwards and put
-    // the old token back. So its cookie has no sliding TTL: a user who hasn't
-    // finished onboarding 30 days after login has to log in again.
+    // Not for a pending token, nor its session's TTL above: finishing onboarding
+    // replaces them, and a request sent before that would bring them back.
     if (!req.user.pending) setSessionCookie(reply, sessionId)
 
     const session = sess

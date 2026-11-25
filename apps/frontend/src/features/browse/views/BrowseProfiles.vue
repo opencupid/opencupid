@@ -388,9 +388,7 @@ function handleMarkerSelect(id: string) {
 }
 
 // ── Onboarding guard ───────────────────────────────────────────────
-// Only needed for sessions issued before the JWT had the `pending` claim; the
-// router redirects everyone else (router/onboardingGate.ts).
-// TODO: remove once those sessions have expired.
+// TODO: remove (#1718). Only for sessions from before router/onboardingGate.ts.
 function checkOnboarding(): boolean {
   if (ownerProfileStore.profile && !ownerProfileStore.profile.isOnboarded) {
     router.replace({ name: 'Onboarding' })

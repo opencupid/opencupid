@@ -65,13 +65,6 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * Copies the profile's state into the current session. Once the user has
    * onboarded, also replaces a JWT still marked pending.
-   *
-   * The session of the replaced JWT is left to expire: deleting it would 401
-   * requests already in flight, and the browser drops the old JWT with this
-   * response. It stays indexed, so revoking the user's sessions still ends it.
-   *
-   * If the session was revoked after this request authenticated, there is
-   * nothing to replace and no cookie is set.
    */
   async function syncSession(req: FastifyRequest, reply: FastifyReply, profile: OwnerProfile) {
     const { id, isDatingActive, isSocialActive, isActive } = profile
@@ -100,8 +93,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       if (!fetched) return sendError(reply, 404, 'Social profile not found')
 
       const profile = mapDbProfileToOwnerProfile(locale, fetched)
-      // Onboarding was finished elsewhere (another device), or its response was
-      // lost: this session still says otherwise.
+      // Onboarding was finished on another device, or its response was lost
       if (req.user.pending && profile.isOnboarded) await syncSession(req, reply, profile)
       const response: GetMyProfileResponse = { success: true, profile }
       return reply.code(200).send(response)

@@ -38,7 +38,7 @@ export function getRefreshCookie(req: FastifyRequest): string | undefined {
   return req.cookies[REFRESH_COOKIE]
 }
 
-/** Signs the JWT for a session. The session still has to be stored under it. */
+/** Signs the JWT for a session, without storing the session under it. */
 export function signSessionJwt(
   fastify: FastifyInstance,
   session: SessionData,
@@ -54,10 +54,7 @@ export function signSessionJwt(
   return fastify.jwt.sign(payload)
 }
 
-/**
- * Signs the JWT for a session and stores the session under it. The caller
- * stamps the cookie.
- */
+/** Signs the JWT for a session and stores the session under it. */
 export async function createSessionJwt(
   fastify: FastifyInstance,
   session: SessionData,

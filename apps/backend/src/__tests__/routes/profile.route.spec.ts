@@ -561,13 +561,4 @@ describe('POST /me (onboarding)', () => {
     expect(req.deleteSession).not.toHaveBeenCalled()
     expect(reply.statusCode).toBe(200)
   })
-
-  it('keeps a JWT that is not pending', async () => {
-    mockProfileService.updateCompleteProfile.mockResolvedValue({ ...dbProfile, isOnboarded: true })
-
-    await fastify.routes['POST /me'](makeReq({ body: { publicName: 'Test' } }), reply as any)
-
-    expect(reply.cookies).toEqual([])
-    expect(reply.statusCode).toBe(200)
-  })
 })

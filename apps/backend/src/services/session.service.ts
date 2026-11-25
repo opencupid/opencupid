@@ -6,7 +6,8 @@ import { SessionData, SessionDataSchema } from '@zod/user/user.dto'
 export class SessionService {
   constructor(
     private redis: Redis,
-    private ttlSec = 60 * 60 * 24 * 30 // 30 days
+    private ttlSec = 60 * 60 * 24 * 30, // 30 days
+    private replacedTtlSec = 60
   ) {}
 
   private sessionKey(id: string) {
@@ -21,7 +22,7 @@ export class SessionService {
    * Invariants and edge cases:
    * - Only getOrCreate(), replace() (and scripts/backfill-user-sessions.ts) add
    *   members.
-   *   patch() and refreshTtl() only extend the set's TTL, so a session that is
+   *   refreshTtl() only extends the set's TTL, so a session that is
    *   missing from the set stays missing — e.g. one created before this index
    *   existed and not yet backfilled. Such a session can't be revoked by
    *   deleteAllForUser().
@@ -84,38 +85,30 @@ export class SessionService {
   /**
    * Merge partial data into an existing session without deleting it. A session
    * deleted between the read and the write (logout, refresh, deleteAllForUser)
-   * stays deleted.
+   * stays deleted, and the session's TTL is left as it is.
    */
   async patch(id: string, data: Partial<SessionData>): Promise<void> {
     const existing = await this.get(id)
     if (!existing) return
     const merged = { ...existing, ...data }
-    const hkey = this.sessionKey(id)
-    const ukey = this.userSessionsKey(existing.userId)
-    await this.redis
-      .multi()
-      .set(hkey, JSON.stringify(merged), 'XX')
-      .expire(hkey, this.ttlSec)
-      .expire(ukey, this.ttlSec)
-      .exec()
+    await this.redis.set(this.sessionKey(id), JSON.stringify(merged), 'KEEPTTL', 'XX')
   }
 
   /**
-   * Continue a session under a new ID, keeping the old one. Returns false, and
-   * creates nothing, if the old session no longer exists: a request that
-   * authenticated before its session was revoked must not bring it back.
-   *
-   * Atomic with deleteAllForUser(): the new session is either created before
-   * it, and deleted with the others, or not created. (A dead ID left in the set
-   * is harmless, see userSessionsKey.)
+   * Continue a session under a new ID. The old one stays valid for a moment, for
+   * requests already in flight, and then expires. Returns false, and creates
+   * nothing, if it no longer exists: a request that authenticated before its
+   * session was revoked must not bring it back.
    */
   async replace(id: string, newId: string, userId: string): Promise<boolean> {
+    const key = this.sessionKey(id)
     const newKey = this.sessionKey(newId)
     const ukey = this.userSessionsKey(userId)
     const results = await this.redis
       .multi()
-      .copy(this.sessionKey(id), newKey, 'REPLACE')
+      .copy(key, newKey, 'REPLACE')
       .expire(newKey, this.ttlSec)
+      .expire(key, this.replacedTtlSec)
       .sadd(ukey, newId)
       .expire(ukey, this.ttlSec)
       .exec()

@@ -43,9 +43,8 @@ const handleGoToBrowse = () => {
 }
 
 const handleWizardFinish = async () => {
-  // The app shell hasn't been loaded yet: fetch it while the confirmation is on
-  // screen, so leaving for Browse doesn't wait for it. If that fails, the
-  // navigation itself loads it again.
+  // Load the app shell while the confirmation is on screen, so leaving for Browse
+  // doesn't wait for it. If that fails, the navigation loads it again.
   loadRouteLocation(router.resolve({ name: 'Browse' })).catch(() => {})
 
   // handle the case where the user changes this flag

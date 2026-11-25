@@ -12,9 +12,12 @@ vi.mock('@/lib/appconfig', () => ({
 }))
 
 const store = vi.hoisted(() => new Map<string, string>())
+const ttl = vi.hoisted(() => new Map<string, number>())
 vi.mock('ioredis', () => ({
   default: class {
     get = async (key: string) => store.get(key) ?? null
+    // patch(): KEEPTTL XX
+    set = async (key: string, value: string) => void (store.has(key) && store.set(key, value))
     // Commands run on exec, in order and without interleaving, like MULTI
     multi() {
       const queue: (() => unknown)[] = []
@@ -25,16 +28,14 @@ vi.mock('ioredis', () => ({
           return tx
         }
       const tx: any = {
-        set: queued((key, value, mode) => {
-          if (mode !== 'XX' || store.has(key)) store.set(key, value)
-        }),
+        set: queued((key, value) => store.set(key, value)),
         copy: queued((from, to) => {
           if (!store.has(from)) return 0
           store.set(to, store.get(from)!)
           return 1
         }),
         del: queued((key) => store.delete(key)),
-        expire: queued(() => 1),
+        expire: queued((key, seconds) => ttl.set(key, seconds)),
         sadd: queued(() => 1),
         srem: queued(() => 1),
         exec: async () => queue.map((run) => [null, run()]),
@@ -65,6 +66,7 @@ let slowStarted: Promise<void>
 
 beforeEach(async () => {
   store.clear()
+  ttl.clear()
   fastify = Fastify()
   await fastify.register(cookie)
   await fastify.register(sessionAuth)
@@ -77,6 +79,10 @@ beforeEach(async () => {
     app.get('/slow', { onRequest: [app.authenticate] }, async () => {
       markStarted()
       await slow
+      return { ok: true }
+    })
+    app.post('/update', { onRequest: [app.authenticate] }, async (req) => {
+      await req.updateSession({ lang: 'hu' })
       return { ok: true }
     })
     app.post('/finish', { onRequest: [app.authenticate] }, async (req, reply) => {
@@ -159,6 +165,19 @@ describe('session replacement', () => {
     expect((await send('GET', '/ping', pending)).statusCode).toBe(401)
     const replacement = signSessionJwt(fastify, session, true)
     expect((await send('GET', '/ping', replacement)).statusCode).toBe(401)
+  })
+
+  it('lets the old session expire shortly, even if it is still used', async () => {
+    const pending = await createSessionJwt(fastify, session, false)
+    const month = 60 * 60 * 24 * 30
+
+    const [replacement] = sessionCookie(await send('POST', '/finish', pending))
+    expect(ttl.get(`session:${pending}`)).toBe(60)
+    expect(ttl.get(`session:${replacement}`)).toBe(month)
+
+    await send('GET', '/ping', pending)
+    await send('POST', '/update', pending)
+    expect(ttl.get(`session:${pending}`)).toBe(60)
   })
 
   it('carries over what the request changed in the session', async () => {
