@@ -1,5 +1,19 @@
 # frontend
 
+## 0.98.0
+
+### Minor Changes
+
+- cab4e53: Add a help button to the onboarding wizard: users who get stuck can message the admin profile, and the button pulses after a minute without progress. Messages to the admin profile are no longer held by the sender's trust flags. Unnamed senders show up there by email address
+- 88e7d9c: Hide and unhide conversations in the inbox list. Hidden conversations move to the bottom and are muted, calls included, until you reply or unhide them. The turn badge moves to the corner and message previews fade out.
+
+### Patch Changes
+
+- f1e22b7: The back button during onboarding no longer restarts the wizard: the login → browse → onboarding redirects replace the history entry instead of adding one
+- e06fcd3: New users no longer see the browse view flash up before onboarding: the session token marks users who haven't finished onboarding, and the router sends them there before anything renders
+- 344c051: Temporarily hide the video call settings section in the settings dialog and the video call button in the message form, to fix the settings dialog layout on mobile screens
+- c1a6a24: Remove the onboarding completion screen's unused profile event and handler
+
 ## 0.97.1
 
 ### Patch Changes

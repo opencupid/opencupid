@@ -1,5 +1,12 @@
 # @opencupid/admin
 
+## 0.98.0
+
+### Minor Changes
+
+- 1e9bfc4: Add a Statistics page to the admin app: age, gender, family situation and dating matches of the member base
+- 4a711f1: Admin user detail: show email (incl. nearby signup) and push notification opt-in flags; drop Phone and Roles rows
+
 ## 0.97.1
 
 ## 0.97.0

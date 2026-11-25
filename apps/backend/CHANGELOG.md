@@ -1,5 +1,18 @@
 # backend
 
+## 0.98.0
+
+### Minor Changes
+
+- cab4e53: Add a help button to the onboarding wizard: users who get stuck can message the admin profile, and the button pulses after a minute without progress. Messages to the admin profile are no longer held by the sender's trust flags. Unnamed senders show up there by email address
+- 1e9bfc4: Add a Statistics page to the admin app: age, gender, family situation and dating matches of the member base
+- 88e7d9c: Hide and unhide conversations in the inbox list. Hidden conversations move to the bottom and are muted, calls included, until you reply or unhide them. The turn badge moves to the corner and message previews fade out.
+- 4a711f1: Admin user detail: show email (incl. nearby signup) and push notification opt-in flags; drop Phone and Roles rows
+
+### Patch Changes
+
+- e06fcd3: New users no longer see the browse view flash up before onboarding: the session token marks users who haven't finished onboarding, and the router sends them there before anything renders
+
 ## 0.97.1
 
 ## 0.97.0
