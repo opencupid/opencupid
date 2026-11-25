@@ -50,6 +50,26 @@ describe('MessageService.canSendMessageInConversation', () => {
     expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
   })
 
+  it.each([
+    { status: 'INITIATED', recipient: 'sys-sender', allowed: true },
+    { status: 'INITIATED', recipient: 'p2', allowed: false },
+    { status: 'BLOCKED', recipient: 'sys-sender', allowed: false },
+    { status: 'ARCHIVED', recipient: 'sys-sender', allowed: false },
+  ])(
+    'follow-up by the initiator to $recipient, $status: $allowed',
+    async ({ status, recipient, allowed }) => {
+      // Imported here to pick up the mocked ADMIN_PROFILE_ID.
+      const { canSendMessageInConversation } = await import('../../services/messaging.service')
+      const pair = { status, initiatorProfileId: 'p1' } as any
+      expect(
+        canSendMessageInConversation({ ...pair, profileAId: 'p1', profileBId: recipient }, 'p1')
+      ).toBe(allowed)
+      expect(
+        canSendMessageInConversation({ ...pair, profileAId: recipient, profileBId: 'p1' }, 'p1')
+      ).toBe(allowed)
+    }
+  )
+
   it('rejects when blocked', () => {
     const convo: any = { status: 'BLOCKED', initiatorProfileId: 'x' }
     expect(canSendMessageInConversation(convo, 'p1')).toBe(false)
