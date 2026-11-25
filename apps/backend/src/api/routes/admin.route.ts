@@ -461,6 +461,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
               isSocialActive: true,
               isDatingActive: true,
               activitySummary: { select: { lastSeenAt: true } },
+              nearbySignupOptOut: { select: { profileId: true } },
             },
           },
         },
@@ -472,6 +473,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
       const flattened = {
         ...rest,
         pushSubscriptionCount: _count.pushSubscription,
+        nearbySignupOptOut: !!profile?.nearbySignupOptOut,
         lastSeenAt: profile?.activitySummary?.lastSeenAt ?? null,
         profile: profile
           ? {

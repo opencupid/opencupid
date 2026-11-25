@@ -678,6 +678,7 @@ describe('GET /users/:id', () => {
         isSocialActive: true,
         isDatingActive: false,
         activitySummary: { lastSeenAt: seen },
+        nearbySignupOptOut: { profileId: 'prof1' },
       },
     })
 
@@ -692,6 +693,7 @@ describe('GET /users/:id', () => {
       emailNotificationsOptIn: false,
       isPushNotificationEnabled: true,
       pushSubscriptionCount: 2,
+      nearbySignupOptOut: true,
       lastSeenAt: seen,
       profile: {
         id: 'prof1',
@@ -718,7 +720,12 @@ describe('GET /users/:id', () => {
     await handler({ params: { id: 'user2' } }, reply)
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload.user).toMatchObject({ id: 'user2', lastSeenAt: null, profile: null })
+    expect(reply.payload.user).toMatchObject({
+      id: 'user2',
+      lastSeenAt: null,
+      nearbySignupOptOut: false,
+      profile: null,
+    })
   })
 
   it('returns 404 for missing user', async () => {

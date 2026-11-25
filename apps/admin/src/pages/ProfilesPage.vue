@@ -56,6 +56,7 @@ interface AdminUserDetail {
   emailNotificationsOptIn: boolean
   isPushNotificationEnabled: boolean
   pushSubscriptionCount: number
+  nearbySignupOptOut: boolean
   createdAt: string
   lastSeenAt: string | null
   language: string
@@ -459,6 +460,7 @@ const userOptIns = computed(() => {
   return [
     { label: 'Newsletter', value: u.newsletterOptIn },
     { label: 'Email notifications', value: u.emailNotificationsOptIn },
+    { label: 'Nearby signup emails', value: !u.nearbySignupOptOut },
     {
       label: 'Push notifications',
       value: u.isPushNotificationEnabled,
