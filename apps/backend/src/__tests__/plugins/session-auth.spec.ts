@@ -15,14 +15,29 @@ const store = vi.hoisted(() => new Map<string, string>())
 vi.mock('ioredis', () => ({
   default: class {
     get = async (key: string) => store.get(key) ?? null
+    // Commands run on exec, in order and without interleaving, like MULTI
     multi() {
+      const queue: (() => unknown)[] = []
+      const queued =
+        (fn: (...args: any[]) => unknown) =>
+        (...args: any[]) => {
+          queue.push(() => fn(...args))
+          return tx
+        }
       const tx: any = {
-        set: (key: string, value: string) => (store.set(key, value), tx),
-        del: (key: string) => (store.delete(key), tx),
-        expire: () => tx,
-        sadd: () => tx,
-        srem: () => tx,
-        exec: async () => [],
+        set: queued((key, value, mode) => {
+          if (mode !== 'XX' || store.has(key)) store.set(key, value)
+        }),
+        copy: queued((from, to) => {
+          if (!store.has(from)) return 0
+          store.set(to, store.get(from)!)
+          return 1
+        }),
+        del: queued((key) => store.delete(key)),
+        expire: queued(() => 1),
+        sadd: queued(() => 1),
+        srem: queued(() => 1),
+        exec: async () => queue.map((run) => [null, run()]),
       }
       return tx
     }
@@ -30,7 +45,7 @@ vi.mock('ioredis', () => ({
 }))
 
 import sessionAuth from '../../plugins/session-auth'
-import { createSessionJwt, setSessionCookie } from '../../lib/session'
+import { createSessionJwt, setSessionCookie, signSessionJwt } from '../../lib/session'
 import type { SessionData } from '@zod/user/user.dto'
 
 const profileId = 'cmc7t45x400086w39gj30pzn3'
@@ -65,7 +80,16 @@ beforeEach(async () => {
       return { ok: true }
     })
     app.post('/finish', { onRequest: [app.authenticate] }, async (req, reply) => {
-      setSessionCookie(reply, await createSessionJwt(fastify, req.session, true))
+      const jwt = signSessionJwt(fastify, req.session, true)
+      if (await req.replaceSession(jwt)) setSessionCookie(reply, jwt)
+      return { ok: true }
+    })
+    app.post('/slow-finish', { onRequest: [app.authenticate] }, async (req, reply) => {
+      markStarted()
+      await slow
+      await req.updateSession({ hasActiveProfile: true })
+      const jwt = signSessionJwt(fastify, req.session, true)
+      if (await req.replaceSession(jwt)) setSessionCookie(reply, jwt)
       return { ok: true }
     })
   })
@@ -117,5 +141,33 @@ describe('session cookie re-stamp', () => {
     // cookie, and the new one works.
     expect((await send('GET', '/ping', pending)).statusCode).toBe(200)
     expect((await send('GET', '/ping', replacement!)).statusCode).toBe(200)
+  })
+})
+
+describe('session replacement', () => {
+  it('creates no session when the source was revoked after the request authenticated', async () => {
+    const pending = await createSessionJwt(fastify, session, false)
+
+    const inFlight = send('POST', '/slow-finish', pending)
+    await slowStarted
+    store.clear() // e.g. an admin blocks the user, or they log out
+    releaseSlow()
+    const late = await inFlight
+
+    expect(sessionCookie(late)).toEqual([])
+    expect([...store.keys()]).toEqual([])
+    expect((await send('GET', '/ping', pending)).statusCode).toBe(401)
+    const replacement = signSessionJwt(fastify, session, true)
+    expect((await send('GET', '/ping', replacement)).statusCode).toBe(401)
+  })
+
+  it('carries over what the request changed in the session', async () => {
+    const pending = await createSessionJwt(fastify, session, false)
+    releaseSlow()
+    const [replacement] = sessionCookie(await send('POST', '/slow-finish', pending))
+    expect(JSON.parse(store.get(`session:${replacement}`)!)).toMatchObject({
+      userId: session.userId,
+      hasActiveProfile: true,
+    })
   })
 })

@@ -68,6 +68,7 @@ const makeReq = (overrides: any = {}) => ({
   },
   deleteSession: vi.fn(),
   updateSession: vi.fn(),
+  replaceSession: vi.fn().mockResolvedValue(true),
   ...overrides,
 })
 
@@ -150,30 +151,40 @@ describe('GET /me with a pending JWT', () => {
       },
     })
 
-  beforeEach(() => {
-    fastify.createSession = vi.fn().mockResolvedValue(undefined)
-  })
-
   it('replaces the JWT and brings the session up to date once the user has onboarded elsewhere', async () => {
     mockProfileService.getProfileCompleteByUserId.mockResolvedValue({
       ...dbProfile,
       isOnboarded: true,
     })
 
-    await fastify.routes['GET /me'](pendingReq(), reply as any)
+    const req = pendingReq()
+    await fastify.routes['GET /me'](req, reply as any)
 
     const jwt = JSON.stringify({ userId: 'u1', profileId: 'p1', tokenVersion: 3 })
     expect(reply.cookies.map(({ name, value }) => [name, value])).toEqual([['__session', jwt]])
-    expect(fastify.createSession).toHaveBeenCalledWith(
-      jwt,
-      expect.objectContaining({
-        lang: 'hu',
-        tokenVersion: 3,
-        hasActiveProfile: true,
-        profile: { id: 'p1', isDatingActive: false, isSocialActive: true, isActive: true },
-      })
+    expect(req.replaceSession).toHaveBeenCalledWith(jwt)
+    expect(req.updateSession).toHaveBeenCalledWith({
+      hasActiveProfile: true,
+      profile: { id: 'p1', isDatingActive: false, isSocialActive: true, isActive: true },
+    })
+    // The replacement copies the session, so it has to be up to date by then
+    expect(req.updateSession.mock.invocationCallOrder[0]).toBeLessThan(
+      req.replaceSession.mock.invocationCallOrder[0]!
     )
     expect(reply.statusCode).toBe(200)
+  })
+
+  it('sets no cookie when the session was revoked meanwhile', async () => {
+    mockProfileService.getProfileCompleteByUserId.mockResolvedValue({
+      ...dbProfile,
+      isOnboarded: true,
+    })
+    const req = pendingReq()
+    req.replaceSession.mockResolvedValue(false)
+
+    await fastify.routes['GET /me'](req, reply as any)
+
+    expect(reply.cookies).toEqual([])
   })
 
   it('keeps the JWT while the user has not onboarded', async () => {
@@ -182,10 +193,11 @@ describe('GET /me with a pending JWT', () => {
       isOnboarded: false,
     })
 
-    await fastify.routes['GET /me'](pendingReq(), reply as any)
+    const req = pendingReq()
+    await fastify.routes['GET /me'](req, reply as any)
 
     expect(reply.cookies).toEqual([])
-    expect(fastify.createSession).not.toHaveBeenCalled()
+    expect(req.replaceSession).not.toHaveBeenCalled()
   })
 
   it('keeps a JWT that is not pending', async () => {
@@ -199,7 +211,7 @@ describe('GET /me with a pending JWT', () => {
 
     expect(reply.cookies).toEqual([])
     expect(req.updateSession).not.toHaveBeenCalled()
-    expect(fastify.createSession).not.toHaveBeenCalled()
+    expect(req.replaceSession).not.toHaveBeenCalled()
   })
 })
 
@@ -529,7 +541,6 @@ describe('POST /me (onboarding)', () => {
   })
 
   it('replaces a pending JWT, leaving the old session to in-flight requests', async () => {
-    fastify.createSession = vi.fn().mockResolvedValue(undefined)
     mockProfileService.updateCompleteProfile.mockResolvedValue({
       ...dbProfile,
       isActive: true,
@@ -546,10 +557,7 @@ describe('POST /me (onboarding)', () => {
 
     const jwt = JSON.stringify({ userId: 'u1', profileId: 'p1', tokenVersion: 0 })
     expect(reply.cookies.map(({ name, value }) => [name, value])).toEqual([['__session', jwt]])
-    expect(fastify.createSession).toHaveBeenCalledWith(
-      jwt,
-      expect.objectContaining({ hasActiveProfile: true })
-    )
+    expect(req.replaceSession).toHaveBeenCalledWith(jwt)
     expect(req.deleteSession).not.toHaveBeenCalled()
     expect(reply.statusCode).toBe(200)
   })

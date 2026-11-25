@@ -38,6 +38,22 @@ export function getRefreshCookie(req: FastifyRequest): string | undefined {
   return req.cookies[REFRESH_COOKIE]
 }
 
+/** Signs the JWT for a session. The session still has to be stored under it. */
+export function signSessionJwt(
+  fastify: FastifyInstance,
+  session: SessionData,
+  isOnboarded: boolean
+): string {
+  // TODO: profileId in JWT is redundant with session data — remove in follow-up
+  const payload: JwtPayload = {
+    userId: session.userId,
+    profileId: session.profileId,
+    tokenVersion: session.tokenVersion,
+    ...(isOnboarded ? {} : { pending: true }),
+  }
+  return fastify.jwt.sign(payload)
+}
+
 /**
  * Signs the JWT for a session and stores the session under it. The caller
  * stamps the cookie.
@@ -47,14 +63,7 @@ export async function createSessionJwt(
   session: SessionData,
   isOnboarded: boolean
 ): Promise<string> {
-  // TODO: profileId in JWT is redundant with session data — remove in follow-up
-  const payload: JwtPayload = {
-    userId: session.userId,
-    profileId: session.profileId,
-    tokenVersion: session.tokenVersion,
-    ...(isOnboarded ? {} : { pending: true }),
-  }
-  const jwt = fastify.jwt.sign(payload)
+  const jwt = signSessionJwt(fastify, session, isOnboarded)
   await fastify.createSession(jwt, session)
   return jwt
 }

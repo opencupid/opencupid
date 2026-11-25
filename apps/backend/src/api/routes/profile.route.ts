@@ -17,7 +17,7 @@ import {
 } from '@zod/profile/profile.dto'
 
 import { rateLimitConfig, sendError, sendForbiddenError } from '../helpers'
-import { createSessionJwt, setSessionCookie } from '@/lib/session'
+import { setSessionCookie, signSessionJwt } from '@/lib/session'
 import {
   mapDbProfileToOwnerProfile,
   mapProfileSummary,
@@ -69,6 +69,9 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
    * The session of the replaced JWT is left to expire: deleting it would 401
    * requests already in flight, and the browser drops the old JWT with this
    * response. It stays indexed, so revoking the user's sessions still ends it.
+   *
+   * If the session was revoked after this request authenticated, there is
+   * nothing to replace and no cookie is set.
    */
   async function syncSession(req: FastifyRequest, reply: FastifyReply, profile: OwnerProfile) {
     const { id, isDatingActive, isSocialActive, isActive } = profile
@@ -78,7 +81,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
     }
     await req.updateSession(data)
     if (req.user.pending && profile.isOnboarded) {
-      setSessionCookie(reply, await createSessionJwt(fastify, { ...req.session, ...data }, true))
+      const jwt = signSessionJwt(fastify, req.session, true)
+      if (await req.replaceSession(jwt)) setSessionCookie(reply, jwt)
     }
   }
 

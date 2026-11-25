@@ -19,7 +19,8 @@ export class SessionService {
    * Set of session IDs belonging to a user, so they can be revoked together.
    *
    * Invariants and edge cases:
-   * - Only getOrCreate() (and scripts/backfill-user-sessions.ts) add members.
+   * - Only getOrCreate(), replace() (and scripts/backfill-user-sessions.ts) add
+   *   members.
    *   patch() and refreshTtl() only extend the set's TTL, so a session that is
    *   missing from the set stays missing — e.g. one created before this index
    *   existed and not yet backfilled. Such a session can't be revoked by
@@ -81,14 +82,9 @@ export class SessionService {
   }
 
   /**
-   * Merge partial data into an existing session without deleting it.
-   *
-   * Edge case — not atomic: this is a GET followed by a separate SET. If the
-   * session is deleted in between (logout, refresh, deleteAllForUser), the SET
-   * recreates the session key without re-adding it to the user's set, leaving
-   * a live session that deleteAllForUser() can no longer find. A write with
-   * `SET … XX` (only if the key still exists) would close this window.
-   * A patch that starts after the delete is safe: get() returns null.
+   * Merge partial data into an existing session without deleting it. A session
+   * deleted between the read and the write (logout, refresh, deleteAllForUser)
+   * stays deleted.
    */
   async patch(id: string, data: Partial<SessionData>): Promise<void> {
     const existing = await this.get(id)
@@ -98,10 +94,34 @@ export class SessionService {
     const ukey = this.userSessionsKey(existing.userId)
     await this.redis
       .multi()
-      .set(hkey, JSON.stringify(merged))
+      .set(hkey, JSON.stringify(merged), 'XX')
       .expire(hkey, this.ttlSec)
       .expire(ukey, this.ttlSec)
       .exec()
+  }
+
+  /**
+   * Continue a session under a new ID, keeping the old one. Returns false, and
+   * creates nothing, if the old session no longer exists: a request that
+   * authenticated before its session was revoked must not bring it back.
+   *
+   * Atomic with deleteAllForUser(): the new session is either created before
+   * it, and deleted with the others, or not created. (A dead ID left in the set
+   * is harmless, see userSessionsKey.)
+   */
+  async replace(id: string, newId: string, userId: string): Promise<boolean> {
+    const newKey = this.sessionKey(newId)
+    const ukey = this.userSessionsKey(userId)
+    const results = await this.redis
+      .multi()
+      .copy(this.sessionKey(id), newKey, 'REPLACE')
+      .expire(newKey, this.ttlSec)
+      .sadd(ukey, newId)
+      .expire(ukey, this.ttlSec)
+      .exec()
+    const [err, copied] = results?.[0] ?? []
+    if (err) throw err
+    return copied === 1
   }
 
   /**
@@ -117,25 +137,25 @@ export class SessionService {
   /**
    * Delete every session belonging to a user (e.g. when they are blocked).
    *
-   * Edge cases — not a hard guarantee that no session survives:
-   * - A session created between SMEMBERS and EXEC isn't deleted. It stays in
-   *   the set (only the IDs read are SREM'd), so a later call can revoke it.
-   * - A /auth/refresh that already passed its tokenVersion check can create
-   *   its replacement session after this returns. Callers revoking access
-   *   should bump User.tokenVersion first so refreshes that start afterwards
-   *   fail; only one already in flight can slip through.
-   * - A concurrent patch() can recreate a deleted session (see patch()).
+   * Runs as one script, so no session can be added between reading the set and
+   * deleting its members.
+   *
+   * Edge case — not a hard guarantee that no session survives: a /auth/refresh
+   * that already passed its tokenVersion check can create its replacement
+   * session after this returns. Callers revoking access should bump
+   * User.tokenVersion first so refreshes that start afterwards fail; only one
+   * already in flight can slip through.
    */
   async deleteAllForUser(userId: string): Promise<void> {
-    const ukey = this.userSessionsKey(userId)
-    const ids = await this.redis.smembers(ukey)
-    if (ids.length === 0) return
-    const tx = this.redis.multi()
-    for (const id of ids) {
-      tx.del(this.sessionKey(id)).del(this.rolesKey(id))
-    }
-    // Remove only the IDs read above: a session created after SMEMBERS stays
-    // indexed (and revocable) instead of being dropped with the whole set.
-    await tx.srem(ukey, ...ids).exec()
+    await this.redis.eval(
+      `for _, id in ipairs(redis.call('SMEMBERS', KEYS[1])) do
+         local key = ARGV[1] .. id
+         redis.call('DEL', key, key .. ':roles')
+       end
+       redis.call('DEL', KEYS[1])`,
+      1,
+      this.userSessionsKey(userId),
+      this.sessionKey('')
+    )
   }
 }

@@ -23,6 +23,7 @@ declare module 'fastify' {
     session: SessionData
     deleteSession: () => Promise<void>
     updateSession: (data: Partial<SessionData>) => Promise<void>
+    replaceSession: (token: string) => Promise<boolean>
   }
 }
 
@@ -125,5 +126,6 @@ export default fp(async (fastify: FastifyInstance) => {
     req.updateSession = async (data: Partial<SessionData>) => {
       return await sessionService.patch(sessionId, data)
     }
+    req.replaceSession = (token: string) => sessionService.replace(sessionId, token, session.userId)
   })
 })
