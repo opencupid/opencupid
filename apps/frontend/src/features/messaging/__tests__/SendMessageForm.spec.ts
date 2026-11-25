@@ -180,44 +180,63 @@ describe('SendMessageForm', () => {
     })
   }
 
-  it('gives the call and attach buttons the same rounded button class', () => {
-    const wrapper = mountForm({ canCall: true })
-
-    const call = wrapper.find('[title="calls.call_button_title"]')
-    expect(call.classes()).toContain('btn-rounded')
+  it('gives the attach button the rounded button class', () => {
+    const wrapper = mountForm()
 
     const attach = wrapper.findComponent(ImageUploadStub)
     expect(attach.props('buttonClass')).toContain('btn-rounded')
 
     // A Bootstrap size modifier would change the padding and break the circle.
-    const sizeModifiers = ['btn-sm', 'btn-lg']
-    for (const modifier of sizeModifiers) {
-      expect(call.classes()).not.toContain(modifier)
+    for (const modifier of ['btn-sm', 'btn-lg']) {
       expect(attach.props('buttonClass')).not.toContain(modifier)
     }
   })
 
-  it('shows call button when canCall is true', () => {
+  // The video call button is temporarily hidden (see SendMessageForm.vue).
+  // Re-enable the tests below together with the button.
+  it('does not render the call button while calls are hidden', () => {
     const wrapper = mountForm({ canCall: true })
-    expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(true)
-  })
-
-  it('hides call button when canCall is false', () => {
-    const wrapper = mountForm({ canCall: false })
     expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(false)
   })
 
-  it('hides call button while recording voice message', async () => {
-    const wrapper = mountForm({ canCall: true })
-    expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(true)
-
-    // Simulate recording started
-    const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
-    await voiceRecorder.vm.$emit('recording:started')
-    await wrapper.vm.$nextTick()
-
-    expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(false)
-  })
+  // it('gives the call and attach buttons the same rounded button class', () => {
+  //   const wrapper = mountForm({ canCall: true })
+  //
+  //   const call = wrapper.find('[title="calls.call_button_title"]')
+  //   expect(call.classes()).toContain('btn-rounded')
+  //
+  //   const attach = wrapper.findComponent(ImageUploadStub)
+  //   expect(attach.props('buttonClass')).toContain('btn-rounded')
+  //
+  //   // A Bootstrap size modifier would change the padding and break the circle.
+  //   const sizeModifiers = ['btn-sm', 'btn-lg']
+  //   for (const modifier of sizeModifiers) {
+  //     expect(call.classes()).not.toContain(modifier)
+  //     expect(attach.props('buttonClass')).not.toContain(modifier)
+  //   }
+  // })
+  //
+  // it('shows call button when canCall is true', () => {
+  //   const wrapper = mountForm({ canCall: true })
+  //   expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(true)
+  // })
+  //
+  // it('hides call button when canCall is false', () => {
+  //   const wrapper = mountForm({ canCall: false })
+  //   expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(false)
+  // })
+  //
+  // it('hides call button while recording voice message', async () => {
+  //   const wrapper = mountForm({ canCall: true })
+  //   expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(true)
+  //
+  //   // Simulate recording started
+  //   const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
+  //   await voiceRecorder.vm.$emit('recording:started')
+  //   await wrapper.vm.$nextTick()
+  //
+  //   expect(wrapper.find('[title="calls.call_button_title"]').exists()).toBe(false)
+  // })
 
   it('hides send controls while voice recording is active', async () => {
     const wrapper = mountForm()

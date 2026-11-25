@@ -11,7 +11,8 @@ import { type MessageRecipient, type OwnerProfile } from '@zod/profile/profile.d
 
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
-import IconCall from '@/assets/icons/interface/call.svg'
+// Video call button temporarily hidden, see template.
+// import IconCall from '@/assets/icons/interface/call.svg'
 import IconSend from '@/assets/icons/interface/send.svg'
 import IconPhoto from '@/assets/icons/interface/photo.svg'
 import IconCross from '@/assets/icons/interface/cross.svg'
@@ -378,6 +379,10 @@ function handleVoiceRecordingError(error: string) {
               @recording:cancelled="handleVoiceRecordingCancelled"
               @recording:error="handleVoiceRecordingError"
             />
+            <!--
+              Video call button temporarily hidden, together with the video call
+              settings section. Re-enable both once the settings dialog layout is fixed.
+
             <a
               v-if="canCall && !isVoiceActive"
               class="btn btn-secondary btn-rounded"
@@ -387,6 +392,7 @@ function handleVoiceRecordingError(error: string) {
             >
               <IconCall class="svg-icon" />
             </a>
+            -->
             <ImageUpload
               :store="imageStore"
               :preview="false"
