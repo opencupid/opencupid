@@ -8,11 +8,13 @@ function createMockRedis() {
     del: vi.fn().mockReturnThis(),
     sadd: vi.fn().mockReturnThis(),
     srem: vi.fn().mockReturnThis(),
+    copy: vi.fn().mockReturnThis(),
     exec: vi.fn().mockResolvedValue([]),
   }
   return {
     get: vi.fn(),
-    smembers: vi.fn(),
+    set: vi.fn(),
+    eval: vi.fn(),
     multi: vi.fn(() => chain),
     _chain: chain,
   }
@@ -96,17 +98,21 @@ describe('SessionService.patch', () => {
     await service.patch('sess1', { lang: 'hu' })
 
     // Zod reorders keys when parsing, so compare as parsed objects
-    const storedJson = redis._chain.set.mock.calls[0][1]
+    const storedJson = redis.set.mock.calls[0]![1]
     expect(JSON.parse(storedJson)).toEqual({ ...sessionData, lang: 'hu' })
-    expect(redis._chain.expire).toHaveBeenCalledWith('session:sess1', 2592000)
-    expect(redis._chain.expire).toHaveBeenCalledWith(`user:${sessionData.userId}:sessions`, 2592000)
+  })
+
+  it('does not recreate a session deleted since it was read, nor change its TTL', async () => {
+    redis.get.mockResolvedValue(JSON.stringify(sessionData))
+    await service.patch('sess1', { lang: 'hu' })
+    expect(redis.set).toHaveBeenCalledWith('session:sess1', expect.any(String), 'KEEPTTL', 'XX')
   })
 
   it('does nothing when session does not exist', async () => {
     redis.get.mockResolvedValue(null)
     await service.patch('missing', { lang: 'hu' })
 
-    expect(redis.multi).not.toHaveBeenCalled()
+    expect(redis.set).not.toHaveBeenCalled()
   })
 })
 
@@ -120,23 +126,36 @@ describe('SessionService.delete', () => {
   })
 })
 
-describe('SessionService.deleteAllForUser', () => {
-  it("deletes every session in the user's set", async () => {
-    redis.smembers.mockResolvedValue(['s1', 's2'])
-    await service.deleteAllForUser('user1')
-    expect(redis.smembers).toHaveBeenCalledWith('user:user1:sessions')
-    for (const key of ['session:s1', 'session:s1:roles', 'session:s2', 'session:s2:roles']) {
-      expect(redis._chain.del).toHaveBeenCalledWith(key)
-    }
-    // Only the IDs read are removed, so a session added concurrently stays indexed
-    expect(redis._chain.srem).toHaveBeenCalledWith('user:user1:sessions', 's1', 's2')
-    expect(redis._chain.del).not.toHaveBeenCalledWith('user:user1:sessions')
-    expect(redis._chain.exec).toHaveBeenCalled()
+describe('SessionService.replace', () => {
+  it('copies the session to the new ID and indexes it', async () => {
+    redis._chain.exec.mockResolvedValue([[null, 1]])
+    expect(await service.replace('old', 'new', 'user1')).toBe(true)
+    expect(redis._chain.copy).toHaveBeenCalledWith('session:old', 'session:new', 'REPLACE')
+    expect(redis._chain.sadd).toHaveBeenCalledWith('user:user1:sessions', 'new')
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:new', 2592000)
+    expect(redis._chain.expire).toHaveBeenCalledWith('session:old', 60)
+    expect(redis._chain.del).not.toHaveBeenCalled()
   })
 
-  it('does nothing when the user has no sessions', async () => {
-    redis.smembers.mockResolvedValue([])
+  it('returns false when the old session is gone', async () => {
+    redis._chain.exec.mockResolvedValue([[null, 0]])
+    expect(await service.replace('old', 'new', 'user1')).toBe(false)
+  })
+
+  it('throws when the copy fails', async () => {
+    redis._chain.exec.mockResolvedValue([[new Error('copy failed'), undefined]])
+    await expect(service.replace('old', 'new', 'user1')).rejects.toThrow('copy failed')
+  })
+})
+
+describe('SessionService.deleteAllForUser', () => {
+  it("deletes the sessions in the user's set in one script", async () => {
     await service.deleteAllForUser('user1')
-    expect(redis.multi).not.toHaveBeenCalled()
+    expect(redis.eval).toHaveBeenCalledWith(
+      expect.stringContaining('SMEMBERS'),
+      1,
+      'user:user1:sessions',
+      'session:'
+    )
   })
 })

@@ -388,6 +388,7 @@ function handleMarkerSelect(id: string) {
 }
 
 // ── Onboarding guard ───────────────────────────────────────────────
+// TODO: remove (#1718). Only for sessions from before router/onboardingGate.ts.
 function checkOnboarding(): boolean {
   if (ownerProfileStore.profile && !ownerProfileStore.profile.isOnboarded) {
     router.replace({ name: 'Onboarding' })

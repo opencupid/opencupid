@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const authStore = vi.hoisted(() => ({ isLoggedIn: false }))
 vi.mock('@/features/auth/stores/authStore', () => ({ useAuthStore: () => authStore }))
@@ -10,6 +10,7 @@ vi.mock('@/features/auth/views/MagicLink.vue', () => stub)
 vi.mock('@/features/app/views/AppShellLayout.vue', () => stub)
 vi.mock('@/features/browse/views/BrowseProfiles.vue', () => stub)
 vi.mock('@/features/settings/views/AccountDeletedView.vue', () => stub)
+vi.mock('@/features/onboarding/views/Onboarding.vue', () => stub)
 
 import router from '../index'
 import { bus } from '@/lib/bus'
@@ -70,5 +71,78 @@ describe('router auth guard', () => {
     await new Promise((resolve) => setTimeout(resolve))
 
     expect(router.currentRoute.value.name).toBe('AccountDeleted')
+  })
+})
+
+describe('router onboarding gate', () => {
+  const setPending = (pending: boolean) => {
+    const body = btoa(JSON.stringify({ userId: 'u1', ...(pending && { pending: true }) }))
+    document.cookie = `__session=header.${body}.signature; path=/`
+  }
+
+  beforeEach(async () => {
+    // A pending user arrives from a logged-out page, never from Browse.
+    authStore.isLoggedIn = false
+    await router.replace('/auth')
+    authStore.isLoggedIn = true
+  })
+
+  afterEach(() => {
+    document.cookie = '__session=; path=/; max-age=0'
+    authStore.isLoggedIn = false
+  })
+
+  it.each(['/inbox/abc', '/magic-link'])(
+    'sends a pending user from %s to Onboarding',
+    async (path) => {
+      setPending(true)
+      await router.push(path)
+      expect(router.currentRoute.value.name).toBe('Onboarding')
+    }
+  )
+
+  it('replaces the history entry', async () => {
+    const entries = window.history.length
+    setPending(true)
+    await router.push('/me')
+
+    expect(router.currentRoute.value.name).toBe('Onboarding')
+    expect(window.history.length).toBe(entries)
+  })
+
+  it('stays on Onboarding when going back to the login page', async () => {
+    authStore.isLoggedIn = false
+    await router.push('/magic-link')
+    authStore.isLoggedIn = true
+    setPending(true)
+    await router.replace('/browse')
+    expect(router.currentRoute.value.name).toBe('Onboarding')
+
+    const settled = new Promise((resolve) => {
+      const stop = router.afterEach((to, _from, failure) => {
+        if (failure) return
+        stop()
+        resolve(to.name)
+      })
+    })
+    router.back()
+    expect(await settled).toBe('Onboarding')
+  })
+
+  it('opens Browse as soon as the token has been replaced', async () => {
+    setPending(true)
+    await router.push('/browse/grid')
+    expect(router.currentRoute.value.name).toBe('Onboarding')
+
+    setPending(false)
+    await router.replace({ name: 'Browse' })
+    expect(router.currentRoute.value.name).toBe('Browse')
+  })
+
+  it('sends a logged-out visitor to Login even if a pending cookie is left over', async () => {
+    authStore.isLoggedIn = false
+    setPending(true)
+    await router.push('/me')
+    expect(router.currentRoute.value.name).toBe('Login')
   })
 })

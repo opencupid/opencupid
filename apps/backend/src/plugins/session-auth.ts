@@ -23,6 +23,7 @@ declare module 'fastify' {
     session: SessionData
     deleteSession: () => Promise<void>
     updateSession: (data: Partial<SessionData>) => Promise<void>
+    replaceSession: (token: string) => Promise<boolean>
   }
 }
 
@@ -95,7 +96,7 @@ export default fp(async (fastify: FastifyInstance) => {
       if (req.user.tokenVersion !== sess.tokenVersion) {
         return sendUnauthorizedError(reply, 'Token revoked')
       }
-      await sessionService.refreshTtl(sessionId, sess.userId)
+      if (!req.user.pending) await sessionService.refreshTtl(sessionId, sess.userId)
     } catch (err) {
       req.log.error({ err, sessionId }, 'Redis error during authenticated request')
       return sendServiceUnavailableError(reply, 'Session lookup failed')
@@ -110,7 +111,10 @@ export default fp(async (fastify: FastifyInstance) => {
     //      on their next request.
     // Only runs after the full auth chain succeeds, so failed-auth
     // responses don't re-stamp a cookie the client can't use.
-    setSessionCookie(reply, sessionId)
+    //
+    // Not for a pending token, nor its session's TTL above: finishing onboarding
+    // replaces them, and a request sent before that would bring them back.
+    if (!req.user.pending) setSessionCookie(reply, sessionId)
 
     const session = sess
     req.session = session
@@ -120,5 +124,6 @@ export default fp(async (fastify: FastifyInstance) => {
     req.updateSession = async (data: Partial<SessionData>) => {
       return await sessionService.patch(sessionId, data)
     }
+    req.replaceSession = (token: string) => sessionService.replace(sessionId, token, session.userId)
   })
 })

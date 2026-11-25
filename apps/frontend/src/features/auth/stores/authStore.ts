@@ -2,11 +2,12 @@ import { defineStore } from 'pinia'
 import Cookies from 'universal-cookie'
 import { api, axios, safeApiCall } from '@/lib/api'
 import { bus } from '@/lib/bus'
+import { parseJwtPayload } from '@/lib/jwt'
 import type { UserRoleType } from '@zod/generated/inputTypeSchemas/UserRoleSchema'
 
 import { LoginUserSchema } from '@zod/user/user.dto'
 
-import type { UserIdentifier, JwtPayload, SessionData, LoginUser } from '@zod/user/user.dto'
+import type { UserIdentifier, SessionData, LoginUser } from '@zod/user/user.dto'
 
 import type { ApiError, VerifyTokenResponse, SendMagicLinkResponse } from '@zod/apiResponse.dto'
 import { AuthErrorCodes } from '@zod/user/auth.dto'
@@ -83,14 +84,14 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     setAuthState(token: string) {
       // Parse user data from JWT payload (cookie is non-httpOnly so JWT is readable)
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
-        this.userId = payload.userId
-        this.profileId = payload.profileId
-      } catch (e) {
-        console.warn('Failed to parse JWT payload:', e)
+      const payload = parseJwtPayload(token)
+      if (!payload) {
+        console.warn('Failed to parse JWT payload')
         this.userId = null
+        return
       }
+      this.userId = payload.userId
+      this.profileId = payload.profileId
     },
 
     initialize() {
@@ -98,9 +99,7 @@ export const useAuthStore = defineStore('auth', {
       const token = cookies.get<string>(SESSION_COOKIE) ?? migrateLegacyToken()
 
       if (token) {
-        try {
-          JSON.parse(atob(token.split('.')[1]!))
-        } catch {
+        if (!parseJwtPayload(token)) {
           // Malformed JWT — clear it
           removeSessionCookie()
           this.isInitialized = true

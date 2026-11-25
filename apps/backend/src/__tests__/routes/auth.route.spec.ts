@@ -127,6 +127,7 @@ describe('POST /verify-token', () => {
     })
     mockGetExistingUserSession.mockResolvedValue({
       profileId: 'profile1',
+      isOnboarded: true,
       sessionData: {
         userId: 'user1',
         profileId: 'profile1',
@@ -177,6 +178,7 @@ describe('POST /verify-token', () => {
       })
       mockGetExistingUserSession.mockResolvedValue({
         profileId: 'p1',
+        isOnboarded: true,
         sessionData: {
           userId: 'u1',
           profileId: 'p1',
@@ -219,6 +221,7 @@ describe('POST /verify-token', () => {
     })
     mockCreateNewUserSession.mockResolvedValue({
       profileId: 'profile2',
+      isOnboarded: true,
       sessionData: {
         userId: 'user2',
         profileId: 'profile2',
@@ -674,6 +677,7 @@ describe('POST /refresh', () => {
     })
     mockGetExistingUserSession.mockResolvedValue({
       profileId,
+      isOnboarded: true,
       sessionData: {
         userId: 'user1',
         profileId,
@@ -731,6 +735,7 @@ describe('POST /refresh — same-second refresh', () => {
     })
     mockGetExistingUserSession.mockResolvedValue({
       profileId,
+      isOnboarded: true,
       sessionData: {
         userId: 'user1',
         profileId,
@@ -763,6 +768,61 @@ describe('POST /refresh — same-second refresh', () => {
     const deleteOrder = (fastify.deleteSession as any).mock.invocationCallOrder[0]
     const createOrder = (fastify.createSession as any).mock.invocationCallOrder[0]
     expect(deleteOrder).toBeLessThan(createOrder)
+  })
+})
+
+describe('pending claim', () => {
+  const user = { id: 'user1', tokenVersion: 2, roles: [], language: 'en' }
+  const sessionResult = (isOnboarded: boolean) => ({
+    profileId: 'p1',
+    isOnboarded,
+    sessionData: { userId: 'user1', profileId: 'p1', tokenVersion: 2 },
+  })
+  const claims = { userId: 'user1', profileId: 'p1', tokenVersion: 2 }
+  let sign: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    sign = vi.fn().mockReturnValue('jwt')
+    fastify.jwt = { sign, verify: vi.fn().mockReturnValue(claims) }
+    mockRefreshTokenService.validate.mockResolvedValue(claims)
+    mockUserService.getUserById.mockResolvedValue(user)
+  })
+
+  const login = (isNewUser: boolean) => {
+    mockUserService.validateLoginToken.mockResolvedValue({ success: true, user, isNewUser })
+    return fastify.routes['POST /verify-token']({ body: { token: 'abc123' } }, reply)
+  }
+  const refresh = () =>
+    fastify.routes['POST /refresh']({ cookies: { __session: 'old', __refresh: 'r' } }, reply)
+
+  it('marks the JWT of a new user', async () => {
+    mockCreateNewUserSession.mockResolvedValue(sessionResult(false))
+    await login(true)
+    expect(sign).toHaveBeenCalledWith({ ...claims, pending: true })
+  })
+
+  it('marks the JWT of an existing user who logs in again before onboarding', async () => {
+    mockGetExistingUserSession.mockResolvedValue(sessionResult(false))
+    await login(false)
+    expect(sign).toHaveBeenCalledWith({ ...claims, pending: true })
+  })
+
+  it('leaves the claim out for an onboarded user', async () => {
+    mockGetExistingUserSession.mockResolvedValue(sessionResult(true))
+    await login(false)
+    expect(sign).toHaveBeenCalledWith(claims)
+  })
+
+  it('is kept by a refresh before onboarding', async () => {
+    mockGetExistingUserSession.mockResolvedValue(sessionResult(false))
+    await refresh()
+    expect(sign).toHaveBeenCalledWith({ ...claims, pending: true })
+  })
+
+  it('is dropped by a refresh after onboarding', async () => {
+    mockGetExistingUserSession.mockResolvedValue(sessionResult(true))
+    await refresh()
+    expect(sign).toHaveBeenCalledWith(claims)
   })
 })
 

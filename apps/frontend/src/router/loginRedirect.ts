@@ -7,10 +7,10 @@ const isUtmKey = (key: string) => key.startsWith('utm_')
 
 /**
  * The `utm_*` keys of a query. Umami loads after the router's first
- * navigation, so it records the page after a redirect; the Login redirect
- * carries these over so that page still has the email campaign.
+ * navigation, so it records the page after a redirect; the Login and Onboarding
+ * redirects carry these over so that page still has the email campaign.
  */
-function utmQuery(query: LocationQuery): LocationQuery {
+export function utmQuery(query: LocationQuery): LocationQuery {
   return Object.fromEntries(Object.entries(query).filter(([key]) => isUtmKey(key)))
 }
 

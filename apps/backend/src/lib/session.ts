@@ -6,7 +6,7 @@
  * Platform-agnostic primitives (cookie names, max-ages, `resolveSessionCookie`)
  * live in `@shared/session`.
  */
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import '@fastify/cookie'
 import {
   SESSION_COOKIE,
@@ -20,6 +20,7 @@ import {
 } from '@shared/session'
 import { appConfig } from '@/lib/appconfig'
 import { brandForHost } from '@/lib/brand'
+import type { JwtPayload, SessionData } from '@zod/user/user.dto'
 
 /**
  * Session cookies are scoped to the domain of the brand the request was made
@@ -35,6 +36,33 @@ export function getSessionCookie(req: FastifyRequest): string | undefined {
 
 export function getRefreshCookie(req: FastifyRequest): string | undefined {
   return req.cookies[REFRESH_COOKIE]
+}
+
+/** Signs the JWT for a session, without storing the session under it. */
+export function signSessionJwt(
+  fastify: FastifyInstance,
+  session: SessionData,
+  isOnboarded: boolean
+): string {
+  // TODO: profileId in JWT is redundant with session data — remove in follow-up
+  const payload: JwtPayload = {
+    userId: session.userId,
+    profileId: session.profileId,
+    tokenVersion: session.tokenVersion,
+    ...(isOnboarded ? {} : { pending: true }),
+  }
+  return fastify.jwt.sign(payload)
+}
+
+/** Signs the JWT for a session and stores the session under it. */
+export async function createSessionJwt(
+  fastify: FastifyInstance,
+  session: SessionData,
+  isOnboarded: boolean
+): Promise<string> {
+  const jwt = signSessionJwt(fastify, session, isOnboarded)
+  await fastify.createSession(jwt, session)
+  return jwt
 }
 
 export function setSessionCookie(reply: FastifyReply, jwt: string) {

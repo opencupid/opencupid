@@ -16,6 +16,8 @@ export const JwtPayloadSchema = z.object({
   userId: z.string().cuid(),
   profileId: z.string().cuid(),
   tokenVersion: z.number().int(),
+  // Onboarding not finished. Never false: a token without it counts as onboarded.
+  pending: z.literal(true).optional(),
 })
 export type JwtPayload = z.infer<typeof JwtPayloadSchema>
 

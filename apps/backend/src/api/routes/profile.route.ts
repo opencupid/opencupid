@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { validateBody } from '@/utils/zodValidate'
 
 import {
+  type OwnerProfile,
   type UpdateProfileOptInPayload,
   type UpdateProfilePayload,
   type UpdateProfileScopePayload,
@@ -16,6 +17,7 @@ import {
 } from '@zod/profile/profile.dto'
 
 import { rateLimitConfig, sendError, sendForbiddenError } from '../helpers'
+import { setSessionCookie, signSessionJwt } from '@/lib/session'
 import {
   mapDbProfileToOwnerProfile,
   mapProfileSummary,
@@ -61,8 +63,26 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   const clusterService = ClusterService.getInstance()
 
   /**
+   * Copies the profile's state into the current session. Once the user has
+   * onboarded, also replaces a JWT still marked pending.
+   */
+  async function syncSession(req: FastifyRequest, reply: FastifyReply, profile: OwnerProfile) {
+    const { id, isDatingActive, isSocialActive, isActive } = profile
+    const data = {
+      hasActiveProfile: isActive,
+      profile: { id, isDatingActive, isSocialActive, isActive },
+    }
+    await req.updateSession(data)
+    if (req.user.pending && profile.isOnboarded) {
+      const jwt = signSessionJwt(fastify, req.session, true)
+      if (await req.replaceSession(jwt)) setSessionCookie(reply, jwt)
+    }
+  }
+
+  /**
    * GET /me
    * Returns the current user's complete profile (owner view — includes private fields).
+   * Replaces a JWT still marked pending if the user has finished onboarding.
    * @returns {GetMyProfileResponse}
    */
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -73,6 +93,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       if (!fetched) return sendError(reply, 404, 'Social profile not found')
 
       const profile = mapDbProfileToOwnerProfile(locale, fetched)
+      // Onboarding was finished on another device, or its response was lost
+      if (req.user.pending && profile.isOnboarded) await syncSession(req, reply, profile)
       const response: GetMyProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {
@@ -261,7 +283,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /me
    * Creates/activates the current user's profile (onboarding completion).
-   * Sets isOnboarded=true, clears the session to refresh roles, and sends
+   * Sets isOnboarded=true, updates the session, replaces the pending JWT, and sends
    * a welcome message. Can only be called once per user.
    * @body {CreateProfilePayload} Profile data including isDatingActive, isSocialActive
    * @returns {UpdateProfileResponse}
@@ -295,15 +317,7 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         return mapDbProfileToOwnerProfile(locale, updatedProfile)
       })
       // Update session so the next request sees hasActiveProfile=true without a round-trip
-      await req.updateSession({
-        hasActiveProfile: updated.isActive,
-        profile: {
-          id: updated.id,
-          isDatingActive: updated.isDatingActive,
-          isSocialActive: updated.isSocialActive,
-          isActive: updated.isActive,
-        },
-      })
+      await syncSession(req, reply, updated)
       const response: UpdateProfileResponse = { success: true, profile: updated }
       reply.code(200).send(response)
 
