@@ -1,7 +1,7 @@
 import Cookies from 'universal-cookie'
 import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router'
 import { SESSION_COOKIE } from '@shared/session'
-import type { JwtPayload } from '@zod/user/user.dto'
+import { parseJwtPayload } from '@/lib/jwt'
 import { utmQuery } from './loginRedirect'
 
 /**
@@ -13,14 +13,7 @@ import { utmQuery } from './loginRedirect'
  */
 function isOnboardingPending(): boolean {
   const token = new Cookies().get<string | undefined>(SESSION_COOKIE)
-  if (!token) return false
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]!)) as JwtPayload
-    return payload.pending === true
-  } catch {
-    // authStore.initialize() clears a malformed session cookie
-    return false
-  }
+  return token !== undefined && parseJwtPayload(token)?.pending === true
 }
 
 /**
