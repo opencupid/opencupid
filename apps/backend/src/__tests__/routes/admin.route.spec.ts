@@ -667,6 +667,10 @@ describe('GET /users/:id', () => {
       id: 'user1',
       email: 'test@test.com',
       isActive: true,
+      newsletterOptIn: true,
+      emailNotificationsOptIn: false,
+      isPushNotificationEnabled: true,
+      _count: { pushSubscription: 2 },
       profile: {
         id: 'prof1',
         publicName: 'Test',
@@ -684,6 +688,10 @@ describe('GET /users/:id', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.user).toMatchObject({
       id: 'user1',
+      newsletterOptIn: true,
+      emailNotificationsOptIn: false,
+      isPushNotificationEnabled: true,
+      pushSubscriptionCount: 2,
       lastSeenAt: seen,
       profile: {
         id: 'prof1',
@@ -694,6 +702,7 @@ describe('GET /users/:id', () => {
       },
     })
     expect(reply.payload.user.profile).not.toHaveProperty('activitySummary')
+    expect(reply.payload.user).not.toHaveProperty('_count')
   })
 
   it('returns lastSeenAt: null when the user has no profile', async () => {
@@ -701,6 +710,7 @@ describe('GET /users/:id', () => {
       id: 'user2',
       email: 'x@y.z',
       isActive: false,
+      _count: { pushSubscription: 0 },
       profile: null,
     })
 

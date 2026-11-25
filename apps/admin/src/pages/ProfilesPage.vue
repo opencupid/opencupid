@@ -50,10 +50,12 @@ interface AdminProfileDetail extends AdminProfile {
 interface AdminUserDetail {
   id: string
   email: string
-  phonenumber: string | null
   isActive: boolean
   isBlocked: boolean
-  roles: string[]
+  newsletterOptIn: boolean
+  emailNotificationsOptIn: boolean
+  isPushNotificationEnabled: boolean
+  pushSubscriptionCount: number
   createdAt: string
   lastSeenAt: string | null
   language: string
@@ -449,6 +451,21 @@ function onDetailHasFaceChange(hasFace: boolean) {
 }
 
 const userDetail = ref<AdminUserDetail | null>(null)
+
+const userOptIns = computed(() => {
+  const u = userDetail.value
+  if (!u) return []
+  const devices = u.pushSubscriptionCount
+  return [
+    { label: 'Newsletter', value: u.newsletterOptIn },
+    { label: 'Email notifications', value: u.emailNotificationsOptIn },
+    {
+      label: 'Push notifications',
+      value: u.isPushNotificationEnabled,
+      note: `${devices} subscribed device${devices === 1 ? '' : 's'}`,
+    },
+  ]
+})
 const userLoading = ref(false)
 const userError = ref<string | null>(null)
 const editUserActive = ref(false)
@@ -1471,10 +1488,6 @@ onUnmounted(() => {
                     </dd>
                     <dt class="col-sm-4">Email</dt>
                     <dd class="col-sm-8">{{ userDetail.email }}</dd>
-                    <dt class="col-sm-4">Phone</dt>
-                    <dd class="col-sm-8">{{ userDetail.phonenumber || '-' }}</dd>
-                    <dt class="col-sm-4">Roles</dt>
-                    <dd class="col-sm-8">{{ userDetail.roles.join(', ') }}</dd>
                     <dt class="col-sm-4">Active</dt>
                     <dd class="col-sm-8">
                       <div class="form-check">
@@ -1554,6 +1567,28 @@ onUnmounted(() => {
                         </option>
                       </select>
                     </dd>
+                  </dl>
+                  <h6 class="mt-3 mb-2">Opt-in</h6>
+                  <dl
+                    class="row mb-0"
+                    data-testid="user-optins"
+                  >
+                    <template
+                      v-for="optIn in userOptIns"
+                      :key="optIn.label"
+                    >
+                      <dt class="col-sm-4">{{ optIn.label }}</dt>
+                      <dd class="col-sm-8">
+                        <span :class="optIn.value ? 'badge bg-success' : 'badge bg-secondary'">
+                          {{ optIn.value ? 'Yes' : 'No' }}
+                        </span>
+                        <span
+                          v-if="optIn.note"
+                          class="small text-body-secondary ms-2"
+                          >{{ optIn.note }}</span
+                        >
+                      </dd>
+                    </template>
                   </dl>
                 </template>
               </template>

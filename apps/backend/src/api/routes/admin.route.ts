@@ -450,7 +450,9 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           language: true,
           originDomain: true,
           newsletterOptIn: true,
+          emailNotificationsOptIn: true,
           isPushNotificationEnabled: true,
+          _count: { select: { pushSubscription: true } },
           profile: {
             select: {
               id: true,
@@ -466,9 +468,10 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (!user) return sendError(reply, 404, 'User not found')
 
-      const { profile, ...rest } = user
+      const { profile, _count, ...rest } = user
       const flattened = {
         ...rest,
+        pushSubscriptionCount: _count.pushSubscription,
         lastSeenAt: profile?.activitySummary?.lastSeenAt ?? null,
         profile: profile
           ? {
