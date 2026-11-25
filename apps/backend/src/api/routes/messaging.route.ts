@@ -34,6 +34,7 @@ import { broadcastNewMessage } from '@/services/messageBroadcast'
 import {
   ArchiveConversationPayloadSchema,
   EditMessagePayloadSchema,
+  HelpRequestPayloadSchema,
   SendMessagePayloadSchema,
   SendVoiceMessagePayloadSchema,
 } from '@zod/messaging/messaging.dto'
@@ -119,10 +120,15 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   const profileService = ProfileService.getInstance()
 
   /*
-   * Owns Phases 1 + 2 shared by /message and /voice: the resolve → classify →
+   * Owns Phases 1 + 2 shared by /message, /voice and /help: the resolve → classify →
    * accept → send transaction, plus the post-tx summary lookup, match-seen
    * side-effect, DTO mapping, and response assembly. Throws on 'blocked' so
    * the handler's catch maps to a 403.
+   *
+   * Messages to the system profile (ADMIN_PROFILE_ID) always go through: they
+   * bypass the sender's quarantine and the one-unanswered-message limit, which
+   * protect members from each other. Every new account is quarantined, and must
+   * still be able to reach the admins.
    */
   async function sendAndBuildResponse(input: {
     senderProfileId: string
@@ -145,8 +151,11 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     const { senderProfileId, recipientProfileId, content, messageType, attachment, imageIds } =
       input
 
+    const isToSystemProfile = recipientProfileId === appConfig.ADMIN_PROFILE_ID
+
     // Pre-tx: is the sender currently quarantined? Drives PENDING vs INITIATED status.
-    const senderIsQuarantined = await trustService.hasTrustFlag(senderProfileId)
+    const senderIsQuarantined =
+      !isToSystemProfile && (await trustService.hasTrustFlag(senderProfileId))
 
     const { convoId, message, isDuplicate, outcome } = await fastify.prisma.$transaction(
       async (tx) => {
@@ -161,7 +170,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           wasCreated,
           senderProfileId,
           senderIsQuarantined,
-          false
+          isToSystemProfile
         )
 
         if (outcome === 'blocked') {
@@ -223,7 +232,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       throw new Error('Conversation summary not found')
     }
 
-    const messageDTO = mapMessageToDTO(message)
+    const messageDTO = mapMessageToDTO(message, recipientProfileId)
     const messageWithMine = mapMessageToDTO(message, senderProfileId)
 
     const response: SendMessageResponse = {
@@ -556,6 +565,50 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
             recipientProfileId: profileId,
             messageDTO,
           })
+        }
+      } catch (error) {
+        if (error instanceof MessagingError) {
+          return sendError(reply, MESSAGING_ERROR_STATUS[error.code], error.message)
+        }
+        throw error
+      }
+    }
+  )
+
+  /**
+   * POST /help
+   * Sends a help request from the onboarding wizard to the system profile
+   * (ADMIN_PROFILE_ID) as a text message. Notifies it like any new message.
+   * @body {string} content - Message text
+   * @returns {SendMessageResponse} { conversation, message }
+   */
+  fastify.post(
+    '/help',
+    { onRequest: [fastify.authenticate], config: rateLimitConfig(fastify, '1 minute', 5) },
+    async (req, reply) => {
+      const senderProfileId = req.session.profileId
+      if (!senderProfileId) return sendError(reply, 401, 'Sender ID not found.')
+
+      const body = HelpRequestPayloadSchema.safeParse(req.body)
+      if (!body.success) return sendError(reply, 400, 'Invalid parameters')
+
+      const recipientProfileId = appConfig.ADMIN_PROFILE_ID
+      if (!recipientProfileId) {
+        return sendError(reply, 503, 'ADMIN_PROFILE_ID is not configured')
+      }
+
+      try {
+        const { response, messageDTO, outcome, isDuplicate } = await sendAndBuildResponse({
+          senderProfileId,
+          recipientProfileId,
+          content: body.data.content,
+          messageType: 'text/plain',
+        })
+
+        reply.code(200).send(response)
+
+        if (!isDuplicate && outcome !== 'pending') {
+          await fireNewMessageNotifications({ senderProfileId, recipientProfileId, messageDTO })
         }
       } catch (error) {
         if (error instanceof MessagingError) {

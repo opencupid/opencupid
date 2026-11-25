@@ -37,6 +37,7 @@ const conversationSummaryInclude = {
       // sender as a participant until the trust flag clears.
       profileA: {
         include: {
+          user: { select: { email: true } },
           profileImages: {
             include: { image: true },
             orderBy: { position: 'asc' as const },
@@ -46,6 +47,7 @@ const conversationSummaryInclude = {
       },
       profileB: {
         include: {
+          user: { select: { email: true } },
           profileImages: {
             include: { image: true },
             orderBy: { position: 'asc' as const },
@@ -77,6 +79,7 @@ export const messageWithSenderInclude = {
     select: {
       id: true,
       publicName: true,
+      user: { select: { email: true } },
       profileImages: {
         include: { image: true },
         orderBy: { position: 'asc' },
@@ -828,21 +831,29 @@ Checks if the sender is allowed to reply to a conversation.
 | -------------------------------------------------- | ------------------------ |
 | status = `ACCEPTED`                                | ✅ Yes                    |
 | status = `INITIATED`, sender ≠ initiator           | ✅ Yes                    |
+| status = `INITIATED`, recipient = system profile   | ✅ Yes (see canFollowUp)  |
 | status = `INITIATED`, sender = initiator           | ❌ No (already initiated) |
 | status = `INITIATED`, initiatorProfileId = null     | ❌ No (deleted account)   |
 | status = `BLOCKED` / `ARCHIVED` / anything else    | ❌ No                     |
 */
 export function canSendMessageInConversation(
-  conversation: Pick<Conversation, 'status' | 'initiatorProfileId'> | null,
+  conversation: Pick<
+    Conversation,
+    'status' | 'initiatorProfileId' | 'profileAId' | 'profileBId'
+  > | null,
   senderProfileId: string
 ): boolean {
   if (!conversation) return true // no conversation yet → allowed to start one
+
+  const recipientProfileId =
+    conversation.profileAId === senderProfileId ? conversation.profileBId : conversation.profileAId
 
   return (
     conversation.status === 'ACCEPTED' ||
     (conversation.status === 'INITIATED' &&
       conversation.initiatorProfileId != null &&
-      conversation.initiatorProfileId !== senderProfileId)
+      (conversation.initiatorProfileId !== senderProfileId ||
+        recipientProfileId === appConfig.ADMIN_PROFILE_ID))
   )
 }
 

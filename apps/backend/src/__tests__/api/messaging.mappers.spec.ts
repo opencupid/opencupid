@@ -104,6 +104,65 @@ describe('messaging mappers', () => {
     expect(summary.lastMessage?.isMine).toBe(true)
   })
 
+  describe('name of a profile that has not finished onboarding', () => {
+    const nameless = {
+      id: 'p2',
+      publicName: '',
+      user: { email: 'new@example.org' },
+      profileImages: [],
+      isCallable: true,
+    }
+    const named = { ...nameless, publicName: 'Them' }
+    const summaryFor = (viewer: string, partner: object) =>
+      mapConversationParticipantToSummary(
+        {
+          ...participant,
+          profileId: viewer,
+          conversation: {
+            ...participant.conversation,
+            profileAId: viewer,
+            profileA: { ...profileMe, id: viewer },
+            profileB: partner,
+          },
+        } as any,
+        viewer
+      )
+    const messageFrom = (sender: object, viewer?: string) =>
+      mapMessageToDTO({ ...msg, senderId: 'p2', sender } as any, viewer)
+
+    it('is the email address for the system profile', () => {
+      expect(messageFrom(nameless, 'admin-profile').sender.publicName).toBe('new@example.org')
+      expect(summaryFor('admin-profile', nameless).partnerProfile.publicName).toBe(
+        'new@example.org'
+      )
+    })
+
+    it('stays the public name once there is one', () => {
+      expect(messageFrom(named, 'admin-profile').sender.publicName).toBe('Them')
+      expect(summaryFor('admin-profile', named).partnerProfile.publicName).toBe('Them')
+    })
+
+    it('never exposes the email address to anyone else', () => {
+      const payloads = [
+        messageFrom(nameless, 'p1'),
+        messageFrom(nameless),
+        summaryFor('p1', nameless),
+        summaryFor('admin-profile', named),
+      ]
+      expect(JSON.stringify(payloads)).not.toContain('new@example.org')
+    })
+
+    it('never exposes it when no system profile is configured', () => {
+      const previous = mockAppConfig.ADMIN_PROFILE_ID
+      mockAppConfig.ADMIN_PROFILE_ID = undefined
+      try {
+        expect(messageFrom(nameless).sender.publicName).toBe('')
+      } finally {
+        mockAppConfig.ADMIN_PROFILE_ID = previous
+      }
+    })
+  })
+
   describe('isCallable mapping', () => {
     it('returns isCallable true when partner profile and participant are callable', () => {
       const summary = mapConversationParticipantToSummary(participant, 'p1')

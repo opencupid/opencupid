@@ -10,6 +10,7 @@ export const appConfigSchema = z.object({
   VAPID_PUBLIC_KEY: z.string().default(''),
   SENTRY_DSN: z.string().default(''),
   SITE_NAME: z.string().default('OpenCupid'),
+  EMAIL_REPLY_TO: z.string().default(''),
   // Deliberately unvalidated: nothing parses window.__APP_CONFIG__ through
   // this schema at runtime, so a check here would never run. normalizeLocale()
   // bounds the value where it is used instead.

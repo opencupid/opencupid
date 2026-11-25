@@ -31,10 +31,6 @@ vi.mock('@/lib/logger', () => ({
   logger: { error: loggerErrorMock, warn: vi.fn(), info: vi.fn() },
 }))
 
-vi.mock('@/lib/appconfig', () => ({
-  appConfig: { ADMIN_PROFILE_ID: 'system-profile' },
-}))
-
 vi.mock('@/services/messaging.service', () => ({
   MessageService: {
     getInstance: () => ({ promoteConversation: promoteConversationMock }),
@@ -758,17 +754,6 @@ describe('ProfileTrustService', () => {
 
     it('sweep: sends nothing while the sender is still flagged', async () => {
       txFlagFindFirst.mockResolvedValue({ id: 'flag' })
-
-      await svc.promotePendingsIfClear('sender')
-
-      expect(notifyProfileMock).not.toHaveBeenCalled()
-    })
-
-    it('skips a release whose recipient is the system sender', async () => {
-      txConversationFindMany.mockResolvedValue([
-        { id: 'c1', profileAId: 'sender', profileBId: 'system-profile' },
-      ])
-      promoteConversationMock.mockResolvedValue(true)
 
       await svc.promotePendingsIfClear('sender')
 

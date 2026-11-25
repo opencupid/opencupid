@@ -312,6 +312,15 @@
     "dating_mode_switch": "Párkereső mód",
     "dating_preferences_title": "Kit keresek?",
     "gender_subtitle": "Így azonosítom magam",
+    "help": {
+      "button_hint": "Segítség",
+      "close": "Bezárás",
+      "contact": "E-mailben is elérsz minket:",
+      "error": "Valami hiba történt. Kérjük, próbáld újra.",
+      "prompt": "Elakadtál? Írd meg, mi nem sikerült.",
+      "send": "Küldés",
+      "sent": "Köszönjük, megkaptuk az üzenetedet!"
+    },
     "interests_hint": "Kezdj el beírni egy érdeklődési kört, majd válaszd ki a listából.  Több címkét is hozzáadhatsz.",
     "interests_popular_heading": "Mások itt ezekre kíváncsiak:",
     "interests_title": "Mi érdekel?",

@@ -308,6 +308,15 @@
     "dating_mode_switch": "Dating mode ON?",
     "dating_preferences_title": "Who am I looking for?",
     "gender_subtitle": "I identify as...",
+    "help": {
+      "button_hint": "Get help",
+      "close": "Close",
+      "contact": "You can also contact us at",
+      "error": "Something went wrong. Please try again.",
+      "prompt": "Got stuck here? Please tell us what went wrong.",
+      "send": "Send",
+      "sent": "Thanks, we got your message!"
+    },
     "interests_hint": "Start typing to search for tags. You can add new tags if you don't find what you're looking for.",
     "interests_popular_heading": "What other people here are into:",
     "interests_title": "I'm into...",
