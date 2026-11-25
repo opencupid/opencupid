@@ -129,6 +129,13 @@ watch(
           >
         </li>
         <li class="nav-item">
+          <router-link
+            class="nav-link"
+            to="/statistics"
+            >Statistics</router-link
+          >
+        </li>
+        <li class="nav-item">
           <a
             class="nav-link"
             href="/bull-board/"
