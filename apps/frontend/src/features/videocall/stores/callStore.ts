@@ -101,8 +101,8 @@ export const useCallStore = defineStore('call', () => {
     reset()
   }
 
-  function handleCallCancelled(_payload: { conversationId: string }) {
-    if (status.value !== 'ringing') return
+  function handleCallCancelled(payload: { conversationId: string }) {
+    if (status.value !== 'ringing' || payload.conversationId !== conversationId.value) return
     reset()
   }
 

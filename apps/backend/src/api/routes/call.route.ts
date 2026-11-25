@@ -40,11 +40,19 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
       if (!body.success) return sendError(reply, 400, 'Invalid parameters')
 
       try {
-        const { roomName, calleeProfileId, callerPublicName } = await fastify.prisma.$transaction(
-          async (tx) => {
+        const { roomName, calleeProfileId, callerPublicName, isMutedForCallee } =
+          await fastify.prisma.$transaction(async (tx) => {
             return await callService.initiateCall(tx, body.data.conversationId, profileId)
-          }
-        )
+          })
+
+        const response = {
+          success: true,
+          conversationId: body.data.conversationId,
+          roomName,
+        }
+
+        // The callee is not alerted; to the caller it looks like an unanswered call.
+        if (isMutedForCallee) return reply.code(200).send(response)
 
         // Notify callee via WS, fall back to push notification if offline
         const isWsBroadcasted = broadcastToProfile(fastify, calleeProfileId, {
@@ -64,11 +72,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
             })
         }
 
-        return reply.code(200).send({
-          success: true,
-          conversationId: body.data.conversationId,
-          roomName,
-        })
+        return reply.code(200).send(response)
       } catch (error: any) {
         fastify.log.error(error)
         return sendError(reply, 403, error?.error || 'Failed to initiate call')

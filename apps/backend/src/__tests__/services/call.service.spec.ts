@@ -32,6 +32,7 @@ describe('CallService', () => {
               {
                 profileId: 'callee',
                 isCallable: true,
+                isArchived: true,
                 profile: { publicName: 'Bob', isCallable: true },
               },
             ],
@@ -42,6 +43,7 @@ describe('CallService', () => {
 
       const result = await service.initiateCall(tx, 'c1', 'caller')
       expect(result.roomName).toBeDefined()
+      expect(result.isMutedForCallee).toBe(true)
       expect(result.calleeProfileId).toBe('callee')
       expect(result.callerPublicName).toBe('Alice')
       expect(tx.conversation.update).toHaveBeenCalled()
@@ -105,6 +107,7 @@ describe('CallService', () => {
           findFirst: vi.fn().mockResolvedValue(null), // no recent duplicate
           create: vi.fn().mockResolvedValue({ id: 'm1' }),
         },
+        conversationParticipant: { updateMany: vi.fn() },
       }
       const result = await service.insertMissedCallMessage(tx, 'c1', 'caller')
       expect(tx.message.create).toHaveBeenCalledWith(
@@ -118,6 +121,11 @@ describe('CallService', () => {
           include: expect.objectContaining({ attachment: true, sender: expect.any(Object) }),
         })
       )
+      // Brings the conversation back for the caller only.
+      expect(tx.conversationParticipant.updateMany).toHaveBeenCalledWith({
+        where: { conversationId: 'c1', profileId: 'caller', isArchived: true },
+        data: { isArchived: false },
+      })
       expect(result.message.id).toBe('m1')
       expect(result.isDuplicate).toBe(false)
     })

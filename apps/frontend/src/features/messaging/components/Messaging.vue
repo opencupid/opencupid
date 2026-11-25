@@ -40,6 +40,7 @@ const {
   canLoadMoreConversations,
   isLoadingMoreConversations,
   handleMatchSelect,
+  setArchived,
   handleProfileSelect,
   matches,
   haveMatches,
@@ -118,6 +119,7 @@ function handleSelectConvo(convo: ConversationSummary) {
           :conversations="conversations"
           :activeConversation="activeConversation"
           @convo:select="handleSelectConvo"
+          @convo:archive="setArchived"
         />
       </div>
     </div>

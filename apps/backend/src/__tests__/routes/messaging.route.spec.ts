@@ -8,6 +8,7 @@ let fastify: MockFastify
 let reply: MockReply
 let mockMessageService: any
 let mockWebPushService: any
+let webPushConfigured = false
 let mockNotifierService: any
 let mockTrustService: any
 let mockProfileService: any
@@ -50,7 +51,10 @@ vi.mock('../../services/messaging.service', () => {
 })
 
 vi.mock('../../services/webpush.service', () => ({
-  WebPushService: { getInstance: () => mockWebPushService, isWebPushConfigured: () => false },
+  WebPushService: {
+    getInstance: () => mockWebPushService,
+    isWebPushConfigured: () => webPushConfigured,
+  },
 }))
 
 vi.mock('../../services/notifier.service', () => ({
@@ -133,6 +137,9 @@ beforeEach(async () => {
     getInboxConversationSummary: vi.fn(),
     hasUnreadConversations: vi.fn().mockResolvedValue(false),
     markConversationRead: vi.fn(),
+    archiveConversation: vi.fn(),
+    isConversationArchived: vi.fn().mockResolvedValue(false),
+    unarchiveConversation: vi.fn(),
     getConversationSummary: vi.fn(),
     resolveConversation: vi.fn(),
     acceptConversationOnReply: vi.fn(),
@@ -146,7 +153,8 @@ beforeEach(async () => {
     getProfilePublicById: vi.fn(),
     getProfileById: vi.fn(),
   }
-  mockWebPushService = { send: vi.fn() }
+  mockWebPushService = { send: vi.fn().mockResolvedValue(undefined) }
+  webPushConfigured = false
   mockNotifierService = (await import('../../services/notifier.service')).notifierService
   fastify.prisma = {
     $transaction: vi.fn(async (fn: any) => fn(fastify.prisma)),
@@ -248,6 +256,52 @@ describe('POST /conversations/:id/mark-read', () => {
   })
 })
 
+describe('PATCH /conversations/:id/archived', () => {
+  const id = 'ck1234567890abcd12345678'
+  const call = (session: any, body: any) =>
+    fastify.routes['PATCH /conversations/:id/archived'](
+      { session, params: { id }, body } as any,
+      reply as any
+    )
+
+  it('returns 401 when session missing', async () => {
+    await call({}, { isArchived: true, lastMessageAt: null })
+    expect(reply.statusCode).toBe(401)
+  })
+
+  it('returns 400 on an invalid body', async () => {
+    await call({ profileId: 'p1' }, { isArchived: 'yes' })
+    expect(reply.statusCode).toBe(400)
+    expect(mockMessageService.archiveConversation).not.toHaveBeenCalled()
+  })
+
+  it('archives and returns the summary with the inbox-wide unread flag', async () => {
+    mockMessageService.getInboxConversationSummary.mockResolvedValue({})
+    await call({ profileId: 'p1' }, { isArchived: true, lastMessageAt: '2026-01-02T03:04:05.678Z' })
+    expect(mockMessageService.archiveConversation).toHaveBeenCalledWith(
+      id,
+      'p1',
+      new Date('2026-01-02T03:04:05.678Z')
+    )
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload.conversation.id).toBe('summary')
+    expect(reply.payload.hasUnread).toBe(false)
+  })
+
+  it('unarchives', async () => {
+    mockMessageService.getInboxConversationSummary.mockResolvedValue({})
+    await call({ profileId: 'p1' }, { isArchived: false, lastMessageAt: null })
+    expect(mockMessageService.unarchiveConversation).toHaveBeenCalledWith(id, 'p1')
+    expect(mockMessageService.archiveConversation).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the conversation is not in the inbox of the viewer', async () => {
+    mockMessageService.getInboxConversationSummary.mockResolvedValue(null)
+    await call({ profileId: 'p1' }, { isArchived: true, lastMessageAt: null })
+    expect(reply.statusCode).toBe(404)
+  })
+})
+
 describe('GET /conversations', () => {
   it('returns 404 when session missing', async () => {
     const handler = fastify.routes['GET /conversations']
@@ -289,6 +343,7 @@ describe('GET /conversations', () => {
   it('round-trips the cursor between response and query', async () => {
     const handler = fastify.routes['GET /conversations']
     const cursor = {
+      isArchived: true,
       updatedAt: new Date('2026-01-02T03:04:05.678Z'),
       conversationId: 'ck1234567890abcd12345678',
     }
@@ -299,7 +354,7 @@ describe('GET /conversations', () => {
     })
     await handler({ session: { profileId: 'p1' } } as any, reply as any)
     expect(reply.payload.hasMore).toBe(true)
-    expect(reply.payload.nextCursor).toBe('2026-01-02T03:04:05.678Z_ck1234567890abcd12345678')
+    expect(reply.payload.nextCursor).toBe('1_2026-01-02T03:04:05.678Z_ck1234567890abcd12345678')
 
     await handler(
       { session: { profileId: 'p1' }, query: { cursor: reply.payload.nextCursor } } as any,
@@ -308,15 +363,17 @@ describe('GET /conversations', () => {
     expect(mockMessageService.listConversationsForProfile).toHaveBeenLastCalledWith('p1', cursor)
   })
 
-  it.each(['garbage', 'not-a-date_ck1234567890abcd12345678', '2026-01-02T03:04:05.678Z_nope'])(
-    'returns 400 for malformed cursor %s',
-    async (cursor) => {
-      const handler = fastify.routes['GET /conversations']
-      await handler({ session: { profileId: 'p1' }, query: { cursor } } as any, reply as any)
-      expect(reply.statusCode).toBe(400)
-      expect(mockMessageService.listConversationsForProfile).not.toHaveBeenCalled()
-    }
-  )
+  it.each([
+    'garbage',
+    '0_not-a-date_ck1234567890abcd12345678',
+    '0_2026-01-02T03:04:05.678Z_nope',
+    '2_2026-01-02T03:04:05.678Z_ck1234567890abcd12345678',
+  ])('returns 400 for malformed cursor %s', async (cursor) => {
+    const handler = fastify.routes['GET /conversations']
+    await handler({ session: { profileId: 'p1' }, query: { cursor } } as any, reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(mockMessageService.listConversationsForProfile).not.toHaveBeenCalled()
+  })
 
   it('returns 500 when service throws', async () => {
     const handler = fastify.routes['GET /conversations']
@@ -464,6 +521,54 @@ describe('POST /message', () => {
       expect.objectContaining({ senderId: 'p1', path: '/inbox' })
     )
   })
+
+  it.each([
+    { archived: false, notified: 1 },
+    { archived: true, notified: 0 },
+  ])(
+    'offline recipient, archived=$archived: push and email sent $notified times',
+    async ({ archived, notified }) => {
+      webPushConfigured = true
+      const { broadcastToProfile } = await import('../../utils/wsUtils')
+      ;(broadcastToProfile as any).mockReturnValue(false)
+
+      const handler = fastify.routes['POST /message']
+      mockMessageService.resolveConversation.mockResolvedValue({
+        convo: {
+          id: 'conv1',
+          status: 'ACCEPTED',
+          initiatorProfileId: 'other',
+          profileAId: 'p1',
+          profileBId: 'ck1234567890abcd12345678',
+        },
+        wasCreated: false,
+      })
+      mockMessageService.sendMessage.mockResolvedValue({
+        message: { id: 'm1', conversationId: 'conv1', senderId: 'p1' },
+        isDuplicate: false,
+      })
+      mockMessageService.getConversationSummary.mockResolvedValue({
+        conversation: { status: 'ACTIVE' },
+      })
+
+      mockMessageService.isConversationArchived.mockResolvedValue(archived)
+      mockNotifierService.notifyProfile.mockClear()
+
+      await handler({ session: { profileId: 'p1' }, body: validBody } as any, reply as any)
+
+      expect(broadcastToProfile).toHaveBeenCalledWith(
+        fastify,
+        'ck1234567890abcd12345678',
+        expect.objectContaining({ type: 'ws:new_message' })
+      )
+      expect(mockMessageService.isConversationArchived).toHaveBeenCalledWith(
+        'conv1',
+        'ck1234567890abcd12345678'
+      )
+      expect(mockWebPushService.send).toHaveBeenCalledTimes(notified)
+      expect(mockNotifierService.notifyProfile).toHaveBeenCalledTimes(notified)
+    }
+  )
 
   it('skips broadcast and notification when isDuplicate', async () => {
     const { broadcastToProfile } = await import('../../utils/wsUtils')

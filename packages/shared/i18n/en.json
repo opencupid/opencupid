@@ -246,6 +246,8 @@
     "edit_no_longer_possible": "They replied in the meantime, so the message can no longer be edited. Your text is kept in the message box.",
     "edited": "edited",
     "editing_message": "Editing message",
+    "hide": "Hide",
+    "hide_hint": "Hide this conversation",
     "loading_older_messages": "Loading older messages…",
     "message_input_placeholder": "Type your message here...",
     "message_sent_success": "Message sent successfully!",
@@ -261,6 +263,8 @@
     "send_mode_click": "Click to send",
     "send_mode_press_enter": "Press enter to send",
     "their_turn": "Their turn",
+    "unhide": "Unhide",
+    "unhide_hint": "Unhide this conversation",
     "unknown_sender": "Someone",
     "voice": {
       "cancel": "Cancel",

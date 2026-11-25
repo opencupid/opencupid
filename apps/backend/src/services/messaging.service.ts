@@ -147,9 +147,24 @@ function inboxVisibleConversationWhere(viewerProfileId: string): Prisma.Conversa
   }
 }
 
+/**
+ * Writing in an archived conversation brings it back for the sender. The
+ * recipient's archived flag stands: a message doesn't undo their choice.
+ */
+export async function unarchiveForSender(
+  tx: Prisma.TransactionClient,
+  conversationId: string,
+  senderProfileId: string
+): Promise<void> {
+  await tx.conversationParticipant.updateMany({
+    where: { conversationId, profileId: senderProfileId, isArchived: true },
+    data: { isArchived: false },
+  })
+}
+
 export const CONVERSATION_PAGE_SIZE = 20
 
-export type ConversationCursor = { updatedAt: Date; conversationId: string }
+export type ConversationCursor = { isArchived: boolean; updatedAt: Date; conversationId: string }
 
 export class MessageService {
   private static instance: MessageService
@@ -201,10 +216,11 @@ export class MessageService {
   }
 
   /**
-   * Lists one page of conversations for a given profile, most recently active first.
+   * Lists one page of conversations for a given profile, most recently active
+   * first, followed by the ones the profile has archived.
    *
-   * Keyset-paginated on (conversation.updatedAt, conversationId) rather than a
-   * row cursor: conversations jump to the top whenever a message arrives, and a
+   * Keyset-paginated on (isArchived, conversation.updatedAt, conversationId)
+   * rather than a row cursor: conversations jump to the top whenever a message arrives, and a
    * value cursor keeps the next page anchored where the previous one ended even
    * if the last row has since moved.
    * @param profileId - The ID of the profile to list conversations for.
@@ -218,18 +234,27 @@ export class MessageService {
         ...(cursor
           ? {
               OR: [
-                { conversation: { updatedAt: { lt: cursor.updatedAt } } },
                 {
+                  isArchived: cursor.isArchived,
+                  conversation: { updatedAt: { lt: cursor.updatedAt } },
+                },
+                {
+                  isArchived: cursor.isArchived,
                   conversation: { updatedAt: cursor.updatedAt },
                   conversationId: { lt: cursor.conversationId },
                 },
+                ...(cursor.isArchived ? [] : [{ isArchived: true }]),
               ],
             }
           : {}),
       },
 
       include: conversationSummaryInclude,
-      orderBy: [{ conversation: { updatedAt: 'desc' } }, { conversationId: 'desc' }],
+      orderBy: [
+        { isArchived: 'asc' },
+        { conversation: { updatedAt: 'desc' } },
+        { conversationId: 'desc' },
+      ],
       take: CONVERSATION_PAGE_SIZE + 1,
     })
 
@@ -238,7 +263,11 @@ export class MessageService {
     const last = conversations[conversations.length - 1]
     const nextCursor: ConversationCursor | null =
       hasMore && last
-        ? { updatedAt: last.conversation.updatedAt, conversationId: last.conversationId }
+        ? {
+            isArchived: last.isArchived,
+            updatedAt: last.conversation.updatedAt,
+            conversationId: last.conversationId,
+          }
         : null
 
     return { conversations, nextCursor, hasMore }
@@ -246,7 +275,8 @@ export class MessageService {
 
   /**
    * Whether the profile has any inbox-visible conversation whose latest message
-   * came from someone else after the profile last read it. Covers the whole
+   * came from someone else after the profile last read it. Archived
+   * conversations are muted and don't count. Covers the whole
    * inbox, independent of which pages of the conversation list were loaded.
    */
   async hasUnreadConversations(profileId: string): Promise<boolean> {
@@ -263,6 +293,7 @@ export class MessageService {
         LIMIT 1
       ) latest ON TRUE
       WHERE cp."profileId" = ${profileId}
+        AND NOT cp."isArchived"
         AND latest."senderId" <> ${profileId}
         AND (cp."lastReadAt" IS NULL OR cp."lastReadAt" < latest."createdAt")
     `
@@ -337,6 +368,46 @@ export class MessageService {
         },
       },
       data: { lastReadAt: new Date() },
+    })
+  }
+
+  /**
+   * Archives a conversation for one participant, marking it as read.
+   *
+   * No-op when the conversation holds a message newer than the last one the
+   * profile saw: their list is stale, and archiving would mark that
+   * message as read unseen.
+   * @param lastMessageAt - createdAt of the last message the profile saw, null if none.
+   */
+  async archiveConversation(
+    conversationId: string,
+    profileId: string,
+    lastMessageAt: Date | null
+  ): Promise<void> {
+    await prisma.conversationParticipant.updateMany({
+      where: {
+        conversationId,
+        profileId,
+        conversation: {
+          messages: { none: lastMessageAt ? { createdAt: { gt: lastMessageAt } } : {} },
+        },
+      },
+      data: { isArchived: true, lastReadAt: new Date() },
+    })
+  }
+
+  async isConversationArchived(conversationId: string, profileId: string): Promise<boolean> {
+    const archived = await prisma.conversationParticipant.findFirst({
+      where: { conversationId, profileId, isArchived: true },
+      select: { id: true },
+    })
+    return archived !== null
+  }
+
+  async unarchiveConversation(conversationId: string, profileId: string): Promise<void> {
+    await prisma.conversationParticipant.updateMany({
+      where: { conversationId, profileId },
+      data: { isArchived: false },
     })
   }
 
@@ -474,6 +545,8 @@ export class MessageService {
         include: messageWithSenderInclude,
       })
     }
+
+    await unarchiveForSender(tx, convoId, senderProfileId)
 
     // Bump parent conversation so inbox ordering (listConversationsForProfile
     // orders by updatedAt DESC) reflects the new activity. Prisma @updatedAt

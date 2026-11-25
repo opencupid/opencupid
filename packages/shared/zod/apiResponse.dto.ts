@@ -86,6 +86,10 @@ export type MarkConversationReadResponse = ApiSuccess<{
   conversation: ConversationSummary
   hasUnread: boolean
 }>
+export type ArchiveConversationResponse = ApiSuccess<{
+  conversation: ConversationSummary
+  hasUnread: boolean
+}>
 export type ConversationByProfileResponse = ApiSuccess<{ conversation: ConversationOrDraft }>
 
 export type SendMessageResponse = ApiSuccess<{
