@@ -20,6 +20,12 @@ vi.mock('../../services/webpush.service', () => ({
   },
 }))
 
+vi.mock('../../services/messaging.service', () => ({
+  MessageService: {
+    getInstance: () => ({ isConversationArchived: vi.fn().mockResolvedValue(false) }),
+  },
+}))
+
 vi.mock('../../utils/wsUtils', () => ({
   broadcastToProfile: vi.fn(() => true),
 }))

@@ -103,6 +103,12 @@ const MessageDTOSchema = MessageInConversationSchema.extend({
 })
 export type MessageDTO = z.infer<typeof MessageDTOSchema>
 
+// A message pushed to a participant's open sessions.
+export type IncomingMessageDTO = MessageDTO & {
+  // Whether this participant has archived (muted) the conversation.
+  isArchived: boolean
+}
+
 const MessageInConversationSummarySchema = MessageSchema.pick({
   content: true,
   messageType: true,

@@ -23,7 +23,7 @@ import {
 import { MessageService, MessagingError, MessagingErrorCodes } from '@/services/messaging.service'
 import { computeSendOutcome } from '@/services/messaging.stateMachine'
 import { mapMessageToDTO } from '../mappers/messaging.mappers'
-import { broadcastToProfile } from '@/utils/wsUtils'
+import { broadcastNewMessage } from '@/services/messageBroadcast'
 import { ProfileTrustService } from '@/services/profileTrust.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageService } from '@/services/image.service'
@@ -822,17 +822,14 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
         // Admin broadcasts intentionally do NOT fall back to push/email — that's
         // a separate product decision (#1377 follow-up). Skip on duplicate (the
         // dedup window in sendMessage already returned the prior message row).
-        // Pre-check active sockets to avoid log spam from broadcastToProfile,
+        // Pre-check active sockets to avoid log spam from the broadcast,
         // which warns on every offline recipient — bulk-sends to mostly-offline
         // audiences would otherwise generate hundreds of warning lines.
         // Failures here must not roll back the persisted send.
         const hasActiveSockets = (fastify.connections?.get(recipientProfileId)?.size ?? 0) > 0
         if (!isDuplicate && hasActiveSockets) {
           try {
-            broadcastToProfile(fastify, recipientProfileId, {
-              type: 'ws:new_message',
-              payload: mapMessageToDTO(message),
-            })
+            await broadcastNewMessage(fastify, recipientProfileId, mapMessageToDTO(message))
           } catch (err) {
             fastify.log.warn({ err, recipientProfileId }, 'Admin send-message: WS broadcast failed')
           }

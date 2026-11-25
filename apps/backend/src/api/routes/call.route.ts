@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { rateLimitConfig, sendError } from '../helpers'
 import { CallService } from '@/services/call.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { broadcastNewMessage } from '@/services/messageBroadcast'
 import { mapMessageToDTO } from '@/api/mappers/messaging.mappers'
 import { WebPushService } from '@/services/webpush.service'
 
@@ -172,10 +173,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           const messageDTO = mapMessageToDTO(missedMsg)
 
           for (const p of conversation.participants) {
-            broadcastToProfile(fastify, p.profileId, {
-              type: 'ws:new_message',
-              payload: messageDTO,
-            })
+            await broadcastNewMessage(fastify, p.profileId, messageDTO)
           }
         }
 
@@ -234,10 +232,7 @@ const callRoutes: FastifyPluginAsync = async (fastify) => {
           const messageDTO = mapMessageToDTO(cancelMissedMsg)
 
           for (const p of conversation.participants) {
-            broadcastToProfile(fastify, p.profileId, {
-              type: 'ws:new_message',
-              payload: messageDTO,
-            })
+            await broadcastNewMessage(fastify, p.profileId, messageDTO)
           }
         }
 

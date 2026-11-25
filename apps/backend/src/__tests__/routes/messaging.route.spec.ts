@@ -354,7 +354,7 @@ describe('GET /conversations', () => {
     })
     await handler({ session: { profileId: 'p1' } } as any, reply as any)
     expect(reply.payload.hasMore).toBe(true)
-    expect(reply.payload.nextCursor).toBe('1_2026-01-02T03:04:05.678Z_ck1234567890abcd12345678')
+    expect(reply.payload.nextCursor).toEqual(expect.any(String))
 
     await handler(
       { session: { profileId: 'p1' }, query: { cursor: reply.payload.nextCursor } } as any,
@@ -365,9 +365,10 @@ describe('GET /conversations', () => {
 
   it.each([
     'garbage',
-    '0_not-a-date_ck1234567890abcd12345678',
-    '0_2026-01-02T03:04:05.678Z_nope',
-    '2_2026-01-02T03:04:05.678Z_ck1234567890abcd12345678',
+    '{}',
+    '{"isArchived":1,"updatedAt":"2026-01-02T03:04:05.678Z","conversationId":"ck1234567890abcd12345678"}',
+    '{"isArchived":false,"updatedAt":"not-a-date","conversationId":"ck1234567890abcd12345678"}',
+    '{"isArchived":false,"updatedAt":"2026-01-02T03:04:05.678Z","conversationId":"nope"}',
   ])('returns 400 for malformed cursor %s', async (cursor) => {
     const handler = fastify.routes['GET /conversations']
     await handler({ session: { profileId: 'p1' }, query: { cursor } } as any, reply as any)

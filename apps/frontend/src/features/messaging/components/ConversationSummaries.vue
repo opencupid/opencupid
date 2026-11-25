@@ -64,10 +64,11 @@ function onSelect(convo: ConversationSummary) {
               >
             </div>
           </div>
-          <button
+          <BButton
             v-if="!convo.isAdminInitiator"
-            type="button"
-            class="archive-button btn btn-sm btn-secondary flex-shrink-0 ms-2"
+            size="sm"
+            variant="secondary"
+            class="archive-button flex-shrink-0 ms-2"
             :title="$t(convo.isArchived ? 'messaging.unhide_hint' : 'messaging.hide_hint')"
             :aria-label="$t(convo.isArchived ? 'messaging.unhide_hint' : 'messaging.hide_hint')"
             @click.stop="$emit('convo:archive', convo, !convo.isArchived)"
@@ -83,7 +84,7 @@ function onSelect(convo: ConversationSummary) {
               v-else
               class="archive-icon svg-icon"
             />
-          </button>
+          </BButton>
           <small
             v-if="turnOf(convo) === 'mine'"
             class="turn-badge badge bg-danger"

@@ -103,6 +103,7 @@ vi.mock('deepl-node', () => {
 })
 
 const mockMessageService = vi.hoisted(() => ({
+  isConversationArchived: vi.fn().mockResolvedValue(false),
   resolveConversation: vi.fn(),
   acceptConversationOnReply: vi.fn(),
   promoteConversation: vi.fn(),

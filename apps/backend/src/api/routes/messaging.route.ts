@@ -5,6 +5,7 @@ import {
   MessageService,
   MessagingError,
   MessagingErrorCodes,
+  type ConversationCursor,
   type MessagingErrorCode,
 } from '@/services/messaging.service'
 import { computeSendOutcome, type SendOutcome } from '@/services/messaging.stateMachine'
@@ -29,6 +30,7 @@ import type {
 import type { ConversationDraftSummary } from '@zod/messaging/messaging.dto'
 import { ProfileService } from '@/services/profile.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { broadcastNewMessage } from '@/services/messageBroadcast'
 import {
   ArchiveConversationPayloadSchema,
   EditMessagePayloadSchema,
@@ -55,18 +57,29 @@ const MessageListQuerySchema = z.object({
   take: z.coerce.number().int().min(1).max(50).optional(),
 })
 
-// Opaque to clients: `<isArchived 0|1>_<conversation.updatedAt ISO>_<conversationId>`, as issued
-// in ConversationsResponse.nextCursor.
+const ConversationCursorSchema = z.object({
+  isArchived: z.boolean(),
+  updatedAt: z.iso.datetime().transform((value) => new Date(value)),
+  conversationId: z.string().cuid(),
+})
+
+// The cursor is opaque to clients: they send back ConversationsResponse.nextCursor.
+function encodeConversationCursor(cursor: ConversationCursor): string {
+  return JSON.stringify(cursor)
+}
+
 const ConversationListQuerySchema = z.object({
   cursor: z
     .string()
-    .transform((value) => value.split('_'))
-    .pipe(z.tuple([z.enum(['0', '1']), z.iso.datetime(), z.string().cuid()]))
-    .transform(([isArchived, updatedAt, conversationId]) => ({
-      isArchived: isArchived === '1',
-      updatedAt: new Date(updatedAt),
-      conversationId,
-    }))
+    .transform((value, ctx): unknown => {
+      try {
+        return JSON.parse(value)
+      } catch {
+        ctx.addIssue({ code: 'custom', message: 'Malformed cursor' })
+        return z.NEVER
+      }
+    })
+    .pipe(ConversationCursorSchema)
     .optional(),
 })
 
@@ -235,15 +248,12 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   }): Promise<void> {
     const { senderProfileId, recipientProfileId, messageDTO } = args
 
-    const isWsBroadcasted = broadcastToProfile(fastify, recipientProfileId, {
-      type: 'ws:new_message',
-      payload: messageDTO,
-    })
-
-    if (isWsBroadcasted) return
-
-    if (await messageService.isConversationArchived(messageDTO.conversationId, recipientProfileId))
-      return
+    const { isDelivered, isArchived } = await broadcastNewMessage(
+      fastify,
+      recipientProfileId,
+      messageDTO
+    )
+    if (isDelivered || isArchived) return
 
     if (WebPushService.isWebPushConfigured()) {
       webPushService.send(messageDTO, recipientProfileId).catch((err) => {
@@ -321,9 +331,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
         conversations: page.conversations.map((p) =>
           mapConversationParticipantToSummary(p, profileId)
         ),
-        nextCursor: page.nextCursor
-          ? `${page.nextCursor.isArchived ? 1 : 0}_${page.nextCursor.updatedAt.toISOString()}_${page.nextCursor.conversationId}`
-          : null,
+        nextCursor: page.nextCursor ? encodeConversationCursor(page.nextCursor) : null,
         hasMore: page.hasMore,
         hasUnread,
       }

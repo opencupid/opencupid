@@ -8,6 +8,7 @@ import type {
   ConversationOrDraft,
   ConversationSummary,
   EditMessagePayload,
+  IncomingMessageDTO,
   MessageDTO,
   MessageInConversation,
   SendMessagePayload,
@@ -102,7 +103,7 @@ export const useMessageStore = defineStore('message', {
   },
 
   actions: {
-    async handleIncomingMessage(message: MessageDTO) {
+    async handleIncomingMessage(message: IncomingMessageDTO) {
       // Update conversation summary (and bump it to top)
       const known = this.conversations.find((c) => c.conversationId === message.conversationId)
       // When we receive a message, it means the conversation is now in ACCEPTED state
@@ -114,8 +115,7 @@ export const useMessageStore = defineStore('message', {
             ...known,
             lastMessage: message,
             canReply: true,
-            // Only one's own message (a missed-call notice) unarchives.
-            isArchived: known.isArchived && message.senderId !== known.profileId,
+            isArchived: message.isArchived,
             conversation: { ...known.conversation, updatedAt: message.createdAt },
           }
         : await this.fetchConversation(message.conversationId)
@@ -123,7 +123,7 @@ export const useMessageStore = defineStore('message', {
         this.bumpConversation(convo)
         // Missed-call notices are broadcast to their sender as well. Archived
         // conversations are muted.
-        if (message.senderId !== convo.profileId && !convo.isArchived) {
+        if (message.senderId !== convo.profileId && !message.isArchived) {
           this.hasUnreadMessages = true
           this.unreadRevision++
         }
@@ -131,7 +131,7 @@ export const useMessageStore = defineStore('message', {
       // If this is the active conversation, append to visible messages
       if (this.activeConversation?.conversationId === message.conversationId) {
         this.appendMessageIfNew(message)
-      } else if (!this.suppressMessageNotifications && !convo?.isArchived) {
+      } else if (!this.suppressMessageNotifications && !message.isArchived) {
         bus.emit('notification:new_message', message)
       }
     },
@@ -442,13 +442,14 @@ export const useMessageStore = defineStore('message', {
             } satisfies ArchiveConversationPayload
           )
         )
-        // A message that arrived while the request was in flight is newer than
-        // the rest of this snapshot.
+        // A message sent or received while the request was in flight brought a
+        // newer state than this snapshot, except that an unarchived one stands:
+        // nothing but the viewer archives.
         const current = this.conversations.find((c) => c.conversationId === convo.conversationId)
         if (current?.lastMessage?.createdAt === convo.lastMessage?.createdAt) {
           this.updateConvo(res.data.conversation)
-        } else if (current) {
-          current.isArchived = res.data.conversation.isArchived
+        } else if (current && !res.data.conversation.isArchived) {
+          current.isArchived = false
         }
         this.applyServerUnread(res.data.hasUnread, unreadRevision)
       } catch (error: any) {
