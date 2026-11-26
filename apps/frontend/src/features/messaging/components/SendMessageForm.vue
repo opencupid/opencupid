@@ -36,9 +36,11 @@ const props = withDefaults(
     conversationId: string | null
     showTags?: boolean
     canCall?: boolean
+    // False while the partner hasn't replied to the viewer's first message.
+    canReply?: boolean
     noResize?: boolean
   }>(),
-  { noResize: true }
+  { noResize: true, canReply: true }
 )
 const emit = defineEmits<{
   (e: 'message:sent', message: MessageDTO | null): void
@@ -172,6 +174,8 @@ const canEditHere = computed(
 )
 const editingMessage = computed(() => (canEditHere.value ? messageStore.editingMessage : null))
 const isEditing = computed(() => editingMessage.value !== null)
+// Editing the unanswered first message stays possible; sending a new one doesn't.
+const isLocked = computed(() => !props.canReply && !isEditing.value)
 // Non-null exactly while this form is in edit mode.
 const draftBeforeEdit = ref<string | null>(null)
 
@@ -236,7 +240,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   }
 }
 
-const canSend = computed(() => content.value.trim() !== '')
+const canSend = computed(() => !isLocked.value && content.value.trim() !== '')
 
 async function handleSendMessage() {
   if (isEditing.value) return handleSaveEdit()
@@ -360,10 +364,17 @@ function handleVoiceRecordingError(error: string) {
           :class="{ 'opacity-25': isVoiceActive }"
           @keydown="handleKeyPress"
           @paste="handlePaste"
-          :placeholder="$t('messaging.message_input_placeholder')"
-          :disabled="messageStore.isSending || isVoiceActive"
+          :placeholder="
+            isLocked
+              ? $t('messaging.already_sent_waiting')
+              : $t('messaging.message_input_placeholder')
+          "
+          :disabled="messageStore.isSending || isVoiceActive || isLocked"
         />
-        <div class="d-flex justify-content-between align-items-start">
+        <div
+          v-if="!isLocked"
+          class="d-flex justify-content-between align-items-start"
+        >
           <div
             v-if="!isEditing"
             class="d-flex align-items-center gap-2"

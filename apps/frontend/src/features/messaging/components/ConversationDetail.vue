@@ -68,6 +68,7 @@ async function handleBlockProfile() {
         :recipientProfile="vm.partner.value"
         :conversationId="vm.persistedConversation.value?.conversationId ?? null"
         :canCall="vm.canCall.value"
+        :canReply="vm.conversation.value.canReply"
         @message:sent="vm.onMessageSent"
         @call:start="vm.startCall"
       />

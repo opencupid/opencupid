@@ -12,7 +12,7 @@ defineProps<{
   loadingMore?: boolean
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'convo:select', val: ConversationSummary): void
   (e: 'convo:archive', val: ConversationSummary, isArchived: boolean): void
 }>()
@@ -21,11 +21,6 @@ function turnOf(convo: ConversationSummary): 'mine' | 'theirs' | null {
   if (convo.isAdminInitiator || convo.isArchived) return null
   if (!convo.canReply) return 'theirs'
   return convo.lastMessage?.isMine ? null : 'mine'
-}
-
-// A conversation that can't be replied to doesn't open, but can still be hidden.
-function onSelect(convo: ConversationSummary) {
-  if (convo.canReply) emit('convo:select', convo)
 }
 </script>
 
@@ -38,13 +33,12 @@ function onSelect(convo: ConversationSummary) {
           :key="convo.conversationId"
           :active="activeConversation?.conversationId === convo.conversationId"
           :class="{
-            faded: !convo.canReply || convo.isArchived,
-            'cursor-pointer': convo.canReply,
+            faded: convo.isArchived,
             admin: convo.isAdminInitiator,
           }"
           variant="light"
-          class="convo-item d-flex justify-content-start align-items-center mb-3 p-2 border-0 rounded-3 shadow user-select-none"
-          @click="onSelect(convo)"
+          class="convo-item cursor-pointer d-flex justify-content-start align-items-center mb-3 p-2 border-0 rounded-3 shadow user-select-none"
+          @click="$emit('convo:select', convo)"
         >
           <div class="convo-content d-flex align-items-center flex-grow-1 overflow-hidden">
             <div class="thumbnail me-2 flex-shrink-0">

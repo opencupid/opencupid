@@ -242,7 +242,7 @@
     "you_received_like": "Valaki rád mosolygott!"
   },
   "messaging": {
-    "already_sent_waiting": "Már küldtél nekik üzenetet. Amint válaszolnak, folytathatod a beszélgetést.",
+    "already_sent_waiting": "Már küldtél neki üzenetet. Amint válaszol, folytathatod a beszélgetést.",
     "attach_image": "Kép csatolása",
     "block_member": "Tag letiltása",
     "cancel_edit": "Szerkesztés megszakítása",

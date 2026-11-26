@@ -260,6 +260,23 @@ describe('SendMessageForm', () => {
     expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(true)
   })
 
+  it('locks the composer while the partner has not replied to the first message', () => {
+    const wrapper = mountForm({ canReply: false })
+
+    const textarea = wrapper.find('b-form-textarea-stub')
+    expect(textarea.attributes('disabled')).toBe('true')
+    expect(textarea.attributes('placeholder')).toBe('messaging.already_sent_waiting')
+    expect(wrapper.findComponent({ name: 'VoiceRecorder' }).exists()).toBe(false)
+    expect(wrapper.findComponent(ImageUploadStub).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(false)
+  })
+
+  it('leaves the composer open by default', () => {
+    const textarea = mountForm().find('b-form-textarea-stub')
+    expect(textarea.attributes('disabled')).toBe('false')
+    expect(textarea.attributes('placeholder')).toBe('messaging.message_input_placeholder')
+  })
+
   it('passes VOICE_MESSAGE_MAX_DURATION config to VoiceRecorder', () => {
     const wrapper = mountForm()
     const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
@@ -571,6 +588,20 @@ describe('SendMessageForm', () => {
       expect(textareaOf(wrapper).value).toBe('helo')
       expect(wrapper.find('[data-testid="edit-banner"]').exists()).toBe(true)
       expect(wrapper.findComponent(ImageUploadStub).exists()).toBe(false)
+    })
+
+    it('still lets the unanswered first message be edited', async () => {
+      const { wrapper } = mountEditForm()
+
+      await press(wrapper, 'ArrowUp')
+      await wrapper.setProps({ canReply: false })
+
+      expect(textareaOf(wrapper).value).toBe('helo')
+      expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(true)
+
+      await press(wrapper, 'Escape')
+
+      expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(false)
     })
 
     it('lets Escape through to the surrounding panel when not editing', async () => {
