@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import Redis from 'ioredis'
+import { REFRESH_MAX_AGE } from '@shared/session'
 
 interface RefreshTokenData {
   userId: string
@@ -8,8 +9,6 @@ interface RefreshTokenData {
 }
 
 export class RefreshTokenService {
-  private ttlSec = 60 * 60 * 24 * 90 // 90 days
-
   constructor(private redis: Redis) {}
 
   private key(userId: string, token: string) {
@@ -20,7 +19,7 @@ export class RefreshTokenService {
     const token = randomUUID()
     const data: RefreshTokenData = { userId, profileId, tokenVersion }
     const key = this.key(userId, token)
-    await this.redis.set(key, JSON.stringify(data), 'EX', this.ttlSec)
+    await this.redis.set(key, JSON.stringify(data), 'EX', REFRESH_MAX_AGE)
     return token
   }
 

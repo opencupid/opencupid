@@ -11,7 +11,6 @@ import '@fastify/cookie'
 import {
   SESSION_COOKIE,
   SESSION_COOKIE_OPTS,
-  SESSION_MAX_AGE,
   REFRESH_COOKIE,
   REFRESH_MAX_AGE,
   ORIGIN_COOKIE,
@@ -70,7 +69,7 @@ export function setSessionCookie(reply: FastifyReply, jwt: string) {
     ...sessionCookieOpts(reply),
     httpOnly: false,
     secure: appConfig.NODE_ENV !== 'development',
-    maxAge: SESSION_MAX_AGE,
+    maxAge: REFRESH_MAX_AGE,
   })
 }
 
