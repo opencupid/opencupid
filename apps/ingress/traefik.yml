@@ -16,6 +16,16 @@ entryPoints:
   web:
     address: ':80'
     http:
+      # Reject encoded path separators and the like (400) instead of letting
+      # them through, so the proxy and the backend can't disagree about the path.
+      encodedCharacters: &encodedCharacters
+        allowEncodedSlash: false
+        allowEncodedBackSlash: false
+        allowEncodedNullCharacter: false
+        allowEncodedSemicolon: false
+        allowEncodedPercent: false
+        allowEncodedQuestionMark: false
+        allowEncodedHash: false
       redirections:
         entryPoint:
           to: websecure
@@ -24,6 +34,7 @@ entryPoints:
   websecure:
     address: ':443'
     http:
+      encodedCharacters: *encodedCharacters
       tls:
         certResolver: letsencrypt
 
