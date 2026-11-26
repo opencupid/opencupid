@@ -130,8 +130,6 @@ model User {
   lastLoginAt             DateTime?
   language                String     @default("en")
   originDomain            String
-  newsletterOptIn         Boolean    @default(true)
-  emailNotificationsOptIn Boolean    @default(true)
   roles                   UserRole[] @default([user])
 
   // relations
@@ -220,7 +218,6 @@ model Profile {
 
   // Nearby signups digest
   nearbySignupNotifications NearbySignupNotification[]
-  nearbySignupOptOut        NearbySignupOptOut?
 
   @@index([lat, lon])
 }
@@ -582,13 +579,6 @@ model NearbySignupNotification {
   newProfileIds String[] @default([])
 
   @@index([profileId, sentAt])
-}
-
-/// A row means the profile opted out of nearby-signups emails.
-model NearbySignupOptOut {
-  profileId String   @id
-  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
 }
 
 /// What a user agreed to receive by email. Each email type maps to one scope

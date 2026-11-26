@@ -71,8 +71,8 @@ function userWith({
   }
 }
 
-/** Signs claims the way tokens in emails sent before scoped claims were. */
-const legacySigner = createSigner({
+/** Signs arbitrary claims with the unsubscribe secret. */
+const rawSigner = createSigner({
   key: 'test-unsubscribe-secret',
   algorithm: 'HS256',
   expiresIn: TOKEN_TTL_SECONDS * 1000,
@@ -132,51 +132,16 @@ describe('reminders scope', () => {
     expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 
-  it('accepts links from nearby-digest emails sent before the reminders scope', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(userWith())
-    const token = legacySigner({
-      userId: USER_ID,
-      emailHash: hashEmail(EMAIL),
-      scope: 'nearby_signups',
-    })
+  it.each([
+    ['without a scope claim', {}],
+    ['with the retired nearby_signups scope', { scope: 'nearby_signups' }],
+  ])('rejects a token %s', async (_label, claims) => {
+    const token = rawSigner({ userId: USER_ID, emailHash: hashEmail(EMAIL), ...claims })
 
     await fastify.routes['POST /:token']({ params: { token } } as any, reply as any)
 
-    expect(reply.payload.scope).toBe('reminders')
-    expect(mockPrisma.emailPreference.upsert).toHaveBeenCalledTimes(1)
-    expectTurnedOff('reminders')
-  })
-
-  it('turns off notifications and reminders for an unscoped link from an older email', async () => {
-    // Those links turned off all notification email, nearby digests included.
-    mockPrisma.user.findUnique.mockResolvedValue(userWith())
-    const token = legacySigner({ userId: USER_ID, emailHash: hashEmail(EMAIL) })
-
-    await fastify.routes['POST /:token']({ params: { token } } as any, reply as any)
-
-    expect(reply.payload).toEqual({
-      success: true,
-      alreadyUnsubscribed: false,
-      scope: 'notifications',
-    })
-    expectTurnedOff('notifications')
-    expectTurnedOff('reminders')
-  })
-
-  it('still turns off reminders for an unscoped link when only notifications is off', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      email: EMAIL,
-      emailPreferences: [
-        { scope: 'notifications', granted: false },
-        { scope: 'reminders', granted: true },
-      ],
-    })
-    const token = legacySigner({ userId: USER_ID, emailHash: hashEmail(EMAIL) })
-
-    await fastify.routes['POST /:token']({ params: { token } } as any, reply as any)
-
-    expect(reply.payload.alreadyUnsubscribed).toBe(false)
-    expectTurnedOff('reminders')
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled()
   })
 
   it('rejects a token with an unknown scope', async () => {

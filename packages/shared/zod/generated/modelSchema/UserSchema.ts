@@ -21,8 +21,6 @@ export const UserSchema = z.object({
   lastLoginAt: z.coerce.date().nullable(),
   language: z.string(),
   originDomain: z.string(),
-  newsletterOptIn: z.boolean(),
-  emailNotificationsOptIn: z.boolean(),
   isPushNotificationEnabled: z.boolean(),
 })
 
