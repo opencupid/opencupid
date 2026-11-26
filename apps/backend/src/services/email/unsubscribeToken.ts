@@ -4,22 +4,8 @@ import { appConfig } from '@/lib/appconfig'
 import { canonicalizeEmail } from '@/lib/email'
 import { EMAIL_SCOPES, type EmailScope } from '@zod/user/emailPreference.dto'
 
-/**
- * Token format: the email scope the link turns off is carried as a `scope`
- * claim.
- *
- * TODO(#email-preferences contract PR): drop the two legacy formats below.
- * Links in emails sent before the EmailPreference deploy carry them and expire
- * TOKEN_TTL_SECONDS after it:
- * - no claim: turned off all notification email, which also stopped nearby
- *   digests, so it keeps turning off both notifications and reminders;
- * - `nearby_signups`: nearby digests only, now the reminders scope.
- */
-const CLAIM_SCOPES: ReadonlyMap<string, readonly EmailScope[]> = new Map([
-  ...EMAIL_SCOPES.map((scope) => [scope, [scope]] as const),
-  ['nearby_signups', ['reminders']],
-])
-const UNSCOPED_LEGACY_SCOPES: readonly EmailScope[] = ['notifications', 'reminders']
+/** Token format: the email scope the link turns off is carried as a `scope` claim. */
+const CLAIM_SCOPES: ReadonlySet<string> = new Set<EmailScope>(EMAIL_SCOPES)
 
 export type UnsubscribePayload = {
   userId: string
@@ -77,8 +63,8 @@ export function verifyUnsubscribeToken(token: string): UnsubscribePayload | null
     > & {
       scope?: string
     }
-    const scopes = scope === undefined ? UNSCOPED_LEGACY_SCOPES : CLAIM_SCOPES.get(scope)
-    return scopes ? { userId, emailHash, scopes, iat } : null
+    if (scope === undefined || !CLAIM_SCOPES.has(scope)) return null
+    return { userId, emailHash, scopes: [scope as EmailScope], iat }
   } catch {
     return null
   }
