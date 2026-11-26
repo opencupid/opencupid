@@ -1,5 +1,18 @@
 # backend
 
+## 0.99.0
+
+### Minor Changes
+
+- e9572f3: Unify email opt-in flags into one EmailPreference table with notifications, reminders and newsletter scopes; add a reminder-emails setting; remove the unused Listmonk subscribers endpoint
+- 9eefcfd: Add an "Unsubscribe from all emails" button to the unsubscribe page
+
+### Patch Changes
+
+- 80bec44: Keep unsubscribe links working for 60 days instead of 7
+- 7addb6a: Drop the legacy User.emailNotificationsOptIn and User.newsletterOptIn columns, the NearbySignupOptOut table and the nearby_signups unsubscribe token scope
+- 3a8f6a8: Migrate email opt-in flags to EmailPreference and drop the legacy columns in one pre-deploy data migration
+
 ## 0.98.0
 
 ### Minor Changes

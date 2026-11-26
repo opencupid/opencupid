@@ -1,5 +1,12 @@
 # frontend
 
+## 0.99.0
+
+### Minor Changes
+
+- e9572f3: Unify email opt-in flags into one EmailPreference table with notifications, reminders and newsletter scopes; add a reminder-emails setting; remove the unused Listmonk subscribers endpoint
+- 9eefcfd: Add an "Unsubscribe from all emails" button to the unsubscribe page
+
 ## 0.98.0
 
 ### Minor Changes
