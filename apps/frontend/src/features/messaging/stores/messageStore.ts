@@ -193,6 +193,15 @@ export const useMessageStore = defineStore('message', {
         conversation,
         ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
       ]
+      this.syncActiveConversation(conversation)
+    },
+
+    // The open conversation holds its own copy of the summary: keep it in step
+    // when the list entry is replaced (e.g. canReply flipping on a reply).
+    syncActiveConversation(conversation: ConversationSummary) {
+      if (this.activeConversation?.conversationId === conversation.conversationId) {
+        this.activeConversation = conversation
+      }
     },
 
     handleSendResponse(res: {
@@ -214,6 +223,7 @@ export const useMessageStore = defineStore('message', {
       if (index !== -1) {
         this.conversations[index] = convo
       }
+      this.syncActiveConversation(convo)
     },
 
     // Applies the inbox-wide unread flag from a response whose request was sent

@@ -379,9 +379,9 @@ describe('SendMessageForm', () => {
       position: 0,
     }
 
-    function mountPasteForm() {
+    function mountPasteForm(props: Record<string, unknown> = {}) {
       const wrapper = mount(SendMessageForm, {
-        props: { recipientProfile: mockRecipient, conversationId: 'conv-1' },
+        props: { recipientProfile: mockRecipient, conversationId: 'conv-1', ...props },
         global: {
           stubs: {
             BFormTextarea: TextareaStub,
@@ -429,6 +429,16 @@ describe('SendMessageForm', () => {
       expect((apiPost.mock.calls[0]![1] as FormData).get('file')).toBe(file)
       expect(sendMessage).toHaveBeenCalledWith(mockRecipient.id, '', ['ck2j6z1x30000a1b2c3d4e5f6'])
       expect(wrapper.emitted('message:sent')).toHaveLength(1)
+    })
+
+    it('neither uploads nor sends a pasted image while the partner has not replied', async () => {
+      const { wrapper, sendMessage } = mountPasteForm({ canReply: false })
+
+      const event = await paste(wrapper, [new File(['x'], 'shot.png', { type: 'image/png' })])
+
+      expect(event.defaultPrevented).toBe(true)
+      expect(apiPost).not.toHaveBeenCalled()
+      expect(sendMessage).not.toHaveBeenCalled()
     })
 
     it('leaves a text-only paste to the browser', async () => {

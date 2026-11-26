@@ -100,6 +100,8 @@ async function handlePaste(event: ClipboardEvent) {
   // No image on the clipboard — let the browser paste text as usual.
   if (!file) return
   event.preventDefault()
+  // A pasted image is sent as a new message, which only a repliable conversation takes.
+  if (!props.canReply) return
   // One attachment at a time: a second upload landing mid-send would be sent twice.
   if (imageStore.isLoading || isSending.value) return
 

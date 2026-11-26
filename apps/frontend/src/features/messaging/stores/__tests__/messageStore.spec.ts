@@ -336,6 +336,27 @@ describe('bumpConversation', () => {
     expect(store.conversations[1]!.conversationId).toBe('convo-1')
   })
 
+  it('replaces the open conversation summary, so a reply unlocks its composer', () => {
+    const store = useMessageStore()
+    const convo = makeConvo('convo-1', 'Partner 1')
+    store.conversations = [convo]
+    store.activeConversation = convo
+
+    store.bumpConversation({ ...convo, canReply: true })
+
+    expect(store.activeConversation!.canReply).toBe(true)
+  })
+
+  it('leaves the open conversation alone when another one is bumped', () => {
+    const store = useMessageStore()
+    const open = makeConvo('convo-1', 'Partner 1')
+    store.activeConversation = open
+
+    store.bumpConversation(makeConvo('convo-2', 'Partner 2'))
+
+    expect(store.activeConversation!.conversationId).toBe('convo-1')
+  })
+
   it('adds a new conversation to the top if not already present', () => {
     const store = useMessageStore()
     const convo1 = makeConvo('convo-1', 'Partner 1')
