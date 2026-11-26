@@ -16,8 +16,11 @@ export type UnsubscribePayload = {
   iat: number
 }
 
-/** Long enough that a link in a weekly email still works until the next one. */
-export const TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60
+/**
+ * How long an unsubscribe link keeps working. A link can only turn emails
+ * off, so it stays valid well past when the email is read: 60 days.
+ */
+export const TOKEN_TTL_SECONDS = 60 * 24 * 60 * 60
 
 const signer = createSigner({
   key: appConfig.UNSUBSCRIBE_SECRET,
