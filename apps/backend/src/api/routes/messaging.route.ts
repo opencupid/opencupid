@@ -152,13 +152,6 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     const { senderProfileId, recipientProfileId, content, messageType, attachment, imageIds } =
       input
 
-    if (senderProfileId === recipientProfileId) {
-      throw new MessagingError(
-        MessagingErrorCodes.SELF_CONVERSATION,
-        'Cannot send a message to yourself'
-      )
-    }
-
     const isToSystemProfile = recipientProfileId === appConfig.ADMIN_PROFILE_ID
 
     // Pre-tx: is the sender currently quarantined? Drives PENDING vs INITIATED status.
@@ -391,8 +384,9 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    * GET /conversations/by-profile/:profileId
    * Resolves the conversation between the viewer and the given partner. Returns
    * a persisted ConversationSummary if one exists, or a ConversationDraftSummary
-   * (no DB write) for pairs that haven't messaged yet. Vague 404 when the
-   * partner has blocked the viewer; 400 SELF_CONVERSATION for the viewer's own id.
+   * (no DB write) for pairs that haven't messaged yet. 403 unless the viewer's
+   * own profile is active; vague 404 when the partner is inactive or has
+   * blocked the viewer; 400 SELF_CONVERSATION for the viewer's own id.
    * @returns {ConversationByProfileResponse}
    */
   fastify.get(
@@ -401,6 +395,9 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       const viewerProfileId = req.session.profileId
       if (!viewerProfileId) return sendError(reply, 401, 'Profile not found.')
+      if (!req.session.hasActiveProfile) {
+        return sendError(reply, 403, 'Complete your profile to send messages')
+      }
 
       const params = z.object({ profileId: z.string().cuid() }).safeParse(req.params)
       if (!params.success) return sendError(reply, 400, 'Invalid profileId')
@@ -415,7 +412,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const partner = await profileService.getProfilePublicById(partnerId, viewerProfileId)
-        if (!partner) return sendError(reply, 404, 'Profile not found')
+        if (!partner || !partner.isActive) return sendError(reply, 404, 'Profile not found')
         // Vague 404 mirrors GET /profile/:id — the partner blocking the viewer
         // is indistinguishable from "no such profile" by design.
         if (partner.blockedProfiles.length > 0) {

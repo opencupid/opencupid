@@ -521,6 +521,15 @@ describe('MessageService.acceptConversationOnMatch', () => {
 })
 
 describe('MessageService.resolveConversation', () => {
+  it('refuses a conversation with yourself before touching the database', async () => {
+    const tx: any = { conversation: { findFirst: vi.fn(), create: vi.fn() } }
+
+    await expect(service.resolveConversation(tx, 'alice', 'alice')).rejects.toMatchObject({
+      code: 'SELF_CONVERSATION',
+    })
+    expect(tx.conversation.findFirst).not.toHaveBeenCalled()
+  })
+
   const existing = {
     id: 'c-existing',
     status: 'ACCEPTED',

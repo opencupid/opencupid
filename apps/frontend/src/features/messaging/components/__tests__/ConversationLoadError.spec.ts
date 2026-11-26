@@ -5,17 +5,22 @@ vi.mock('@/assets/icons/arrows/arrow-single-left.svg', () => ({
   default: { template: '<span />' },
 }))
 
-import ConversationNotFound from '../ConversationNotFound.vue'
+import ConversationLoadError from '../ConversationLoadError.vue'
 
-function mountView() {
-  return mount(ConversationNotFound, {
+function mountView(reason: 'not_found' | 'failed' = 'not_found') {
+  return mount(ConversationLoadError, {
+    props: { reason },
     global: { mocks: { $t: (key: string) => key } },
   })
 }
 
-describe('ConversationNotFound', () => {
+describe('ConversationLoadError', () => {
   it('explains that the conversation does not exist', () => {
-    expect(mountView().text()).toContain('messaging.conversation_not_found')
+    expect(mountView('not_found').text()).toContain('messaging.conversation_not_found')
+  })
+
+  it('says loading failed when the request itself failed', () => {
+    expect(mountView('failed').text()).toContain('messaging.conversation_load_failed')
   })
 
   it('goes back to the inbox or closes the drawer', async () => {

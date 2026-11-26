@@ -265,16 +265,25 @@ describe('SendMessageForm', () => {
 
     const textarea = wrapper.find('b-form-textarea-stub')
     expect(textarea.attributes('disabled')).toBe('true')
-    expect(textarea.attributes('placeholder')).toBe('messaging.already_sent_waiting')
+    expect(wrapper.find('[data-testid="awaiting-reply-hint"]').text()).toBe(
+      'messaging.already_sent_waiting'
+    )
     expect(wrapper.findComponent({ name: 'VoiceRecorder' }).exists()).toBe(false)
     expect(wrapper.findComponent(ImageUploadStub).exists()).toBe(false)
     expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(false)
   })
 
   it('leaves the composer open by default', () => {
-    const textarea = mountForm().find('b-form-textarea-stub')
-    expect(textarea.attributes('disabled')).toBe('false')
-    expect(textarea.attributes('placeholder')).toBe('messaging.message_input_placeholder')
+    const wrapper = mountForm()
+    expect(wrapper.find('b-form-textarea-stub').attributes('disabled')).toBe('false')
+    expect(wrapper.find('[data-testid="awaiting-reply-hint"]').exists()).toBe(false)
+  })
+
+  it('keeps the hint visible when a saved draft fills the locked composer', () => {
+    useLocalStore().setMessageDraft(mockRecipient.id, 'an unsent follow-up')
+    const wrapper = mountForm({ canReply: false })
+
+    expect(wrapper.find('[data-testid="awaiting-reply-hint"]').exists()).toBe(true)
   })
 
   it('passes VOICE_MESSAGE_MAX_DURATION config to VoiceRecorder', () => {

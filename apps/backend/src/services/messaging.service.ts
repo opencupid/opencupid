@@ -707,6 +707,14 @@ export class MessageService {
     recipientProfileId: string,
     opts: { createAsPending?: boolean } = {}
   ): Promise<{ convo: Conversation; wasCreated: boolean }> {
+    // Every send path creates its conversation here, so this is where the
+    // pair is guaranteed to be two different profiles.
+    if (senderProfileId === recipientProfileId) {
+      throw new MessagingError(
+        MessagingErrorCodes.SELF_CONVERSATION,
+        'Cannot send a message to yourself'
+      )
+    }
     const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
 
     const existing = await tx.conversation.findFirst({

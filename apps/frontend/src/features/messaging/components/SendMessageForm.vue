@@ -355,6 +355,14 @@ function handleVoiceRecordingError(error: string) {
             <IconCross class="svg-icon" />
           </button>
         </div>
+        <!-- Separate text, not the placeholder: a restored draft would hide that. -->
+        <div
+          v-if="isLocked"
+          class="form-hint mb-2"
+          data-testid="awaiting-reply-hint"
+        >
+          {{ $t('messaging.already_sent_waiting') }}
+        </div>
         <BFormTextarea
           id="content-input"
           ref="textarea"
@@ -366,11 +374,7 @@ function handleVoiceRecordingError(error: string) {
           :class="{ 'opacity-25': isVoiceActive }"
           @keydown="handleKeyPress"
           @paste="handlePaste"
-          :placeholder="
-            isLocked
-              ? $t('messaging.already_sent_waiting')
-              : $t('messaging.message_input_placeholder')
-          "
+          :placeholder="$t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive || isLocked"
         />
         <div

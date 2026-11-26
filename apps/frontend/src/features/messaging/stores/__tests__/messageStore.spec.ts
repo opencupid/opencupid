@@ -542,14 +542,86 @@ describe('setActiveConversationById', () => {
   it('clears activeConversation when id not found after fetch', async () => {
     const store = useMessageStore()
 
-    mockApi.get.mockResolvedValue({
-      data: { success: true, conversations: [] },
-    })
+    mockApi.get.mockImplementation((url: string) =>
+      url === '/messages/conversations'
+        ? Promise.resolve({ data: { success: true, conversations: [] } })
+        : Promise.reject(
+            Object.assign(new Error('Not Found'), {
+              isAxiosError: true,
+              response: {
+                status: 404,
+                data: { success: false, message: 'Conversation not found' },
+              },
+            })
+          )
+    )
 
     await store.setActiveConversationById('nonexistent')
 
     expect(store.activeConversation).toBeNull()
     expect(store.messages).toEqual([])
+  })
+  it('keeps the newer conversation when an older, slower load finishes last', async () => {
+    const store = useMessageStore()
+    const convoB = makeConvo('convo-b', 'Bea')
+    store.conversations = [convoB]
+    store.initialized = true
+
+    // A is past the loaded pages, so it is fetched on its own, slowly.
+    let finishA!: (v: unknown) => void
+    mockApi.get.mockImplementation((url: string) => {
+      if (url === '/messages/conversations/convo-a') {
+        return new Promise((resolve) => (finishA = resolve))
+      }
+      const messages = url === '/messages/convo-b' ? [{ id: 'm-b' }] : [{ id: 'm-a' }]
+      return Promise.resolve({
+        data: { success: true, messages, nextCursor: null, hasMore: false },
+      })
+    })
+
+    const loadA = store.setActiveConversationById('convo-a')
+    await store.setActiveConversationById('convo-b')
+    finishA({ data: { success: true, conversation: makeConvo('convo-a', 'Anna') } })
+    await loadA
+
+    expect(store.activeConversation?.conversationId).toBe('convo-b')
+    expect(store.messages.map((m) => m.id)).toEqual(['m-b'])
+  })
+
+  it('returns the HTTP status when the conversation cannot be loaded', async () => {
+    const store = useMessageStore()
+    store.initialized = true
+    mockApi.get.mockRejectedValue(
+      Object.assign(new Error('Not Found'), {
+        isAxiosError: true,
+        response: { status: 404, data: { success: false, message: 'Conversation not found' } },
+      })
+    )
+
+    const res = await store.setActiveConversationById('gone')
+
+    expect(res).toMatchObject({ success: false, status: 404 })
+  })
+})
+
+describe('fetchMessagesForConversation', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.clearAllMocks()
+  })
+
+  it('drops a page that arrives after another conversation was opened', async () => {
+    const store = useMessageStore()
+    store.activeConversation = makeConvo('convo-b', 'Bea')
+    store.messages = [{ id: 'm-b' } as any]
+    mockApi.get.mockResolvedValue({
+      data: { success: true, messages: [{ id: 'm-a' }], nextCursor: null, hasMore: false },
+    })
+
+    const result = await store.fetchMessagesForConversation('convo-a', { append: true })
+
+    expect(result).toEqual([])
+    expect(store.messages.map((m) => m.id)).toEqual(['m-b'])
   })
 })
 
@@ -661,6 +733,7 @@ describe('profile:blocked listener', () => {
 describe('fetchMessagesForConversation pagination', () => {
   it('loads latest 10 messages and stores cursor metadata', async () => {
     const store = useMessageStore()
+    store.activeConversation = { conversationId: 'convo-1' } as ConversationSummary
     mockApi.get.mockResolvedValue({
       data: {
         success: true,

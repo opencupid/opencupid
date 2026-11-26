@@ -2000,23 +2000,21 @@ describe('POST /messages', () => {
     expect(mockMessageService.resolveConversation).toHaveBeenCalledTimes(2)
   })
 
-  it('rejects sending to the configured sender profile', async () => {
+  it('reports the service SELF_CONVERSATION error for the configured sender profile', async () => {
+    const { MessagingError } = await import('@/services/messaging.service')
+    mockMessageService.resolveConversation.mockImplementation(async (_tx, from, to) => {
+      if (from === to) throw new MessagingError('SELF_CONVERSATION' as any, 'self')
+      return {
+        convo: { id: 'c1', status: 'INITIATED', initiatorProfileId: 'sys-sender' },
+        wasCreated: true,
+      }
+    })
     const handler = fastify.routes['POST /messages']
     await handler({ body: { profileIds: ['sys-sender', 'p1'], content: 'hi' } }, reply)
 
-    mockMessageService.resolveConversation.mockResolvedValue({
-      convo: { id: 'c1', status: 'INITIATED', initiatorProfileId: 'sys-sender' },
-      wasCreated: true,
-    })
-
-    // sys-sender is skipped without invoking the service
     expect(reply.payload.results).toEqual(
-      expect.arrayContaining([{ profileId: 'sys-sender', error: 'SELF_SEND_NOT_ALLOWED' }])
+      expect.arrayContaining([{ profileId: 'sys-sender', error: 'SELF_CONVERSATION' }])
     )
-    // resolveConversation must not have been called for the sender
-    for (const call of mockMessageService.resolveConversation.mock.calls) {
-      expect(call[2]).not.toBe('sys-sender')
-    }
   })
 
   // accept_and_promote_pending fires when a quarantined user previously sent into

@@ -30,6 +30,9 @@ type MessageStoreState = {
   conversations: ConversationSummary[]
   messages: MessageDTO[]
   activeConversation: ConversationSummary | null
+  // Bumped whenever the open conversation changes, so a slower load started
+  // for an earlier one can tell it has been superseded.
+  activeLoadToken: number
   hasUnreadMessages: boolean
   // Bumped whenever an incoming message makes the inbox unread, so a server
   // snapshot requested before that message is not allowed to clear the flag.
@@ -64,6 +67,7 @@ export const useMessageStore = defineStore('message', {
     conversations: [] as ConversationSummary[],
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
+    activeLoadToken: 0,
     hasUnreadMessages: false,
     unreadRevision: 0,
     initialized: false,
@@ -119,7 +123,9 @@ export const useMessageStore = defineStore('message', {
             isArchived: message.isArchived,
             conversation: { ...known.conversation, updatedAt: message.createdAt },
           }
-        : await this.fetchConversation(message.conversationId)
+        : await this.fetchConversation(message.conversationId).then((res) =>
+            res.success ? (res.data ?? null) : null
+          )
       if (convo) {
         this.bumpConversation(convo)
         // Missed-call notices are broadcast to their sender as well. Archived
@@ -279,6 +285,9 @@ export const useMessageStore = defineStore('message', {
           })
         )
 
+        // The user opened another conversation while this page was loading.
+        if (this.activeConversation?.conversationId !== conversationId) return []
+
         if (res.data.success) {
           this.messageCursor = res.data.nextCursor
           this.hasMoreMessages = res.data.hasMore
@@ -409,15 +418,15 @@ export const useMessageStore = defineStore('message', {
       }
     },
 
-    async fetchConversation(conversationId: string): Promise<ConversationSummary | null> {
+    async fetchConversation(conversationId: string): Promise<StoreResponse<ConversationSummary>> {
       try {
         const res = await safeApiCall(() =>
           api.get<ConversationResponse>(`/messages/conversations/${conversationId}`)
         )
-        return res.data.success ? res.data.conversation : null
+        return res.data.success ? storeSuccess(res.data.conversation) : storeError(res.data)
       } catch (error: any) {
         this.error = storeError(error)
-        return null
+        return this.error
       }
     },
 
@@ -534,6 +543,7 @@ export const useMessageStore = defineStore('message', {
     },
 
     async setActiveConversation(convo: ConversationSummary | null) {
+      this.activeLoadToken++
       this.activeConversation = convo
       this.editingMessageId = null
       if (this.activeConversation) {
@@ -542,6 +552,7 @@ export const useMessageStore = defineStore('message', {
     },
 
     resetActiveConversation() {
+      this.activeLoadToken++
       this.activeConversation = null
       this.messages = []
       this.messageCursor = null
@@ -554,20 +565,25 @@ export const useMessageStore = defineStore('message', {
       await this.fetchConversations()
     },
 
-    async setActiveConversationById(conversationId: string) {
+    async setActiveConversationById(
+      conversationId: string
+    ): Promise<StoreResponse<ConversationSummary>> {
+      const token = ++this.activeLoadToken
       if (!this.initialized) {
         await this.fetchConversations()
       }
       // The list only holds the pages loaded so far; a deep link can point past them.
-      const convo =
-        this.conversations.find((c) => c.conversationId === conversationId) ??
-        (await this.fetchConversation(conversationId))
-      if (convo) {
-        await this.setActiveConversation(convo)
+      const known = this.conversations.find((c) => c.conversationId === conversationId)
+      const res = known ? storeSuccess(known) : await this.fetchConversation(conversationId)
+      // Another conversation was opened meanwhile: leave its state alone.
+      if (token !== this.activeLoadToken) return res
+      if (res.success && res.data) {
+        await this.setActiveConversation(res.data)
       } else {
         this.activeConversation = null
         this.messages = []
       }
+      return res
     },
 
     async initialize() {

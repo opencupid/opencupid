@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
+import type { ConversationLoadError } from '../composables/useConversationDetailViewModel'
+
+defineProps<{ reason: ConversationLoadError }>()
 
 defineEmits<{
   (e: 'back'): void
@@ -10,7 +13,7 @@ defineEmits<{
 <template>
   <div
     class="d-flex flex-column h-100"
-    data-testid="conversation-not-found"
+    data-testid="conversation-load-error"
   >
     <div class="d-flex align-items-center justify-content-between p-2">
       <button
@@ -30,7 +33,13 @@ defineEmits<{
       />
     </div>
     <p class="flex-grow-1 d-flex align-items-center justify-content-center text-muted p-3">
-      {{ $t('messaging.conversation_not_found') }}
+      {{
+        $t(
+          reason === 'not_found'
+            ? 'messaging.conversation_not_found'
+            : 'messaging.conversation_load_failed'
+        )
+      }}
     </p>
   </div>
 </template>

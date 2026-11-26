@@ -8,6 +8,7 @@ import type {
 } from '@zod/messaging/messaging.dto'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 
+import type { StoreError } from '@/store/helpers'
 import { useMessageStore } from '../stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
 import { useCallStore } from '@/features/videocall/stores/callStore'
@@ -23,6 +24,14 @@ import { useInboxRouteState } from './useInboxRouteState'
 // ConversationDetail.vue is a pure renderer over what this composable returns.
 // The store stays strictly typed to persisted ConversationSummary — drafts are
 // held locally here.
+export type ConversationLoadError = 'not_found' | 'failed'
+
+// 400 (bad id, own profile), 403 and 404 mean there is nothing to open;
+// anything else is a failure worth retrying.
+function loadErrorOf(res: StoreError): ConversationLoadError {
+  return res.status && [400, 403, 404].includes(res.status) ? 'not_found' : 'failed'
+}
+
 export function useConversationDetailViewModel() {
   const router = useRouter()
   const messageStore = useMessageStore()
@@ -33,9 +42,10 @@ export function useConversationDetailViewModel() {
   // Local-only — drafts never enter messageStore (which is persisted-only).
   const draftSummary = ref<ConversationDraftSummary | null>(null)
   const conversationPartner = ref<PublicProfile | null>(null)
-  // The route points at nothing the viewer can open: a missing or hidden
-  // conversation, or a profile that can't be messaged (e.g. their own).
-  const notFound = ref(false)
+  // Why the route could not be opened. 'not_found': the target is missing,
+  // hidden or can't be messaged (e.g. the viewer's own profile). 'failed': the
+  // request itself failed (offline, server error) and may work on a retry.
+  const loadError = ref<ConversationLoadError | null>(null)
 
   const conversation = computed<ConversationOrDraft | null>(() => {
     if (mode.value === 'draft') return draftSummary.value
@@ -67,24 +77,28 @@ export function useConversationDetailViewModel() {
     [mode, conversationId, partnerProfileId],
     async ([m, convoId, profileId], _prev, onCleanup) => {
       let superseded = false
-      onCleanup(() => (superseded = true))
-      notFound.value = false
+      let markReadTimer: ReturnType<typeof setTimeout> | undefined
+      onCleanup(() => {
+        superseded = true
+        clearTimeout(markReadTimer)
+      })
+      loadError.value = null
       if (m === 'detail' && convoId) {
         draftSummary.value = null
-        await messageStore.setActiveConversationById(convoId)
+        const res = await messageStore.setActiveConversationById(convoId)
         if (superseded) return
-        if (!messageStore.activeConversation) {
-          notFound.value = true
+        if (!res.success) {
+          loadError.value = loadErrorOf(res)
           return
         }
-        setTimeout(() => messageStore.markAsRead(convoId), 2000)
+        markReadTimer = setTimeout(() => messageStore.markAsRead(convoId), 2000)
       } else if (m === 'draft' && profileId) {
         messageStore.resetActiveConversation()
         const res = await messageStore.resolveConversationByProfile(profileId)
         if (superseded) return
         if (!res.success || !res.data) {
           draftSummary.value = null
-          notFound.value = true
+          loadError.value = res.success ? 'not_found' : loadErrorOf(res)
           return
         }
         if (res.data.isDraft) {
@@ -179,7 +193,7 @@ export function useConversationDetailViewModel() {
     conversation,
     persistedConversation,
     partner: conversationPartner,
-    notFound,
+    loadError,
     isDraft,
     isLoading: computed(() => messageStore.isLoading),
     canCall,

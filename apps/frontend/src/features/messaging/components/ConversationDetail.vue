@@ -12,7 +12,7 @@ import BlockProfileDialog from '@/features/publicprofile/components/BlockProfile
 import SendMessage from './SendMessageForm.vue'
 import MessageList from './MessageList.vue'
 import MessagingNav from './MessagingNav.vue'
-import ConversationNotFound from './ConversationNotFound.vue'
+import ConversationLoadError from './ConversationLoadError.vue'
 
 defineOptions({ name: 'ConversationDetail' })
 
@@ -39,8 +39,9 @@ async function handleBlockProfile() {
 
 <template>
   <div class="convo-detail shadow-lg h-100 position-relative d-flex flex-column">
-    <ConversationNotFound
-      v-if="vm.notFound.value"
+    <ConversationLoadError
+      v-if="vm.loadError.value"
+      :reason="vm.loadError.value"
       @back="vm.deselect"
       @close="router.replace({ name: 'Browse' })"
     />
