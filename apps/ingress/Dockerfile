@@ -3,7 +3,7 @@
 # boot; using localPlugins with source pre-copied into the image removes
 # that runtime dependency entirely.
 
-ARG TRAEFIK_VERSION=v3.7
+ARG TRAEFIK_VERSION=v3.8
 # Commit SHA, not a tag — tags are mutable and can be force-pushed.
 # 030072af is the tree at legege/jwt-validation-middleware tag v0.2.1.
 ARG PLUGIN_COMMIT=030072af546973af742434e8ed3c5a06c57db06b
