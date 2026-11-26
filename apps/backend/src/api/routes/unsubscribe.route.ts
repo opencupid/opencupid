@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { rateLimitConfig, sendError } from '../helpers'
 import { hashEmail, verifyUnsubscribeToken } from '@/services/email/unsubscribeToken'
 import { setEmailPreferences } from '@/services/emailPreference.service'
-import type { EmailScope } from '@zod/user/emailPreference.dto'
+import { EMAIL_SCOPES, type EmailScope } from '@zod/user/emailPreference.dto'
 
 type Resolved =
   | {
@@ -14,17 +14,21 @@ type Resolved =
     }
   | { success: false; code: 'INVALID_TOKEN' | 'USER_NOT_FOUND' }
 
-/** Verify the token and load its user; the token's email fingerprint must still match. */
-async function resolveToken(token: string): Promise<Resolved> {
+/**
+ * Verify the token and load its user; the token's email fingerprint must still
+ * match. `all` widens what is turned off from the token's scopes to every scope.
+ */
+async function resolveToken(token: string, { all = false } = {}): Promise<Resolved> {
   const payload = verifyUnsubscribeToken(token)
   if (!payload) return { success: false, code: 'INVALID_TOKEN' }
+  const scopes = all ? EMAIL_SCOPES : payload.scopes
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
     select: {
       email: true,
       emailPreferences: {
-        where: { scope: { in: [...payload.scopes] } },
+        where: { scope: { in: [...scopes] } },
         select: { scope: true, granted: true },
       },
     },
@@ -36,13 +40,18 @@ async function resolveToken(token: string): Promise<Resolved> {
   return {
     success: true,
     userId: payload.userId,
-    scopes: payload.scopes,
+    scopes,
     // Only an explicit "off" row counts: a missing row is written as off, so a
     // later backfill cannot turn the scope back on.
-    alreadyUnsubscribed: payload.scopes.every((scope) =>
+    alreadyUnsubscribed: scopes.every((scope) =>
       user.emailPreferences.some((row) => row.scope === scope && !row.granted)
     ),
   }
+}
+
+async function turnOff(userId: string, scopes: readonly EmailScope[]) {
+  const off = Object.fromEntries(scopes.map((scope) => [scope, false]))
+  await setEmailPreferences(prisma, userId, off, 'unsubscribe_link')
 }
 
 const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
@@ -77,11 +86,33 @@ const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const { userId, scopes, alreadyUnsubscribed } = resolved
-      if (!alreadyUnsubscribed) {
-        const off = Object.fromEntries(scopes.map((scope) => [scope, false]))
-        await setEmailPreferences(prisma, userId, off, 'unsubscribe_link')
-      }
+      if (!alreadyUnsubscribed) await turnOff(userId, scopes)
       return reply.code(200).send({ success: true, alreadyUnsubscribed, scope: scopes[0] })
+    }
+  )
+
+  /**
+   * POST /:token/all
+   * The landing page's "unsubscribe from all emails" button: turns off every
+   * email scope for the token's user, whatever scope the link was for.
+   * Sign-in links are not a scope and are still sent.
+   */
+  fastify.post<{ Params: { token: string } }>(
+    '/:token/all',
+    {
+      config: {
+        ...rateLimitConfig(fastify, '1 hour', 20),
+      },
+    },
+    async (req, reply) => {
+      const resolved = await resolveToken(req.params.token, { all: true })
+      if (!resolved.success) {
+        return sendError(reply, resolved.code === 'INVALID_TOKEN' ? 400 : 404, resolved.code)
+      }
+
+      const { userId, scopes, alreadyUnsubscribed } = resolved
+      if (!alreadyUnsubscribed) await turnOff(userId, scopes)
+      return reply.code(200).send({ success: true, alreadyUnsubscribed })
     }
   )
 

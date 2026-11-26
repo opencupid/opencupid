@@ -575,6 +575,9 @@
     }
   },
   "unsubscribe": {
+    "all_already_body": "Egyik levelünkre sem vagy feliratkozva.",
+    "all_button": "Leiratkozás minden levelünkről",
+    "all_done_body": "Nem küldünk több levelet, csak az általad kért bejelentkezési linkeket.",
     "already_body": "Már nem küldünk neked értesítő e-maileket.",
     "already_title": "Már le vagy iratkozva",
     "confirm_body": "Nem fogsz több értesítő e-mailt kapni. Bármikor bejelentkezve módosíthatod a beállításokat.",

@@ -12,6 +12,7 @@ vi.mock('@/store/i18nStore', () => ({
 const store = vi.hoisted(() => ({
   getStatus: vi.fn(),
   unsubscribe: vi.fn(),
+  unsubscribeAll: vi.fn(),
 }))
 vi.mock('../../stores/unsubscribeStore', () => ({ useUnsubscribeStore: () => store }))
 
@@ -92,5 +93,87 @@ describe('UnsubscribeView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('unsubscribe.error_title')
+  })
+
+  describe('unsubscribe from all emails', () => {
+    const allButton = (wrapper: ReturnType<typeof mountView>) =>
+      wrapper.find('[data-testid="unsubscribe-all"]')
+
+    it.each([
+      ['confirm', ok('reminders')],
+      ['already', ok('reminders', true)],
+    ])('is offered in the %s state', async (_state, status) => {
+      store.getStatus.mockResolvedValue(status)
+      const wrapper = mountView()
+      await flushPromises()
+
+      expect(allButton(wrapper).text()).toBe('unsubscribe.all_button')
+    })
+
+    it('is still offered after unsubscribing from the link scope', async () => {
+      store.getStatus.mockResolvedValue(ok('reminders'))
+      store.unsubscribe.mockResolvedValue(ok('reminders'))
+      const wrapper = mountView()
+      await flushPromises()
+
+      await wrapper.find('button').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('unsubscribe.nearby_done_body')
+      expect(allButton(wrapper).exists()).toBe(true)
+    })
+
+    it('turns off every email and says so', async () => {
+      store.getStatus.mockResolvedValue(ok('reminders'))
+      store.unsubscribeAll.mockResolvedValue({
+        success: true,
+        data: { success: true, alreadyUnsubscribed: false },
+      })
+      const wrapper = mountView()
+      await flushPromises()
+
+      await allButton(wrapper).trigger('click')
+      await flushPromises()
+
+      expect(store.unsubscribeAll).toHaveBeenCalledWith('tok')
+      expect(store.unsubscribe).not.toHaveBeenCalled()
+      expect(wrapper.text()).toContain('unsubscribe.all_done_body')
+      expect(allButton(wrapper).exists()).toBe(false)
+    })
+
+    it('says so when nothing was subscribed', async () => {
+      store.getStatus.mockResolvedValue(ok('notifications', true))
+      store.unsubscribeAll.mockResolvedValue({
+        success: true,
+        data: { success: true, alreadyUnsubscribed: true },
+      })
+      const wrapper = mountView()
+      await flushPromises()
+
+      await allButton(wrapper).trigger('click')
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('unsubscribe.all_already_body')
+    })
+
+    it('shows the error state when it fails', async () => {
+      store.getStatus.mockResolvedValue(ok('notifications'))
+      store.unsubscribeAll.mockResolvedValue({ success: false })
+      const wrapper = mountView()
+      await flushPromises()
+
+      await allButton(wrapper).trigger('click')
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('unsubscribe.error_title')
+    })
+
+    it('is not offered when the link is invalid', async () => {
+      store.getStatus.mockResolvedValue({ success: false })
+      const wrapper = mountView()
+      await flushPromises()
+
+      expect(allButton(wrapper).exists()).toBe(false)
+    })
   })
 })

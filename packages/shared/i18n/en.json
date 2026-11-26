@@ -571,6 +571,9 @@
     }
   },
   "unsubscribe": {
+    "all_already_body": "You're not subscribed to any of our emails.",
+    "all_button": "Unsubscribe from all emails",
+    "all_done_body": "You won't receive any more emails from us, except sign-in links you request.",
     "already_body": "You no longer receive notification emails from us.",
     "already_title": "You're already unsubscribed",
     "confirm_body": "You won't receive any more notification emails. You can still log in and update your preferences at any time.",

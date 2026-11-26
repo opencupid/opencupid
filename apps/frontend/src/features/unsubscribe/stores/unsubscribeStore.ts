@@ -13,6 +13,13 @@ const UnsubscribeStatusSchema = z.object({
 
 export type UnsubscribeStatus = z.infer<typeof UnsubscribeStatusSchema>
 
+const UnsubscribeAllResultSchema = z.object({
+  success: z.literal(true),
+  alreadyUnsubscribed: z.boolean(),
+})
+
+export type UnsubscribeAllResult = z.infer<typeof UnsubscribeAllResultSchema>
+
 type UnsubscribeStoreState = {
   isLoading: boolean
 }
@@ -44,6 +51,19 @@ export const useUnsubscribeStore = defineStore('unsubscribe', {
         return storeSuccess(parsed)
       } catch (error: any) {
         return storeError(error, 'Failed to unsubscribe')
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    /** Turn off every email scope for the token's user. */
+    async unsubscribeAll(token: string): Promise<StoreResponse<UnsubscribeAllResult>> {
+      try {
+        this.isLoading = true
+        const res = await api.post(`/unsubscribe/${encodeURIComponent(token)}/all`)
+        return storeSuccess(UnsubscribeAllResultSchema.parse(res.data))
+      } catch (error: any) {
+        return storeError(error, 'Failed to unsubscribe from all emails')
       } finally {
         this.isLoading = false
       }
