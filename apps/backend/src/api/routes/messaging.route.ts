@@ -383,9 +383,8 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    * GET /conversations/by-profile/:profileId
    * Resolves the conversation between the viewer and the given partner. Returns
    * a persisted ConversationSummary if one exists, or a ConversationDraftSummary
-   * (no DB write) for matched pairs that haven't messaged yet. Vague 404 when
-   * the partner has blocked the viewer; 403 when the pair isn't matched (drafts
-   * are gated to matches because that's the only UX entry point).
+   * (no DB write) for pairs that haven't messaged yet. Vague 404 when the
+   * partner has blocked the viewer.
    * @returns {ConversationByProfileResponse}
    */
   fastify.get(
@@ -419,10 +418,6 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           }
           return reply.code(200).send(response)
         }
-
-        // No persisted conversation — drafts are only offered to matched pairs.
-        const isMatched = await messageService.hasMutualLike(viewerProfileId, partnerId)
-        if (!isMatched) return sendError(reply, 403, 'Cannot message this profile')
 
         const viewer = await profileService.getProfileById(viewerProfileId)
         const draft: ConversationDraftSummary = {
