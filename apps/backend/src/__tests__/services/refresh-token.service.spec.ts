@@ -12,6 +12,7 @@ function createMockRedis() {
       keys.forEach((k) => delete store[k])
       return keys.length
     }),
+    expire: vi.fn(async () => 1),
     scan: vi.fn(async (): Promise<[string, string[]]> => ['0', []]),
     _store: store,
   }
@@ -63,6 +64,15 @@ describe('RefreshTokenService.delete', () => {
     redis._store['refresh:user1:tok1'] = 'data'
     await service.delete('tok1', 'user1')
     expect(redis.del).toHaveBeenCalledWith('refresh:user1:tok1')
+  })
+})
+
+describe('RefreshTokenService.retire', () => {
+  it('keeps the token for a short grace period instead of deleting it', async () => {
+    redis._store['refresh:user1:tok1'] = 'data'
+    await service.retire('tok1', 'user1')
+    expect(redis.del).not.toHaveBeenCalled()
+    expect(redis.expire).toHaveBeenCalledWith('refresh:user1:tok1', 60, 'LT')
   })
 })
 

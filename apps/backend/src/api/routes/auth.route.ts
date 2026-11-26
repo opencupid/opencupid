@@ -196,8 +196,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         user.tokenVersion
       )
 
-      // Delete old refresh token
-      await refreshTokenService.delete(refreshToken, jwtPayload.userId)
+      // Retire, not delete, the old refresh token: another tab may be
+      // refreshing with it right now (see RefreshTokenService.retire).
+      await refreshTokenService.retire(refreshToken, jwtPayload.userId)
 
       setSessionCookie(reply, newJwt)
       setRefreshCookie(reply, newRefreshToken)

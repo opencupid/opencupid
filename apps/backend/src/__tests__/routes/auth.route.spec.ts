@@ -79,6 +79,7 @@ beforeEach(async () => {
     create: vi.fn().mockResolvedValue('mock-refresh-token'),
     validate: vi.fn(),
     delete: vi.fn(),
+    retire: vi.fn(),
     deleteAllForUser: vi.fn(),
   }
   await authRoutes(fastify as any, {})
@@ -705,10 +706,13 @@ describe('POST /refresh', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.token).toBe('new-jwt')
     expect(reply.payload.refreshToken).toBeUndefined()
-    expect(mockRefreshTokenService.delete).toHaveBeenCalledWith(
+    // Retired, not deleted: a second tab refreshing concurrently with the same
+    // token must still succeed rather than log out and clear the shared cookie.
+    expect(mockRefreshTokenService.retire).toHaveBeenCalledWith(
       '550e8400-e29b-41d4-a716-446655440000',
       'user1'
     )
+    expect(mockRefreshTokenService.delete).not.toHaveBeenCalled()
     expect(reply.cookies[0].name).toBe('__session')
     expect(reply.cookies[0].value).toBe('new-jwt')
     expect(reply.cookies[1].name).toBe('__refresh')

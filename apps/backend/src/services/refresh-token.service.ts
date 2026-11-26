@@ -10,6 +10,15 @@ interface RefreshTokenData {
 export class RefreshTokenService {
   private ttlSec = 60 * 60 * 24 * 90 // 90 days
 
+  /**
+   * How long a rotated-out refresh token stays usable. Tabs share the cookie
+   * jar, so two tabs that hit a 401 together both send the same refresh
+   * token; if the first refresh deleted it outright, the second would fail
+   * and that tab would log out — clearing the session cookie the first tab
+   * just received.
+   */
+  private reuseGraceSec = 60
+
   constructor(private redis: Redis) {}
 
   private key(userId: string, token: string) {
@@ -38,6 +47,15 @@ export class RefreshTokenService {
   async delete(token: string, userId: string): Promise<void> {
     const key = this.key(userId, token)
     await this.redis.del(key)
+  }
+
+  /**
+   * Rotate a token out: it keeps working for the grace period, then expires.
+   * LT only ever shortens the TTL, so reusing a retired token within the grace
+   * period doesn't extend it.
+   */
+  async retire(token: string, userId: string): Promise<void> {
+    await this.redis.expire(this.key(userId, token), this.reuseGraceSec, 'LT')
   }
 
   async deleteAllForUser(userId: string): Promise<void> {
