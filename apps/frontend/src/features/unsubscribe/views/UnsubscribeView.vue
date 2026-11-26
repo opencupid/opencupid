@@ -6,7 +6,7 @@ import AuthLayout from '@/features/auth/components/AuthLayout.vue'
 import { useI18nStore } from '@/store/i18nStore'
 import { useUnsubscribeStore, type UnsubscribeStatus } from '../stores/unsubscribeStore'
 
-type Status = 'loading' | 'confirm' | 'done' | 'already' | 'error'
+type Status = 'loading' | 'confirm' | 'done' | 'already' | 'all_done' | 'all_already' | 'error'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -64,6 +64,20 @@ async function confirmUnsubscribe() {
   submitting.value = false
   status.value = res.success ? 'done' : 'error'
 }
+
+// Offered next to every outcome of the link's own scope.
+const offerAll = computed(() => ['confirm', 'done', 'already'].includes(status.value))
+
+async function unsubscribeAll() {
+  submitting.value = true
+  const res = await unsubscribeStore.unsubscribeAll(token)
+  submitting.value = false
+  if (!res.success || !res.data) {
+    status.value = 'error'
+    return
+  }
+  status.value = res.data.alreadyUnsubscribed ? 'all_already' : 'all_done'
+}
 </script>
 
 <template>
@@ -98,10 +112,35 @@ async function confirmUnsubscribe() {
         <p class="text-muted">{{ t(copy.alreadyBody) }}</p>
       </template>
 
+      <template v-else-if="status === 'all_done'">
+        <h1 class="fs-4 mb-3">{{ t('unsubscribe.done_title') }}</h1>
+        <p class="text-muted">{{ t('unsubscribe.all_done_body') }}</p>
+      </template>
+
+      <template v-else-if="status === 'all_already'">
+        <h1 class="fs-4 mb-3">{{ t('unsubscribe.already_title') }}</h1>
+        <p class="text-muted">{{ t('unsubscribe.all_already_body') }}</p>
+      </template>
+
       <template v-else>
         <h1 class="fs-4 mb-3">{{ t('unsubscribe.error_title') }}</h1>
         <p class="text-muted">{{ t('unsubscribe.error_body') }}</p>
       </template>
+
+      <div
+        v-if="offerAll"
+        class="mt-4"
+      >
+        <BButton
+          variant="link"
+          size="sm"
+          data-testid="unsubscribe-all"
+          :disabled="submitting"
+          @click="unsubscribeAll"
+        >
+          {{ t('unsubscribe.all_button') }}
+        </BButton>
+      </div>
     </div>
   </AuthLayout>
 </template>

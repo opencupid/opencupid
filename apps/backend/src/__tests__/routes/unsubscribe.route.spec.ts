@@ -245,6 +245,98 @@ describe('POST /unsubscribe/:token', () => {
   })
 })
 
+describe('POST /unsubscribe/:token/all', () => {
+  const ALL_ON = {
+    email: EMAIL,
+    emailPreferences: ['notifications', 'reminders', 'newsletter'].map((scope) => ({
+      scope,
+      granted: true,
+    })),
+  }
+
+  it('turns off every scope, whatever scope the link was for', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(ALL_ON)
+
+    await fastify.routes['POST /:token/all'](
+      { params: { token: remindersToken() } } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(200)
+    expect(reply.payload).toEqual({ success: true, alreadyUnsubscribed: false })
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: USER_ID },
+      select: {
+        email: true,
+        emailPreferences: {
+          where: { scope: { in: ['notifications', 'reminders', 'newsletter'] } },
+          select: { scope: true, granted: true },
+        },
+      },
+    })
+    expectTurnedOff('notifications')
+    expectTurnedOff('reminders')
+    expectTurnedOff('newsletter')
+  })
+
+  it('writes scopes whose rows are missing', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ email: EMAIL, emailPreferences: [] })
+
+    await fastify.routes['POST /:token/all'](
+      { params: { token: validToken() } } as any,
+      reply as any
+    )
+
+    expect(reply.payload.alreadyUnsubscribed).toBe(false)
+    expect(mockPrisma.emailPreference.upsert).toHaveBeenCalledTimes(3)
+  })
+
+  it('is idempotent when every scope is already off', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      email: EMAIL,
+      emailPreferences: ALL_ON.emailPreferences.map((row) => ({ ...row, granted: false })),
+    })
+
+    await fastify.routes['POST /:token/all'](
+      { params: { token: validToken() } } as any,
+      reply as any
+    )
+
+    expect(reply.payload).toEqual({ success: true, alreadyUnsubscribed: true })
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
+  })
+
+  it('rejects an invalid token', async () => {
+    await fastify.routes['POST /:token/all']({ params: { token: 'nope' } } as any, reply as any)
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled()
+  })
+
+  it('rejects a token signed for a different email', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ ...ALL_ON, email: 'new@example.com' })
+
+    await fastify.routes['POST /:token/all'](
+      { params: { token: validToken() } } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(400)
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the user no longer exists', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null)
+
+    await fastify.routes['POST /:token/all'](
+      { params: { token: validToken() } } as any,
+      reply as any
+    )
+
+    expect(reply.statusCode).toBe(404)
+  })
+})
+
 describe('GET /unsubscribe/:token', () => {
   it('reports current subscription state without side effects', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(userWith())

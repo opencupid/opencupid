@@ -88,3 +88,25 @@ describe('useUnsubscribeStore.unsubscribe', () => {
     expect(res.success).toBe(false)
   })
 })
+
+describe('useUnsubscribeStore.unsubscribeAll', () => {
+  it('POSTs to the unsubscribe-all endpoint and returns the parsed result', async () => {
+    mockApi.post.mockResolvedValueOnce({ data: { success: true, alreadyUnsubscribed: false } })
+    const store = useUnsubscribeStore()
+
+    const res = await store.unsubscribeAll('a/b')
+
+    expect(mockApi.post).toHaveBeenCalledWith('/unsubscribe/a%2Fb/all')
+    expect(res.success).toBe(true)
+    expect(res.success && res.data).toEqual({ success: true, alreadyUnsubscribed: false })
+  })
+
+  it('returns a StoreError when the API rejects', async () => {
+    mockApi.post.mockRejectedValueOnce(new Error('nope'))
+    const store = useUnsubscribeStore()
+
+    const res = await store.unsubscribeAll('tok')
+
+    expect(res.success).toBe(false)
+  })
+})
