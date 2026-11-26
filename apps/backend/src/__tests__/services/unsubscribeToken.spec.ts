@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createSigner } from 'fast-jwt'
 
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
@@ -14,6 +15,13 @@ import {
 } from '@/services/email/unsubscribeToken'
 
 const NOW = 1_700_000_000
+
+/** Signs claims the way tokens in emails sent before scoped claims were. */
+const legacySigner = createSigner({
+  key: 'test-unsubscribe-secret',
+  algorithm: 'HS256',
+  expiresIn: TOKEN_TTL_SECONDS * 1000,
+})
 
 describe('unsubscribeToken', () => {
   beforeEach(() => {
@@ -34,7 +42,7 @@ describe('unsubscribeToken', () => {
     expect(verifyUnsubscribeToken(token)).toEqual({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
-      scope: 'notifications',
+      scopes: ['notifications'],
       iat: NOW,
     })
   })
@@ -45,26 +53,32 @@ describe('unsubscribeToken', () => {
       emailHash: hashEmail('alice@example.com'),
       scope,
     })
-    expect(verifyUnsubscribeToken(token)?.scope).toBe(scope)
+    expect(verifyUnsubscribeToken(token)?.scopes).toEqual([scope])
   })
 
-  it('signs a notifications token without a scope claim', () => {
+  it('signs a notifications token with an explicit scope claim', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
       scope: 'notifications',
     })
     const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
-    expect(claims).not.toHaveProperty('scope')
+    expect(claims.scope).toBe('notifications')
+  })
+
+  it('reads an unscoped token from older emails as notifications and reminders', () => {
+    // Those links turned off all notification email, nearby digests included.
+    const token = legacySigner({ userId: 'user-1', emailHash: hashEmail('alice@example.com') })
+    expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['notifications', 'reminders'])
   })
 
   it('reads a nearby_signups claim from older nearby-digest emails as reminders', () => {
-    const token = signUnsubscribeToken({
+    const token = legacySigner({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
-      scope: 'nearby_signups' as any,
+      scope: 'nearby_signups',
     })
-    expect(verifyUnsubscribeToken(token)?.scope).toBe('reminders')
+    expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['reminders'])
   })
 
   it('rejects an unknown scope claim', () => {
@@ -133,7 +147,7 @@ describe('unsubscribeToken', () => {
       scope: 'reminders',
     })
     vi.setSystemTime((NOW + 6 * 24 * 60 * 60) * 1000)
-    expect(verifyUnsubscribeToken(token)?.scope).toBe('reminders')
+    expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['reminders'])
   })
 
   it('hashEmail is stable, lowercase- and whitespace-normalized', () => {

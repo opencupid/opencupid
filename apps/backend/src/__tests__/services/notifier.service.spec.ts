@@ -423,7 +423,7 @@ describe('NotifierService', () => {
       const [payload] = await sendDigest()
       const { verifyUnsubscribeToken } = await import('../../services/email/unsubscribeToken')
       const token = payload.templateProps.unsubscribeUrl.split('/unsubscribe/')[1].split('?')[0]
-      expect(verifyUnsubscribeToken(token)?.scope).toBe('reminders')
+      expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['reminders'])
       expect(payload.headers['List-Unsubscribe']).toContain(token)
     })
 
@@ -554,7 +554,7 @@ describe('NotifierService', () => {
     const [payload] = mockDispatchEmail.mock.calls[0]
     const { verifyUnsubscribeToken } = await import('../../services/email/unsubscribeToken')
     const token = payload.templateProps.unsubscribeUrl.split('/unsubscribe/')[1].split('?')[0]
-    expect(verifyUnsubscribeToken(token)?.scope).toBe('notifications')
+    expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['notifications'])
   })
 
   describe('notifyLoadedUser', () => {

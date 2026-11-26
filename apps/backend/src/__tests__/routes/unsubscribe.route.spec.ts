@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Fastify, { type FastifyInstance } from 'fastify'
+import { createSigner } from 'fast-jwt'
 
 vi.mock('@/lib/appconfig', () => ({
   appConfig: {
@@ -58,10 +59,24 @@ function remindersToken() {
   return signUnsubscribeToken({ userId: USER_ID, emailHash: hashEmail(EMAIL), scope: 'reminders' })
 }
 
-/** The user row resolveToken loads: the address and the token's scope row, if any. */
-function userWith({ granted = true as boolean | null, email = EMAIL } = {}) {
-  return { email, emailPreferences: granted === null ? [] : [{ granted }] }
+/** The user row resolveToken loads: the address and the rows for the token's scopes. */
+function userWith({
+  granted = true as boolean | null,
+  email = EMAIL,
+  scopes = ['notifications', 'reminders'],
+} = {}) {
+  return {
+    email,
+    emailPreferences: granted === null ? [] : scopes.map((scope) => ({ scope, granted })),
+  }
 }
+
+/** Signs claims the way tokens in emails sent before scoped claims were. */
+const legacySigner = createSigner({
+  key: 'test-unsubscribe-secret',
+  algorithm: 'HS256',
+  expiresIn: TOKEN_TTL_SECONDS * 1000,
+})
 
 function expectTurnedOff(scope: string) {
   expect(mockPrisma.emailPreference.upsert).toHaveBeenCalledWith({
@@ -97,7 +112,10 @@ describe('reminders scope', () => {
       where: { id: USER_ID },
       select: {
         email: true,
-        emailPreferences: { where: { scope: 'reminders' }, select: { granted: true } },
+        emailPreferences: {
+          where: { scope: { in: ['reminders'] } },
+          select: { scope: true, granted: true },
+        },
       },
     })
   })
@@ -116,15 +134,48 @@ describe('reminders scope', () => {
 
   it('accepts links from nearby-digest emails sent before the reminders scope', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(userWith())
-    const token = signUnsubscribeToken({
+    const token = legacySigner({
       userId: USER_ID,
       emailHash: hashEmail(EMAIL),
-      scope: 'nearby_signups' as any,
+      scope: 'nearby_signups',
     })
 
     await fastify.routes['POST /:token']({ params: { token } } as any, reply as any)
 
     expect(reply.payload.scope).toBe('reminders')
+    expect(mockPrisma.emailPreference.upsert).toHaveBeenCalledTimes(1)
+    expectTurnedOff('reminders')
+  })
+
+  it('turns off notifications and reminders for an unscoped link from an older email', async () => {
+    // Those links turned off all notification email, nearby digests included.
+    mockPrisma.user.findUnique.mockResolvedValue(userWith())
+    const token = legacySigner({ userId: USER_ID, emailHash: hashEmail(EMAIL) })
+
+    await fastify.routes['POST /:token']({ params: { token } } as any, reply as any)
+
+    expect(reply.payload).toEqual({
+      success: true,
+      alreadyUnsubscribed: false,
+      scope: 'notifications',
+    })
+    expectTurnedOff('notifications')
+    expectTurnedOff('reminders')
+  })
+
+  it('still turns off reminders for an unscoped link when only notifications is off', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      email: EMAIL,
+      emailPreferences: [
+        { scope: 'notifications', granted: false },
+        { scope: 'reminders', granted: true },
+      ],
+    })
+    const token = legacySigner({ userId: USER_ID, emailHash: hashEmail(EMAIL) })
+
+    await fastify.routes['POST /:token']({ params: { token } } as any, reply as any)
+
+    expect(reply.payload.alreadyUnsubscribed).toBe(false)
     expectTurnedOff('reminders')
   })
 
@@ -173,14 +224,16 @@ describe('POST /unsubscribe/:token', () => {
     expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 
-  it('treats a missing preference row as already unsubscribed', async () => {
+  it('writes the scope off when its preference row is missing', async () => {
+    // Before the backfill runs a user has no rows; writing "off" keeps the
+    // backfill from later turning the scope back on.
     mockPrisma.user.findUnique.mockResolvedValue(userWith({ granted: null }))
 
     const handler = fastify.routes['POST /:token']
     await handler({ params: { token: validToken() } } as any, reply as any)
 
-    expect(reply.payload.alreadyUnsubscribed).toBe(true)
-    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
+    expect(reply.payload.alreadyUnsubscribed).toBe(false)
+    expectTurnedOff('notifications')
   })
 
   it('rejects a token signed for a different email', async () => {

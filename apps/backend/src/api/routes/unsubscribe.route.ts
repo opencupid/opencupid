@@ -6,7 +6,12 @@ import { setEmailPreferences } from '@/services/emailPreference.service'
 import type { EmailScope } from '@zod/user/emailPreference.dto'
 
 type Resolved =
-  | { success: true; userId: string; scope: EmailScope; alreadyUnsubscribed: boolean }
+  | {
+      success: true
+      userId: string
+      scopes: readonly EmailScope[]
+      alreadyUnsubscribed: boolean
+    }
   | { success: false; code: 'INVALID_TOKEN' | 'USER_NOT_FOUND' }
 
 /** Verify the token and load its user; the token's email fingerprint must still match. */
@@ -18,7 +23,10 @@ async function resolveToken(token: string): Promise<Resolved> {
     where: { id: payload.userId },
     select: {
       email: true,
-      emailPreferences: { where: { scope: payload.scope }, select: { granted: true } },
+      emailPreferences: {
+        where: { scope: { in: [...payload.scopes] } },
+        select: { scope: true, granted: true },
+      },
     },
   })
   if (!user) return { success: false, code: 'USER_NOT_FOUND' }
@@ -28,8 +36,12 @@ async function resolveToken(token: string): Promise<Resolved> {
   return {
     success: true,
     userId: payload.userId,
-    scope: payload.scope,
-    alreadyUnsubscribed: !user.emailPreferences[0]?.granted,
+    scopes: payload.scopes,
+    // Only an explicit "off" row counts: a missing row is written as off, so a
+    // later backfill cannot turn the scope back on.
+    alreadyUnsubscribed: payload.scopes.every((scope) =>
+      user.emailPreferences.some((row) => row.scope === scope && !row.granted)
+    ),
   }
 }
 
@@ -64,11 +76,12 @@ const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
         return sendError(reply, resolved.code === 'INVALID_TOKEN' ? 400 : 404, resolved.code)
       }
 
-      const { userId, scope, alreadyUnsubscribed } = resolved
+      const { userId, scopes, alreadyUnsubscribed } = resolved
       if (!alreadyUnsubscribed) {
-        await setEmailPreferences(prisma, userId, { [scope]: false }, 'unsubscribe_link')
+        const off = Object.fromEntries(scopes.map((scope) => [scope, false]))
+        await setEmailPreferences(prisma, userId, off, 'unsubscribe_link')
       }
-      return reply.code(200).send({ success: true, alreadyUnsubscribed, scope })
+      return reply.code(200).send({ success: true, alreadyUnsubscribed, scope: scopes[0] })
     }
   )
 
@@ -91,8 +104,8 @@ const unsubscribeRoutes: FastifyPluginAsync = async (fastify) => {
       // A token whose user is gone reads as invalid here, as before.
       if (!resolved.success) return sendError(reply, 400, 'INVALID_TOKEN')
 
-      const { scope, alreadyUnsubscribed } = resolved
-      return reply.code(200).send({ success: true, alreadyUnsubscribed, scope })
+      const { scopes, alreadyUnsubscribed } = resolved
+      return reply.code(200).send({ success: true, alreadyUnsubscribed, scope: scopes[0] })
     }
   )
 }
