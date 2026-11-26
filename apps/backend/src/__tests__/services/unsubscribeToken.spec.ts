@@ -137,13 +137,17 @@ describe('unsubscribeToken', () => {
     expect(verifyUnsubscribeToken(token)).not.toBeNull()
   })
 
-  it('still accepts a link from a weekly email six days after it was sent', () => {
+  it('keeps a link working for 60 days', () => {
+    expect(TOKEN_TTL_SECONDS).toBe(60 * 24 * 60 * 60)
+  })
+
+  it('still accepts a link a month after it was sent', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
       scope: 'reminders',
     })
-    vi.setSystemTime((NOW + 6 * 24 * 60 * 60) * 1000)
+    vi.setSystemTime((NOW + 30 * 24 * 60 * 60) * 1000)
     expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['reminders'])
   })
 
