@@ -5,6 +5,7 @@ import { ProfileSchema, UserSchema } from '../generated'
 import { PublicTagSchema, type PublicTag } from '../tag/tag.dto'
 import { PublicImageSchema } from '@zod/image/image.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
+import { EmailPreferencesSchema, UpdateEmailPreferencesSchema } from '@zod/user/emailPreference.dto'
 import {
   baseFields,
   socialFields,
@@ -116,16 +117,21 @@ export const CreateProfilePayloadSchema = ProfileSchema.pick({
 
 export type CreateProfilePayload = z.infer<typeof CreateProfilePayloadSchema>
 
-export const ProfileOptInSettingsSchema = ProfileSchema.pick(profileOptInFields).merge(
+const OptInFlagsSchema = ProfileSchema.pick(profileOptInFields).merge(
   UserSchema.pick(userOptInFields)
 )
+
+export const ProfileOptInSettingsSchema = OptInFlagsSchema.extend({
+  emailPreferences: EmailPreferencesSchema,
+})
 export type ProfileOptInSettings = z.infer<typeof ProfileOptInSettingsSchema>
 
-export const UpdateProfileOptInPayloadSchema = ProfileOptInSettingsSchema.partial()
+export const UpdateProfileOptInPayloadSchema = OptInFlagsSchema.partial()
+  .extend({ emailPreferences: UpdateEmailPreferencesSchema.optional() })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message:
-      'At least one field (isCallable, newsletterOptIn, emailNotificationsOptIn, or isPushNotificationEnabled) is required',
+      'At least one field (isCallable, isPushNotificationEnabled, or emailPreferences) is required',
   })
 export type UpdateProfileOptInPayload = z.infer<typeof UpdateProfileOptInPayloadSchema>
 

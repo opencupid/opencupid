@@ -4,6 +4,7 @@ import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { notBlockedUserWhere } from '@/db/includes/notBlockedUserWhere'
 import { socialVisibleWhere } from './profileMatch.service'
 import { notifierService } from './notifier.service'
+import { emailPreferencesSelect } from './emailPreference.service'
 
 /** A profile not seen for this long counts as dormant. */
 export const DORMANT_DAYS = 30
@@ -45,12 +46,19 @@ async function findDormantRecipients(now: Date, profileIds?: string[]) {
       isOnboarded: true,
       lat: { not: null },
       lon: { not: null },
-      AND: [notBlockedUserWhere, { user: { isActive: true, emailNotificationsOptIn: true } }],
+      AND: [
+        notBlockedUserWhere,
+        {
+          user: {
+            isActive: true,
+            emailPreferences: { some: { scope: 'reminders', granted: true } },
+          },
+        },
+      ],
       activitySummary: { lastSeenAt: { lt: new Date(now.getTime() - DORMANT_DAYS * DAY_MS) } },
-      nearbySignupOptOut: { is: null },
     },
     include: {
-      user: { include: { profile: { select: { publicName: true } } } },
+      user: { include: { profile: { select: { publicName: true } }, ...emailPreferencesSelect } },
       activitySummary: { select: { lastSeenAt: true } },
       nearbySignupNotifications: {
         select: { sentAt: true },

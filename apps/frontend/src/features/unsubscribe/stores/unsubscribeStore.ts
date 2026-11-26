@@ -1,13 +1,14 @@
 import z from 'zod'
 import { defineStore } from 'pinia'
 import { api } from '@/lib/api'
+import { EmailScopeSchema } from '@zod/user/emailPreference.dto'
 import { storeSuccess, storeError, type StoreResponse } from '@/store/helpers'
 
 const UnsubscribeStatusSchema = z.object({
   success: z.literal(true),
   alreadyUnsubscribed: z.boolean(),
-  /** What the link turns off: all notification email, or nearby-signups emails only. */
-  scope: z.enum(['all', 'nearby_signups']),
+  /** The email scope the link turns off. */
+  scope: EmailScopeSchema,
 })
 
 export type UnsubscribeStatus = z.infer<typeof UnsubscribeStatusSchema>

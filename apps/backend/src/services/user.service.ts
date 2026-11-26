@@ -3,6 +3,7 @@ import path from 'path'
 
 import { canonicalizeEmail } from '@/lib/email'
 import { prisma } from '@/lib/prisma'
+import { defaultEmailPreferencesCreate } from './emailPreference.service'
 import { getMediaRoot, MEDIA_SUBDIR } from '@/lib/media'
 import { Prisma, UserRole } from '@prisma/client'
 import type { User } from '@zod/generated'
@@ -107,6 +108,7 @@ export class UserService {
         loginTokenExp: tokenExpiration,
         language,
         originDomain,
+        emailPreferences: defaultEmailPreferencesCreate(),
       },
     })
 

@@ -525,6 +525,8 @@
     "notifications_label": "Értesítések",
     "notifications_opt_in": "Ha üzenetet kapok, vagy rám mosolyog valaki...",
     "push_notify_messages": "mobil értesítés (push)",
+    "reminders_opt_in": "Kérek emlékeztető leveleket",
+    "reminders_opt_in_hint": "Ha új emberek csatlakoznak a közeledben, vagy egy kapcsolat rád vár. Bármikor kikapcsolhatod.",
     "title": "Beállítások"
   },
   "uicomponents": {

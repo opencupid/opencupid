@@ -220,8 +220,8 @@ describe('GET /me/optin', () => {
     const handler = fastify.routes['GET /me/optin']
     mockProfileService.getOptInSettingsByProfileId.mockResolvedValue({
       isCallable: false,
-      newsletterOptIn: true,
       isPushNotificationEnabled: true,
+      emailPreferences: { notifications: true, reminders: true, newsletter: false },
     })
 
     await handler(makeReq(), reply as any)
@@ -229,8 +229,8 @@ describe('GET /me/optin', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.optIn).toEqual({
       isCallable: false,
-      newsletterOptIn: true,
       isPushNotificationEnabled: true,
+      emailPreferences: { notifications: true, reminders: true, newsletter: false },
     })
   })
 
@@ -411,16 +411,21 @@ describe('PATCH /me/optin', () => {
     const handler = fastify.routes['PATCH /me/optin']
     mockProfileService.updateOptInSettingsByUserId.mockResolvedValue({
       isCallable: true,
-      newsletterOptIn: false,
       isPushNotificationEnabled: true,
+      emailPreferences: { notifications: true, reminders: true, newsletter: false },
     })
 
-    const req = makeReq({ body: { isCallable: true, newsletterOptIn: false } })
+    const body = { isCallable: true, emailPreferences: { newsletter: false } }
+    const req = makeReq({ body })
     await handler(req, reply as any)
 
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
-    expect(mockProfileService.updateOptInSettingsByUserId).toHaveBeenCalled()
+    expect(mockProfileService.updateOptInSettingsByUserId).toHaveBeenCalledWith(
+      expect.anything(),
+      'u1',
+      body
+    )
   })
 
   it('clears push subscriptions when push is disabled', async () => {
@@ -431,8 +436,8 @@ describe('PATCH /me/optin', () => {
     fastify.prisma.$transaction.mockImplementation(async (fn: any) => fn(tx))
     mockProfileService.updateOptInSettingsByUserId.mockResolvedValue({
       isCallable: true,
-      newsletterOptIn: false,
       isPushNotificationEnabled: false,
+      emailPreferences: { notifications: true, reminders: true, newsletter: false },
     })
 
     const req = makeReq({ body: { isPushNotificationEnabled: false } })

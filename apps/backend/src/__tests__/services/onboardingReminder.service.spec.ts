@@ -61,7 +61,7 @@ describe('sendOnboardingReminders', () => {
     expect(call.where.OR).toEqual([{ profile: null }, { profile: { isOnboarded: false } }])
   })
 
-  it('loads each user with their public name', async () => {
+  it('loads each user with their public name and email preferences', async () => {
     const sendOnboardingReminders = await importService()
     await sendOnboardingReminders(
       new Date('2026-03-30T12:00:00Z'),
@@ -69,7 +69,10 @@ describe('sendOnboardingReminders', () => {
     )
 
     const call = mockPrisma.user.findMany.mock.calls[0][0]
-    expect(call.include).toEqual({ profile: { select: { publicName: true } } })
+    expect(call.include).toEqual({
+      profile: { select: { publicName: true } },
+      emailPreferences: { select: { scope: true, granted: true } },
+    })
   })
 
   it('sends a reminder to each loaded user without waiting between them', async () => {

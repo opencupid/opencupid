@@ -14,12 +14,12 @@ const i18nStore = useI18nStore()
 const unsubscribeStore = useUnsubscribeStore()
 
 const status = ref<Status>('loading')
-const scope = ref<UnsubscribeStatus['scope']>('all')
+const scope = ref<UnsubscribeStatus['scope']>('notifications')
 const submitting = ref(false)
 
-// A nearby-signups link only stops those emails, so the page says so.
+// A reminders link only stops those emails, so the page says so.
 const copy = computed(() =>
-  scope.value === 'nearby_signups'
+  scope.value === 'reminders'
     ? {
         confirmTitle: 'unsubscribe.nearby_confirm_title',
         confirmBody: 'unsubscribe.nearby_confirm_body',

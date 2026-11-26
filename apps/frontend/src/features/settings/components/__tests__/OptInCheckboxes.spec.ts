@@ -39,21 +39,44 @@ beforeEach(() => {
     success: true,
     data: {
       isCallable: true,
-      newsletterOptIn: false,
       isPushNotificationEnabled: false,
+      emailPreferences: { notifications: true, reminders: true, newsletter: false },
     },
   }) as any
   ownerProfileStore.updateOptInSettings = vi.fn().mockResolvedValue({
     success: true,
     data: {
       isCallable: true,
-      newsletterOptIn: true,
       isPushNotificationEnabled: false,
+      emailPreferences: { notifications: true, reminders: true, newsletter: true },
     },
   }) as any
 })
 
 describe('OptInCheckboxes', () => {
+  it('renders a checkbox for every email scope', () => {
+    const wrapper = mountComponent()
+    for (const scope of ['notifications', 'reminders', 'newsletter']) {
+      const id = scope === 'notifications' ? '#email-notifications-opt-in' : `#${scope}-opt-in`
+      expect(wrapper.find(id).exists()).toBe(true)
+    }
+  })
+
+  it.each([
+    ['#email-notifications-opt-in', 'notifications'],
+    ['#reminders-opt-in', 'reminders'],
+  ])('patches %s as the %s scope', async (id, scope) => {
+    const wrapper = mountComponent()
+    const store = useOwnerProfileStore()
+    const checkbox = wrapper.find(id)
+    ;(checkbox.element as HTMLInputElement).checked = false
+    await checkbox.trigger('change')
+
+    expect(store.updateOptInSettings).toHaveBeenCalledWith({
+      emailPreferences: { [scope]: false },
+    })
+  })
+
   describe('push checkbox', () => {
     it('renders PushPermissions without v-model', () => {
       const wrapper = mountComponent()
@@ -104,8 +127,8 @@ describe('OptInCheckboxes', () => {
         success: true,
         data: {
           isCallable: true,
-          newsletterOptIn: true,
           isPushNotificationEnabled: false,
+          emailPreferences: { notifications: true, reminders: true, newsletter: true },
         },
       })
 
@@ -113,7 +136,9 @@ describe('OptInCheckboxes', () => {
       ;(checkbox.element as HTMLInputElement).checked = true
       await checkbox.trigger('change')
 
-      expect(store.updateOptInSettings).toHaveBeenCalledWith({ newsletterOptIn: true })
+      expect(store.updateOptInSettings).toHaveBeenCalledWith({
+        emailPreferences: { newsletter: true },
+      })
     })
 
     it('reverts checkbox on failure', async () => {

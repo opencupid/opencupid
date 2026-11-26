@@ -2,21 +2,30 @@ import { createHash } from 'crypto'
 import { createSigner, createVerifier } from 'fast-jwt'
 import { appConfig } from '@/lib/appconfig'
 import { canonicalizeEmail } from '@/lib/email'
-
-/** What the link turns off: all notification email, or nearby-signups digests only. */
-export type UnsubscribeScope = 'all' | 'nearby_signups'
+import { EMAIL_SCOPES, type EmailScope } from '@zod/user/emailPreference.dto'
 
 /**
- * Token format: a narrower scope is carried as a `scope` claim; a token
- * without one turns off all notification email.
+ * Token format: the email scope the link turns off is carried as a `scope`
+ * claim.
+ *
+ * TODO(#email-preferences contract PR): drop the two legacy formats below.
+ * Links in emails sent before the EmailPreference deploy carry them and expire
+ * TOKEN_TTL_SECONDS after it:
+ * - no claim: turned off all notification email, which also stopped nearby
+ *   digests, so it keeps turning off both notifications and reminders;
+ * - `nearby_signups`: nearby digests only, now the reminders scope.
  */
-type NarrowScope = Exclude<UnsubscribeScope, 'all'>
-const NARROW_SCOPES: ReadonlySet<string> = new Set<NarrowScope>(['nearby_signups'])
+const CLAIM_SCOPES: ReadonlyMap<string, readonly EmailScope[]> = new Map([
+  ...EMAIL_SCOPES.map((scope) => [scope, [scope]] as const),
+  ['nearby_signups', ['reminders']],
+])
+const UNSCOPED_LEGACY_SCOPES: readonly EmailScope[] = ['notifications', 'reminders']
 
 export type UnsubscribePayload = {
   userId: string
   emailHash: string
-  scope: UnsubscribeScope
+  /** What the link turns off; the first scope picks the confirmation copy. */
+  scopes: readonly EmailScope[]
   /** Unix seconds — set by fast-jwt as the standard `iat` claim. */
   iat: number
 }
@@ -52,23 +61,24 @@ export function hashEmail(email: string): string {
  * dedicated UNSUBSCRIBE_SECRET disjoint from JWT_SECRET so it cannot be
  * reused to authenticate a session.
  */
-export function signUnsubscribeToken({
-  scope = 'all',
-  ...payload
-}: Omit<UnsubscribePayload, 'iat' | 'scope'> & { scope?: UnsubscribeScope }): string {
-  return signer(scope === 'all' ? { ...payload } : { ...payload, scope })
+export function signUnsubscribeToken(payload: {
+  userId: string
+  emailHash: string
+  scope: EmailScope
+}): string {
+  return signer(payload)
 }
 
 export function verifyUnsubscribeToken(token: string): UnsubscribePayload | null {
   try {
     const { userId, emailHash, scope, iat } = verifier(token) as Omit<
       UnsubscribePayload,
-      'scope'
+      'scopes'
     > & {
       scope?: string
     }
-    if (scope !== undefined && !NARROW_SCOPES.has(scope)) return null
-    return { userId, emailHash, scope: (scope as NarrowScope | undefined) ?? 'all', iat }
+    const scopes = scope === undefined ? UNSCOPED_LEGACY_SCOPES : CLAIM_SCOPES.get(scope)
+    return scopes ? { userId, emailHash, scopes, iat } : null
   } catch {
     return null
   }

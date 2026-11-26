@@ -80,17 +80,23 @@ describe('pure helpers', () => {
   })
 })
 
+const REMINDERS_GRANTED = {
+  user: { isActive: true, emailPreferences: { some: { scope: 'reminders', granted: true } } },
+}
+
 describe('sendNearbyDigests', () => {
-  it('selects dormant, opted-in, located profiles without an opt-out', async () => {
+  it('selects dormant, located profiles whose users receive reminder emails', async () => {
     mockRun([], [])
     await sendNearbyDigests({ runDate: '2026-11-23', now: NOW })
 
     const { where, include } = mockPrisma.profile.findMany.mock.calls[0][0]
     const cutoff = new Date(NOW.getTime() - DORMANT_DAYS * 24 * 60 * 60 * 1000)
     expect(where.activitySummary).toEqual({ lastSeenAt: { lt: cutoff } })
-    expect(where.nearbySignupOptOut).toEqual({ is: null })
-    expect(where.AND).toContainEqual({ user: { isActive: true, emailNotificationsOptIn: true } })
+    expect(where.AND).toContainEqual(REMINDERS_GRANTED)
     expect(include.nearbySignupNotifications.take).toBe(MAX_SENDS_PER_SPELL)
+    expect(include.user.include.emailPreferences).toEqual({
+      select: { scope: true, granted: true },
+    })
   })
 
   it('considers every profile when no cohort is given', async () => {
@@ -106,8 +112,7 @@ describe('sendNearbyDigests', () => {
 
     const { where } = mockPrisma.profile.findMany.mock.calls[0][0]
     expect(where.id).toEqual({ in: ['p1', 'p2'] })
-    expect(where.nearbySignupOptOut).toEqual({ is: null })
-    expect(where.AND).toContainEqual({ user: { isActive: true, emailNotificationsOptIn: true } })
+    expect(where.AND).toContainEqual(REMINDERS_GRANTED)
   })
 
   it('looks for new neighbours with the browse filter, blocklist, reference time and box', async () => {

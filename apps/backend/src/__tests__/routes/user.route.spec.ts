@@ -50,7 +50,6 @@ describe('GET /me', () => {
       email: 'a@b.com',
       phonenumber: null,
       language: 'en',
-      newsletterOptIn: false,
       isPushNotificationEnabled: false,
     }
     mockUserService.getUserById.mockResolvedValue(user)

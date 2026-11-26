@@ -138,6 +138,8 @@ model User {
   profile     Profile? @relation
   createdTags Tag[]    @relation("TagCreator")
 
+  emailPreferences EmailPreference[]
+
   pushSubscription          PushSubscription[]
   // TODO: remove isPushNotificationEnabled — push state should be derived from PushSubscription existence
   isPushNotificationEnabled Boolean            @default(false)
@@ -587,4 +589,38 @@ model NearbySignupOptOut {
   profileId String   @id
   profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+/// What a user agreed to receive by email. Each email type maps to one scope
+/// (see EMAIL_TYPE_SCOPE); a missing row means the email is not sent.
+enum EmailScope {
+  /// Service messages: messages, likes, matches, welcome, onboarding reminders.
+  notifications
+  /// Re-engagement: nearby-signups digest, match reminders.
+  reminders
+  /// Opt-in; sent outside the app.
+  newsletter
+}
+
+/// How the current value of an EmailPreference was set.
+enum EmailPreferenceSource {
+  /// Written at account creation; not a choice the user made.
+  default
+  settings
+  unsubscribe_link
+  data_migration
+}
+
+/// One row per user and scope, written when the user is created.
+/// Who/when/how for consent (GDPR Art. 7(1)): userId, updatedAt, source.
+model EmailPreference {
+  userId    String
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope     EmailScope
+  granted   Boolean
+  source    EmailPreferenceSource
+  updatedAt DateTime              @updatedAt
+
+  @@id([userId, scope])
+  @@index([scope, granted])
 }

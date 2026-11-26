@@ -28,6 +28,7 @@ import { ProfileTrustService } from '@/services/profileTrust.service'
 import { ClusterService } from '@/services/cluster.service'
 import { ImageService } from '@/services/image.service'
 import { computeHiddenFromResults } from '@/services/profileVisibility.service'
+import { emailPreferencesSelect, toEmailPreferences } from '@/services/emailPreference.service'
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
 import adminStatisticsRoutes from './admin/statistics.route'
@@ -403,7 +404,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
             isActive: true,
             isBlocked: true,
             isRegistrationConfirmed: true,
-            newsletterOptIn: true,
+            ...emailPreferencesSelect,
             roles: true,
             createdAt: true,
             language: true,
@@ -415,7 +416,10 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.code(200).send({
         success: true,
-        users,
+        users: users.map((u) => ({
+          ...u,
+          emailPreferences: toEmailPreferences(u.emailPreferences),
+        })),
         total,
         page: pageNum,
         pageSize: size,
@@ -449,8 +453,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
           updatedAt: true,
           language: true,
           originDomain: true,
-          newsletterOptIn: true,
-          emailNotificationsOptIn: true,
+          ...emailPreferencesSelect,
           isPushNotificationEnabled: true,
           _count: { select: { pushSubscription: true } },
           profile: {
@@ -461,7 +464,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
               isSocialActive: true,
               isDatingActive: true,
               activitySummary: { select: { lastSeenAt: true } },
-              nearbySignupOptOut: { select: { profileId: true } },
             },
           },
         },
@@ -469,11 +471,11 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (!user) return sendError(reply, 404, 'User not found')
 
-      const { profile, _count, ...rest } = user
+      const { profile, _count, emailPreferences, ...rest } = user
       const flattened = {
         ...rest,
+        emailPreferences: toEmailPreferences(emailPreferences),
         pushSubscriptionCount: _count.pushSubscription,
-        nearbySignupOptOut: !!profile?.nearbySignupOptOut,
         lastSeenAt: profile?.activitySummary?.lastSeenAt ?? null,
         profile: profile
           ? {
@@ -1192,41 +1194,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err) {
       fastify.log.error({ err }, 'Error translating tag via DeepL')
       return sendError(reply, 500, 'Translation failed')
-    }
-  })
-
-  /**
-   * GET /subscribers
-   * Returns subscriber data for external newsletter sync (active profiles with email).
-   * @returns {{ success, subscribers: { id, email, name, language, newsletterOptIn }[] }}
-   */
-  fastify.get('/subscribers', async (_req, reply) => {
-    try {
-      const users = await prisma.user.findMany({
-        where: {
-          profile: { isActive: true },
-        },
-        select: {
-          id: true,
-          email: true,
-          language: true,
-          newsletterOptIn: true,
-          profile: { select: { publicName: true } },
-        },
-      })
-
-      const subscribers = users.map((u) => ({
-        id: u.id,
-        email: u.email,
-        name: u.profile?.publicName ?? '',
-        language: u.language,
-        newsletterOptIn: u.newsletterOptIn,
-      }))
-
-      return reply.code(200).send({ success: true, subscribers })
-    } catch (err) {
-      fastify.log.error({ err }, 'Error fetching subscribers')
-      return sendError(reply, 500, 'Failed to fetch subscribers')
     }
   })
 

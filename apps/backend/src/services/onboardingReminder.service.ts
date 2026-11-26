@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { notifierService } from './notifier.service'
+import { emailPreferencesSelect } from './emailPreference.service'
 
 /**
  * Find users who registered within the given time window
@@ -28,6 +29,7 @@ export async function sendOnboardingReminders(
     },
     include: {
       profile: { select: { publicName: true } },
+      ...emailPreferencesSelect,
     },
   })
 

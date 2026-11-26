@@ -22,7 +22,7 @@ beforeEach(() => {
 describe('useUnsubscribeStore.getStatus', () => {
   it('URL-encodes the token and returns parsed status', async () => {
     mockApi.get.mockResolvedValueOnce({
-      data: { success: true, alreadyUnsubscribed: false, scope: 'all' },
+      data: { success: true, alreadyUnsubscribed: false, scope: 'notifications' },
     })
     const store = useUnsubscribeStore()
 
@@ -37,7 +37,7 @@ describe('useUnsubscribeStore.getStatus', () => {
 
   it('reports alreadyUnsubscribed when the API says so', async () => {
     mockApi.get.mockResolvedValueOnce({
-      data: { success: true, alreadyUnsubscribed: true, scope: 'all' },
+      data: { success: true, alreadyUnsubscribed: true, scope: 'notifications' },
     })
     const store = useUnsubscribeStore()
 
@@ -69,7 +69,7 @@ describe('useUnsubscribeStore.getStatus', () => {
 describe('useUnsubscribeStore.unsubscribe', () => {
   it('POSTs to the unsubscribe endpoint and returns parsed status', async () => {
     mockApi.post.mockResolvedValueOnce({
-      data: { success: true, alreadyUnsubscribed: false, scope: 'all' },
+      data: { success: true, alreadyUnsubscribed: false, scope: 'notifications' },
     })
     const store = useUnsubscribeStore()
 

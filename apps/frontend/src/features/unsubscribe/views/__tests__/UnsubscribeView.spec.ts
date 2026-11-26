@@ -43,16 +43,16 @@ beforeEach(() => {
 })
 
 describe('UnsubscribeView', () => {
-  it('uses the general copy for an all-scope link', async () => {
-    store.getStatus.mockResolvedValue(ok('all'))
+  it('uses the general copy for a notifications link', async () => {
+    store.getStatus.mockResolvedValue(ok('notifications'))
     const wrapper = mountView()
     await flushPromises()
 
     expect(wrapper.text()).toContain('unsubscribe.confirm_title')
   })
 
-  it('says only nearby-signups emails stop for a scoped link', async () => {
-    store.getStatus.mockResolvedValue(ok('nearby_signups'))
+  it('says only reminder emails stop for a reminders link', async () => {
+    store.getStatus.mockResolvedValue(ok('reminders'))
     const wrapper = mountView()
     await flushPromises()
 
@@ -61,7 +61,7 @@ describe('UnsubscribeView', () => {
   })
 
   it('shows the scoped already-unsubscribed text', async () => {
-    store.getStatus.mockResolvedValue(ok('nearby_signups', true))
+    store.getStatus.mockResolvedValue(ok('reminders', true))
     const wrapper = mountView()
     await flushPromises()
 
@@ -69,8 +69,8 @@ describe('UnsubscribeView', () => {
   })
 
   it('confirms with the scoped done text', async () => {
-    store.getStatus.mockResolvedValue(ok('nearby_signups'))
-    store.unsubscribe.mockResolvedValue(ok('nearby_signups'))
+    store.getStatus.mockResolvedValue(ok('reminders'))
+    store.unsubscribe.mockResolvedValue(ok('reminders'))
     const wrapper = mountView()
     await flushPromises()
 
@@ -83,7 +83,7 @@ describe('UnsubscribeView', () => {
   })
 
   it('shows the error state when unsubscribing fails', async () => {
-    store.getStatus.mockResolvedValue(ok('all'))
+    store.getStatus.mockResolvedValue(ok('notifications'))
     store.unsubscribe.mockResolvedValue({ success: false })
     const wrapper = mountView()
     await flushPromises()

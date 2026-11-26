@@ -20,8 +20,6 @@ export const profileOptInFields = {
 } as const
 
 export const userOptInFields = {
-  newsletterOptIn: true,
-  emailNotificationsOptIn: true,
   // TODO: remove isPushNotificationEnabled — push state should be derived from PushSubscription existence
   isPushNotificationEnabled: true,
 } as const

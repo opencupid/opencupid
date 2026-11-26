@@ -26,6 +26,7 @@ export { MessageTemplateScalarFieldEnumSchema } from './MessageTemplateScalarFie
 export { AccountDeletionFeedbackScalarFieldEnumSchema } from './AccountDeletionFeedbackScalarFieldEnumSchema';
 export { NearbySignupNotificationScalarFieldEnumSchema } from './NearbySignupNotificationScalarFieldEnumSchema';
 export { NearbySignupOptOutScalarFieldEnumSchema } from './NearbySignupOptOutScalarFieldEnumSchema';
+export { EmailPreferenceScalarFieldEnumSchema } from './EmailPreferenceScalarFieldEnumSchema';
 export { SortOrderSchema } from './SortOrderSchema';
 export { QueryModeSchema } from './QueryModeSchema';
 export { NullsOrderSchema } from './NullsOrderSchema';
@@ -42,3 +43,5 @@ export { AttendanceStatusSchema } from './AttendanceStatusSchema';
 export { TrustReasonSchema } from './TrustReasonSchema';
 export { MessageTemplateTypeSchema } from './MessageTemplateTypeSchema';
 export { AccountDeletionReasonSchema } from './AccountDeletionReasonSchema';
+export { EmailScopeSchema } from './EmailScopeSchema';
+export { EmailPreferenceSourceSchema } from './EmailPreferenceSourceSchema';

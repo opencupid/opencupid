@@ -167,6 +167,81 @@ describe('ProfileService.updateProfileScalars', () => {
   })
 })
 
+describe('ProfileService opt-in settings', () => {
+  const stored = {
+    isPushNotificationEnabled: true,
+    profile: { isCallable: false },
+    emailPreferences: [
+      { scope: 'notifications', granted: true },
+      { scope: 'newsletter', granted: true },
+    ],
+  }
+  const expected = {
+    isCallable: false,
+    isPushNotificationEnabled: true,
+    emailPreferences: { notifications: true, reminders: false, newsletter: true },
+  }
+
+  function makeTx() {
+    return {
+      profile: { update: vi.fn() },
+      user: { update: vi.fn(), findUniqueOrThrow: vi.fn().mockResolvedValue(stored) },
+      emailPreference: { upsert: vi.fn() },
+    }
+  }
+
+  it('reads the flags and every email scope for a profile', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue({ userId: 'u1' })
+    mockPrisma.user.findUniqueOrThrow = vi.fn().mockResolvedValue(stored)
+
+    expect(await service.getOptInSettingsByProfileId('p1')).toEqual(expected)
+    expect(mockPrisma.user.findUniqueOrThrow).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'u1' } })
+    )
+  })
+
+  it('returns null for a missing profile', async () => {
+    mockPrisma.profile.findUnique.mockResolvedValue(null)
+    expect(await service.getOptInSettingsByProfileId('missing')).toBeNull()
+  })
+
+  it('writes only the fields in the payload, email preferences from settings', async () => {
+    const tx = makeTx()
+
+    const result = await service.updateOptInSettingsByUserId(tx, 'u1', {
+      emailPreferences: { reminders: false },
+    })
+
+    expect(tx.profile.update).not.toHaveBeenCalled()
+    expect(tx.user.update).not.toHaveBeenCalled()
+    expect(tx.emailPreference.upsert).toHaveBeenCalledWith({
+      where: { userId_scope: { userId: 'u1', scope: 'reminders' } },
+      create: { userId: 'u1', scope: 'reminders', granted: false, source: 'settings' },
+      update: { granted: false, source: 'settings' },
+    })
+    expect(result).toEqual(expected)
+  })
+
+  it('updates the profile and user flags', async () => {
+    const tx = makeTx()
+
+    await service.updateOptInSettingsByUserId(tx, 'u1', {
+      isCallable: true,
+      isPushNotificationEnabled: false,
+    })
+
+    expect(tx.profile.update).toHaveBeenCalledWith({
+      where: { userId: 'u1' },
+      data: { isCallable: true },
+    })
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { isPushNotificationEnabled: false },
+    })
+    expect(tx.emailPreference.upsert).not.toHaveBeenCalled()
+  })
+})
+
 describe('ProfileService.addProfileTag / removeProfileTag', () => {
   it('connects a tag', async () => {
     mockPrisma.profile.update.mockResolvedValue({})

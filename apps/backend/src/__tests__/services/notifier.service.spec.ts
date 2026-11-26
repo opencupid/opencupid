@@ -51,6 +51,10 @@ vi.mock('@/lib/appconfig', () => ({
   },
 }))
 
+/** Preference rows with every listed scope granted. */
+const granted = (...scopes: string[]) => scopes.map((scope) => ({ scope, granted: true }))
+const ALL_GRANTED = granted('notifications', 'reminders', 'newsletter')
+
 describe('NotifierService', () => {
   beforeEach(() => {
     mockPrisma = {
@@ -59,9 +63,6 @@ describe('NotifierService', () => {
       },
       profile: {
         findUnique: vi.fn(),
-      },
-      nearbySignupOptOut: {
-        count: vi.fn().mockResolvedValue(0),
       },
     }
 
@@ -77,7 +78,10 @@ describe('NotifierService', () => {
     const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
     await service.notifyUser('missing-user', 'welcome', { path: '/me' })
 
-    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { id: 'missing-user' } })
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 'missing-user' },
+      include: { emailPreferences: { select: { scope: true, granted: true } } },
+    })
     expect(mockDispatchEmail).not.toHaveBeenCalled()
   })
 
@@ -99,6 +103,7 @@ describe('NotifierService', () => {
                 publicName: true,
               },
             },
+            emailPreferences: { select: { scope: true, granted: true } },
           },
         },
       },
@@ -123,7 +128,7 @@ describe('NotifierService', () => {
         email: 'user@example.com',
         originDomain: 'frontend.test',
         language: 'de',
-        emailNotificationsOptIn: true,
+        emailPreferences: ALL_GRANTED,
         profile: { publicName: 'Alice' },
       },
     })
@@ -175,7 +180,7 @@ describe('NotifierService', () => {
         email: 'recipient@example.com',
         originDomain: 'frontend.test',
         language: 'en',
-        emailNotificationsOptIn: true,
+        emailPreferences: ALL_GRANTED,
         profile: { publicName: 'Bob' },
       },
     })
@@ -203,7 +208,7 @@ describe('NotifierService', () => {
         email: 'recipient@example.com',
         originDomain: 'frontend.test',
         language: 'hu',
-        emailNotificationsOptIn: true,
+        emailPreferences: ALL_GRANTED,
         profile: { publicName: 'Bob' },
       },
     }
@@ -241,7 +246,7 @@ describe('NotifierService', () => {
       email: 'user@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: true,
+      emailPreferences: ALL_GRANTED,
       profile: { publicName: 'Alice' },
     })
 
@@ -271,7 +276,7 @@ describe('NotifierService', () => {
       email: 'user2@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: true,
+      emailPreferences: ALL_GRANTED,
       profile: null,
     })
 
@@ -295,13 +300,13 @@ describe('NotifierService', () => {
     )
   })
 
-  it('notifyUser: skips suppressible emails when emailNotificationsOptIn is false', async () => {
+  it('notifyUser: skips notification emails when notifications are off', async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 'user-3',
       email: 'user3@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: false,
+      emailPreferences: granted('reminders', 'newsletter'),
       profile: { publicName: 'Carol' },
     })
 
@@ -311,13 +316,13 @@ describe('NotifierService', () => {
     expect(mockDispatchEmail).not.toHaveBeenCalled()
   })
 
-  it('notifyUser: always sends login_link even when emailNotificationsOptIn is false', async () => {
+  it('notifyUser: always sends login_link, even with no preference granted', async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 'user-4',
       email: 'user4@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: false,
+      emailPreferences: granted('reminders', 'newsletter'),
       profile: { publicName: 'Dave' },
     })
 
@@ -341,7 +346,7 @@ describe('NotifierService', () => {
         email: 'other@example.com',
         originDomain: 'other.test',
         language: 'en',
-        emailNotificationsOptIn: true,
+        emailPreferences: ALL_GRANTED,
         profile: { publicName: 'Olga' },
       },
     })
@@ -368,7 +373,7 @@ describe('NotifierService', () => {
       email: 'unknown@example.com',
       originDomain: 'unknown.test',
       language: 'en',
-      emailNotificationsOptIn: true,
+      emailPreferences: ALL_GRANTED,
       profile: null,
     })
 
@@ -385,7 +390,7 @@ describe('NotifierService', () => {
       email: 'digest@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: true,
+      emailPreferences: ALL_GRANTED,
       profile: { publicName: 'Dora' },
     } as any
 
@@ -414,11 +419,11 @@ describe('NotifierService', () => {
       expect(call[1]).toMatchObject({ count: 4 })
     })
 
-    it('carries an unsubscribe link scoped to nearby-signups emails', async () => {
+    it('carries an unsubscribe link scoped to reminder emails', async () => {
       const [payload] = await sendDigest()
       const { verifyUnsubscribeToken } = await import('../../services/email/unsubscribeToken')
       const token = payload.templateProps.unsubscribeUrl.split('/unsubscribe/')[1].split('?')[0]
-      expect(verifyUnsubscribeToken(token)?.scope).toBe('nearby_signups')
+      expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['reminders'])
       expect(payload.headers['List-Unsubscribe']).toContain(token)
     })
 
@@ -429,31 +434,48 @@ describe('NotifierService', () => {
       expect(payload.templateProps.unsubscribeLabel).toBe('emails.unsubscribe_link_nearby_signups')
     })
 
-    it('is suppressed when the user turned off notification email', async () => {
+    it('is sent when only reminders are granted', async () => {
       const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
       await service.notifyLoadedUser(
-        { ...digestUser, emailNotificationsOptIn: false },
+        { ...digestUser, emailPreferences: granted('reminders') },
         'nearby_digest',
-        {
-          path: '/browse',
-          count: 4,
-        }
+        { path: '/browse', count: 4 }
       )
-      expect(mockDispatchEmail).not.toHaveBeenCalled()
+      expect(mockDispatchEmail).toHaveBeenCalledOnce()
     })
 
-    it('is suppressed when the user opted out of nearby-signups emails', async () => {
-      mockPrisma.nearbySignupOptOut.count.mockResolvedValue(1)
-      await sendDigest()
-      expect(mockPrisma.nearbySignupOptOut.count).toHaveBeenCalledWith({
-        where: { profile: { userId: 'user-digest' } },
-      })
+    it('is suppressed when the user turned off reminder emails', async () => {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(
+        {
+          ...digestUser,
+          emailPreferences: [...granted('notifications'), { scope: 'reminders', granted: false }],
+        },
+        'nearby_digest',
+        { path: '/browse', count: 4 }
+      )
       expect(mockDispatchEmail).not.toHaveBeenCalled()
     })
   })
 
-  it('does not check the nearby-signups opt-out for other types', async () => {
-    mockPrisma.nearbySignupOptOut.count.mockResolvedValue(1)
+  it('sends nothing suppressible when the user has no preference rows', async () => {
+    const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+    await service.notifyLoadedUser(
+      {
+        id: 'user-none',
+        email: 'none@example.com',
+        originDomain: 'frontend.test',
+        language: 'en',
+        emailPreferences: [],
+        profile: null,
+      } as any,
+      'new_like',
+      { path: '/browse' }
+    )
+    expect(mockDispatchEmail).not.toHaveBeenCalled()
+  })
+
+  it('sends notification emails when reminders are off', async () => {
     const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
     await service.notifyLoadedUser(
       {
@@ -461,13 +483,12 @@ describe('NotifierService', () => {
         email: 'like@example.com',
         originDomain: 'frontend.test',
         language: 'en',
-        emailNotificationsOptIn: true,
+        emailPreferences: granted('notifications'),
         profile: null,
       } as any,
       'new_like',
       { path: '/browse' }
     )
-    expect(mockPrisma.nearbySignupOptOut.count).not.toHaveBeenCalled()
     expect(mockDispatchEmail).toHaveBeenCalledOnce()
   })
 
@@ -477,7 +498,7 @@ describe('NotifierService', () => {
       email: 'utm@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: true,
+      emailPreferences: ALL_GRANTED,
       profile: null,
     } as any
 
@@ -518,13 +539,13 @@ describe('NotifierService', () => {
     })
   })
 
-  it('signs unsubscribe links for other types with the all scope', async () => {
+  it('signs unsubscribe links for other types with the notifications scope', async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 'user-like',
       email: 'like@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: true,
+      emailPreferences: ALL_GRANTED,
       profile: null,
     })
     const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
@@ -533,7 +554,7 @@ describe('NotifierService', () => {
     const [payload] = mockDispatchEmail.mock.calls[0]
     const { verifyUnsubscribeToken } = await import('../../services/email/unsubscribeToken')
     const token = payload.templateProps.unsubscribeUrl.split('/unsubscribe/')[1].split('?')[0]
-    expect(verifyUnsubscribeToken(token)?.scope).toBe('all')
+    expect(verifyUnsubscribeToken(token)?.scopes).toEqual(['notifications'])
   })
 
   describe('notifyLoadedUser', () => {
@@ -542,7 +563,7 @@ describe('NotifierService', () => {
       email: 'loaded@example.com',
       originDomain: 'frontend.test',
       language: 'en',
-      emailNotificationsOptIn: true,
+      emailPreferences: ALL_GRANTED,
       profile: null,
     } as any
 
@@ -556,6 +577,17 @@ describe('NotifierService', () => {
         'welcome-user-loaded',
         { bulk: false }
       )
+    })
+
+    it('suppresses onboarding reminders under the notifications scope', async () => {
+      const service = new NotifierService({ dispatchEmail: mockDispatchEmail } as any)
+      await service.notifyLoadedUser(
+        { ...loadedUser, emailPreferences: granted('reminders') },
+        'onboarding_reminder',
+        { path: '/onboarding' }
+      )
+
+      expect(mockDispatchEmail).not.toHaveBeenCalled()
     })
 
     it('sends onboarding reminders on the bulk queue', async () => {
