@@ -92,6 +92,7 @@ const MESSAGING_ERROR_STATUS: Record<MessagingErrorCode, number> = {
   [MessagingErrorCodes.EMPTY_MESSAGE]: 400,
   [MessagingErrorCodes.MESSAGE_NOT_FOUND]: 404,
   [MessagingErrorCodes.MESSAGE_NOT_EDITABLE]: 409,
+  [MessagingErrorCodes.SELF_CONVERSATION]: 400,
 }
 
 const messageRoutes: FastifyPluginAsync = async (fastify) => {
@@ -150,6 +151,13 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
   }> {
     const { senderProfileId, recipientProfileId, content, messageType, attachment, imageIds } =
       input
+
+    if (senderProfileId === recipientProfileId) {
+      throw new MessagingError(
+        MessagingErrorCodes.SELF_CONVERSATION,
+        'Cannot send a message to yourself'
+      )
+    }
 
     const isToSystemProfile = recipientProfileId === appConfig.ADMIN_PROFILE_ID
 
@@ -384,7 +392,7 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    * Resolves the conversation between the viewer and the given partner. Returns
    * a persisted ConversationSummary if one exists, or a ConversationDraftSummary
    * (no DB write) for pairs that haven't messaged yet. Vague 404 when the
-   * partner has blocked the viewer.
+   * partner has blocked the viewer; 400 SELF_CONVERSATION for the viewer's own id.
    * @returns {ConversationByProfileResponse}
    */
   fastify.get(
@@ -397,6 +405,13 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       const params = z.object({ profileId: z.string().cuid() }).safeParse(req.params)
       if (!params.success) return sendError(reply, 400, 'Invalid profileId')
       const partnerId = params.data.profileId
+      if (partnerId === viewerProfileId) {
+        return sendError(
+          reply,
+          MESSAGING_ERROR_STATUS[MessagingErrorCodes.SELF_CONVERSATION],
+          'Cannot start a conversation with yourself'
+        )
+      }
 
       try {
         const partner = await profileService.getProfilePublicById(partnerId, viewerProfileId)

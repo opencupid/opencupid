@@ -31,6 +31,7 @@ vi.mock('../../services/messaging.service', () => {
     EMPTY_MESSAGE: 'EMPTY_MESSAGE',
     MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
     MESSAGE_NOT_EDITABLE: 'MESSAGE_NOT_EDITABLE',
+    SELF_CONVERSATION: 'SELF_CONVERSATION',
   } as const
   class MessagingError extends Error {
     readonly code: (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
@@ -440,6 +441,16 @@ describe('POST /message', () => {
     await handler({ session: { profileId: 'p1' }, body: {} } as any, reply as any)
     expect(reply.statusCode).toBe(401)
     expect(reply.payload.message).toMatch('Invalid parameters')
+  })
+
+  it('returns 400 when sending to yourself, without touching the database', async () => {
+    const handler = fastify.routes['POST /message']
+    await handler(
+      { session: { profileId: validBody.profileId }, body: validBody } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(400)
+    expect(mockMessageService.resolveConversation).not.toHaveBeenCalled()
   })
 
   it('sends message and returns conversation with messageDTO', async () => {
@@ -1600,6 +1611,16 @@ describe('GET /conversations/by-profile/:profileId', () => {
       reply as any
     )
     expect(reply.statusCode).toBe(400)
+  })
+
+  it("returns 400 for the viewer's own profile id", async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    await handler(
+      { session: { profileId: validProfileId }, params: { profileId: validProfileId } } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(400)
+    expect(mockProfileService.getProfilePublicById).not.toHaveBeenCalled()
   })
 
   it('returns 404 when partner profile is not found', async () => {

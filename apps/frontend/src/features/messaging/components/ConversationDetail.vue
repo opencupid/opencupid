@@ -12,6 +12,7 @@ import BlockProfileDialog from '@/features/publicprofile/components/BlockProfile
 import SendMessage from './SendMessageForm.vue'
 import MessageList from './MessageList.vue'
 import MessagingNav from './MessagingNav.vue'
+import ConversationNotFound from './ConversationNotFound.vue'
 
 defineOptions({ name: 'ConversationDetail' })
 
@@ -38,49 +39,56 @@ async function handleBlockProfile() {
 
 <template>
   <div class="convo-detail shadow-lg h-100 position-relative d-flex flex-column">
-    <MessagingNav
-      class="messaging-nav w-100"
-      v-if="vm.partner.value"
-      :recipient="vm.partner.value"
-      :allowCalls="vm.myIsCallable.value"
-      :callableDisabled="vm.isDraft.value"
-      @deselect:convo="vm.deselect"
+    <ConversationNotFound
+      v-if="vm.notFound.value"
+      @back="vm.deselect"
       @close="router.replace({ name: 'Browse' })"
-      @profile:select="onProfileSelect"
-      @block:open="showModal = true"
-      @callable:toggle="vm.toggleCallable"
     />
-
-    <div class="flex-grow-1 overflow-hidden d-flex flex-column">
-      <MessageList
-        :messages="messageStore.messages"
-        :has-more="messageStore.hasMoreMessages"
-        :is-loading-more="messageStore.isLoadingMoreMessages"
-        :editable-message-id="messageStore.editableMessage?.id"
-        @load-older="messageStore.fetchOlderMessages"
-        @edit="messageStore.startEditing"
+    <template v-else>
+      <MessagingNav
+        class="messaging-nav w-100"
+        v-if="vm.partner.value"
+        :recipient="vm.partner.value"
+        :allowCalls="vm.myIsCallable.value"
+        :callableDisabled="vm.isDraft.value"
+        @deselect:convo="vm.deselect"
+        @close="router.replace({ name: 'Browse' })"
+        @profile:select="onProfileSelect"
+        @block:open="showModal = true"
+        @callable:toggle="vm.toggleCallable"
       />
-    </div>
 
-    <div class="send-message-wrapper d-flex flex-column align-items-center w-100 py-3 px-2">
-      <SendMessage
-        v-if="vm.partner.value && vm.conversation.value"
-        :recipientProfile="vm.partner.value"
-        :conversationId="vm.persistedConversation.value?.conversationId ?? null"
-        :canCall="vm.canCall.value"
-        :canReply="vm.conversation.value.canReply"
-        @message:sent="vm.onMessageSent"
-        @call:start="vm.startCall"
+      <div class="flex-grow-1 overflow-hidden d-flex flex-column">
+        <MessageList
+          :messages="messageStore.messages"
+          :has-more="messageStore.hasMoreMessages"
+          :is-loading-more="messageStore.isLoadingMoreMessages"
+          :editable-message-id="messageStore.editableMessage?.id"
+          @load-older="messageStore.fetchOlderMessages"
+          @edit="messageStore.startEditing"
+        />
+      </div>
+
+      <div class="send-message-wrapper d-flex flex-column align-items-center w-100 py-3 px-2">
+        <SendMessage
+          v-if="vm.partner.value && vm.conversation.value"
+          :recipientProfile="vm.partner.value"
+          :conversationId="vm.persistedConversation.value?.conversationId ?? null"
+          :canCall="vm.canCall.value"
+          :canReply="vm.conversation.value.canReply"
+          @message:sent="vm.onMessageSent"
+          @call:start="vm.startCall"
+        />
+      </div>
+
+      <BlockProfileDialog
+        v-if="vm.partner.value"
+        :profile="vm.partner.value"
+        v-model="showModal"
+        :loading="vm.profileStoreLoading.value"
+        @block="handleBlockProfile"
       />
-    </div>
-
-    <BlockProfileDialog
-      v-if="vm.partner.value"
-      :profile="vm.partner.value"
-      v-model="showModal"
-      :loading="vm.profileStoreLoading.value"
-      @block="handleBlockProfile"
-    />
+    </template>
   </div>
 </template>
 

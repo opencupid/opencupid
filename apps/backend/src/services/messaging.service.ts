@@ -14,6 +14,7 @@ export const MessagingErrorCodes = {
   EMPTY_MESSAGE: 'EMPTY_MESSAGE',
   MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
   MESSAGE_NOT_EDITABLE: 'MESSAGE_NOT_EDITABLE',
+  SELF_CONVERSATION: 'SELF_CONVERSATION',
 } as const
 
 export type MessagingErrorCode = (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]

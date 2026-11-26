@@ -160,6 +160,30 @@ describe('useConversationDetailViewModel — detail mode', () => {
     await vi.waitFor(() => expect(mockProfileStore.getPublicProfile).toHaveBeenCalledWith('p1'))
     expect(vm.isDraft.value).toBe(false)
     expect(vm.partner.value).toEqual(partner)
+    expect(vm.notFound.value).toBe(false)
+  })
+
+  it('flags notFound when the conversation cannot be loaded', async () => {
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'gone' }
+
+    const vm = mountVm()
+    await vi.waitFor(() => expect(vm.notFound.value).toBe(true))
+  })
+})
+
+describe('useConversationDetailViewModel — not found in draft mode', () => {
+  it('flags notFound when the profile cannot be resolved', async () => {
+    mockRouteName.value = 'ConversationNew'
+    mockRouteParams.value = { profileId: 'me' }
+    mockMessageStore.resolveConversationByProfile.mockResolvedValue({
+      success: false,
+      message: 'Cannot start a conversation with yourself',
+    })
+
+    const vm = mountVm()
+    await vi.waitFor(() => expect(vm.notFound.value).toBe(true))
+    expect(vm.conversation.value).toBeNull()
   })
 })
 

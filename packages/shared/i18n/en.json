@@ -242,6 +242,7 @@
     "attach_image": "Attach image",
     "block_member": "Block member",
     "cancel_edit": "Cancel editing",
+    "conversation_not_found": "This conversation does not exist.",
     "edit_message": "Edit message",
     "edit_no_longer_possible": "They replied in the meantime, so the message can no longer be edited. Your text is kept in the message box.",
     "edited": "edited",

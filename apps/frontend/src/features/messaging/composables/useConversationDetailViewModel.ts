@@ -33,6 +33,9 @@ export function useConversationDetailViewModel() {
   // Local-only — drafts never enter messageStore (which is persisted-only).
   const draftSummary = ref<ConversationDraftSummary | null>(null)
   const conversationPartner = ref<PublicProfile | null>(null)
+  // The route points at nothing the viewer can open: a missing or hidden
+  // conversation, or a profile that can't be messaged (e.g. their own).
+  const notFound = ref(false)
 
   const conversation = computed<ConversationOrDraft | null>(() => {
     if (mode.value === 'draft') return draftSummary.value
@@ -62,15 +65,21 @@ export function useConversationDetailViewModel() {
   watch(
     [mode, conversationId, partnerProfileId],
     async ([m, convoId, profileId]) => {
+      notFound.value = false
       if (m === 'detail' && convoId) {
         draftSummary.value = null
         await messageStore.setActiveConversationById(convoId)
+        if (!messageStore.activeConversation) {
+          notFound.value = true
+          return
+        }
         setTimeout(() => messageStore.markAsRead(convoId), 2000)
       } else if (m === 'draft' && profileId) {
         messageStore.resetActiveConversation()
         const res = await messageStore.resolveConversationByProfile(profileId)
         if (!res.success || !res.data) {
           draftSummary.value = null
+          notFound.value = true
           return
         }
         if (res.data.isDraft) {
@@ -164,6 +173,7 @@ export function useConversationDetailViewModel() {
     conversation,
     persistedConversation,
     partner: conversationPartner,
+    notFound,
     isDraft,
     isLoading: computed(() => messageStore.isLoading),
     canCall,
