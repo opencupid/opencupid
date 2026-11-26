@@ -21,7 +21,7 @@ describe('ConversationNotFound', () => {
   it('goes back to the inbox or closes the drawer', async () => {
     const wrapper = mountView()
 
-    await wrapper.find('[role="button"]').trigger('click')
+    await wrapper.find('button[type="button"]:not(.btn-close)').trigger('click')
     await wrapper.find('.btn-close').trigger('click')
 
     expect(wrapper.emitted('back')).toHaveLength(1)

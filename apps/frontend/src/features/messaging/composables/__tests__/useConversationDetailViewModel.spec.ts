@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h, ref } from 'vue'
-import { mount, type VueWrapper } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 
 import type { ConversationDraftSummary, ConversationSummary } from '@zod/messaging/messaging.dto'
 
@@ -184,6 +184,33 @@ describe('useConversationDetailViewModel — not found in draft mode', () => {
     const vm = mountVm()
     await vi.waitFor(() => expect(vm.notFound.value).toBe(true))
     expect(vm.conversation.value).toBeNull()
+  })
+  it('ignores a failure that arrives after navigating to another conversation', async () => {
+    let failOld!: (v: unknown) => void
+    mockRouteName.value = 'ConversationNew'
+    mockRouteParams.value = { profileId: 'gone' }
+    mockMessageStore.resolveConversationByProfile.mockReturnValueOnce(
+      new Promise((resolve) => (failOld = resolve))
+    )
+
+    const vm = mountVm()
+    await vi.waitFor(() =>
+      expect(mockMessageStore.resolveConversationByProfile).toHaveBeenCalledWith('gone')
+    )
+
+    // Navigate to a saved conversation while the old lookup is still pending.
+    mockMessageStore.activeConversation = makePersistedSummary('c1', 'p1')
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'c1' }
+    await vi.waitFor(() =>
+      expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledWith('c1')
+    )
+
+    failOld({ success: false, message: 'Profile not found' })
+    await flushPromises()
+
+    expect(vm.notFound.value).toBe(false)
+    expect(mockRouterReplace).not.toHaveBeenCalled()
   })
 })
 

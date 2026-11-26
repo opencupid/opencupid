@@ -61,14 +61,18 @@ export function useConversationDetailViewModel() {
   const myIsCallable = computed(() => conversation.value?.myIsCallable ?? true)
 
   // Route-driven resolution. Detail mode loads an existing conversation by id;
-  // draft mode resolves by partner profileId without writing anything.
+  // draft mode resolves by partner profileId without writing anything. A run
+  // superseded by a newer navigation drops its results after each await.
   watch(
     [mode, conversationId, partnerProfileId],
-    async ([m, convoId, profileId]) => {
+    async ([m, convoId, profileId], _prev, onCleanup) => {
+      let superseded = false
+      onCleanup(() => (superseded = true))
       notFound.value = false
       if (m === 'detail' && convoId) {
         draftSummary.value = null
         await messageStore.setActiveConversationById(convoId)
+        if (superseded) return
         if (!messageStore.activeConversation) {
           notFound.value = true
           return
@@ -77,6 +81,7 @@ export function useConversationDetailViewModel() {
       } else if (m === 'draft' && profileId) {
         messageStore.resetActiveConversation()
         const res = await messageStore.resolveConversationByProfile(profileId)
+        if (superseded) return
         if (!res.success || !res.data) {
           draftSummary.value = null
           notFound.value = true
@@ -89,6 +94,7 @@ export function useConversationDetailViewModel() {
           // so refresh / share-link behavior matches the detail route.
           draftSummary.value = null
           await messageStore.setActiveConversation(res.data)
+          if (superseded) return
           router.replace({
             name: 'Conversation',
             params: { conversationId: res.data.conversationId },
