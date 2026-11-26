@@ -27,6 +27,7 @@ import type {
   UpdateDatingPreferencesResponse,
   UpdateProfileScopeResponse,
 } from '@zod/apiResponse.dto'
+import { EMAIL_SCOPE_DEFAULTS } from '@zod/user/emailPreference.dto'
 import {
   DatingPreferencesFormSchema,
   type DatingPreferencesFormType,
@@ -34,9 +35,8 @@ import {
 
 const defaultOptInSettings: ProfileOptInSettings = {
   isCallable: true,
-  newsletterOptIn: true,
-  emailNotificationsOptIn: true,
   isPushNotificationEnabled: false,
+  emailPreferences: { ...EMAIL_SCOPE_DEFAULTS },
 }
 import {
   storeSuccess,

@@ -10,9 +10,8 @@ vi.mock('@/lib/appconfig', () => ({
 const mockPrisma = vi.hoisted(() => ({
   user: {
     findUnique: vi.fn(),
-    update: vi.fn(),
   },
-  nearbySignupOptOut: {
+  emailPreference: {
     upsert: vi.fn(),
   },
 }))
@@ -36,7 +35,7 @@ beforeEach(async () => {
   fastify = new MockFastify()
   reply = new MockReply()
   mockPrisma.user.findUnique.mockReset()
-  mockPrisma.user.update.mockReset()
+  mockPrisma.emailPreference.upsert.mockReset()
   await unsubscribeRoutes(fastify as any, {})
 })
 
@@ -48,75 +47,85 @@ const EMAIL = 'alice@example.com'
 const USER_ID = 'user-1'
 
 function validToken() {
-  return signUnsubscribeToken({ userId: USER_ID, emailHash: hashEmail(EMAIL) })
-}
-
-const PROFILE_ID = 'profile-1'
-
-function nearbyToken() {
   return signUnsubscribeToken({
     userId: USER_ID,
     emailHash: hashEmail(EMAIL),
-    scope: 'nearby_signups',
+    scope: 'notifications',
   })
 }
 
-function userWith({ optedOut = false, notifications = true } = {}) {
-  return {
-    id: USER_ID,
-    email: EMAIL,
-    emailNotificationsOptIn: notifications,
-    profile: { id: PROFILE_ID, nearbySignupOptOut: optedOut ? { profileId: PROFILE_ID } : null },
-  }
+function remindersToken() {
+  return signUnsubscribeToken({ userId: USER_ID, emailHash: hashEmail(EMAIL), scope: 'reminders' })
 }
 
-describe('nearby_signups scope', () => {
-  it('opts out of nearby-signups emails only', async () => {
+/** The user row resolveToken loads: the address and the token's scope row, if any. */
+function userWith({ granted = true as boolean | null, email = EMAIL } = {}) {
+  return { email, emailPreferences: granted === null ? [] : [{ granted }] }
+}
+
+function expectTurnedOff(scope: string) {
+  expect(mockPrisma.emailPreference.upsert).toHaveBeenCalledWith({
+    where: { userId_scope: { userId: USER_ID, scope } },
+    create: { userId: USER_ID, scope, granted: false, source: 'unsubscribe_link' },
+    update: { granted: false, source: 'unsubscribe_link' },
+  })
+}
+
+describe('reminders scope', () => {
+  it('turns off reminder emails only', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(userWith())
 
-    await fastify.routes['POST /:token']({ params: { token: nearbyToken() } } as any, reply as any)
+    await fastify.routes['POST /:token'](
+      { params: { token: remindersToken() } } as any,
+      reply as any
+    )
 
-    expect(reply.payload).toEqual({
-      success: true,
-      alreadyUnsubscribed: false,
-      scope: 'nearby_signups',
-    })
-    expect(mockPrisma.nearbySignupOptOut.upsert).toHaveBeenCalledWith({
-      where: { profileId: PROFILE_ID },
-      create: { profileId: PROFILE_ID },
-      update: {},
-    })
-    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+    expect(reply.payload).toEqual({ success: true, alreadyUnsubscribed: false, scope: 'reminders' })
+    expect(mockPrisma.emailPreference.upsert).toHaveBeenCalledTimes(1)
+    expectTurnedOff('reminders')
   })
 
-  it('is idempotent when already opted out', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(userWith({ optedOut: true }))
+  it('loads only the row for the token scope', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userWith())
 
-    await fastify.routes['POST /:token']({ params: { token: nearbyToken() } } as any, reply as any)
+    await fastify.routes['GET /:token'](
+      { params: { token: remindersToken() } } as any,
+      reply as any
+    )
+
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: USER_ID },
+      select: {
+        email: true,
+        emailPreferences: { where: { scope: 'reminders' }, select: { granted: true } },
+      },
+    })
+  })
+
+  it('is idempotent when already turned off', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userWith({ granted: false }))
+
+    await fastify.routes['POST /:token'](
+      { params: { token: remindersToken() } } as any,
+      reply as any
+    )
 
     expect(reply.payload.alreadyUnsubscribed).toBe(true)
-    expect(mockPrisma.nearbySignupOptOut.upsert).not.toHaveBeenCalled()
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 
-  it('reports the scope and the opt-out state on GET, ignoring the global flag', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(userWith({ notifications: false }))
-
-    await fastify.routes['GET /:token']({ params: { token: nearbyToken() } } as any, reply as any)
-
-    expect(reply.payload).toEqual({
-      success: true,
-      alreadyUnsubscribed: false,
-      scope: 'nearby_signups',
+  it('accepts links from nearby-digest emails sent before the reminders scope', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userWith())
+    const token = signUnsubscribeToken({
+      userId: USER_ID,
+      emailHash: hashEmail(EMAIL),
+      scope: 'nearby_signups' as any,
     })
-  })
 
-  it('rejects a nearby token for a user without a profile', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({ ...userWith(), profile: null })
+    await fastify.routes['POST /:token']({ params: { token } } as any, reply as any)
 
-    await fastify.routes['POST /:token']({ params: { token: nearbyToken() } } as any, reply as any)
-
-    expect(reply.statusCode).toBe(404)
-    expect(mockPrisma.nearbySignupOptOut.upsert).not.toHaveBeenCalled()
+    expect(reply.payload.scope).toBe('reminders')
+    expectTurnedOff('reminders')
   })
 
   it('rejects a token with an unknown scope', async () => {
@@ -134,53 +143,55 @@ describe('nearby_signups scope', () => {
 })
 
 describe('POST /unsubscribe/:token', () => {
-  it('disables email notifications on valid token', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      id: USER_ID,
-      email: EMAIL,
-      emailNotificationsOptIn: true,
-    })
-    mockPrisma.user.update.mockResolvedValue({})
+  it('turns off notification email on valid token', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userWith())
 
     const handler = fastify.routes['POST /:token']
     await handler({ params: { token: validToken() } } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload).toEqual({ success: true, alreadyUnsubscribed: false, scope: 'all' })
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { id: USER_ID },
-      data: { emailNotificationsOptIn: false },
+    expect(reply.payload).toEqual({
+      success: true,
+      alreadyUnsubscribed: false,
+      scope: 'notifications',
     })
+    expectTurnedOff('notifications')
   })
 
   it('is idempotent when user is already unsubscribed', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      id: USER_ID,
-      email: EMAIL,
-      emailNotificationsOptIn: false,
-    })
+    mockPrisma.user.findUnique.mockResolvedValue(userWith({ granted: false }))
 
     const handler = fastify.routes['POST /:token']
     await handler({ params: { token: validToken() } } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload).toEqual({ success: true, alreadyUnsubscribed: true, scope: 'all' })
-    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+    expect(reply.payload).toEqual({
+      success: true,
+      alreadyUnsubscribed: true,
+      scope: 'notifications',
+    })
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
+  })
+
+  it('treats a missing preference row as already unsubscribed', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userWith({ granted: null }))
+
+    const handler = fastify.routes['POST /:token']
+    await handler({ params: { token: validToken() } } as any, reply as any)
+
+    expect(reply.payload.alreadyUnsubscribed).toBe(true)
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 
   it('rejects a token signed for a different email', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      id: USER_ID,
-      email: 'new@example.com',
-      emailNotificationsOptIn: true,
-    })
+    mockPrisma.user.findUnique.mockResolvedValue(userWith({ email: 'new@example.com' }))
 
     const handler = fastify.routes['POST /:token']
     await handler({ params: { token: validToken() } } as any, reply as any)
 
     expect(reply.statusCode).toBe(400)
     expect(reply.payload.success).toBe(false)
-    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 
   it('rejects a garbage token', async () => {
@@ -194,7 +205,7 @@ describe('POST /unsubscribe/:token', () => {
   it('rejects an expired token', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(Date.now())
-    const token = signUnsubscribeToken({ userId: USER_ID, emailHash: hashEmail(EMAIL) })
+    const token = validToken()
     vi.advanceTimersByTime((TOKEN_TTL_SECONDS + 60) * 1000)
 
     const handler = fastify.routes['POST /:token']
@@ -212,30 +223,28 @@ describe('POST /unsubscribe/:token', () => {
     await handler({ params: { token: validToken() } } as any, reply as any)
 
     expect(reply.statusCode).toBe(404)
-    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 })
 
 describe('GET /unsubscribe/:token', () => {
   it('reports current subscription state without side effects', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      email: EMAIL,
-      emailNotificationsOptIn: true,
-    })
+    mockPrisma.user.findUnique.mockResolvedValue(userWith())
 
     const handler = fastify.routes['GET /:token']
     await handler({ params: { token: validToken() } } as any, reply as any)
 
     expect(reply.statusCode).toBe(200)
-    expect(reply.payload).toEqual({ success: true, alreadyUnsubscribed: false, scope: 'all' })
-    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+    expect(reply.payload).toEqual({
+      success: true,
+      alreadyUnsubscribed: false,
+      scope: 'notifications',
+    })
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 
-  it('reports alreadyUnsubscribed when the flag is off', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      email: EMAIL,
-      emailNotificationsOptIn: false,
-    })
+  it('reports alreadyUnsubscribed when the scope is off', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(userWith({ granted: false }))
 
     const handler = fastify.routes['GET /:token']
     await handler({ params: { token: validToken() } } as any, reply as any)
@@ -263,12 +272,7 @@ describe('one-click request bodies (RFC 8058)', () => {
     // A sibling route: the parser must not leak out of the unsubscribe scope.
     app.post('/api/other', async () => ({ ok: true }))
     await app.ready()
-    mockPrisma.user.findUnique.mockResolvedValue({
-      id: USER_ID,
-      email: EMAIL,
-      emailNotificationsOptIn: true,
-    })
-    mockPrisma.user.update.mockResolvedValue({})
+    mockPrisma.user.findUnique.mockResolvedValue(userWith())
   })
 
   afterEach(async () => {
@@ -284,26 +288,25 @@ describe('one-click request bodies (RFC 8058)', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ success: true, alreadyUnsubscribed: false, scope: 'all' })
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { id: USER_ID },
-      data: { emailNotificationsOptIn: false },
+    expect(res.json()).toEqual({
+      success: true,
+      alreadyUnsubscribed: false,
+      scope: 'notifications',
     })
+    expectTurnedOff('notifications')
   })
 
-  it('opts out of nearby-signups only on a one-click POST with a scoped token', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(userWith())
-
+  it('turns off only reminders on a one-click POST with a reminders token', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/unsubscribe/${nearbyToken()}`,
+      url: `/api/unsubscribe/${remindersToken()}`,
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       payload: 'List-Unsubscribe=One-Click',
     })
 
     expect(res.statusCode).toBe(200)
-    expect(mockPrisma.nearbySignupOptOut.upsert).toHaveBeenCalled()
-    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+    expect(mockPrisma.emailPreference.upsert).toHaveBeenCalledTimes(1)
+    expectTurnedOff('reminders')
   })
 
   it('unsubscribes on a multipart/form-data one-click POST', async () => {
@@ -320,7 +323,7 @@ describe('one-click request bodies (RFC 8058)', () => {
     })
 
     expect(res.statusCode).toBe(200)
-    expect(mockPrisma.user.update).toHaveBeenCalled()
+    expectTurnedOff('notifications')
   })
 
   it('still accepts the bodiless POST the unsubscribe page sends', async () => {
@@ -336,7 +339,7 @@ describe('one-click request bodies (RFC 8058)', () => {
       payload: 'List-Unsubscribe=One-Click',
     })
     expect(res.statusCode).toBe(400)
-    expect(mockPrisma.user.update).not.toHaveBeenCalled()
+    expect(mockPrisma.emailPreference.upsert).not.toHaveBeenCalled()
   })
 
   it('does not accept form bodies on routes outside the unsubscribe plugin', async () => {

@@ -73,11 +73,9 @@ const baseUser = {
   email: 'a@b.com',
   isActive: true,
   isBlocked: false,
-  newsletterOptIn: true,
-  emailNotificationsOptIn: false,
+  emailPreferences: { notifications: false, reminders: false, newsletter: true },
   isPushNotificationEnabled: true,
   pushSubscriptionCount: 2,
-  nearbySignupOptOut: true,
   createdAt: '2026-01-02T00:00:00Z',
   lastSeenAt: null,
   language: 'en',
@@ -91,7 +89,7 @@ const baseUserRow = {
   isActive: true,
   isBlocked: false,
   isRegistrationConfirmed: false,
-  newsletterOptIn: false,
+  emailPreferences: { notifications: true, reminders: true, newsletter: false },
   createdAt: '2026-01-03T00:00:00Z',
   originDomain: 'example.org',
 }
@@ -801,7 +799,7 @@ describe('ProfilesPage', () => {
     )
     expect(rows['Newsletter']).toBe('Yes')
     expect(rows['Email notifications']).toBe('No')
-    expect(rows['Nearby signup emails']).toBe('No')
+    expect(rows['Reminder emails']).toBe('No')
     expect(rows['Push notifications']).toContain('Yes')
     expect(rows['Push notifications']).toContain('2 subscribed devices')
 

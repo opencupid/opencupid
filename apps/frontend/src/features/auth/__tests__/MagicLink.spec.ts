@@ -82,7 +82,6 @@ const emailLoginUser = {
   email: 'test@example.com',
   phonenumber: '',
   language: 'en',
-  newsletterOptIn: true,
   isPushNotificationEnabled: false,
 }
 

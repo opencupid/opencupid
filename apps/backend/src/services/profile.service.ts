@@ -17,6 +17,11 @@ import {
 import { mapToLocalizedUpserts } from '@/api/mappers/profile.mappers'
 import { computeHiddenFromResults } from '@/services/profileVisibility.service'
 import {
+  emailPreferencesSelect,
+  setEmailPreferences,
+  toEmailPreferences,
+} from '@/services/emailPreference.service'
+import {
   blockedContextInclude,
   conversationContextInclude,
   interactionContextInclude,
@@ -148,110 +153,44 @@ export class ProfileService {
   async getOptInSettingsByProfileId(profileId: string): Promise<ProfileOptInSettings | null> {
     const profile = await prisma.profile.findUnique({
       where: { id: profileId },
-      select: {
-        isCallable: true,
-        user: {
-          select: {
-            newsletterOptIn: true,
-            emailNotificationsOptIn: true,
-            isPushNotificationEnabled: true,
-          },
-        },
-      },
+      select: { userId: true },
     })
-
     if (!profile) return null
-
-    return {
-      isCallable: profile.isCallable,
-      newsletterOptIn: profile.user.newsletterOptIn,
-      emailNotificationsOptIn: profile.user.emailNotificationsOptIn,
-      isPushNotificationEnabled: profile.user.isPushNotificationEnabled,
-    }
+    return this.readOptInSettings(prisma, profile.userId)
   }
 
-  /*
-  TODO  #tech-debt - The updateOptInSettingsByUserId method executes separate queries for profile 
-  and user updates, followed by separate findUnique queries when no updates are needed
-   (lines 145-150, 168-174). Use a single query with a select that includes both profile
-    and user fields in a join, reducing the number of database round trips from potentially
-     4 queries to 2 (one for update, one for fallback read).
-
-     This function is AI slop that needs to be drastically simplified.
-    
-  */
   async updateOptInSettingsByUserId(
     tx: Prisma.TransactionClient,
     userId: string,
-    data: UpdateProfileOptInPayload
+    { emailPreferences, isCallable, isPushNotificationEnabled }: UpdateProfileOptInPayload
   ): Promise<ProfileOptInSettings> {
-    const profileUpdateData: Prisma.ProfileUpdateInput = {}
-    if (typeof data.isCallable === 'boolean') {
-      profileUpdateData.isCallable = data.isCallable
+    if (isCallable !== undefined) {
+      await tx.profile.update({ where: { userId }, data: { isCallable } })
     }
-
-    const userUpdateData: Prisma.UserUpdateInput = {}
-    if (typeof data.newsletterOptIn === 'boolean') {
-      userUpdateData.newsletterOptIn = data.newsletterOptIn
+    if (isPushNotificationEnabled !== undefined) {
+      await tx.user.update({ where: { id: userId }, data: { isPushNotificationEnabled } })
     }
-    if (typeof data.emailNotificationsOptIn === 'boolean') {
-      userUpdateData.emailNotificationsOptIn = data.emailNotificationsOptIn
-    }
-    if (typeof data.isPushNotificationEnabled === 'boolean') {
-      userUpdateData.isPushNotificationEnabled = data.isPushNotificationEnabled
-    }
+    if (emailPreferences) await setEmailPreferences(tx, userId, emailPreferences, 'settings')
+    return this.readOptInSettings(tx, userId)
+  }
 
-    let isCallable: boolean
-    if (Object.keys(profileUpdateData).length > 0) {
-      const profile = await tx.profile.update({
-        where: { userId },
-        data: profileUpdateData,
-        select: { isCallable: true },
-      })
-      isCallable = profile.isCallable
-    } else {
-      const profile = await tx.profile.findUnique({
-        where: { userId },
-        select: { isCallable: true },
-      })
-      if (!profile) throw new Error(`Profile not found for userId: ${userId}`)
-      isCallable = profile.isCallable
-    }
-
-    let userFlags: {
-      newsletterOptIn: boolean
-      emailNotificationsOptIn: boolean
-      isPushNotificationEnabled: boolean
-    } | null = null
-
-    if (Object.keys(userUpdateData).length > 0) {
-      userFlags = await tx.user.update({
-        where: { id: userId },
-        data: userUpdateData,
-        select: {
-          newsletterOptIn: true,
-          emailNotificationsOptIn: true,
-          isPushNotificationEnabled: true,
-        },
-      })
-    } else {
-      userFlags = await tx.user.findUnique({
-        where: { id: userId },
-        select: {
-          newsletterOptIn: true,
-          emailNotificationsOptIn: true,
-          isPushNotificationEnabled: true,
-        },
-      })
-    }
-
-    if (!userFlags) throw new Error(`User not found: ${userId}`)
-
+  private async readOptInSettings(
+    db: Prisma.TransactionClient,
+    userId: string
+  ): Promise<ProfileOptInSettings> {
+    const user = await db.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: {
+        isPushNotificationEnabled: true,
+        profile: { select: { isCallable: true } },
+        ...emailPreferencesSelect,
+      },
+    })
+    if (!user.profile) throw new Error(`Profile not found for userId: ${userId}`)
     return {
-      isCallable,
-      newsletterOptIn: userFlags.newsletterOptIn,
-      emailNotificationsOptIn: userFlags.emailNotificationsOptIn,
-      isPushNotificationEnabled: userFlags.isPushNotificationEnabled,
+      isCallable: user.profile.isCallable,
+      isPushNotificationEnabled: user.isPushNotificationEnabled,
+      emailPreferences: toEmailPreferences(user.emailPreferences),
     }
   }
 

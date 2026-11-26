@@ -588,7 +588,7 @@ describe('GET /users', () => {
         isActive: true,
         isBlocked: false,
         isRegistrationConfirmed: true,
-        newsletterOptIn: false,
+        emailPreferences: [{ scope: 'notifications', granted: true }],
         roles: ['user'],
         createdAt: new Date(),
         language: 'en',
@@ -604,7 +604,11 @@ describe('GET /users', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.total).toBe(1)
     expect(reply.payload.users).toHaveLength(1)
-    expect(reply.payload.users[0]).toMatchObject({ id: 'user1', email: 'test@test.com' })
+    expect(reply.payload.users[0]).toMatchObject({
+      id: 'user1',
+      email: 'test@test.com',
+      emailPreferences: { notifications: true, reminders: false, newsletter: false },
+    })
   })
 
   it('filters to users without a profile when hasProfile=false', async () => {
@@ -667,8 +671,11 @@ describe('GET /users/:id', () => {
       id: 'user1',
       email: 'test@test.com',
       isActive: true,
-      newsletterOptIn: true,
-      emailNotificationsOptIn: false,
+      emailPreferences: [
+        { scope: 'notifications', granted: false },
+        { scope: 'reminders', granted: true },
+        { scope: 'newsletter', granted: true },
+      ],
       isPushNotificationEnabled: true,
       _count: { pushSubscription: 2 },
       profile: {
@@ -678,7 +685,6 @@ describe('GET /users/:id', () => {
         isSocialActive: true,
         isDatingActive: false,
         activitySummary: { lastSeenAt: seen },
-        nearbySignupOptOut: { profileId: 'prof1' },
       },
     })
 
@@ -689,11 +695,9 @@ describe('GET /users/:id', () => {
     expect(reply.payload.success).toBe(true)
     expect(reply.payload.user).toMatchObject({
       id: 'user1',
-      newsletterOptIn: true,
-      emailNotificationsOptIn: false,
+      emailPreferences: { notifications: false, reminders: true, newsletter: true },
       isPushNotificationEnabled: true,
       pushSubscriptionCount: 2,
-      nearbySignupOptOut: true,
       lastSeenAt: seen,
       profile: {
         id: 'prof1',
@@ -712,6 +716,7 @@ describe('GET /users/:id', () => {
       id: 'user2',
       email: 'x@y.z',
       isActive: false,
+      emailPreferences: [],
       _count: { pushSubscription: 0 },
       profile: null,
     })
@@ -723,7 +728,7 @@ describe('GET /users/:id', () => {
     expect(reply.payload.user).toMatchObject({
       id: 'user2',
       lastSeenAt: null,
-      nearbySignupOptOut: false,
+      emailPreferences: { notifications: false, reminders: false, newsletter: false },
       profile: null,
     })
   })
@@ -1776,96 +1781,6 @@ describe('POST /tags/translate', () => {
     await handler({ body: { text: 'Hiking', targetLocales: ['de'] } }, reply)
 
     expect(reply.statusCode).toBe(500)
-  })
-})
-
-describe('GET /subscribers', () => {
-  it('returns subscribers with correct shape', async () => {
-    mockPrisma.user.findMany.mockResolvedValue([
-      {
-        id: 'user1',
-        email: 'alice@example.com',
-        language: 'de',
-        newsletterOptIn: true,
-        profile: { publicName: 'Alice' },
-      },
-      {
-        id: 'user2',
-        email: 'bob@example.com',
-        language: 'en',
-        newsletterOptIn: false,
-        profile: { publicName: 'Bob' },
-      },
-    ])
-
-    const handler = fastify.routes['GET /subscribers']
-    await handler({}, reply)
-
-    expect(reply.statusCode).toBe(200)
-    expect(reply.payload.success).toBe(true)
-    expect(reply.payload.subscribers).toEqual([
-      {
-        id: 'user1',
-        email: 'alice@example.com',
-        name: 'Alice',
-        language: 'de',
-        newsletterOptIn: true,
-      },
-      {
-        id: 'user2',
-        email: 'bob@example.com',
-        name: 'Bob',
-        language: 'en',
-        newsletterOptIn: false,
-      },
-    ])
-  })
-
-  it('only queries users with active profile', async () => {
-    mockPrisma.user.findMany.mockResolvedValue([])
-
-    const handler = fastify.routes['GET /subscribers']
-    await handler({}, reply)
-
-    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
-      where: {
-        profile: { isActive: true },
-      },
-      select: {
-        id: true,
-        email: true,
-        language: true,
-        newsletterOptIn: true,
-        profile: { select: { publicName: true } },
-      },
-    })
-  })
-
-  it('defaults name to empty string when profile is null', async () => {
-    mockPrisma.user.findMany.mockResolvedValue([
-      {
-        id: 'user3',
-        email: 'noname@example.com',
-        language: 'en',
-        newsletterOptIn: true,
-        profile: null,
-      },
-    ])
-
-    const handler = fastify.routes['GET /subscribers']
-    await handler({}, reply)
-
-    expect(reply.payload.subscribers[0].name).toBe('')
-  })
-
-  it('handles errors gracefully', async () => {
-    mockPrisma.user.findMany.mockRejectedValueOnce(new Error('DB error'))
-
-    const handler = fastify.routes['GET /subscribers']
-    await handler({}, reply)
-
-    expect(reply.statusCode).toBe(500)
-    expect(reply.payload.success).toBe(false)
   })
 })
 

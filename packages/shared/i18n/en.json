@@ -521,6 +521,8 @@
     "notifications_label": "Notifications",
     "notifications_opt_in": "When someone messages me, smiles at me, or matches with me...",
     "push_notify_messages": "Popup and mobile notification",
+    "reminders_opt_in": "Reminder emails",
+    "reminders_opt_in_hint": "When new people join near you, or a match is waiting for you. You can turn these off any time.",
     "title": "Settings"
   },
   "uicomponents": {

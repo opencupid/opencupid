@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import PushPermissions from './PushPermissions.vue'
 import type { ProfileOptInSettings, UpdateProfileOptInPayload } from '@zod/profile/profile.dto'
+import { EMAIL_SCOPES, EMAIL_SCOPE_DEFAULTS, type EmailScope } from '@zod/user/emailPreference.dto'
 
 defineProps<{
   disabled?: boolean
@@ -15,11 +16,18 @@ const ownerProfileStore = useOwnerProfileStore()
 const model = defineModel<ProfileOptInSettings>({
   default: () => ({
     isCallable: true,
-    newsletterOptIn: false,
-    emailNotificationsOptIn: true,
     isPushNotificationEnabled: false,
+    emailPreferences: { ...EMAIL_SCOPE_DEFAULTS },
   }),
 })
+
+// Notifications sit with push under the "when someone messages me" heading;
+// every other scope gets its own checkbox, labelled settings.<scope>_opt_in.
+const standaloneScopes = EMAIL_SCOPES.filter((scope) => scope !== 'notifications')
+
+function emailPatch(scope: EmailScope, event: Event): UpdateProfileOptInPayload {
+  return { emailPreferences: { [scope]: (event.target as HTMLInputElement).checked } }
+}
 
 const isSaving = ref(false)
 
@@ -57,14 +65,9 @@ async function handleOptInChange(event: Event, patch: UpdateProfileOptInPayload)
           id="email-notifications-opt-in"
           type="checkbox"
           class="form-check-input"
-          :checked="model.emailNotificationsOptIn"
+          :checked="model.emailPreferences.notifications"
           :disabled="disabled || isSaving"
-          @change="
-            (e) =>
-              handleOptInChange(e, {
-                emailNotificationsOptIn: (e.target as HTMLInputElement).checked,
-              })
-          "
+          @change="(e) => handleOptInChange(e, emailPatch('notifications', e))"
         />
         <label
           class="form-check-label"
@@ -76,25 +79,27 @@ async function handleOptInChange(event: Event, patch: UpdateProfileOptInPayload)
     </div>
   </fieldset>
 
-  <fieldset class="mb-2">
+  <fieldset
+    v-for="scope in standaloneScopes"
+    :key="scope"
+    class="mb-2"
+  >
     <div class="form-check">
       <input
-        id="newsletter-opt-in"
+        :id="`${scope}-opt-in`"
         type="checkbox"
         class="form-check-input"
-        :checked="model.newsletterOptIn"
+        :checked="model.emailPreferences[scope]"
         :disabled="disabled || isSaving"
-        @change="
-          (e) => handleOptInChange(e, { newsletterOptIn: (e.target as HTMLInputElement).checked })
-        "
+        @change="(e) => handleOptInChange(e, emailPatch(scope, e))"
       />
       <label
         class="form-check-label"
-        for="newsletter-opt-in"
+        :for="`${scope}-opt-in`"
       >
-        {{ t('settings.newsletter_opt_in') }}
+        {{ t(`settings.${scope}_opt_in`) }}
       </label>
-      <div class="form-hint">{{ t('settings.newsletter_opt_in_hint') }}</div>
+      <div class="form-hint">{{ t(`settings.${scope}_opt_in_hint`) }}</div>
     </div>
   </fieldset>
 

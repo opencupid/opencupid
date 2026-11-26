@@ -25,3 +25,4 @@ export * from './MessageTemplateSchema';
 export * from './AccountDeletionFeedbackSchema';
 export * from './NearbySignupNotificationSchema';
 export * from './NearbySignupOptOutSchema';
+export * from './EmailPreferenceSchema';

@@ -201,6 +201,22 @@ describe('UserService.setLoginToken', () => {
         loginTokenExp: expect.any(Date),
         language: 'en',
         originDomain: 'test.local',
+        emailPreferences: expect.anything(),
+      },
+    })
+  })
+
+  it('gives a new user one email preference row per scope at its default', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null)
+    mockPrisma.user.create.mockResolvedValue({ id: 'new' })
+    await service.setLoginToken({ email: 'new@example.com' }, 'en', 'test.local')
+    expect(mockPrisma.user.create.mock.calls[0][0].data.emailPreferences).toEqual({
+      createMany: {
+        data: [
+          { scope: 'notifications', granted: true, source: 'default' },
+          { scope: 'reminders', granted: true, source: 'default' },
+          { scope: 'newsletter', granted: false, source: 'default' },
+        ],
       },
     })
   })

@@ -29,38 +29,58 @@ describe('unsubscribeToken', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
+      scope: 'notifications',
     })
     expect(verifyUnsubscribeToken(token)).toEqual({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
-      scope: 'all',
+      scope: 'notifications',
       iat: NOW,
     })
   })
 
-  it('round-trips a narrow scope', () => {
+  it.each(['reminders', 'newsletter'] as const)('round-trips the %s scope', (scope) => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
-      scope: 'nearby_signups',
+      scope,
     })
-    expect(verifyUnsubscribeToken(token)?.scope).toBe('nearby_signups')
+    expect(verifyUnsubscribeToken(token)?.scope).toBe(scope)
   })
 
-  it("signs an 'all' token without a scope claim", () => {
+  it('signs a notifications token without a scope claim', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
-      scope: 'all',
+      scope: 'notifications',
     })
     const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
     expect(claims).not.toHaveProperty('scope')
+  })
+
+  it('reads a nearby_signups claim from older nearby-digest emails as reminders', () => {
+    const token = signUnsubscribeToken({
+      userId: 'user-1',
+      emailHash: hashEmail('alice@example.com'),
+      scope: 'nearby_signups' as any,
+    })
+    expect(verifyUnsubscribeToken(token)?.scope).toBe('reminders')
+  })
+
+  it('rejects an unknown scope claim', () => {
+    const token = signUnsubscribeToken({
+      userId: 'user-1',
+      emailHash: hashEmail('alice@example.com'),
+      scope: 'toString' as any,
+    })
+    expect(verifyUnsubscribeToken(token)).toBeNull()
   })
 
   it('rejects tokens tampered in the payload', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
+      scope: 'notifications',
     })
     const [header, , sig] = token.split('.')
     const tamperedPayload = Buffer.from(
@@ -73,6 +93,7 @@ describe('unsubscribeToken', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
+      scope: 'notifications',
     })
     const [header, payloadB64] = token.split('.')
     const badSig = Buffer.alloc(32).toString('base64url')
@@ -89,6 +110,7 @@ describe('unsubscribeToken', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
+      scope: 'notifications',
     })
     vi.setSystemTime((NOW + TOKEN_TTL_SECONDS + 1) * 1000)
     expect(verifyUnsubscribeToken(token)).toBeNull()
@@ -98,6 +120,7 @@ describe('unsubscribeToken', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
+      scope: 'notifications',
     })
     vi.setSystemTime((NOW + TOKEN_TTL_SECONDS - 1) * 1000)
     expect(verifyUnsubscribeToken(token)).not.toBeNull()
@@ -107,10 +130,10 @@ describe('unsubscribeToken', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('alice@example.com'),
-      scope: 'nearby_signups',
+      scope: 'reminders',
     })
     vi.setSystemTime((NOW + 6 * 24 * 60 * 60) * 1000)
-    expect(verifyUnsubscribeToken(token)?.scope).toBe('nearby_signups')
+    expect(verifyUnsubscribeToken(token)?.scope).toBe('reminders')
   })
 
   it('hashEmail is stable, lowercase- and whitespace-normalized', () => {
@@ -132,6 +155,7 @@ describe('unsubscribeToken', () => {
     const token = signUnsubscribeToken({
       userId: 'user-1',
       emailHash: hashEmail('old@example.com'),
+      scope: 'notifications',
     })
     const payload = verifyUnsubscribeToken(token)
     // Token still valid cryptographically, but the route-level check compares

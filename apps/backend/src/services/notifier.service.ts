@@ -1,11 +1,13 @@
 import { prisma } from '@/lib/prisma'
-import type { User } from '@prisma/client'
+import type { EmailPreference, User } from '@prisma/client'
 import type { TFunction } from 'i18next'
 import { brandFor, type Brand } from '@/lib/brand'
 import { tFor } from '@/lib/i18n'
 import { dispatcher } from '@/queues/emailDispatcher'
 import type { EmailPayload } from './email/types'
-import { hashEmail, signUnsubscribeToken, type UnsubscribeScope } from './email/unsubscribeToken'
+import { hashEmail, signUnsubscribeToken } from './email/unsubscribeToken'
+import { emailPreferencesSelect, isGranted } from './emailPreference.service'
+import type { EmailScope } from '@zod/user/emailPreference.dto'
 import { withUtm } from './email/utm'
 import { cleanMessageForNotification } from '@/utils/notificationText'
 
@@ -18,17 +20,19 @@ type NotificationType =
   | 'onboarding_reminder'
   | 'nearby_digest'
 
-// login_link is auth/transactional — always sent and never carries an
-// unsubscribe link or List-Unsubscribe header. Every other type is a
-// suppressible notification subject to emailNotificationsOptIn.
-const SUPPRESSIBLE_TYPES: ReadonlySet<NotificationType> = new Set([
-  'welcome',
-  'new_message',
-  'new_like',
-  'new_match',
-  'onboarding_reminder',
-  'nearby_digest',
-])
+// Which preference each email type is sent under; null is auth/transactional
+// (always sent, never carries an unsubscribe link or List-Unsubscribe header).
+// onboarding_reminder goes to users who cannot reach settings yet, so it sits
+// under the general notifications scope its own unsubscribe link turns off.
+const EMAIL_TYPE_SCOPE: Record<NotificationType, EmailScope | null> = {
+  login_link: null,
+  welcome: 'notifications',
+  new_message: 'notifications',
+  new_like: 'notifications',
+  new_match: 'notifications',
+  onboarding_reminder: 'notifications',
+  nearby_digest: 'reminders',
+}
 
 // Bulk types go to the rate-limited emails-bulk queue; everything else is
 // transactional and sent without delay.
@@ -38,28 +42,17 @@ const BULK_TYPES: ReadonlySet<NotificationType> = new Set(['onboarding_reminder'
 // The login link is auth, not engagement, so it is left untagged.
 const UNTAGGED_TYPES: ReadonlySet<NotificationType> = new Set(['login_link'])
 
-type NarrowScope = Exclude<UnsubscribeScope, 'all'>
-
-// What an email's unsubscribe link turns off; any type not listed turns off
-// all notification email (User.emailNotificationsOptIn).
-const UNSUBSCRIBE_SCOPES: Partial<Record<NotificationType, NarrowScope>> = {
-  nearby_digest: 'nearby_signups',
-}
-
-// Whether the user turned off a narrow scope; checked before every send of a
-// type in that scope, like emailNotificationsOptIn is for all of them.
-const OPTED_OUT_OF: Record<NarrowScope, (userId: string) => Promise<boolean>> = {
-  nearby_signups: async (userId) =>
-    (await prisma.nearbySignupOptOut.count({ where: { profile: { userId } } })) > 0,
-}
-
 // The footer link says what it turns off.
-const UNSUBSCRIBE_LABEL_KEYS: Record<UnsubscribeScope, string> = {
-  all: 'emails.unsubscribe_link',
-  nearby_signups: 'emails.unsubscribe_link_nearby_signups',
+const UNSUBSCRIBE_LABEL_KEYS: Record<EmailScope, string> = {
+  notifications: 'emails.unsubscribe_link',
+  reminders: 'emails.unsubscribe_link_nearby_signups',
+  newsletter: 'emails.unsubscribe_link',
 }
 
-type NotifiableUser = User & { profile?: { publicName: string } | null }
+type NotifiableUser = User & {
+  profile?: { publicName: string } | null
+  emailPreferences: Pick<EmailPreference, 'scope' | 'granted'>[]
+}
 
 interface NotifyOptions {
   /** Appended to the dispatch key, e.g. a run date, so one user can get one email per run. */
@@ -160,6 +153,7 @@ export class NotifierService {
                 publicName: true,
               },
             },
+            ...emailPreferencesSelect,
           },
         },
       },
@@ -179,6 +173,7 @@ export class NotifierService {
   ): Promise<void> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: emailPreferencesSelect,
     })
     if (!user) return
     await this.notifyLoadedUser(user, emailType, args)
@@ -193,10 +188,8 @@ export class NotifierService {
     const { siteName } = brand
     const t = tFor(brand, user.language)
 
-    const suppressible = SUPPRESSIBLE_TYPES.has(emailType)
-    const unsubscribe = suppressible
-      ? this.buildUnsubscribe(brand, user, t, UNSUBSCRIBE_SCOPES[emailType] ?? 'all')
-      : undefined
+    const scope = EMAIL_TYPE_SCOPE[emailType]
+    const unsubscribe = scope ? this.buildUnsubscribe(brand, user, t, scope) : undefined
     const contentVars: Record<string, unknown> = {
       siteName,
       ...args,
@@ -258,7 +251,7 @@ export class NotifierService {
     brand: Brand,
     user: NotifiableUser,
     t: TFunction,
-    scope: UnsubscribeScope
+    scope: EmailScope
   ): { pageUrl: string; apiUrl: string; label: string } {
     const token = signUnsubscribeToken({
       userId: user.id,
@@ -290,9 +283,8 @@ export class NotifierService {
     args: NotificationParams[T],
     { dedupSuffix }: NotifyOptions = {}
   ): Promise<void> {
-    if (SUPPRESSIBLE_TYPES.has(emailType) && user.emailNotificationsOptIn === false) return
-    const scope = UNSUBSCRIBE_SCOPES[emailType]
-    if (scope && (await OPTED_OUT_OF[scope](user.id))) return
+    const scope = EMAIL_TYPE_SCOPE[emailType]
+    if (scope && !isGranted(user.emailPreferences, scope)) return
 
     const emailPayload = this.createEmailPayload(emailType, args, user)
     await this.disp.dispatchEmail(

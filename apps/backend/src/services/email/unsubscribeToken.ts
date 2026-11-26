@@ -2,21 +2,25 @@ import { createHash } from 'crypto'
 import { createSigner, createVerifier } from 'fast-jwt'
 import { appConfig } from '@/lib/appconfig'
 import { canonicalizeEmail } from '@/lib/email'
-
-/** What the link turns off: all notification email, or nearby-signups digests only. */
-export type UnsubscribeScope = 'all' | 'nearby_signups'
+import { EMAIL_SCOPES, type EmailScope } from '@zod/user/emailPreference.dto'
 
 /**
- * Token format: a narrower scope is carried as a `scope` claim; a token
- * without one turns off all notification email.
+ * Token format: the email scope the link turns off is carried as a `scope`
+ * claim; a token without one turns off notifications.
+ *
+ * TODO(#email-preferences contract PR): drop `nearby_signups`. Links in
+ * nearby-digest emails sent before the reminders scope existed carry it; they
+ * expire TOKEN_TTL_SECONDS after the deploy.
  */
-type NarrowScope = Exclude<UnsubscribeScope, 'all'>
-const NARROW_SCOPES: ReadonlySet<string> = new Set<NarrowScope>(['nearby_signups'])
+const CLAIM_SCOPES: ReadonlyMap<string, EmailScope> = new Map([
+  ...EMAIL_SCOPES.map((scope) => [scope, scope] as const),
+  ['nearby_signups', 'reminders'],
+])
 
 export type UnsubscribePayload = {
   userId: string
   emailHash: string
-  scope: UnsubscribeScope
+  scope: EmailScope
   /** Unix seconds — set by fast-jwt as the standard `iat` claim. */
   iat: number
 }
@@ -53,10 +57,10 @@ export function hashEmail(email: string): string {
  * reused to authenticate a session.
  */
 export function signUnsubscribeToken({
-  scope = 'all',
+  scope,
   ...payload
-}: Omit<UnsubscribePayload, 'iat' | 'scope'> & { scope?: UnsubscribeScope }): string {
-  return signer(scope === 'all' ? { ...payload } : { ...payload, scope })
+}: Omit<UnsubscribePayload, 'iat'>): string {
+  return signer(scope === 'notifications' ? { ...payload } : { ...payload, scope })
 }
 
 export function verifyUnsubscribeToken(token: string): UnsubscribePayload | null {
@@ -67,8 +71,9 @@ export function verifyUnsubscribeToken(token: string): UnsubscribePayload | null
     > & {
       scope?: string
     }
-    if (scope !== undefined && !NARROW_SCOPES.has(scope)) return null
-    return { userId, emailHash, scope: (scope as NarrowScope | undefined) ?? 'all', iat }
+    if (scope === undefined) return { userId, emailHash, scope: 'notifications', iat }
+    const resolved = CLAIM_SCOPES.get(scope)
+    return resolved ? { userId, emailHash, scope: resolved, iat } : null
   } catch {
     return null
   }

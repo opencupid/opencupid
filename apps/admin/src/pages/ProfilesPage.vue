@@ -14,6 +14,7 @@ import PublicProfileLink from '../components/PublicProfileLink.vue'
 import KpiCard from '../components/KpiCard.vue'
 import ProfileImageReview, { type AdminProfileImage } from '../components/ProfileImageReview.vue'
 import { vModalFocus } from '../directives/modalFocus'
+import { EMAIL_SCOPES, type EmailPreferences, type EmailScope } from '@zod/user/emailPreference.dto'
 
 interface AdminProfile {
   id: string
@@ -52,11 +53,9 @@ interface AdminUserDetail {
   email: string
   isActive: boolean
   isBlocked: boolean
-  newsletterOptIn: boolean
-  emailNotificationsOptIn: boolean
+  emailPreferences: EmailPreferences
   isPushNotificationEnabled: boolean
   pushSubscriptionCount: number
-  nearbySignupOptOut: boolean
   createdAt: string
   lastSeenAt: string | null
   language: string
@@ -70,7 +69,7 @@ interface AdminUserRow {
   isActive: boolean
   isBlocked: boolean
   isRegistrationConfirmed: boolean
-  newsletterOptIn: boolean
+  emailPreferences: EmailPreferences
   createdAt: string
   originDomain: string
 }
@@ -453,14 +452,21 @@ function onDetailHasFaceChange(hasFace: boolean) {
 
 const userDetail = ref<AdminUserDetail | null>(null)
 
-const userOptIns = computed(() => {
+const EMAIL_SCOPE_LABELS: Record<EmailScope, string> = {
+  notifications: 'Email notifications',
+  reminders: 'Reminder emails',
+  newsletter: 'Newsletter',
+}
+
+const userOptIns = computed((): { label: string; value: boolean; note?: string }[] => {
   const u = userDetail.value
   if (!u) return []
   const devices = u.pushSubscriptionCount
   return [
-    { label: 'Newsletter', value: u.newsletterOptIn },
-    { label: 'Email notifications', value: u.emailNotificationsOptIn },
-    { label: 'Nearby signup emails', value: !u.nearbySignupOptOut },
+    ...EMAIL_SCOPES.map((scope) => ({
+      label: EMAIL_SCOPE_LABELS[scope],
+      value: u.emailPreferences[scope],
+    })),
     {
       label: 'Push notifications',
       value: u.isPushNotificationEnabled,
@@ -1223,8 +1229,12 @@ onUnmounted(() => {
                 </span>
               </td>
               <td>
-                <span :class="user.newsletterOptIn ? 'badge bg-success' : 'badge bg-secondary'">
-                  {{ user.newsletterOptIn ? 'Yes' : 'No' }}
+                <span
+                  :class="
+                    user.emailPreferences.newsletter ? 'badge bg-success' : 'badge bg-secondary'
+                  "
+                >
+                  {{ user.emailPreferences.newsletter ? 'Yes' : 'No' }}
                 </span>
               </td>
               <td>{{ new Date(user.createdAt).toLocaleDateString() }}</td>

@@ -31,8 +31,7 @@ describe('ownerProfileStore opt-in settings', () => {
       data: {
         optIn: {
           isCallable: false,
-          newsletterOptIn: true,
-          emailNotificationsOptIn: true,
+          emailPreferences: { notifications: true, reminders: true, newsletter: true },
           isPushNotificationEnabled: true,
         },
       },
@@ -45,8 +44,7 @@ describe('ownerProfileStore opt-in settings', () => {
     expect(res.success).toBe(true)
     expect(store.optInSettings).toEqual({
       isCallable: false,
-      newsletterOptIn: true,
-      emailNotificationsOptIn: true,
+      emailPreferences: { notifications: true, reminders: true, newsletter: true },
       isPushNotificationEnabled: true,
     })
   })
@@ -56,8 +54,7 @@ describe('ownerProfileStore opt-in settings', () => {
       data: {
         optIn: {
           isCallable: true,
-          newsletterOptIn: false,
-          emailNotificationsOptIn: false,
+          emailPreferences: { notifications: false, reminders: false, newsletter: false },
           isPushNotificationEnabled: false,
         },
       },
@@ -72,8 +69,7 @@ describe('ownerProfileStore opt-in settings', () => {
     expect(res.success).toBe(true)
     expect(store.optInSettings).toEqual({
       isCallable: true,
-      newsletterOptIn: false,
-      emailNotificationsOptIn: false,
+      emailPreferences: { notifications: false, reminders: false, newsletter: false },
       isPushNotificationEnabled: false,
     })
   })

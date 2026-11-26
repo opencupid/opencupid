@@ -39,7 +39,6 @@ const validUser = {
   email: 'test@example.com',
   phonenumber: '',
   language: 'en',
-  newsletterOptIn: false,
   isPushNotificationEnabled: false,
 }
 

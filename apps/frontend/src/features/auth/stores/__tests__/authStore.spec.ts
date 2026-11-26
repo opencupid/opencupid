@@ -183,7 +183,6 @@ describe('authStore localStorage auth flow', () => {
           email: 'test@example.com',
           phonenumber: '',
           language: 'en',
-          newsletterOptIn: true,
           isPushNotificationEnabled: false,
         },
       },
@@ -204,7 +203,6 @@ describe('authStore localStorage auth flow', () => {
           email: 'test@example.com',
           phonenumber: '',
           language: 'en',
-          newsletterOptIn: true,
           isPushNotificationEnabled: false,
         },
       },
@@ -220,7 +218,6 @@ describe('authStore localStorage auth flow', () => {
       email: 'test@example.com',
       phonenumber: '',
       language: 'en',
-      newsletterOptIn: true,
       isPushNotificationEnabled: false,
     })
 
