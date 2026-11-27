@@ -6,8 +6,8 @@ export const DEFAULT_LANDING = '/browse'
 const isUtmKey = (key: string) => key.startsWith('utm_')
 
 /**
- * The `utm_*` keys of a query. Umami loads after the router's first
- * navigation, so it records the page after a redirect; the Login and Onboarding
+ * The `utm_*` keys of a query. Umami records the page the first navigation
+ * lands on, after any redirect; the Login and Onboarding
  * redirects carry these over so that page still has the email campaign.
  */
 export function utmQuery(query: LocationQuery): LocationQuery {

@@ -77,6 +77,110 @@ describe('umami', () => {
       expect(script!.src).toBe('https://u.example.com/script.js')
       expect(script!.getAttribute('data-website-id')).toBe('abc-123')
       expect(script!.getAttribute('data-performance')).toBe('true')
+      expect(script!.getAttribute('data-auto-pageview')).toBe('false')
+    })
+  })
+
+  describe('trackPageviews', () => {
+    const origin = window.location.origin
+    const Blank = { render: () => null }
+
+    async function setup(config = ENABLED) {
+      setConfig(config)
+      const { createRouter, createWebHistory } = await import('vue-router')
+      const { initUmami, trackPageviews } = await import('../umami')
+      window.history.replaceState(null, '', '/')
+      const router = createRouter({
+        history: createWebHistory(),
+        routes: [
+          { path: '/', redirect: '/browse' },
+          { path: '/browse', component: Blank },
+          { path: '/browse/grid', component: Blank },
+          { path: '/inbox', component: Blank },
+          { path: '/inbox/:id', component: Blank },
+          { path: '/blocked', component: Blank, beforeEnter: () => false },
+        ],
+      })
+      const track = vi.fn()
+      trackPageviews(router)
+      initUmami()
+      ;(window as any).umami = { identify: vi.fn(), track }
+      fireScriptLoad()
+
+      /** The url and referrer of each pageview sent so far. */
+      const pageviews = async () => {
+        await new Promise((resolve) => setTimeout(resolve))
+        return track.mock.calls.map(([build]) => {
+          const { url, referrer } = build({ website: 'abc-123', url: 'stale', referrer: 'stale' })
+          return { url, referrer }
+        })
+      }
+      const back = async () => {
+        const landed = new Promise((resolve) => router.afterEach(() => resolve(undefined)))
+        router.back()
+        await landed
+      }
+      return { router, track, pageviews, back }
+    }
+
+    it('sends the page the initial navigation lands on, after redirects', async () => {
+      const { router, pageviews } = await setup()
+      await router.push('/')
+
+      expect(await pageviews()).toEqual([{ url: `${origin}/browse`, referrer: document.referrer }])
+    })
+
+    it('sends one pageview per navigation with the previous page as referrer', async () => {
+      const { router, pageviews } = await setup()
+      await router.push('/inbox')
+      await router.push('/inbox/c1')
+
+      expect(await pageviews()).toEqual([
+        { url: `${origin}/inbox`, referrer: document.referrer },
+        { url: `${origin}/inbox/c1`, referrer: `${origin}/inbox` },
+      ])
+    })
+
+    it('counts a back navigation and does not double the next one', async () => {
+      const { router, pageviews, back } = await setup()
+      await router.push('/inbox')
+      await router.push('/inbox/c1')
+      await back()
+      await router.push('/inbox/c1')
+
+      expect(await pageviews()).toEqual([
+        { url: `${origin}/inbox`, referrer: document.referrer },
+        { url: `${origin}/inbox/c1`, referrer: `${origin}/inbox` },
+        { url: `${origin}/inbox`, referrer: `${origin}/inbox/c1` },
+        { url: `${origin}/inbox/c1`, referrer: `${origin}/inbox` },
+      ])
+    })
+
+    it('ignores query changes on the same page', async () => {
+      const { router, pageviews } = await setup()
+      await router.push('/browse/grid?bbox=1,2,3,4')
+      await router.replace('/browse/grid?bbox=1,2,3,5')
+      await router.replace('/browse/grid?bbox=1,2,3,6&tags=a')
+
+      expect(await pageviews()).toEqual([
+        { url: `${origin}/browse/grid?bbox=1,2,3,4`, referrer: document.referrer },
+      ])
+    })
+
+    it('ignores a navigation a guard cancels', async () => {
+      const { router, pageviews } = await setup()
+      await router.push('/inbox')
+      await router.push('/blocked')
+
+      expect(await pageviews()).toHaveLength(1)
+    })
+
+    it('sends nothing when umami is disabled', async () => {
+      const { router, track } = await setup(DISABLED)
+      await router.push('/inbox')
+      await new Promise((resolve) => setTimeout(resolve))
+
+      expect(track).not.toHaveBeenCalled()
     })
   })
 

@@ -1,3 +1,4 @@
+import { START_LOCATION, type Router } from 'vue-router'
 import { bus } from '@/lib/bus'
 import type { OutageCause } from '@/lib/connectivity'
 
@@ -71,10 +72,37 @@ export function initUmami() {
   script.src = `${__APP_CONFIG__.UMAMI_URL}/script.js`
   script.setAttribute('data-website-id', __APP_CONFIG__.UMAMI_WEBSITE_ID)
   script.setAttribute('data-before-send', 'umamiBeforeSend')
+  // Pageviews come from the router (trackPageviews). Not `data-auto-track`:
+  // that also switches off the tracker's performance (Web Vitals) reporting.
+  script.setAttribute('data-auto-pageview', 'false')
   script.setAttribute('data-performance', 'true')
   script.addEventListener('load', () => resolveReady(window.umami), { once: true })
   script.addEventListener('error', () => resolveReady(undefined), { once: true })
   document.head.appendChild(script)
+}
+
+/**
+ * One pageview for each page the router lands on, back and forward included.
+ *
+ * Umami's own auto-tracking misses popstate, so after back or forward its idea
+ * of the current URL is stale. The next `router.push` then makes two history
+ * calls that each look like a URL change (replaceState of the current URL,
+ * then pushState), and both send the new URL: a double pageview. A change of
+ * query or hash on the same path (e.g. the browse grid's map area) is not a
+ * new page.
+ *
+ * Register before the router is installed so the initial navigation counts.
+ */
+export function trackPageviews(router: Router) {
+  if (!enabled) return
+  let referrer = document.referrer
+  router.afterEach((to, from, failure) => {
+    if (failure || (from !== START_LOCATION && to.path === from.path)) return
+    const url = window.location.href
+    const payload = { url, referrer }
+    referrer = url
+    ready.then((umami) => umami?.track((props: UmamiPayload) => ({ ...props, ...payload })))
+  })
 }
 
 export function identifyUmami(userId: string) {
