@@ -23,7 +23,9 @@ const props = withDefaults(
   { languages: () => [] }
 )
 
-const langList = computed(() => (props.languages ? sortLanguagesWithDefaultFirst(props.languages, locale.value) : []))
+const langList = computed(() =>
+  props.languages ? sortLanguagesWithDefaultFirst(props.languages, locale.value) : []
+)
 const labelledLangList = computed(() => getLanguageLabels(langList.value))
 
 const selectedLanguage = ref('')
@@ -82,19 +84,6 @@ watch(
       </div>
     </div>
 
-    <!-- <BFormFloatingLabel label="My name is..." label-for="publicName">
-      <BFormTextarea
-        v-model="model"
-        id="content-input"
-        :placeholder="$t('profiles.introtext_placeholder')"
-        :label="$t('profiles.introtext_label')"
-        max-rows="5"
-        no-resize
-        size="lg"
-        :required="true"
-        class="mb-3"
-      />
-    </BFormFloatingLabel> -->
     <!-- 
     <div v-if="recognition">
       <p><strong>isListening:</strong> {{ isListening }}</p>

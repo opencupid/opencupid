@@ -28,7 +28,7 @@ defineEmits<{
       <button
         type="button"
         class="btn-close"
-        :aria-label="$t('common.close')"
+        :aria-label="$t('uicomponents.close_button_title')"
         @click="$emit('close')"
       />
     </div>

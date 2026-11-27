@@ -156,7 +156,7 @@ describe('ProfilePanel', () => {
 
   it('close button calls router.replace({ name: Browse })', async () => {
     const wrapper = mount(ProfilePanel, { global: globalConfig })
-    await wrapper.find('[aria-label="common.close"]').trigger('click')
+    await wrapper.find('[aria-label="uicomponents.close_button_title"]').trigger('click')
     expect(mockReplace).toHaveBeenCalledWith({ name: 'Browse' })
   })
 

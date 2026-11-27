@@ -475,7 +475,8 @@
       "tab_profile": "Profilom",
       "tag_add_placeholder": "Új címke",
       "tag_no_results": "Nem találtam hasonlót.",
-      "tag_search_placeholder": "Érdeklődési körök..."
+      "tag_search_placeholder": "Érdeklődési körök...",
+      "tags_placeholder": "Add meg az érdeklődési köreidet"
     },
     "gender_edit_label": "nemem",
     "image_editor": {
@@ -533,6 +534,7 @@
   },
   "uicomponents": {
     "back_button_title": "Vissza",
+    "close_button_title": "Bezárás",
     "connection_error": {
       "description": "Elnézést a fennakadásért. A gépmanók dolgoznak rajta, mindjárt visszatérünk.",
       "title": "Nem te vagy az oka, mi vagyunk."

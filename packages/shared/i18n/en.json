@@ -471,7 +471,8 @@
       "tab_profile": "Profile",
       "tag_add_placeholder": "Add this as new tag",
       "tag_no_results": "Can't find anything similar.",
-      "tag_search_placeholder": "Search interests..."
+      "tag_search_placeholder": "Search interests...",
+      "tags_placeholder": "Add your interests"
     },
     "gender_edit_label": "gender",
     "image_editor": {
@@ -529,6 +530,7 @@
   },
   "uicomponents": {
     "back_button_title": "Go back",
+    "close_button_title": "Close",
     "connection_error": {
       "description": "Apologies for the interruption.  The Machine Elves need a few seconds to sort things out, we'll be back in a bit.",
       "title": "It's not you, it's us."

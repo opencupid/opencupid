@@ -86,7 +86,7 @@ function handleSelectConvo(convo: ConversationSummary) {
       <button
         type="button"
         class="btn-close ms-auto"
-        :aria-label="$t('common.close')"
+        :aria-label="$t('uicomponents.close_button_title')"
         @click="router.replace({ name: 'Browse' })"
       />
     </div>
