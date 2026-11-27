@@ -82,6 +82,19 @@ export function initUmami() {
 }
 
 /**
+ * The page the user is on, as the last pageview recorded it. Every pageview
+ * and event is sent with it: the tracker's own idea of the current URL misses
+ * popstate, so after back or forward it still names the page the user left.
+ */
+let page = { url: window.location.href, referrer: document.referrer }
+
+/** Sends a pageview (no name) or an event for the current page. */
+function send(event?: { name: string; data?: Record<string, unknown> }) {
+  const payload = { ...page, ...event }
+  ready.then((umami) => umami?.track((props: UmamiPayload) => ({ ...props, ...payload })))
+}
+
+/**
  * One pageview for each page the router lands on, back and forward included.
  *
  * Umami's own auto-tracking misses popstate, so after back or forward its idea
@@ -95,13 +108,11 @@ export function initUmami() {
  */
 export function trackPageviews(router: Router) {
   if (!enabled) return
-  let referrer = document.referrer
   router.afterEach((to, from, failure) => {
     if (failure || (from !== START_LOCATION && to.path === from.path)) return
     const url = window.location.href
-    const payload = { url, referrer }
-    referrer = url
-    ready.then((umami) => umami?.track((props: UmamiPayload) => ({ ...props, ...payload })))
+    page = { url, referrer: from === START_LOCATION ? page.referrer : page.url }
+    send()
   })
 }
 
@@ -124,7 +135,7 @@ export function resetUmamiIdentity() {
 
 export const tracker = {
   track(eventName: string, data?: Record<string, unknown>) {
-    ready.then((umami) => umami?.track(eventName, data))
+    send({ name: eventName, data })
   },
 }
 

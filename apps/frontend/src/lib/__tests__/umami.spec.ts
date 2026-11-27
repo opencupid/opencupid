@@ -25,6 +25,14 @@ function fireScriptLoad() {
   script?.dispatchEvent(new Event('load'))
 }
 
+/** The name and data of each event a `track` mock sent. */
+function eventsSent(track: ReturnType<typeof vi.fn>) {
+  return track.mock.calls.map(([build]) => {
+    const { name, data } = build({ website: 'abc-123' })
+    return [name, data]
+  })
+}
+
 function fireScriptError() {
   const script = document.head.querySelector('script') as HTMLScriptElement | null
   script?.dispatchEvent(new Event('error'))
@@ -88,7 +96,7 @@ describe('umami', () => {
     async function setup(config = ENABLED) {
       setConfig(config)
       const { createRouter, createWebHistory } = await import('vue-router')
-      const { initUmami, trackPageviews } = await import('../umami')
+      const { initUmami, trackPageviews, tracker } = await import('../umami')
       window.history.replaceState(null, '', '/')
       const router = createRouter({
         history: createWebHistory(),
@@ -110,17 +118,21 @@ describe('umami', () => {
       /** The url and referrer of each pageview sent so far. */
       const pageviews = async () => {
         await new Promise((resolve) => setTimeout(resolve))
-        return track.mock.calls.map(([build]) => {
-          const { url, referrer } = build({ website: 'abc-123', url: 'stale', referrer: 'stale' })
-          return { url, referrer }
-        })
+        return sent()
+          .filter((payload) => !payload.name)
+          .map(({ url, referrer }) => ({ url, referrer }))
       }
+      /** Every payload sent so far, built on top of a stale tracker payload. */
+      const sent = () =>
+        track.mock.calls.map(([build]) =>
+          build({ website: 'abc-123', url: 'stale', referrer: 'stale' })
+        )
       const back = async () => {
         const landed = new Promise((resolve) => router.afterEach(() => resolve(undefined)))
         router.back()
         await landed
       }
-      return { router, track, pageviews, back }
+      return { router, track, tracker, sent, pageviews, back }
     }
 
     it('sends the page the initial navigation lands on, after redirects', async () => {
@@ -154,6 +166,23 @@ describe('umami', () => {
         { url: `${origin}/inbox`, referrer: `${origin}/inbox/c1` },
         { url: `${origin}/inbox/c1`, referrer: `${origin}/inbox` },
       ])
+    })
+
+    it('sends an event with the page the user is on, also after going back', async () => {
+      const { router, tracker, sent, back } = await setup()
+      await router.push('/inbox')
+      await router.push('/inbox/c1')
+      await back()
+      tracker.track('event-x', { a: 1 })
+      await new Promise((resolve) => setTimeout(resolve))
+
+      expect(sent().at(-1)).toEqual({
+        website: 'abc-123',
+        url: `${origin}/inbox`,
+        referrer: `${origin}/inbox/c1`,
+        name: 'event-x',
+        data: { a: 1 },
+      })
     })
 
     it('ignores query changes on the same page', async () => {
@@ -255,7 +284,7 @@ describe('umami', () => {
       fireScriptLoad()
       await Promise.resolve()
 
-      expect(track).toHaveBeenCalledWith('event-x', { a: 1 })
+      expect(eventsSent(track)).toEqual([['event-x', { a: 1 }]])
     })
 
     it('is a no-op when umami is disabled', async () => {
@@ -339,7 +368,7 @@ describe('umami', () => {
 
       await emit('api:offline', { cause: 'api' })
 
-      expect(track).toHaveBeenCalledExactlyOnceWith('outage-api', undefined)
+      expect(eventsSent(track)).toEqual([['outage-api', undefined]])
     })
 
     it('holds outage-network back until the connection has recovered', async () => {
@@ -349,7 +378,7 @@ describe('umami', () => {
       expect(track).not.toHaveBeenCalled()
 
       await emit('api:online')
-      expect(track).toHaveBeenCalledExactlyOnceWith('outage-network', undefined)
+      expect(eventsSent(track)).toEqual([['outage-network', undefined]])
     })
 
     it('sends the held outage-network once the cause turns into an API outage', async () => {
@@ -358,7 +387,7 @@ describe('umami', () => {
       await emit('api:offline', { cause: 'network' })
       await emit('api:offline', { cause: 'api' })
 
-      expect(track.mock.calls).toEqual([
+      expect(eventsSent(track)).toEqual([
         ['outage-network', undefined],
         ['outage-api', undefined],
       ])
@@ -376,7 +405,7 @@ describe('umami', () => {
       await emit('api:offline', { cause: 'network' })
       await emit('api:online')
 
-      expect(track.mock.calls).toEqual([
+      expect(eventsSent(track)).toEqual([
         ['outage-api', undefined],
         ['outage-network', undefined],
       ])
