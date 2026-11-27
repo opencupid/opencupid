@@ -602,6 +602,24 @@ describe('setActiveConversationById', () => {
 
     expect(res).toMatchObject({ success: false, status: 404 })
   })
+
+  it('fails when the summary loads but the first message page does not', async () => {
+    const store = useMessageStore()
+    store.conversations = [makeConvo('convo-1', 'Alice')]
+    store.initialized = true
+    mockApi.get.mockRejectedValue(
+      Object.assign(new Error('Server Error'), {
+        isAxiosError: true,
+        response: { status: 500, data: { success: false, message: 'Internal error' } },
+      })
+    )
+
+    const res = await store.setActiveConversationById('convo-1')
+
+    expect(mockApi.get).toHaveBeenCalledWith('/messages/convo-1', expect.anything())
+    expect(res).toMatchObject({ success: false, status: 500 })
+    expect(store.messages).toEqual([])
+  })
 })
 
 describe('fetchMessagesForConversation', () => {
@@ -620,7 +638,7 @@ describe('fetchMessagesForConversation', () => {
 
     const result = await store.fetchMessagesForConversation('convo-a', { append: true })
 
-    expect(result).toEqual([])
+    expect(result).toEqual({ success: true, data: [] })
     expect(store.messages.map((m) => m.id)).toEqual(['m-b'])
   })
 })
