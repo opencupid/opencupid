@@ -135,7 +135,11 @@ beforeEach(() => {
   mockMessageStore.activeConversation = null
   mockMessageStore.conversations = []
   mockMessageStore.setActiveConversationById.mockResolvedValue({ success: true, data: {} })
-  mockMessageStore.setActiveConversation.mockResolvedValue(undefined)
+  // Like the real router, a replace switches the route the view model watches.
+  mockRouterReplace.mockImplementation(({ name, params }) => {
+    mockRouteName.value = name
+    mockRouteParams.value = params
+  })
   mockMessageStore.resolveConversationByProfile.mockResolvedValue({ success: true, data: null })
   mockProfileStore.getPublicProfile.mockResolvedValue({ success: false })
   mockProfileStore.blockProfile.mockResolvedValue({ success: true })
@@ -306,12 +310,17 @@ describe('useConversationDetailViewModel — draft mode', () => {
     mountVm()
 
     await vi.waitFor(() =>
-      expect(mockMessageStore.setActiveConversation).toHaveBeenCalledWith(persisted)
+      expect(mockRouterReplace).toHaveBeenCalledWith({
+        name: 'Conversation',
+        params: { conversationId: 'c-existing' },
+      })
     )
-    expect(mockRouterReplace).toHaveBeenCalledWith({
-      name: 'Conversation',
-      params: { conversationId: 'c-existing' },
-    })
+    // The detail route loads the conversation, once.
+    await vi.waitFor(() =>
+      expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledWith('c-existing')
+    )
+    expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledTimes(1)
+    expect(mockMessageStore.setActiveConversation).not.toHaveBeenCalled()
   })
 })
 
@@ -332,14 +341,16 @@ describe('useConversationDetailViewModel — onMessageSent draft swap', () => {
     const persisted = makePersistedSummary('c-new', 'p4')
     mockMessageStore.conversations = [persisted]
 
-    await vm.onMessageSent()
+    vm.onMessageSent()
 
-    expect(mockMessageStore.setActiveConversation).toHaveBeenCalledWith(persisted)
     expect(mockRouterReplace).toHaveBeenCalledWith({
       name: 'Conversation',
       params: { conversationId: 'c-new' },
     })
-    expect(vm.isDraft.value).toBe(false)
+    await vi.waitFor(() => expect(vm.isDraft.value).toBe(false))
+    expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledTimes(1)
+    expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledWith('c-new')
+    expect(mockMessageStore.setActiveConversation).not.toHaveBeenCalled()
   })
 
   it('does nothing when not in draft mode', async () => {
@@ -348,7 +359,7 @@ describe('useConversationDetailViewModel — onMessageSent draft swap', () => {
     mockMessageStore.activeConversation = makePersistedSummary('c1')
 
     const vm = mountVm()
-    await vm.onMessageSent()
+    vm.onMessageSent()
     expect(mockRouterReplace).not.toHaveBeenCalled()
   })
 })
