@@ -456,8 +456,8 @@
       },
       "fewer_options": "Kevesebb lehetőség",
       "intro_placeholder": "Mesélj egy kicsit magadról",
-      "introtext_multilang_hint": "A bemutatkozó szövegedet több nyelven is megírhatod. Mások az általuk preferált nyelven fogják látni, vagy az alapértelmezett változatot, ha az ő nyelvük nem elérhető.",
       "intro_who_placeholder": "Kivel szeretnél találkozni?",
+      "introtext_multilang_hint": "A bemutatkozó szövegedet több nyelven is megírhatod. Mások az általuk preferált nyelven fogják látni, vagy az alapértelmezett változatot, ha az ő nyelvük nem elérhető.",
       "kids_label": "Vannak gyerekeid?",
       "kids_preference_label": "Gyerekei?",
       "more_options": "További lehetőségek...",
@@ -534,7 +534,6 @@
   },
   "uicomponents": {
     "back_button_title": "Vissza",
-    "close_button_title": "Bezárás",
     "connection_error": {
       "description": "Elnézést a fennakadásért. A gépmanók dolgoznak rajta, mindjárt visszatérünk.",
       "title": "Nem te vagy az oka, mi vagyunk."

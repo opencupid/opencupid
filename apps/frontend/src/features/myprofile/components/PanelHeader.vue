@@ -12,7 +12,7 @@ defineEmits<{ (e: 'back'): void }>()
         <BButton
           variant="link-secondary"
           class="p-0 me-2"
-          :aria-label="$t('uicomponents.back_button_title')"
+          :aria-label="$t('common.back')"
           @click="$emit('back')"
         >
           <ChevronLeftIcon class="svg-icon" />

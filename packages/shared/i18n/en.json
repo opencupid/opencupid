@@ -452,8 +452,8 @@
       },
       "fewer_options": "Fewer options",
       "intro_placeholder": "Tell a bit about yourself",
-      "introtext_multilang_hint": "You can write your intro text in multiple languages. Other people will see the version in their preferred language, or the default if their language isn't available.",
       "intro_who_placeholder": "Who would you like to meet?",
+      "introtext_multilang_hint": "You can write your intro text in multiple languages. Other people will see the version in their preferred language, or the default if their language isn't available.",
       "kids_label": "Kids?",
       "kids_preference_label": "Their kids?",
       "more_options": "More options",
@@ -530,7 +530,6 @@
   },
   "uicomponents": {
     "back_button_title": "Go back",
-    "close_button_title": "Close",
     "connection_error": {
       "description": "Apologies for the interruption.  The Machine Elves need a few seconds to sort things out, we'll be back in a bit.",
       "title": "It's not you, it's us."

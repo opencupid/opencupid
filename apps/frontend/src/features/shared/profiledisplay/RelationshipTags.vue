@@ -37,7 +37,7 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
           <span
             v-if="props.profile.relationship === 'unspecified'"
             class="badge text-bg-dating opacity-25 me-2"
-            >{{ $t('profiles.forms.edit_titles.relationshipStatus') }}</span
+            >{{ $t('profiles.relationship_unspecified_label') }}</span
           >
         </template>
       </EditField>
@@ -58,7 +58,7 @@ const { relationshipStatus, hasKids } = useDatingFields(profileRef, t)
             v-if="props.profile.hasKids === 'unspecified'"
             class="editable-placeholder me-2"
           >
-            {{ $t('profiles.forms.edit_titles.hasKids') }}</span
+            {{ $t('profiles.haskids_unspecified_label') }}</span
           >
         </template>
       </EditField>

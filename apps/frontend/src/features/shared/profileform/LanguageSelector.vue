@@ -2,9 +2,12 @@
 import { useLanguages } from '@/features/shared/composables/useLanguages'
 
 import { computed, onMounted, reactive, useAttrs } from 'vue'
+import { useI18n } from 'vue-i18n'
 import Multiselect from '@/features/shared/ui/multiselect'
 import { type MultiselectOption } from '@/types/multiselect'
 import { useWindowSize } from '@vueuse/core'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue?: string[]
@@ -55,6 +58,8 @@ const selectHeight = computed(() => {
       placeholder=""
       :showLabels="false"
       :showNoResults="false"
+      :selectLabel="t('common.forms.multiselect.select')"
+      :deselectLabel="t('common.forms.multiselect.deselect')"
     />
   </div>
 </template>

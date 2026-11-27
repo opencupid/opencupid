@@ -88,7 +88,7 @@ function handleClose() {
     <button
       type="button"
       class="btn-close ms-2"
-      :aria-label="$t('uicomponents.close_button_title')"
+      :aria-label="$t('common.close')"
       @click="handleClose"
     />
   </div>

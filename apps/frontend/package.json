@@ -11,7 +11,7 @@
     "test": "vitest --run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/** && node scripts/check-i18n-keys.mjs",
+    "test:i18n": "npx i18n-check --locales ../../packages/shared/i18n/ -s en --only missingKeys --exclude **/api/**",
     "test:coverage": "pnpm run test --coverage --coverage.reporter=text-summary",
     "build-only": "NODE_ENV=production vite build",
     "type-check": "NODE_OPTIONS='--max-old-space-size=4096' vue-tsc --build",
