@@ -6,9 +6,9 @@ import { ImageService, ImageServiceError } from '@/services/image.service'
 import { uploadTmpDir } from '@/lib/media'
 import { rateLimitConfig, sendError } from '../helpers'
 import { mapProfileImagesToOwner } from '@/api/mappers/profile.mappers'
-import { ReorderImagesPayloadSchema } from '@zod/image/image.dto'
+import { AttachProfileImagePayloadSchema, ReorderImagesPayloadSchema } from '@zod/image/image.dto'
 import { appConfig } from '@/lib/appconfig'
-import type { ImageApiResponse, ImageResponse } from '@zod/image/image.dto'
+import type { ProfileImageApiResponse, ImageResponse } from '@zod/image/image.dto'
 import { toOwnerImage } from '@/api/mappers/image.mappers'
 
 // Route params for ID lookups
@@ -16,7 +16,6 @@ const IdLookupParamsSchema = z.object({
   id: z.string().cuid(),
 })
 const UpdateImageBodySchema = z.object({ altText: z.string().optional() })
-const AttachImageBodySchema = z.object({ imageId: z.string().cuid() })
 const ImageIdParamsSchema = z.object({ imageId: z.string().cuid() })
 
 const imageRoutes: FastifyPluginAsync = async (fastify) => {
@@ -42,7 +41,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     try {
       const images = await imageService.listProfileGallery(req.session.profileId)
-      const response: ImageApiResponse = {
+      const response: ProfileImageApiResponse = {
         success: true,
         images: mapProfileImagesToOwner(images),
       }
@@ -117,13 +116,14 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /me/attach
    * Attach an existing image (already owned by the caller) to the profile gallery.
+   * `isRestricted` limits it to viewers who are mutual dating matches.
    */
   fastify.post('/me/attach', { onRequest: [fastify.authenticate] }, async (req, reply) => {
-    const { imageId } = AttachImageBodySchema.parse(req.body)
+    const { imageId, isRestricted } = AttachProfileImagePayloadSchema.parse(req.body)
     try {
-      await imageService.attachToProfile(imageId, req.session.profileId)
+      await imageService.attachToProfile(imageId, req.session.profileId, isRestricted)
       const updated = await imageService.listProfileGallery(req.session.profileId)
-      const response: ImageApiResponse = {
+      const response: ProfileImageApiResponse = {
         success: true,
         images: mapProfileImagesToOwner(updated),
       }
@@ -149,7 +149,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       await imageService.detachFromProfile(imageId, req.session.profileId)
       const updated = await imageService.listProfileGallery(req.session.profileId)
-      const response: ImageApiResponse = {
+      const response: ProfileImageApiResponse = {
         success: true,
         images: mapProfileImagesToOwner(updated),
       }
@@ -173,7 +173,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       await imageService.deleteImage(imageId, req.session.profileId)
       const updated = await imageService.listProfileGallery(req.session.profileId)
-      const response: ImageApiResponse = {
+      const response: ProfileImageApiResponse = {
         success: true,
         images: mapProfileImagesToOwner(updated),
       }
@@ -197,7 +197,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       await imageService.updateImage(imageId, req.session.profileId, patch)
       const updated = await imageService.listProfileGallery(req.session.profileId)
-      const response: ImageApiResponse = {
+      const response: ProfileImageApiResponse = {
         success: true,
         images: mapProfileImagesToOwner(updated),
       }
@@ -219,7 +219,7 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
     const { images } = ReorderImagesPayloadSchema.parse(req.body)
     try {
       const updated = await imageService.reorderProfileGallery(req.session.profileId, images)
-      const response: ImageApiResponse = {
+      const response: ProfileImageApiResponse = {
         success: true,
         images: mapProfileImagesToOwner(updated),
       }

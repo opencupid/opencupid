@@ -9,17 +9,18 @@ import { type DbProfileSummary, type DbProfileWithImages } from '@zod/profile/pr
 import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
-import { type OwnerImage, type PublicImage } from '@zod/image/image.dto'
+import { type OwnerProfileImage, type PublicImage } from '@zod/image/image.dto'
 import { mapTagsTranslated } from './tag.mappers'
 import { Image } from '@zod/generated'
-import { toOwnerImage, toPublicImage } from './image.mappers'
+import { toOwnerProfileImage, toPublicImage } from './image.mappers'
+
+/** A profile gallery entry: the ImageAttachment row with its image. */
+type ProfileGalleryEntry = { image: Image; isRestricted: boolean }
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
   const tags = mapTagsTranslated(db.tags, locale)
-  const images = db.profileImages
-    ? mapProfileImagesToOwner(db.profileImages.map((g) => g.image))
-    : []
+  const images = db.profileImages ? mapProfileImagesToOwner(db.profileImages) : []
   const location = LocationSchema.parse(db)
 
   const localizedMap = db.localized.reduce(
@@ -67,8 +68,10 @@ export function mapProfileToPublic(
     isDatingActive: includeDatingContext,
   }
   const scalars = ProfileUnionSchema.parse(dProf)
+  // A viewer who gets the dating context (both dating, mutually compatible) is
+  // the one the restricted photos are meant for.
   const publicImages = dbProfile.profileImages
-    ? mapProfileImagesToPublic(dbProfile.profileImages.map((g) => g.image))
+    ? mapProfileImagesToPublic(dbProfile.profileImages, includeDatingContext)
     : []
   const publicTags = dbProfile.tags ? mapTagsTranslated(dbProfile.tags, locale) : []
 
@@ -82,12 +85,34 @@ export function mapProfileToPublic(
   } as PublicProfile
 }
 
-export function mapProfileImagesToOwner(images: Image[]): OwnerImage[] {
-  return images.map((img, position) => toOwnerImage(img, position))
+/** The whole gallery in its stored order, as only its owner sees it. */
+export function mapProfileImagesToOwner(entries: ProfileGalleryEntry[]): OwnerProfileImage[] {
+  return entries.map((entry, position) => toOwnerProfileImage(entry, position))
 }
 
-export function mapProfileImagesToPublic(images: Image[]): PublicImage[] {
-  return images.map((img, position) => toPublicImage(img, position))
+/**
+ * The gallery as another viewer sees it. Restricted images are dropped unless
+ * `canSeeRestricted`. The primary image is the first unrestricted one; it is moved
+ * to the front so that `[0]` is the primary for every consumer, and the rest keep
+ * the owner's order. Positions are the indexes after that.
+ */
+export function visibleProfileImages<T extends { isRestricted: boolean }>(
+  entries: T[],
+  canSeeRestricted: boolean
+): T[] {
+  const visible = canSeeRestricted ? entries : entries.filter((e) => !e.isRestricted)
+  const primary = visible.findIndex((e) => !e.isRestricted)
+  if (primary <= 0) return visible
+  return [visible[primary], ...visible.slice(0, primary), ...visible.slice(primary + 1)]
+}
+
+export function mapProfileImagesToPublic(
+  entries: ProfileGalleryEntry[],
+  canSeeRestricted: boolean
+): PublicImage[] {
+  return visibleProfileImages(entries, canSeeRestricted).map((entry, position) =>
+    toPublicImage(entry.image, position)
+  )
 }
 
 export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {

@@ -41,15 +41,21 @@ export function useMyProfileViewModel(isEditMode: boolean) {
   })
 
   // actions
+  // Only the latest request may update the preview: an earlier one (e.g. the
+  // other scope) can resolve after it.
+  let latestPreviewRequest = 0
   const fetchPreview = async () => {
     if (!profileStore.profile) {
       // error.value = 'Profile not found'
       return
     }
+    const request = ++latestPreviewRequest
     const res = await profileStore.getProfilePreview(
       profileStore.profile.id,
-      viewState.previewLanguage
+      viewState.previewLanguage,
+      viewState.currentScope
     )
+    if (request !== latestPreviewRequest) return
     if (!res.success) {
       return res
     }
@@ -82,9 +88,10 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     { immediate: true }
   )
 
-  // Re-fetch preview only when user switches the preview language
+  // Re-fetch the preview when the user switches its language or scope: the
+  // backend decides which photos each audience gets.
   watch(
-    () => viewState.previewLanguage,
+    () => [viewState.previewLanguage, viewState.currentScope],
     () => fetchPreview()
   )
 

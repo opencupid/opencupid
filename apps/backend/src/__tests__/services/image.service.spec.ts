@@ -150,20 +150,24 @@ describe('ImageService.createImage', () => {
 })
 
 describe('listing galleries', () => {
-  it('listProfileGallery orders by ImageAttachment.position and returns the images', async () => {
+  it('listProfileGallery orders by ImageAttachment.position and returns the whole gallery', async () => {
     mockPrisma.imageAttachment.findMany.mockResolvedValue([
-      { image: img('a') },
-      { image: img('b') },
+      { image: img('a'), isRestricted: false },
+      { image: img('b'), isRestricted: true },
     ])
 
     const result = await service.listProfileGallery(ME)
 
+    // Owner view: no restriction filter.
     expect(mockPrisma.imageAttachment.findMany).toHaveBeenCalledWith({
       where: { profileId: ME },
       include: { image: true },
       orderBy: { position: 'asc' },
     })
-    expect(result.map((i: any) => i.id)).toEqual(['a', 'b'])
+    expect(result.map((e: any) => [e.image.id, e.isRestricted])).toEqual([
+      ['a', false],
+      ['b', true],
+    ])
   })
 
   it('listUserContentGallery orders by ImageAttachment.position', async () => {
@@ -182,13 +186,13 @@ describe('attachToProfile', () => {
     given(img('a'))
     mockPrisma.imageAttachment.findFirst.mockResolvedValue({ imageId: 'img1' })
 
-    await service.attachToProfile('a', ME)
+    await service.attachToProfile('a', ME, false)
 
     expect(mockPrisma.profile.update).toHaveBeenNthCalledWith(1, profileLock())
     expect(mockPrisma.image.update).toHaveBeenCalledWith(imageLock('a'))
     // No position: the DB sequence appends it.
     expect(mockPrisma.imageAttachment.create).toHaveBeenCalledWith({
-      data: { imageId: 'a', profileId: ME },
+      data: { imageId: 'a', profileId: ME, isRestricted: false },
     })
     expect(mockPrisma.profile.update).toHaveBeenLastCalledWith({
       where: { id: ME },
@@ -207,12 +211,23 @@ describe('attachToProfile', () => {
   ])('rejects an image that is %s, without writing', async (_label, image, code) => {
     given(image)
 
-    await expect(service.attachToProfile('a', ME)).rejects.toMatchObject({ code })
+    await expect(service.attachToProfile('a', ME, false)).rejects.toMatchObject({ code })
     expect(mockPrisma.imageAttachment.create).not.toHaveBeenCalled()
   })
 
+  it('stores the restriction flag on the attachment', async () => {
+    given(img('a'))
+    mockPrisma.imageAttachment.findFirst.mockResolvedValue(null)
+
+    await service.attachToProfile('a', ME, true)
+
+    expect(mockPrisma.imageAttachment.create).toHaveBeenCalledWith({
+      data: { imageId: 'a', profileId: ME, isRestricted: true },
+    })
+  })
+
   it('reports a missing image as NOT_FOUND', async () => {
-    await expect(service.attachToProfile('missing', ME)).rejects.toMatchObject({
+    await expect(service.attachToProfile('missing', ME, false)).rejects.toMatchObject({
       code: 'NOT_FOUND',
     })
     expect(mockPrisma.imageAttachment.create).not.toHaveBeenCalled()

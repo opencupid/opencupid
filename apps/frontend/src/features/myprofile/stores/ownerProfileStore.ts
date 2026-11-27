@@ -287,12 +287,15 @@ export const useOwnerProfileStore = defineStore('ownerProfile', {
 
     async getProfilePreview(
       profileId: string,
-      locale: string
+      locale: string,
+      scope: ProfileScope
     ): Promise<StoreResponse<PublicProfile> | StoreError> {
       try {
         this.isLoading = true // Set loading state
         const res = await safeApiCall(() =>
-          api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`)
+          api.get<GetPublicProfileResponse>(`/profiles/preview/${locale}/${profileId}`, {
+            params: { scope },
+          })
         )
         const fetched = PublicProfileSchema.parse(res.data.profile)
         return storeSuccess(fetched)

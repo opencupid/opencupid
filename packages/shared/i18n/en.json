@@ -477,7 +477,9 @@
     },
     "gender_edit_label": "gender",
     "image_editor": {
-      "delete_button_title": "Remove photo"
+      "delete_button_title": "Remove photo",
+      "restricted_title": "Hidden photo. Only people who are dating and whose preferences mutually match yours can see it.",
+      "restricted_title_inactive": "Hidden photo. Nobody can see it while dating mode is off."
     },
     "image_upload": {
       "add_from_phone": "Add a photo from your phone",
@@ -486,6 +488,8 @@
       },
       "looks_good": "Looks good!",
       "nevermind": "Nevermind",
+      "restrict_hint": "Nobody else will see the photo. Tick this if you would like to show a bit more about yourself to others who you are compatible with.",
+      "restrict_label": "Show this picture only to people who are dating and our preferences mutually match",
       "take_photo": "Or take a photo with your camera",
       "title": "Add a photo",
       "try_another": "Choose a different photo"

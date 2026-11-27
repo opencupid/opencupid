@@ -7,19 +7,20 @@ import HiddenProfilePhoto from './HiddenProfilePhoto.vue'
 import { type ImageVariant } from '@zod/image/image.dto'
 import { type VariantName } from './types'
 import { useProfilePhotoAccess } from '../composables/useProfilePhotoAccess'
+import { primaryProfileImage } from '../primaryProfileImage'
 
 // Props & Emits
 const props = defineProps<{
   variant?: VariantName
   profile: {
     id: string
-    profileImages: { variants: ImageVariant[]; blurhash?: string | null }[]
+    profileImages: { variants: ImageVariant[]; blurhash?: string | null; isRestricted?: boolean }[]
   }
 }>()
 
 const emit = defineEmits<{ load: [] }>()
 
-const image = computed(() => props.profile.profileImages[0])
+const image = computed(() => primaryProfileImage(props.profile.profileImages))
 
 const { canSeePhotosOf } = useProfilePhotoAccess()
 const isHidden = computed(() => !canSeePhotosOf(props.profile))

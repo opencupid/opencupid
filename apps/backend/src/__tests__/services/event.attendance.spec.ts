@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createMockPrisma } from '../../test-utils/prisma'
+import { profileImageInclude } from '../../db/includes/profileIncludes'
 
 let mockPrisma: any = {}
 vi.mock('../../lib/prisma', () => ({
@@ -98,12 +99,8 @@ describe('EventService.listAttendees', () => {
 
     expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
       where: { eventContentId: 'evt-1' },
-      // Ordered so the attendee's primary photo comes first.
-      include: {
-        profile: {
-          include: { profileImages: { include: { image: true }, orderBy: { position: 'asc' } } },
-        },
-      },
+      // Public gallery, ordered so the attendee's primary photo comes first.
+      include: { profile: { include: profileImageInclude() } },
       orderBy: { rsvpedAt: 'asc' },
     })
     expect(result).toEqual(rows)
@@ -116,12 +113,8 @@ describe('EventService.listAttendees', () => {
 
     expect(mockPrisma.eventAttendance.findMany).toHaveBeenCalledWith({
       where: { eventContentId: 'evt-1', status: 'GOING' },
-      // Ordered so the attendee's primary photo comes first.
-      include: {
-        profile: {
-          include: { profileImages: { include: { image: true }, orderBy: { position: 'asc' } } },
-        },
-      },
+      // Public gallery, ordered so the attendee's primary photo comes first.
+      include: { profile: { include: profileImageInclude() } },
       orderBy: { rsvpedAt: 'asc' },
     })
   })

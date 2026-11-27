@@ -41,6 +41,22 @@ describe('ProfileImage', () => {
     expect(wrapper.find('.image-tag').text()).toContain('/one.jpg')
   })
 
+  it("renders the owner's first unrestricted image, not a restricted first one", () => {
+    const wrapper = mount(ProfileImage, {
+      props: {
+        profile: {
+          id: 'me',
+          profileImages: [
+            { variants: [{ size: 'original', url: '/restricted.jpg' }], isRestricted: true },
+            { variants: [{ size: 'original', url: '/public.jpg' }], isRestricted: false },
+          ],
+        },
+      },
+      global: { stubs: { ImageTag } },
+    })
+    expect(wrapper.find('.image-tag').text()).toContain('/public.jpg')
+  })
+
   it('updates when profile prop changes', async () => {
     const wrapper = mount(ProfileImage, {
       props: { profile: makeProfile('/one.jpg') },

@@ -17,6 +17,13 @@ export const ImageAttachmentSchema = z.object({
   profileId: z.string().nullable(),
   userContentId: z.string().nullable(),
   position: z.number().int(),
+  /**
+   * Shown only to viewers the gallery's owning endpoint deems eligible; what
+   * qualifies is that endpoint's business rule (profile galleries: mutual
+   * dating matches). Profile galleries only, enforced by a CHECK constraint
+   * until a UserContent gallery defines a rule of its own.
+   */
+  isRestricted: z.boolean(),
 })
 
 export type ImageAttachment = z.infer<typeof ImageAttachmentSchema>

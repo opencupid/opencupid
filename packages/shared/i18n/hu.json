@@ -481,7 +481,9 @@
     },
     "gender_edit_label": "nemem",
     "image_editor": {
-      "delete_button_title": "Kép eltávolítása"
+      "delete_button_title": "Kép eltávolítása",
+      "restricted_title": "Rejtett fotó. Csak azok a párkeresők látják, akikkel kölcsönösen megfelelünk egymás preferenciáinak.",
+      "restricted_title_inactive": "Rejtett fotó. Amíg a párkereső mód ki van kapcsolva, senki sem látja."
     },
     "image_upload": {
       "add_from_phone": "Kép egy albumból",
@@ -490,6 +492,8 @@
       },
       "looks_good": "Jó lesz, mehet",
       "nevermind": "Mégse",
+      "restrict_hint": "Rajtuk kívül senki sem látja a fotót. Jelöld be, ha szeretnél egy kicsit többet megmutatni magadról azoknak, akikkel összeilletek.",
+      "restrict_label": "Ezt a képet csak azok a párkeresők lássák, akikkel kölcsönösen megfelelünk egymás preferenciáinak",
       "take_photo": "Lövök egy fotót",
       "title": "Kép hozzáadása",
       "try_another": "Válassz másik képet"

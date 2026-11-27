@@ -9,7 +9,16 @@ vi.mock('@/features/shared/ui/ErrorComponent.vue', () => ({ default: { template:
 vi.mock('../components/UploadButton.vue', () => ({ default: { template: '<input />' } }))
 
 import ImageUpload from '../components/ImageUpload.vue'
-import type { GalleryStore } from '../stores/galleryStore'
+import type { GalleryRestriction, GalleryStore } from '../stores/galleryStore'
+
+const restriction: GalleryRestriction = {
+  labelKey: 'restrict.label',
+  hintKey: 'restrict.hint',
+  titleKey: 'restrict.title',
+  inactiveTitleKey: 'restrict.inactive',
+  isActive: true,
+  isRestricted: () => false,
+}
 
 function makeStubStore(overrides: Partial<GalleryStore> = {}): GalleryStore {
   return {
@@ -66,7 +75,7 @@ describe('ImageUpload', () => {
     })
     const file = new File(['a'], 'a.png', { type: 'image/png' })
     await (wrapper.vm as any).handleFileChange({ target: { files: [file] } } as any)
-    expect(store.upload).toHaveBeenCalledWith(file, '')
+    expect(store.upload).toHaveBeenCalledWith(file, '', { isRestricted: false })
     expect((wrapper.vm as any).showModal).toBe(false)
   })
 
@@ -113,5 +122,38 @@ describe('ImageUpload', () => {
     })
     const button = wrapper.find('.image-upload > *')
     expect(button.classes()).toEqual(expect.arrayContaining(['w-100', 'h-100']))
+  })
+
+  describe('restriction checkbox', () => {
+    const stubs = { ...mountStubs, BModal: { template: '<div><slot /></div>' } }
+    const openPreview = async (store: GalleryStore) => {
+      const wrapper = mount(ImageUpload, { props: { store }, global: { stubs } })
+      const restore = stubFileReader()
+      await (wrapper.vm as any).handleFileChange({
+        target: { files: [new File(['a'], 'a.png', { type: 'image/png' })] },
+      } as any)
+      restore()
+      return wrapper
+    }
+
+    it('is offered only by galleries that define a restriction', async () => {
+      const plain = await openPreview(makeStubStore())
+      expect(plain.find('[data-testid="image-upload-restrict"]').exists()).toBe(false)
+
+      const restricted = await openPreview(makeStubStore({ restriction }))
+      expect(restricted.find('[data-testid="image-upload-restrict"]').exists()).toBe(true)
+      expect(restricted.text()).toContain('restrict.label')
+      expect(restricted.text()).toContain('restrict.hint')
+    })
+
+    it('passes the ticked value to upload and resets it when the dialog closes', async () => {
+      const store = makeStubStore({ restriction })
+      const wrapper = await openPreview(store)
+      ;(wrapper.vm as any).isRestricted = true
+      await (wrapper.vm as any).handleUpload()
+      expect(store.upload).toHaveBeenCalledWith(expect.any(File), '', { isRestricted: true })
+      ;(wrapper.vm as any).onModalHidden()
+      expect((wrapper.vm as any).isRestricted).toBe(false)
+    })
   })
 })

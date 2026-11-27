@@ -32,6 +32,7 @@ import { emailPreferencesSelect, toEmailPreferences } from '@/services/emailPref
 import adminEventRoutes from './admin/event.route'
 import adminImageRoutes from './admin/image.route'
 import adminStatisticsRoutes from './admin/statistics.route'
+import { profileImagesRelation } from '@/db/includes/profileIncludes'
 
 /**
  * Rows attributable to the system sender (ADMIN_PROFILE_ID) — welcome messages
@@ -1216,10 +1217,8 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
               roles: true,
             },
           },
-          profileImages: {
-            select: { image: { select: { id: true, storagePath: true, hasFace: true } } },
-            orderBy: { position: 'asc' },
-          },
+          // Moderation sees the whole gallery, restricted images included.
+          profileImages: profileImagesRelation({ includeRestricted: true }),
           trustFlags: {
             where: { clearedAt: null },
             orderBy: { flaggedAt: 'desc' },

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { primaryProfileImage } from '@/features/images/primaryProfileImage'
 import { provide } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -59,7 +60,10 @@ function handleClose() {
     <template v-else>
       <span class="d-flex align-items-center gap-2 flex-grow-1 overflow-hidden">
         <span
-          v-if="ownerProfileStore.profile?.profileImages?.length"
+          v-if="
+            ownerProfileStore.profile &&
+            primaryProfileImage(ownerProfileStore.profile.profileImages)
+          "
           class="owner-profile-avatar flex-shrink-0 overflow-hidden"
         >
           <ProfileImage
