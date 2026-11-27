@@ -6,7 +6,7 @@ import '@vuepic/vue-datepicker/dist/main.css'
 import registerToast from './lib/toast'
 import { appUseI18n } from './lib/i18n'
 import { useAuthStore } from './features/auth/stores/authStore'
-import { initUmami } from './lib/umami'
+import { initUmami, trackPageviews } from './lib/umami'
 import { initSentry } from './lib/sentry'
 import { initOpenReplay } from './lib/openreplay'
 
@@ -45,6 +45,7 @@ app.config.warnHandler = (msg, _vm, trace) => {
   console.error('Vue warning:', msg, trace)
 }
 app.use(createPinia())
+trackPageviews(router)
 app.use(router)
 app.use(createBootstrap()) // bootstrap-vue-next
 registerToast(app) // vue-toastification plugin (used by lazy authenticated UI)
