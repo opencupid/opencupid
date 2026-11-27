@@ -9,10 +9,10 @@ import { type DbProfileSummary, type DbProfileWithImages } from '@zod/profile/pr
 import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
-import { type OwnerProfileImage, type PublicImage } from '@zod/image/image.dto'
+import { type OwnerProfileImage, type PublicProfileImage } from '@zod/image/image.dto'
 import { mapTagsTranslated } from './tag.mappers'
 import { Image } from '@zod/generated'
-import { toOwnerProfileImage, toPublicImage } from './image.mappers'
+import { toOwnerProfileImage, toPublicImage, toPublicProfileImage } from './image.mappers'
 
 /** A profile gallery entry: the ImageAttachment row with its image. */
 type ProfileGalleryEntry = { image: Image; isRestricted: boolean }
@@ -109,9 +109,9 @@ export function visibleProfileImages<T extends { isRestricted: boolean }>(
 export function mapProfileImagesToPublic(
   entries: ProfileGalleryEntry[],
   canSeeRestricted: boolean
-): PublicImage[] {
+): PublicProfileImage[] {
   return visibleProfileImages(entries, canSeeRestricted).map((entry, position) =>
-    toPublicImage(entry.image, position)
+    toPublicProfileImage(entry, position)
   )
 }
 

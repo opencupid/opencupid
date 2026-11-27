@@ -252,9 +252,19 @@ describe('mappers', () => {
         expect(result.profileImages.map((i) => i.position)).toEqual([0, 1])
       })
 
-      it('never exposes the restriction flag to viewers', () => {
+      it('flags the restricted images an eligible viewer gets', () => {
         const result = mapProfileToPublic({ ...baseProfile, profileImages: gallery }, true, 'en')
-        expect(result.profileImages[0]).not.toHaveProperty('isRestricted')
+        expect(result.profileImages.map((i) => i.isRestricted)).toEqual([false, true])
+      })
+
+      it('keeps the flag on a gallery with no unrestricted image', () => {
+        const allRestricted = gallery.filter((g) => g.isRestricted)
+        const result = mapProfileToPublic(
+          { ...baseProfile, profileImages: allRestricted },
+          true,
+          'en'
+        )
+        expect(result.profileImages.map((i) => i.isRestricted)).toEqual([true])
       })
     })
 

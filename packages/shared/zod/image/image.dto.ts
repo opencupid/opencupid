@@ -39,10 +39,16 @@ export const OwnerImageSchema = ImageSchema.pick(ownerFields).extend({
 export type OwnerImage = z.infer<typeof OwnerImageSchema>
 
 /**
- * A profile gallery image as its owner sees it. `isRestricted` images are left out
- * of what other viewers get unless the profile endpoints' rule lets them see them
- * (mutual dating match). Never sent to non-owners: viewers get PublicImage.
+ * A profile gallery image as another viewer sees it. `isRestricted` images reach
+ * only viewers the profile endpoints' rule lets see them (mutual dating match);
+ * the flag tells them a restricted image cannot be the profile's primary photo.
  */
+export const PublicProfileImageSchema = PublicImageSchema.extend({
+  isRestricted: z.boolean(),
+})
+export type PublicProfileImage = z.infer<typeof PublicProfileImageSchema>
+
+/** A profile gallery image as its owner sees it: the whole gallery, restricted or not. */
 export const OwnerProfileImageSchema = OwnerImageSchema.extend({
   isRestricted: z.boolean(),
 })

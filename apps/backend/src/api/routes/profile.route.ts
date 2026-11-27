@@ -268,9 +268,14 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/preview/:locale/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const myProfileId = req.session.profileId
 
+    const query = PreviewQuerySchema.safeParse(req.query)
+    if (!query.success) {
+      return sendError(reply, 400, 'Missing or invalid query parameters')
+    }
+    const { scope } = query.data
+
     try {
       const { id, locale } = PreviewLookupParamsSchema.parse(req.params)
-      const { scope } = PreviewQuerySchema.parse(req.query)
 
       if (id !== myProfileId) {
         return sendForbiddenError(reply, 'You do not have access to this profile')

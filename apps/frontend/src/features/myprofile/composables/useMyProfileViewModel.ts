@@ -1,7 +1,7 @@
 import { useI18nStore } from '@/store/i18nStore'
 import { computed, reactive, shallowRef, toRef, watch } from 'vue'
 
-import { type PublicProfile } from '@zod/profile/profile.dto'
+import { type ProfileScope, type PublicProfile } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -19,11 +19,13 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     currentScope: 'social',
   })
 
-  const publicProfile = shallowRef<PublicProfile | null>(null)
+  // The backend decides which photos each audience gets, so a preview is shown
+  // only for the scope it was fetched for: never another audience's gallery.
+  const loadedPreview = shallowRef<{ scope: ProfileScope; profile: PublicProfile } | null>(null)
   const profilePreview = computed<PublicProfile | null>(() => {
-    if (!publicProfile.value) return null
+    if (loadedPreview.value?.scope !== viewState.currentScope) return null
     return {
-      ...publicProfile.value,
+      ...loadedPreview.value.profile,
       isDatingActive: viewState.currentScope === 'dating',
     } as PublicProfile
   })
@@ -50,17 +52,18 @@ export function useMyProfileViewModel(isEditMode: boolean) {
       return
     }
     const request = ++latestPreviewRequest
+    const scope = viewState.currentScope
     const res = await profileStore.getProfilePreview(
       profileStore.profile.id,
       viewState.previewLanguage,
-      viewState.currentScope
+      scope
     )
     if (request !== latestPreviewRequest) return
     if (!res.success) {
       return res
     }
     if (!res.data) return
-    publicProfile.value = res.data
+    loadedPreview.value = { scope, profile: res.data }
   }
 
   const updateScopes = async (payload: { isDatingActive: boolean }) => {
@@ -88,8 +91,7 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     { immediate: true }
   )
 
-  // Re-fetch the preview when the user switches its language or scope: the
-  // backend decides which photos each audience gets.
+  // Re-fetch the preview when the user switches its language or scope.
   watch(
     () => [viewState.previewLanguage, viewState.currentScope],
     () => fetchPreview()
@@ -118,7 +120,6 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     isLoading,
     viewState,
     formData,
-    publicProfile,
     profilePreview,
     isDatingOnboarded,
     isOnboarded,

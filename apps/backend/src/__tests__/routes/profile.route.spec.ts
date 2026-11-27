@@ -382,10 +382,11 @@ describe('GET /preview/:locale/:id', () => {
     expect(mapProfileToPublic).toHaveBeenLastCalledWith(own, dating, 'hu')
   })
 
-  it('rejects a request without a scope', async () => {
+  it.each([[undefined], ['everyone']])('rejects scope %s with 400', async (scope) => {
     mockProfileService.getProfileCompleteById.mockResolvedValue(own)
-    await fastify.routes['GET /preview/:locale/:id'](req(), reply as any)
-    expect(reply.statusCode).not.toBe(200)
+    await fastify.routes['GET /preview/:locale/:id'](req(scope), reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(mockProfileService.getProfileCompleteById).not.toHaveBeenCalled()
   })
 })
 
