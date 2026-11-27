@@ -260,6 +260,32 @@ describe('SendMessageForm', () => {
     expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(true)
   })
 
+  it('locks the composer while the partner has not replied to the first message', () => {
+    const wrapper = mountForm({ canReply: false })
+
+    const textarea = wrapper.find('b-form-textarea-stub')
+    expect(textarea.attributes('disabled')).toBe('true')
+    expect(wrapper.find('[data-testid="awaiting-reply-hint"]').text()).toBe(
+      'messaging.already_sent_waiting'
+    )
+    expect(wrapper.findComponent({ name: 'VoiceRecorder' }).exists()).toBe(false)
+    expect(wrapper.findComponent(ImageUploadStub).exists()).toBe(false)
+    expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(false)
+  })
+
+  it('leaves the composer open by default', () => {
+    const wrapper = mountForm()
+    expect(wrapper.find('b-form-textarea-stub').attributes('disabled')).toBe('false')
+    expect(wrapper.find('[data-testid="awaiting-reply-hint"]').exists()).toBe(false)
+  })
+
+  it('keeps the hint visible when a saved draft fills the locked composer', () => {
+    useLocalStore().setMessageDraft(mockRecipient.id, 'an unsent follow-up')
+    const wrapper = mountForm({ canReply: false })
+
+    expect(wrapper.find('[data-testid="awaiting-reply-hint"]').exists()).toBe(true)
+  })
+
   it('passes VOICE_MESSAGE_MAX_DURATION config to VoiceRecorder', () => {
     const wrapper = mountForm()
     const voiceRecorder = wrapper.findComponent({ name: 'VoiceRecorder' })
@@ -362,9 +388,9 @@ describe('SendMessageForm', () => {
       position: 0,
     }
 
-    function mountPasteForm() {
+    function mountPasteForm(props: Record<string, unknown> = {}) {
       const wrapper = mount(SendMessageForm, {
-        props: { recipientProfile: mockRecipient, conversationId: 'conv-1' },
+        props: { recipientProfile: mockRecipient, conversationId: 'conv-1', ...props },
         global: {
           stubs: {
             BFormTextarea: TextareaStub,
@@ -412,6 +438,16 @@ describe('SendMessageForm', () => {
       expect((apiPost.mock.calls[0]![1] as FormData).get('file')).toBe(file)
       expect(sendMessage).toHaveBeenCalledWith(mockRecipient.id, '', ['ck2j6z1x30000a1b2c3d4e5f6'])
       expect(wrapper.emitted('message:sent')).toHaveLength(1)
+    })
+
+    it('neither uploads nor sends a pasted image while the partner has not replied', async () => {
+      const { wrapper, sendMessage } = mountPasteForm({ canReply: false })
+
+      const event = await paste(wrapper, [new File(['x'], 'shot.png', { type: 'image/png' })])
+
+      expect(event.defaultPrevented).toBe(true)
+      expect(apiPost).not.toHaveBeenCalled()
+      expect(sendMessage).not.toHaveBeenCalled()
     })
 
     it('leaves a text-only paste to the browser', async () => {
@@ -571,6 +607,20 @@ describe('SendMessageForm', () => {
       expect(textareaOf(wrapper).value).toBe('helo')
       expect(wrapper.find('[data-testid="edit-banner"]').exists()).toBe(true)
       expect(wrapper.findComponent(ImageUploadStub).exists()).toBe(false)
+    })
+
+    it('still lets the unanswered first message be edited', async () => {
+      const { wrapper } = mountEditForm()
+
+      await press(wrapper, 'ArrowUp')
+      await wrapper.setProps({ canReply: false })
+
+      expect(textareaOf(wrapper).value).toBe('helo')
+      expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(true)
+
+      await press(wrapper, 'Escape')
+
+      expect(wrapper.find('[data-testid="send-controls"]').exists()).toBe(false)
     })
 
     it('lets Escape through to the surrounding panel when not editing', async () => {

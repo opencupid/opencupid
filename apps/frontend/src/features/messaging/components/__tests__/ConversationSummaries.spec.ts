@@ -168,13 +168,14 @@ describe('ConversationSummaries', () => {
     expect(mountWith({ isAdminInitiator: true }).find('.archive-button').exists()).toBe(false)
   })
 
-  it('opens hidden conversations, but not those that cannot be replied to', async () => {
+  it('opens hidden conversations and those awaiting the partner reply', async () => {
     const hidden = mountWith({ isArchived: true })
     await hidden.find('.convo-item').trigger('click')
     expect(hidden.emitted('convo:select')).toHaveLength(1)
 
     const theirs = mountWith({ canReply: false })
     await theirs.find('.convo-item').trigger('click')
-    expect(theirs.emitted('convo:select')).toBeUndefined()
+    expect(theirs.emitted('convo:select')).toHaveLength(1)
+    expect(theirs.find('.faded').exists()).toBe(false)
   })
 })

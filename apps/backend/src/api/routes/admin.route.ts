@@ -775,10 +775,6 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }> = []
 
     for (const recipientProfileId of uniqueProfileIds) {
-      if (recipientProfileId === senderProfileId) {
-        results.push({ profileId: recipientProfileId, error: 'SELF_SEND_NOT_ALLOWED' })
-        continue
-      }
       try {
         const { message, isDuplicate, outcome } = await prisma.$transaction(async (tx) => {
           const { convo, wasCreated } = await messageService.resolveConversation(

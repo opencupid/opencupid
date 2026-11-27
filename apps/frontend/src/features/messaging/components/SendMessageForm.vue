@@ -36,9 +36,11 @@ const props = withDefaults(
     conversationId: string | null
     showTags?: boolean
     canCall?: boolean
+    // False while the partner hasn't replied to the viewer's first message.
+    canReply?: boolean
     noResize?: boolean
   }>(),
-  { noResize: true }
+  { noResize: true, canReply: true }
 )
 const emit = defineEmits<{
   (e: 'message:sent', message: MessageDTO | null): void
@@ -98,6 +100,8 @@ async function handlePaste(event: ClipboardEvent) {
   // No image on the clipboard — let the browser paste text as usual.
   if (!file) return
   event.preventDefault()
+  // A pasted image is sent as a new message, which only a repliable conversation takes.
+  if (!props.canReply) return
   // One attachment at a time: a second upload landing mid-send would be sent twice.
   if (imageStore.isLoading || isSending.value) return
 
@@ -172,6 +176,8 @@ const canEditHere = computed(
 )
 const editingMessage = computed(() => (canEditHere.value ? messageStore.editingMessage : null))
 const isEditing = computed(() => editingMessage.value !== null)
+// Editing the unanswered first message stays possible; sending a new one doesn't.
+const isLocked = computed(() => !props.canReply && !isEditing.value)
 // Non-null exactly while this form is in edit mode.
 const draftBeforeEdit = ref<string | null>(null)
 
@@ -236,7 +242,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   }
 }
 
-const canSend = computed(() => content.value.trim() !== '')
+const canSend = computed(() => !isLocked.value && content.value.trim() !== '')
 
 async function handleSendMessage() {
   if (isEditing.value) return handleSaveEdit()
@@ -349,6 +355,14 @@ function handleVoiceRecordingError(error: string) {
             <IconCross class="svg-icon" />
           </button>
         </div>
+        <!-- Separate text, not the placeholder: a restored draft would hide that. -->
+        <div
+          v-if="isLocked"
+          class="form-hint mb-2"
+          data-testid="awaiting-reply-hint"
+        >
+          {{ $t('messaging.already_sent_waiting') }}
+        </div>
         <BFormTextarea
           id="content-input"
           ref="textarea"
@@ -361,9 +375,12 @@ function handleVoiceRecordingError(error: string) {
           @keydown="handleKeyPress"
           @paste="handlePaste"
           :placeholder="$t('messaging.message_input_placeholder')"
-          :disabled="messageStore.isSending || isVoiceActive"
+          :disabled="messageStore.isSending || isVoiceActive || isLocked"
         />
-        <div class="d-flex justify-content-between align-items-start">
+        <div
+          v-if="!isLocked"
+          class="d-flex justify-content-between align-items-start"
+        >
           <div
             v-if="!isEditing"
             class="d-flex align-items-center gap-2"

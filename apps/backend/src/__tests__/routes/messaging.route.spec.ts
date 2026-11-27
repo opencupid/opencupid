@@ -31,6 +31,7 @@ vi.mock('../../services/messaging.service', () => {
     EMPTY_MESSAGE: 'EMPTY_MESSAGE',
     MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
     MESSAGE_NOT_EDITABLE: 'MESSAGE_NOT_EDITABLE',
+    SELF_CONVERSATION: 'SELF_CONVERSATION',
   } as const
   class MessagingError extends Error {
     readonly code: (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
@@ -440,6 +441,19 @@ describe('POST /message', () => {
     await handler({ session: { profileId: 'p1' }, body: {} } as any, reply as any)
     expect(reply.statusCode).toBe(401)
     expect(reply.payload.message).toMatch('Invalid parameters')
+  })
+
+  it('maps SELF_CONVERSATION from the service to 400', async () => {
+    const handler = fastify.routes['POST /message']
+    const { MessagingError } = await import('../../services/messaging.service')
+    mockMessageService.resolveConversation.mockRejectedValue(
+      new MessagingError('SELF_CONVERSATION' as any, 'Cannot send a message to yourself')
+    )
+    await handler(
+      { session: { profileId: validBody.profileId }, body: validBody } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(400)
   })
 
   it('sends message and returns conversation with messageDTO', async () => {
@@ -1596,17 +1610,68 @@ describe('GET /conversations/by-profile/:profileId', () => {
   it('returns 400 when profileId is not a CUID', async () => {
     const handler = fastify.routes['GET /conversations/by-profile/:profileId']
     await handler(
-      { session: { profileId: 'p1' }, params: { profileId: 'not-a-cuid' } } as any,
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: 'not-a-cuid' },
+      } as any,
       reply as any
     )
     expect(reply.statusCode).toBe(400)
+  })
+
+  it("returns 400 for the viewer's own profile id", async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    await handler(
+      {
+        session: { profileId: validProfileId, hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(400)
+    expect(mockProfileService.getProfilePublicById).not.toHaveBeenCalled()
+  })
+
+  it('returns 403 when the viewer has no active profile', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    await handler(
+      {
+        session: { profileId: 'p1', hasActiveProfile: false },
+        params: { profileId: validProfileId },
+      } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(403)
+    expect(mockProfileService.getProfilePublicById).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the partner profile is inactive', async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    mockProfileService.getProfilePublicById.mockResolvedValue({
+      id: validProfileId,
+      blockedProfiles: [],
+      isActive: false,
+      isCallable: true,
+    })
+    await handler(
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
+      reply as any
+    )
+    expect(reply.statusCode).toBe(404)
+    expect(mockMessageService.findConversationSummaryByPartner).not.toHaveBeenCalled()
   })
 
   it('returns 404 when partner profile is not found', async () => {
     const handler = fastify.routes['GET /conversations/by-profile/:profileId']
     mockProfileService.getProfilePublicById.mockResolvedValue(null)
     await handler(
-      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
       reply as any
     )
     expect(reply.statusCode).toBe(404)
@@ -1617,10 +1682,14 @@ describe('GET /conversations/by-profile/:profileId', () => {
     mockProfileService.getProfilePublicById.mockResolvedValue({
       id: validProfileId,
       blockedProfiles: [{ id: 'p1' }],
+      isActive: true,
       isCallable: true,
     })
     await handler(
-      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
       reply as any
     )
     expect(reply.statusCode).toBe(404)
@@ -1631,19 +1700,21 @@ describe('GET /conversations/by-profile/:profileId', () => {
     mockProfileService.getProfilePublicById.mockResolvedValue({
       id: validProfileId,
       blockedProfiles: [],
+      isActive: true,
       isCallable: true,
     })
     mockMessageService.findConversationSummaryByPartner.mockResolvedValue({ id: 'cp-existing' })
     await handler(
-      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
       reply as any
     )
     expect(mockMessageService.findConversationSummaryByPartner).toHaveBeenCalledWith(
       'p1',
       validProfileId
     )
-    // hasMutualLike must NOT be consulted — existing convos bypass the match gate.
-    expect(mockMessageService.hasMutualLike).not.toHaveBeenCalled()
     expect(reply.statusCode).toBe(200)
     expect(reply.payload.success).toBe(true)
     // Mocked mapper returns { id: 'summary', partnerProfile: {} } — proves the
@@ -1651,35 +1722,22 @@ describe('GET /conversations/by-profile/:profileId', () => {
     expect(reply.payload.conversation.id).toBe('summary')
   })
 
-  it('returns 403 when no conversation exists and pair is not matched', async () => {
-    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
-    mockProfileService.getProfilePublicById.mockResolvedValue({
-      id: validProfileId,
-      blockedProfiles: [],
-      isCallable: true,
-    })
-    mockMessageService.findConversationSummaryByPartner.mockResolvedValue(null)
-    mockMessageService.hasMutualLike.mockResolvedValue(false)
-    await handler(
-      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
-      reply as any
-    )
-    expect(reply.statusCode).toBe(403)
-  })
-
-  it('returns ConversationDraftSummary when matched and no conversation exists', async () => {
+  it('returns ConversationDraftSummary when no conversation exists', async () => {
     const handler = fastify.routes['GET /conversations/by-profile/:profileId']
     mockProfileService.getProfilePublicById.mockResolvedValue({
       id: validProfileId,
       publicName: 'Partner',
       blockedProfiles: [],
+      isActive: true,
       isCallable: true,
     })
     mockMessageService.findConversationSummaryByPartner.mockResolvedValue(null)
-    mockMessageService.hasMutualLike.mockResolvedValue(true)
     mockProfileService.getProfileById.mockResolvedValue({ id: 'p1', isCallable: true })
     await handler(
-      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
       reply as any
     )
     expect(reply.statusCode).toBe(200)
@@ -1689,6 +1747,8 @@ describe('GET /conversations/by-profile/:profileId', () => {
     expect(reply.payload.conversation.canReply).toBe(true)
     expect(reply.payload.conversation.isCallable).toBe(true)
     expect(reply.payload.conversation.myIsCallable).toBe(true)
+    // Drafts are not gated on a mutual like.
+    expect(mockMessageService.hasMutualLike).not.toHaveBeenCalled()
   })
 
   it('reflects per-profile isCallable flags in the draft', async () => {
@@ -1697,13 +1757,16 @@ describe('GET /conversations/by-profile/:profileId', () => {
       id: validProfileId,
       publicName: 'Partner',
       blockedProfiles: [],
+      isActive: true,
       isCallable: false,
     })
     mockMessageService.findConversationSummaryByPartner.mockResolvedValue(null)
-    mockMessageService.hasMutualLike.mockResolvedValue(true)
     mockProfileService.getProfileById.mockResolvedValue({ id: 'p1', isCallable: false })
     await handler(
-      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
       reply as any
     )
     expect(reply.statusCode).toBe(200)
@@ -1716,7 +1779,10 @@ describe('GET /conversations/by-profile/:profileId', () => {
     const handler = fastify.routes['GET /conversations/by-profile/:profileId']
     mockProfileService.getProfilePublicById.mockRejectedValue(new Error('db down'))
     await handler(
-      { session: { profileId: 'p1' }, params: { profileId: validProfileId } } as any,
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
       reply as any
     )
     expect(reply.statusCode).toBe(500)

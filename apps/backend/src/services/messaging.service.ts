@@ -14,6 +14,7 @@ export const MessagingErrorCodes = {
   EMPTY_MESSAGE: 'EMPTY_MESSAGE',
   MESSAGE_NOT_FOUND: 'MESSAGE_NOT_FOUND',
   MESSAGE_NOT_EDITABLE: 'MESSAGE_NOT_EDITABLE',
+  SELF_CONVERSATION: 'SELF_CONVERSATION',
 } as const
 
 export type MessagingErrorCode = (typeof MessagingErrorCodes)[keyof typeof MessagingErrorCodes]
@@ -706,6 +707,14 @@ export class MessageService {
     recipientProfileId: string,
     opts: { createAsPending?: boolean } = {}
   ): Promise<{ convo: Conversation; wasCreated: boolean }> {
+    // Every send path creates its conversation here, so this is where the
+    // pair is guaranteed to be two different profiles.
+    if (senderProfileId === recipientProfileId) {
+      throw new MessagingError(
+        MessagingErrorCodes.SELF_CONVERSATION,
+        'Cannot send a message to yourself'
+      )
+    }
     const [profileAId, profileBId] = this.sortProfilePair(senderProfileId, recipientProfileId)
 
     const existing = await tx.conversation.findFirst({

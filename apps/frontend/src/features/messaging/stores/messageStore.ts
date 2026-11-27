@@ -30,6 +30,9 @@ type MessageStoreState = {
   conversations: ConversationSummary[]
   messages: MessageDTO[]
   activeConversation: ConversationSummary | null
+  // Bumped whenever the open conversation changes, so a slower load started
+  // for an earlier one can tell it has been superseded.
+  activeLoadToken: number
   hasUnreadMessages: boolean
   // Bumped whenever an incoming message makes the inbox unread, so a server
   // snapshot requested before that message is not allowed to clear the flag.
@@ -64,6 +67,7 @@ export const useMessageStore = defineStore('message', {
     conversations: [] as ConversationSummary[],
     messages: [] as MessageDTO[],
     activeConversation: null as ConversationSummary | null,
+    activeLoadToken: 0,
     hasUnreadMessages: false,
     unreadRevision: 0,
     initialized: false,
@@ -119,7 +123,9 @@ export const useMessageStore = defineStore('message', {
             isArchived: message.isArchived,
             conversation: { ...known.conversation, updatedAt: message.createdAt },
           }
-        : await this.fetchConversation(message.conversationId)
+        : await this.fetchConversation(message.conversationId).then((res) =>
+            res.success ? (res.data ?? null) : null
+          )
       if (convo) {
         this.bumpConversation(convo)
         // Missed-call notices are broadcast to their sender as well. Archived
@@ -193,6 +199,15 @@ export const useMessageStore = defineStore('message', {
         conversation,
         ...this.conversations.filter((c) => c.conversationId !== conversation.conversationId),
       ]
+      this.syncActiveConversation(conversation)
+    },
+
+    // The open conversation holds its own copy of the summary: keep it in step
+    // when the list entry is replaced (e.g. canReply flipping on a reply).
+    syncActiveConversation(conversation: ConversationSummary) {
+      if (this.activeConversation?.conversationId === conversation.conversationId) {
+        this.activeConversation = conversation
+      }
     },
 
     handleSendResponse(res: {
@@ -214,6 +229,7 @@ export const useMessageStore = defineStore('message', {
       if (index !== -1) {
         this.conversations[index] = convo
       }
+      this.syncActiveConversation(convo)
     },
 
     // Applies the inbox-wide unread flag from a response whose request was sent
@@ -247,7 +263,7 @@ export const useMessageStore = defineStore('message', {
     async fetchMessagesForConversation(
       conversationId: string,
       options?: { cursor?: string; append?: boolean }
-    ): Promise<MessageInConversation[]> {
+    ): Promise<StoreResponse<MessageInConversation[]>> {
       try {
         const isLoadingOlder = Boolean(options?.append)
         if (isLoadingOlder) {
@@ -269,6 +285,9 @@ export const useMessageStore = defineStore('message', {
           })
         )
 
+        // The user opened another conversation while this page was loading.
+        if (this.activeConversation?.conversationId !== conversationId) return storeSuccess([])
+
         if (res.data.success) {
           this.messageCursor = res.data.nextCursor
           this.hasMoreMessages = res.data.hasMore
@@ -283,8 +302,10 @@ export const useMessageStore = defineStore('message', {
             this.messages = res.data.messages
           }
 
-          return res.data.messages
+          return storeSuccess(res.data.messages)
         }
+        this.error = storeError(new Error('Failed to fetch messages'))
+        return this.error
       } catch (error: any) {
         this.error = storeError(error)
         if (!options?.append) {
@@ -292,21 +313,21 @@ export const useMessageStore = defineStore('message', {
           this.messageCursor = null
           this.hasMoreMessages = false
         }
+        return this.error
       } finally {
         this.isLoading = false
         this.isLoadingMoreMessages = false
       }
-      return []
     },
 
-    async fetchOlderMessages(): Promise<MessageInConversation[]> {
+    async fetchOlderMessages(): Promise<StoreResponse<MessageInConversation[]>> {
       if (
         !this.activeConversation ||
         !this.hasMoreMessages ||
         !this.messageCursor ||
         this.isLoadingMoreMessages
       ) {
-        return []
+        return storeSuccess([])
       }
 
       return this.fetchMessagesForConversation(this.activeConversation.conversationId, {
@@ -399,15 +420,15 @@ export const useMessageStore = defineStore('message', {
       }
     },
 
-    async fetchConversation(conversationId: string): Promise<ConversationSummary | null> {
+    async fetchConversation(conversationId: string): Promise<StoreResponse<ConversationSummary>> {
       try {
         const res = await safeApiCall(() =>
           api.get<ConversationResponse>(`/messages/conversations/${conversationId}`)
         )
-        return res.data.success ? res.data.conversation : null
+        return res.data.success ? storeSuccess(res.data.conversation) : storeError(res.data)
       } catch (error: any) {
         this.error = storeError(error)
-        return null
+        return this.error
       }
     },
 
@@ -523,15 +544,18 @@ export const useMessageStore = defineStore('message', {
       }
     },
 
-    async setActiveConversation(convo: ConversationSummary | null) {
+    async setActiveConversation(
+      convo: ConversationSummary | null
+    ): Promise<StoreResponse<MessageInConversation[]>> {
+      this.activeLoadToken++
       this.activeConversation = convo
       this.editingMessageId = null
-      if (this.activeConversation) {
-        await this.fetchMessagesForConversation(this.activeConversation.conversationId)
-      }
+      if (!convo) return storeSuccess([])
+      return this.fetchMessagesForConversation(convo.conversationId)
     },
 
     resetActiveConversation() {
+      this.activeLoadToken++
       this.activeConversation = null
       this.messages = []
       this.messageCursor = null
@@ -544,20 +568,27 @@ export const useMessageStore = defineStore('message', {
       await this.fetchConversations()
     },
 
-    async setActiveConversationById(conversationId: string) {
+    async setActiveConversationById(
+      conversationId: string
+    ): Promise<StoreResponse<ConversationSummary>> {
+      const token = ++this.activeLoadToken
       if (!this.initialized) {
         await this.fetchConversations()
       }
       // The list only holds the pages loaded so far; a deep link can point past them.
-      const convo =
-        this.conversations.find((c) => c.conversationId === conversationId) ??
-        (await this.fetchConversation(conversationId))
-      if (convo) {
-        await this.setActiveConversation(convo)
+      const known = this.conversations.find((c) => c.conversationId === conversationId)
+      const res = known ? storeSuccess(known) : await this.fetchConversation(conversationId)
+      // Another conversation was opened meanwhile: leave its state alone.
+      if (token !== this.activeLoadToken) return res
+      if (res.success && res.data) {
+        // The summary alone is not an opened conversation: its first page must load too.
+        const loaded = await this.setActiveConversation(res.data)
+        if (!loaded.success) return loaded
       } else {
         this.activeConversation = null
         this.messages = []
       }
+      return res
     },
 
     async initialize() {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h, ref } from 'vue'
-import { mount, type VueWrapper } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 
 import type { ConversationDraftSummary, ConversationSummary } from '@zod/messaging/messaging.dto'
 
@@ -134,7 +134,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockMessageStore.activeConversation = null
   mockMessageStore.conversations = []
-  mockMessageStore.setActiveConversationById.mockResolvedValue(undefined)
+  mockMessageStore.setActiveConversationById.mockResolvedValue({ success: true, data: {} })
   mockMessageStore.setActiveConversation.mockResolvedValue(undefined)
   mockMessageStore.resolveConversationByProfile.mockResolvedValue({ success: true, data: null })
   mockProfileStore.getPublicProfile.mockResolvedValue({ success: false })
@@ -160,6 +160,97 @@ describe('useConversationDetailViewModel — detail mode', () => {
     await vi.waitFor(() => expect(mockProfileStore.getPublicProfile).toHaveBeenCalledWith('p1'))
     expect(vm.isDraft.value).toBe(false)
     expect(vm.partner.value).toEqual(partner)
+    expect(vm.loadError.value).toBeNull()
+  })
+
+  it('reports not_found when the conversation does not exist', async () => {
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'gone' }
+    mockMessageStore.setActiveConversationById.mockResolvedValue({
+      success: false,
+      status: 404,
+      message: 'Conversation not found',
+    })
+
+    const vm = mountVm()
+    await vi.waitFor(() => expect(vm.loadError.value).toBe('not_found'))
+  })
+
+  it('reports failed, not not_found, when the request itself fails', async () => {
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'c1' }
+    mockMessageStore.setActiveConversationById.mockResolvedValue({
+      success: false,
+      status: 500,
+      message: 'Request failed',
+    })
+
+    const vm = mountVm()
+    await vi.waitFor(() => expect(vm.loadError.value).toBe('failed'))
+  })
+
+  it('does not mark a conversation read once the user has left it', async () => {
+    vi.useFakeTimers()
+    try {
+      mockRouteName.value = 'Conversation'
+      mockRouteParams.value = { conversationId: 'c1' }
+      mountVm()
+      await vi.waitFor(() =>
+        expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledWith('c1')
+      )
+      await flushPromises()
+
+      mockRouteName.value = 'Inbox'
+      await flushPromises()
+      vi.advanceTimersByTime(3000)
+
+      expect(mockMessageStore.markAsRead).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('useConversationDetailViewModel — load errors in draft mode', () => {
+  it('reports not_found when the profile cannot be messaged', async () => {
+    mockRouteName.value = 'ConversationNew'
+    mockRouteParams.value = { profileId: 'me' }
+    mockMessageStore.resolveConversationByProfile.mockResolvedValue({
+      success: false,
+      status: 400,
+      message: 'Cannot start a conversation with yourself',
+    })
+
+    const vm = mountVm()
+    await vi.waitFor(() => expect(vm.loadError.value).toBe('not_found'))
+    expect(vm.conversation.value).toBeNull()
+  })
+  it('ignores a failure that arrives after navigating to another conversation', async () => {
+    let failOld!: (v: unknown) => void
+    mockRouteName.value = 'ConversationNew'
+    mockRouteParams.value = { profileId: 'gone' }
+    mockMessageStore.resolveConversationByProfile.mockReturnValueOnce(
+      new Promise((resolve) => (failOld = resolve))
+    )
+
+    const vm = mountVm()
+    await vi.waitFor(() =>
+      expect(mockMessageStore.resolveConversationByProfile).toHaveBeenCalledWith('gone')
+    )
+
+    // Navigate to a saved conversation while the old lookup is still pending.
+    mockMessageStore.activeConversation = makePersistedSummary('c1', 'p1')
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'c1' }
+    await vi.waitFor(() =>
+      expect(mockMessageStore.setActiveConversationById).toHaveBeenCalledWith('c1')
+    )
+
+    failOld({ success: false, status: 404, message: 'Profile not found' })
+    await flushPromises()
+
+    expect(vm.loadError.value).toBeNull()
+    expect(mockRouterReplace).not.toHaveBeenCalled()
   })
 })
 

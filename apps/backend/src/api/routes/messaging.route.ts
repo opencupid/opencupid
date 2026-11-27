@@ -92,6 +92,7 @@ const MESSAGING_ERROR_STATUS: Record<MessagingErrorCode, number> = {
   [MessagingErrorCodes.EMPTY_MESSAGE]: 400,
   [MessagingErrorCodes.MESSAGE_NOT_FOUND]: 404,
   [MessagingErrorCodes.MESSAGE_NOT_EDITABLE]: 409,
+  [MessagingErrorCodes.SELF_CONVERSATION]: 400,
 }
 
 const messageRoutes: FastifyPluginAsync = async (fastify) => {
@@ -383,9 +384,9 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
    * GET /conversations/by-profile/:profileId
    * Resolves the conversation between the viewer and the given partner. Returns
    * a persisted ConversationSummary if one exists, or a ConversationDraftSummary
-   * (no DB write) for matched pairs that haven't messaged yet. Vague 404 when
-   * the partner has blocked the viewer; 403 when the pair isn't matched (drafts
-   * are gated to matches because that's the only UX entry point).
+   * (no DB write) for pairs that haven't messaged yet. 403 unless the viewer's
+   * own profile is active; vague 404 when the partner is inactive or has
+   * blocked the viewer; 400 SELF_CONVERSATION for the viewer's own id.
    * @returns {ConversationByProfileResponse}
    */
   fastify.get(
@@ -394,14 +395,24 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       const viewerProfileId = req.session.profileId
       if (!viewerProfileId) return sendError(reply, 401, 'Profile not found.')
+      if (!req.session.hasActiveProfile) {
+        return sendError(reply, 403, 'Complete your profile to send messages')
+      }
 
       const params = z.object({ profileId: z.string().cuid() }).safeParse(req.params)
       if (!params.success) return sendError(reply, 400, 'Invalid profileId')
       const partnerId = params.data.profileId
+      if (partnerId === viewerProfileId) {
+        return sendError(
+          reply,
+          MESSAGING_ERROR_STATUS[MessagingErrorCodes.SELF_CONVERSATION],
+          'Cannot start a conversation with yourself'
+        )
+      }
 
       try {
         const partner = await profileService.getProfilePublicById(partnerId, viewerProfileId)
-        if (!partner) return sendError(reply, 404, 'Profile not found')
+        if (!partner || !partner.isActive) return sendError(reply, 404, 'Profile not found')
         // Vague 404 mirrors GET /profile/:id — the partner blocking the viewer
         // is indistinguishable from "no such profile" by design.
         if (partner.blockedProfiles.length > 0) {
@@ -419,10 +430,6 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           }
           return reply.code(200).send(response)
         }
-
-        // No persisted conversation — drafts are only offered to matched pairs.
-        const isMatched = await messageService.hasMutualLike(viewerProfileId, partnerId)
-        if (!isMatched) return sendError(reply, 403, 'Cannot message this profile')
 
         const viewer = await profileService.getProfileById(viewerProfileId)
         const draft: ConversationDraftSummary = {
