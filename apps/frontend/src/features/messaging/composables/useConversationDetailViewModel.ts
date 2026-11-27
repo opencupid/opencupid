@@ -105,10 +105,9 @@ export function useConversationDetailViewModel() {
           draftSummary.value = res.data
         } else {
           // Server already had a persisted conversation — swap to canonical URL
-          // so refresh / share-link behavior matches the detail route.
+          // so refresh / share-link behavior matches the detail route, which
+          // loads it.
           draftSummary.value = null
-          await messageStore.setActiveConversation(res.data)
-          if (superseded) return
           router.replace({
             name: 'Conversation',
             params: { conversationId: res.data.conversationId },
@@ -146,15 +145,14 @@ export function useConversationDetailViewModel() {
   // First message in a draft persists the conversation server-side. The send
   // response goes through messageStore.handleSendResponse → bumpConversation,
   // which adds the now-persisted summary to the inbox list. We pick it up here
-  // and swap the route to the canonical /inbox/:conversationId form.
-  async function onMessageSent() {
+  // and swap the route to the canonical /inbox/:conversationId form; the
+  // detail route loads it and drops the draft.
+  function onMessageSent() {
     if (!isDraft.value) return
     const partnerId = draftSummary.value?.partnerProfile.id
     if (!partnerId) return
     const persisted = messageStore.conversations.find((c) => c.partnerProfile.id === partnerId)
     if (!persisted) return
-    draftSummary.value = null
-    await messageStore.setActiveConversation(persisted)
     router.replace({
       name: 'Conversation',
       params: { conversationId: persisted.conversationId },
