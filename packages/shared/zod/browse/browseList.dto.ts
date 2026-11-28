@@ -8,7 +8,11 @@ import { OwnerCommunitySchema, PublicCommunityDetailSchema } from '../community/
 export const BROWSE_LIST_DEFAULT_LIMIT = 24
 export const BROWSE_LIST_MAX_LIMIT = 100
 
-const distanceKm = z.number().nonnegative()
+/** Distance from the viewer's home; null when the viewer has no home location. */
+const distanceKm = z.number().nonnegative().nullable()
+
+/** Max length of the client's per-visit shuffle seed (a UUID). */
+export const BROWSE_LIST_SEED_MAX_LENGTH = 64
 
 /**
  * One grid entry. Hydrated with the same DTOs the map popups and detail

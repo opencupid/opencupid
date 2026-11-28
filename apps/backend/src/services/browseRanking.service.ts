@@ -27,12 +27,20 @@ export const ACTIVITY_WEIGHT: Record<ActivitySegment, number> = {
   dormant: 0.1,
 }
 
+/**
+ * Segment for a profile without an activity summary row: an account the
+ * nightly distill hasn't seen yet, so new.
+ */
+export const SEGMENT_WITHOUT_SUMMARY: ActivitySegment = 'new'
+
 /** Per-item ranking inputs. */
 export interface RankInput {
-  /** Profiles without an activity summary row count as dormant. */
   segment: ActivitySegment
-  /** Distance from the viewer's home. */
-  distanceKm: number
+  /**
+   * Distance from the viewer's home. Null when the viewer has no home
+   * location; the list is then ranked without the proximity term.
+   */
+  distanceKm: number | null
 }
 
 export interface RankableRef {
@@ -63,7 +71,7 @@ export function jitter(seed: string, id: string): number {
 export function rankScore(input: RankInput, highlighted: boolean, jitterValue: number): number {
   return (
     W_ACT * ACTIVITY_WEIGHT[input.segment] +
-    W_DIST * proximity(input.distanceKm) +
+    (input.distanceKm === null ? 0 : W_DIST * proximity(input.distanceKm)) +
     W_MATCH * (highlighted ? 1 : 0) +
     W_RAND * jitterValue
   )
@@ -98,6 +106,8 @@ export interface RankablePoint {
 /**
  * Loads the rank inputs for `points`: each profile's activity segment (a
  * content item takes its poster's) and its distance from the viewer's home.
+ * Items the query no longer finds (deleted since the index was built) get
+ * SEGMENT_WITHOUT_SUMMARY; the route drops them at hydration anyway.
  */
 export async function loadRankInputs(
   viewerId: string,
@@ -125,21 +135,22 @@ export async function loadRankInputs(
       : Promise.resolve([]),
   ])
 
-  // /find/list requires social mode, and every social profile has a location.
-  if (viewer?.lat == null || viewer?.lon == null) {
-    throw new Error(`browse ranking: viewer ${viewerId} has no home location`)
-  }
-  const home = { lat: viewer.lat, lon: viewer.lon }
+  const home =
+    viewer?.lat != null && viewer?.lon != null ? { lat: viewer.lat, lon: viewer.lon } : null
 
   const segments = new Map<string, ActivitySegment>()
-  for (const p of profiles) segments.set(p.id, p.activitySummary?.segment ?? 'dormant')
-  for (const c of contents) segments.set(c.id, c.postedBy?.activitySummary?.segment ?? 'dormant')
+  for (const p of profiles) {
+    segments.set(p.id, p.activitySummary?.segment ?? SEGMENT_WITHOUT_SUMMARY)
+  }
+  for (const c of contents) {
+    segments.set(c.id, c.postedBy?.activitySummary?.segment ?? SEGMENT_WITHOUT_SUMMARY)
+  }
 
   const inputs = new Map<string, RankInput>()
   for (const p of points) {
     inputs.set(p.id, {
-      segment: segments.get(p.id) ?? 'dormant',
-      distanceKm: haversineKm(home, { lat: p.lat, lon: p.lon }),
+      segment: segments.get(p.id) ?? SEGMENT_WITHOUT_SUMMARY,
+      distanceKm: home ? haversineKm(home, { lat: p.lat, lon: p.lon }) : null,
     })
   }
   return inputs

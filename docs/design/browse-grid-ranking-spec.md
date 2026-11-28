@@ -56,12 +56,12 @@ a reply that never comes.
 
 ### Inputs per item
 
-| input         | source                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `highlighted` | already computed: `findMutualMatchIds(viewer)` (mutual age/gender/kids fit, dating on for both; always empty when the viewer has dating off, because `DatingEligibleProfileSchema` requires `isDatingActive: true`)                                                                                                                                                                  |
-| `segment`     | `ProfileActivitySummary.segment` (distilled nightly at 03:00 UTC with hysteresis; profiles without a row count as `dormant`)                                                                                                                                                                                                                                                         |
-| `distanceKm`  | haversine distance from the **viewer's home** (`Profile.lat/lon`) to the item, loaded with the segment and cached per index version (see "Implementation"). Replaces today's per-request distance from the bbox centre. All 574 social profiles on prod have a location (2026-11-28), and `/find/list` requires social mode, so the viewer always has one and no fallback is needed. |
-| `jitter`      | seeded pseudo-random number in [0, 1), see "Randomness"                                                                                                                                                                                                                                                                                                                              |
+| input         | source                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `highlighted` | already computed: `findMutualMatchIds(viewer)` (mutual age/gender/kids fit, dating on for both; always empty when the viewer has dating off, because `DatingEligibleProfileSchema` requires `isDatingActive: true`)                                                                                                                                                                                                                 |
+| `segment`     | `ProfileActivitySummary.segment` (distilled nightly at 03:00 UTC with hysteresis; profiles without a row count as `new`: the nightly distill hasn't seen the account yet)                                                                                                                                                                                                                                                           |
+| `distanceKm`  | haversine distance from the **viewer's home** (`Profile.lat/lon`) to the item, loaded with the segment and cached per viewer for the current index build (see "Implementation"). Replaces today's per-request distance from the bbox centre. If the viewer has no home location (0 of 574 social profiles on prod, 2026-11-28, but the schema allows it), `distanceKm` is `null` and the list is ranked without the proximity term. |
+| `jitter`      | seeded pseudo-random number in [0, 1), see "Randomness"                                                                                                                                                                                                                                                                                                                                                                             |
 
 ### Score
 
@@ -134,21 +134,19 @@ With `W_RAND` = 0.20, a lower-scored item overtakes a higher one in
 
 ### Randomness
 
-- **Seed:** the cluster index version (cache key plus build time), so each
-  viewer and filter set gets its own shuffle. `jitter = FNV-1a(seed:itemId)`
-  mapped to [0, 1), not `Math.random()` per call.
-- **Rotation:** the cluster index lives for 30 minutes (`INDEX_TTL_MS`) and is
-  rebuilt on demand, so the order rotates at most every 30 minutes per viewer
-  and filter set. It changes between visits and stays the same while someone
-  pages through it.
-- **Pagination:** `offset` keeps working, because every page ranks the same
-  points with the same seed and the same cached inputs. Panning changes only
-  which items are inside the bbox. Items that stay in view keep their relative
-  order.
-- **Index rebuilt mid-session** (a TTL expiry, or `evict` after a profile
-  change): the order can change between page 1 and page 2. This is accepted.
-  The grid store already reloads from offset 0 whenever the query changes, and
-  the same thing happens today when profiles are added or removed.
+- **Seed:** sent by the client. The grid store draws one random seed
+  (`crypto.randomUUID()`) per visit, when the store is created, and sends it
+  as `seed` with every `/find/list` page. A new seed is drawn only on reset
+  (logout). `jitter = FNV-1a(seed:itemId)` mapped to [0, 1).
+- **Rotation:** the order reshuffles on each visit (app load) and stays the
+  same for the whole visit: across pages, pans, filter changes and refreshes.
+- **Pagination:** `offset` keeps working because every page ranks with the
+  same seed. This holds even when the cluster index is rebuilt mid-scroll,
+  which happens for every viewer whenever anyone creates, edits or deletes a
+  post, event or community (`evictAll`). A rebuild can still add or remove an
+  item, shifting later pages by one, as with any offset paging.
+- **Panning** changes only which items are inside the bbox. Items that stay in
+  view keep their relative order.
 
 ## Privacy
 
@@ -174,19 +172,27 @@ The list's sort and paging move out of `ClusterService` into a new
 2. `browseRanking.service.ts`: the weights, `rankScore`, `rankListRefs` (pure)
    and `loadRankInputs`. The loader reads the viewer's home and each item's
    segment (a content item takes its poster's), then computes the home
-   distance. It throws if the viewer has no home location, which can't happen
-   for a social viewer.
-3. `BrowseListService.getList`: gets the points, loads rank inputs only for
-   points not cached yet for this `indexVersion` (panning brings in new
-   ones), ranks with the `indexVersion` as seed, then slices the page. Cache
-   entries expire after 30 minutes, with at most 200 kept, like the cluster
-   index.
-4. `GET /find/list` calls `BrowseListService.getList`. `ListRef` moves to
-   `browseList.service.ts`. `ListRef.distanceKm` / `BrowseListItem.distanceKm`
-   now means distance from the viewer's home. No UI component reads it today.
-5. A change of home location is picked up straight away: profile updates
-   already call `clusterService.evict(profileId)`, which gives the index a new
-   version and so a fresh set of inputs.
+   distance, or `null` when the viewer has no home location.
+3. `BrowseListService.getList`: gets the points, **leaves out the viewer's own
+   card**, loads rank inputs only for points not cached yet, ranks with the
+   client's seed, then slices the page. The cache holds one entry per viewer,
+   for their current index build; a rebuild replaces it (so changed segments
+   and a moved home are picked up) and leaves no dead entries. Entries expire
+   after 30 minutes, with at most 200 kept.
+4. `GET /find/list` takes a required `seed` query param and calls
+   `BrowseListService.getList`. `ListRef` moves to `browseList.service.ts`.
+   `BrowseListItem.distanceKm` now means distance from the viewer's home and
+   is nullable. No UI component reads it today. The route's restricted-photo
+   rule for the viewer's own card is gone with the card.
+5. Frontend: `browseGridStore` sends the per-visit `seed`.
+
+#### Own card and hidden profiles
+
+The cluster index keeps the viewer's own pin, including when the viewer is
+hidden from results, because the map's "no one around" state relies on it.
+The list leaves that card out. Every other profile with `isHiddenFromResults`
+(no face photo and no intro) is already excluded from the index, so the list
+never shows a hidden profile.
 
 ### Tests
 
@@ -203,9 +209,13 @@ The list's sort and paging move out of `ClusterService` into a new
   - closer items beat farther ones at equal activity and jitter
   - the order is total (stable `id` tie-break)
 - `browseList.service` tests:
-  - paging with the same index version gives no duplicates or gaps
-  - inputs load once per index version, and only for new points
-  - a new index version reshuffles
+  - paging gives no duplicates or gaps, also across an index rebuild
+  - a new seed reshuffles; the viewer's own card is left out
+  - no home location gives null distances
+  - inputs load once per index build, and only for new points; one cache
+    entry per viewer
+- `browseGridStore` tests: one seed across pages, pans and refreshes; a new
+  one after reset
 - `cluster.service` tests: `getOrBuildPointsInBounds` returns the in-bounds
   points, and the index version is stable until a rebuild
 
@@ -225,6 +235,10 @@ The list's sort and paging move out of `ClusterService` into a new
 - Compatibility is a flat bonus, not a tier, and it is not reduced by dormancy.
 - `W_MATCH` = 0.15.
 - Dormant profiles never score 0 (activity 0.1).
+- No activity summary row counts as `new`.
+- The shuffle seed comes from the client, once per visit.
+- No home location: rank without proximity.
+- The viewer's own card is not listed.
 - Distance is measured from the viewer's home.
 
 ## Open questions

@@ -25,6 +25,7 @@ import { mapperContext } from '../mappers/context'
 import {
   BROWSE_LIST_DEFAULT_LIMIT,
   BROWSE_LIST_MAX_LIMIT,
+  BROWSE_LIST_SEED_MAX_LENGTH,
   type BrowseListItem,
   type BrowseListResponse,
 } from '@zod/browse/browseList.dto'
@@ -45,6 +46,7 @@ const ListQuerySchema = BoundsQuerySchema.extend({
     .max(BROWSE_LIST_MAX_LIMIT)
     .default(BROWSE_LIST_DEFAULT_LIMIT),
   offset: z.coerce.number().int().min(0).default(0),
+  seed: z.string().min(1).max(BROWSE_LIST_SEED_MAX_LENGTH),
 })
 
 const LeavesQuerySchema = z.object({
@@ -107,8 +109,9 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
    * GET /list
    * Returns one page of the items inside the viewport, hydrated for the browse
    * grid and ranked by activity, distance from the viewer's home, dating
-   * compatibility and a per-index shuffle (see BrowseListService). Uses the
-   * same cached index as /clusters, so the list and the map show the same items.
+   * compatibility and a shuffle seeded by the client (see BrowseListService).
+   * Uses the same cached index as /clusters, so the list and the map show the
+   * same items, except the viewer's own card, which the list leaves out.
    * @query {number} south - Bounding box south latitude
    * @query {number} north - Bounding box north latitude
    * @query {number} west - Bounding box west longitude
@@ -117,6 +120,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
    * @query {string} kinds - Comma-separated layer kinds. At least one required.
    * @query {number} [limit=24] - Page size (1–100)
    * @query {number} [offset=0] - Number of items to skip
+   * @query {string} seed - The client's per-visit shuffle seed; send the same one for every page
    * @returns {BrowseListResponse}
    */
   fastify.get('/list', { onRequest: [fastify.authenticate] }, async (req, reply) => {
@@ -129,7 +133,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
       return sendError(reply, 400, 'Missing or invalid query parameters')
     }
 
-    const { south, north, west, east, tagIds, kinds, limit, offset } = parsed.data
+    const { south, north, west, east, tagIds, kinds, limit, offset, seed } = parsed.data
     const viewerId = req.session.profileId
     const ctx = mapperContext(req)
 
@@ -139,7 +143,8 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
         [west, south, east, north],
         tagIds,
         kinds,
-        { limit, offset }
+        { limit, offset },
+        seed
       )
 
       const idsOf = (kind: ListRef['kind']) => refs.filter((r) => r.kind === kind).map((r) => r.id)
@@ -152,12 +157,12 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
         communityService.findManyByIdsHydrated(idsOf('community'), viewerId),
       ])
 
-      // Restricted photos go to the viewer's own card and to potential matches
-      // (the same set the map highlights and gives restricted avatars to).
-      const canSeeRestricted = new Set([
-        viewerId,
-        ...refs.filter((r) => r.kind === 'profile' && r.highlighted).map((r) => r.id),
-      ])
+      // Restricted photos go to potential matches (the same set the map
+      // highlights and gives restricted avatars to). The viewer's own card is
+      // not in the list.
+      const canSeeRestricted = new Set(
+        refs.filter((r) => r.kind === 'profile' && r.highlighted).map((r) => r.id)
+      )
 
       const byId = new Map<string, (ref: ListRef) => BrowseListItem>()
       for (const p of profiles) {

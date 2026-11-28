@@ -24,7 +24,7 @@ import {
   type RankInput,
 } from '@/services/browseRanking.service'
 
-const input = (segment: RankInput['segment'], distanceKm: number): RankInput => ({
+const input = (segment: RankInput['segment'], distanceKm: number | null): RankInput => ({
   segment,
   distanceKm,
 })
@@ -58,6 +58,12 @@ describe('browseRanking', () => {
     it('weights activity, proximity, the match bonus and jitter', () => {
       expect(rankScore(input('frequent', 25), true, 0.5)).toBeCloseTo(
         W_ACT * 1 + W_DIST * 0.5 + W_MATCH + W_RAND * 0.5
+      )
+    })
+
+    it('leaves out the proximity term when there is no home distance', () => {
+      expect(rankScore(input('returning', null), false, 0.5)).toBeCloseTo(
+        W_ACT * 0.7 + W_RAND * 0.5
       )
     })
 
@@ -165,7 +171,8 @@ describe('browseRanking', () => {
       ])
 
       expect(inputs.get('p1')).toEqual({ segment: 'frequent', distanceKm: 0 })
-      expect(inputs.get('p2')!.segment).toBe('dormant')
+      // No activity summary row: an account the nightly distill hasn't seen yet.
+      expect(inputs.get('p2')!.segment).toBe('new')
       // 0.01° of latitude ≈ 1.11 km
       expect(inputs.get('p2')!.distanceKm).toBeCloseTo(1.11, 1)
       expect(mockPrisma.userContent.findMany).not.toHaveBeenCalled()
@@ -184,12 +191,14 @@ describe('browseRanking', () => {
       expect(mockPrisma.profile.findMany).not.toHaveBeenCalled()
     })
 
-    it('throws when the viewer has no home location', async () => {
+    it('gives null distances when the viewer has no home location', async () => {
       mockPrisma.profile.findUnique.mockResolvedValue({ lat: null, lon: null })
 
-      await expect(
-        loadRankInputs('viewer', [{ kind: 'profile', id: 'p1', lat: 47.5, lon: 19.0 }])
-      ).rejects.toThrow(/home location/)
+      const inputs = await loadRankInputs('viewer', [
+        { kind: 'profile', id: 'p1', lat: 47.5, lon: 19.0 },
+      ])
+
+      expect(inputs.get('p1')!.distanceKm).toBeNull()
     })
   })
 })

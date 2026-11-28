@@ -82,6 +82,7 @@ const query = {
   west: '18.5',
   east: '19.5',
   kinds: 'profile,post,event,community',
+  seed: 'visit-seed',
 }
 
 const call = (q: Record<string, string> = query, s: any = session) =>
@@ -125,6 +126,13 @@ describe('GET /list', () => {
     expect(reply.statusCode).toBe(400)
   })
 
+  it('returns 400 when the shuffle seed is missing', async () => {
+    const { seed: _seed, ...withoutSeed } = query
+    await call(withoutSeed)
+    expect(reply.statusCode).toBe(400)
+    expect(mockGetList).not.toHaveBeenCalled()
+  })
+
   it('passes bbox, filters and default paging to the browse list service', async () => {
     mockGetList.mockResolvedValue({ refs: [], total: 0 })
 
@@ -135,7 +143,8 @@ describe('GET /list', () => {
       [18.5, 47.0, 19.5, 48.0],
       ['cabcdef01'],
       ['profile', 'post', 'event', 'community'],
-      { limit: 24, offset: 0 }
+      { limit: 24, offset: 0 },
+      'visit-seed'
     )
     expect(reply.payload).toEqual({ success: true, total: 0, hasMore: false, items: [] })
   })
@@ -177,20 +186,15 @@ describe('GET /list', () => {
     ])
   })
 
-  it("grants restricted photos to potential matches and the viewer's own card only", async () => {
+  it('grants restricted photos to potential matches only', async () => {
     mockGetList.mockResolvedValue({
       refs: [
         { kind: 'profile', id: 'match', distanceKm: 1, highlighted: true },
         { kind: 'profile', id: 'other', distanceKm: 2, highlighted: false },
-        { kind: 'profile', id: 'viewer-1', distanceKm: 3, highlighted: false },
       ],
-      total: 3,
+      total: 2,
     })
-    mockGetProfilesPublicByIds.mockResolvedValue([
-      { id: 'match' },
-      { id: 'other' },
-      { id: 'viewer-1' },
-    ])
+    mockGetProfilesPublicByIds.mockResolvedValue([{ id: 'match' }, { id: 'other' }])
 
     await call()
 
@@ -198,7 +202,6 @@ describe('GET /list', () => {
     expect(calls.map(([p, dating, , restricted]) => [p.id, dating, restricted])).toEqual([
       ['match', false, true],
       ['other', false, false],
-      ['viewer-1', false, true],
     ])
   })
 

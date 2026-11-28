@@ -36,6 +36,10 @@ export const useBrowseGridStore = defineStore('browseGrid', () => {
   const isLoading = ref(false)
   const isLoadingMore = ref(false)
 
+  // One shuffle per visit: the backend ranks the list with this seed, so the
+  // order stays put across pages, pans and refreshes and changes on the next
+  // visit. A new seed is drawn only on reset (logout).
+  let seed = crypto.randomUUID()
   let currentQuery: BrowseGridQuery | null = null
   let currentSignature: string | null = null
   let abortController: AbortController | null = null
@@ -53,6 +57,7 @@ export const useBrowseGridStore = defineStore('browseGrid', () => {
           kinds: q.kinds.join(','),
           limit: BROWSE_LIST_DEFAULT_LIMIT,
           offset,
+          seed,
         },
         signal: controller.signal,
       })
@@ -115,6 +120,7 @@ export const useBrowseGridStore = defineStore('browseGrid', () => {
   function reset() {
     abortController?.abort()
     abortController = null
+    seed = crypto.randomUUID()
     currentQuery = null
     currentSignature = null
     items.value = []

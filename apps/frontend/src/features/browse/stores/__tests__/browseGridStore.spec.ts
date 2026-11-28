@@ -71,6 +71,7 @@ describe('browseGridStore', () => {
         kinds: 'profile,post',
         limit: 24,
         offset: 0,
+        seed: expect.any(String),
       },
       signal: expect.any(AbortSignal),
     })
@@ -160,6 +161,33 @@ describe('browseGridStore', () => {
     await Promise.resolve()
 
     expect(mockGet).toHaveBeenCalledTimes(2)
+  })
+
+  it('sends one shuffle seed per visit: the same across pages, pans and refreshes', async () => {
+    mockGet
+      .mockResolvedValueOnce(page(['a', 'b'], 3, true))
+      .mockResolvedValueOnce(page(['c'], 3, false))
+      .mockResolvedValue(page(['z'], 1, false))
+
+    await store.load(query)
+    await store.loadMore()
+    await store.load({ ...query, bounds: { ...query.bounds, north: 48.5 } })
+    await store.refresh()
+
+    const seeds = mockGet.mock.calls.map((c) => c[1].params.seed)
+    expect(seeds).toHaveLength(4)
+    expect(new Set(seeds).size).toBe(1)
+    expect(seeds[0]).toMatch(/.+/)
+  })
+
+  it('draws a new shuffle seed after reset', async () => {
+    mockGet.mockResolvedValue(page(['a'], 1, false))
+    await store.load(query)
+    store.reset()
+    await store.load(query)
+
+    const [first, second] = mockGet.mock.calls.map((c) => c[1].params.seed)
+    expect(second).not.toBe(first)
   })
 
   it('clears everything on logout', async () => {
