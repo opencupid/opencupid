@@ -10,6 +10,7 @@ import PublicProfileView from '@/features/publicprofile/components/PublicProfile
 import { useMessagingViewModel } from '../composables/useMessagingViewModel'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useRouter } from 'vue-router'
 import { computed, onMounted, ref } from 'vue'
 import { useInfiniteScroll } from '@vueuse/core'
@@ -48,6 +49,9 @@ const {
 } = useMessagingViewModel()
 
 const panel = useDetailPanel()
+
+const ownerProfileStore = useOwnerProfileStore()
+const isDatingActive = computed(() => ownerProfileStore.profile?.isDatingActive === true)
 
 // Click on a "received like" → fetch profile + push into the global detail panel.
 async function onReceivedLikeSelect(like: ReceivedLike) {
@@ -101,7 +105,10 @@ function handleSelectConvo(convo: ConversationSummary) {
       ref="scrollEl"
       class="flex-grow-1 overflow-auto hide-scrollbar p-2"
     >
-      <div class="mb-3">
+      <div
+        v-if="isDatingActive"
+        class="mb-3"
+      >
         <ReceivedLikesTeaser @interaction:selected="onReceivedLikeSelect" />
       </div>
 

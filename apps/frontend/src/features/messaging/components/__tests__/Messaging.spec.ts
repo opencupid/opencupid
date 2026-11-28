@@ -20,7 +20,14 @@ vi.mock('@/features/interaction/components/MatchesList.vue', () => ({
   default: { template: '<div />' },
 }))
 vi.mock('@/features/interaction/components/ReceivedLikesTeaser.vue', () => ({
-  default: { template: '<div />' },
+  default: { template: '<div class="likes-teaser" />' },
+}))
+
+const owner = vi.hoisted(() => ({
+  profile: { isDatingActive: false } as { isDatingActive: boolean } | null,
+}))
+vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
+  useOwnerProfileStore: () => owner,
 }))
 vi.mock('@/features/publicprofile/components/PublicProfileView.vue', () => ({
   default: { template: '<div />' },
@@ -99,5 +106,17 @@ describe('Messaging – conversation list infinite scroll', () => {
   it('passes the loading-more state down to the list', () => {
     const wrapper = mountMessaging()
     expect(wrapper.find('.summaries').attributes('data-loading-more')).toBe('true')
+  })
+})
+
+describe('Messaging – received likes teaser', () => {
+  it('shows the likes teaser when dating is active', () => {
+    owner.profile = { isDatingActive: true }
+    expect(mountMessaging().find('.likes-teaser').exists()).toBe(true)
+  })
+
+  it('hides the likes teaser when dating is off', () => {
+    owner.profile = { isDatingActive: false }
+    expect(mountMessaging().find('.likes-teaser').exists()).toBe(false)
   })
 })
