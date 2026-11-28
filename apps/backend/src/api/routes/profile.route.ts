@@ -14,6 +14,7 @@ import {
   UpdateProfilePayloadSchema,
   CreateProfilePayloadSchema,
   UpdateProfileScopeSchemaPayload,
+  ProfileScopeSchema,
 } from '@zod/profile/profile.dto'
 
 import { rateLimitConfig, sendError, sendForbiddenError } from '../helpers'
@@ -53,6 +54,10 @@ const IdLookupParamsSchema = z.object({
 const PreviewLookupParamsSchema = z.object({
   id: z.string().cuid(),
   locale: z.string(),
+})
+
+const PreviewQuerySchema = z.object({
+  scope: ProfileScopeSchema,
 })
 
 const profileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -217,7 +222,11 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       const { id } = IdLookupParamsSchema.parse(req.params)
-      const raw = await profileService.getProfilePublicById(id, myProfileId)
+      // Restricted photos are loaded here and dropped by mapProfileToPublic
+      // unless the viewer gets the dating context below.
+      const raw = await profileService.getProfilePublicById(id, myProfileId, {
+        includeRestricted: true,
+      })
       if (!raw) return sendError(reply, 404, 'Profile not found')
 
       // the profile being requested has blocked the current profile
@@ -238,7 +247,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
 
-      const profile = mapProfileToPublic(raw, includeDatingContext, locale)
+      // The viewers who get the dating context are the ones restricted photos are for.
+      const profile = mapProfileToPublic(raw, includeDatingContext, locale, includeDatingContext)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {
@@ -253,10 +263,18 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
    * Only accessible for the viewer's own profile.
    * @param {string} locale - Locale code for tag/field translations
    * @param {string} id - Profile ID (must match the authenticated user's profile)
+   * @query {'dating' | 'social'} scope - As an eligible viewer (both dating, mutually
+   *   compatible), or anyone else, sees it
    * @returns {GetPublicProfileResponse}
    */
   fastify.get('/preview/:locale/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const myProfileId = req.session.profileId
+
+    const query = PreviewQuerySchema.safeParse(req.query)
+    if (!query.success) {
+      return sendError(reply, 400, 'Missing or invalid query parameters')
+    }
+    const { scope } = query.data
 
     try {
       const { id, locale } = PreviewLookupParamsSchema.parse(req.params)
@@ -268,10 +286,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       const raw = await profileService.getProfileCompleteById(id)
       if (!raw) return sendError(reply, 404, 'Profile not found')
 
-      const hasDatingPermission = true
-
-      const profile = mapProfileToPublic(raw, hasDatingPermission, locale)
-      // const profile = publicProfileSchema.parse(raw)
+      const asMatch = scope === 'dating'
+      const profile = mapProfileToPublic(raw, asMatch, locale, asMatch)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {

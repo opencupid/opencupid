@@ -1,7 +1,7 @@
 import { useI18nStore } from '@/store/i18nStore'
 import { computed, reactive, shallowRef, toRef, watch } from 'vue'
 
-import { type PublicProfile } from '@zod/profile/profile.dto'
+import { type ProfileScope, type PublicProfile } from '@zod/profile/profile.dto'
 import { type EditFieldProfileFormWithImages } from '@zod/profile/profile.form'
 
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
@@ -19,11 +19,13 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     currentScope: 'social',
   })
 
-  const publicProfile = shallowRef<PublicProfile | null>(null)
+  // The backend decides which photos each audience gets, so a preview is shown
+  // only for the scope it was fetched for: never another audience's gallery.
+  const loadedPreview = shallowRef<{ scope: ProfileScope; profile: PublicProfile } | null>(null)
   const profilePreview = computed<PublicProfile | null>(() => {
-    if (!publicProfile.value) return null
+    if (loadedPreview.value?.scope !== viewState.currentScope) return null
     return {
-      ...publicProfile.value,
+      ...loadedPreview.value.profile,
       isDatingActive: viewState.currentScope === 'dating',
     } as PublicProfile
   })
@@ -41,20 +43,27 @@ export function useMyProfileViewModel(isEditMode: boolean) {
   })
 
   // actions
+  // Only the latest request may update the preview: an earlier one (e.g. the
+  // other scope) can resolve after it.
+  let latestPreviewRequest = 0
   const fetchPreview = async () => {
     if (!profileStore.profile) {
       // error.value = 'Profile not found'
       return
     }
+    const request = ++latestPreviewRequest
+    const scope = viewState.currentScope
     const res = await profileStore.getProfilePreview(
       profileStore.profile.id,
-      viewState.previewLanguage
+      viewState.previewLanguage,
+      scope
     )
+    if (request !== latestPreviewRequest) return
     if (!res.success) {
       return res
     }
     if (!res.data) return
-    publicProfile.value = res.data
+    loadedPreview.value = { scope, profile: res.data }
   }
 
   const updateScopes = async (payload: { isDatingActive: boolean }) => {
@@ -82,9 +91,9 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     { immediate: true }
   )
 
-  // Re-fetch preview only when user switches the preview language
+  // Re-fetch the preview when the user switches its language or scope.
   watch(
-    () => viewState.previewLanguage,
+    () => [viewState.previewLanguage, viewState.currentScope],
     () => fetchPreview()
   )
 
@@ -111,7 +120,6 @@ export function useMyProfileViewModel(isEditMode: boolean) {
     isLoading,
     viewState,
     formData,
-    publicProfile,
     profilePreview,
     isDatingOnboarded,
     isOnboarded,

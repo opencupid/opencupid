@@ -60,6 +60,7 @@ vi.mock('../../api/mappers/tag.mappers', () => ({
 }))
 
 import findProfileRoutes from '../../api/routes/findProfile.route'
+import { mapProfileToPublic } from '../../api/mappers/profile.mappers'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
 
 let fastify: MockFastify
@@ -152,7 +153,9 @@ describe('GET /list', () => {
 
     await call()
 
-    expect(mockGetProfilesPublicByIds).toHaveBeenCalledWith(['p1'], 'viewer-1')
+    expect(mockGetProfilesPublicByIds).toHaveBeenCalledWith(['p1'], 'viewer-1', {
+      includeRestricted: true,
+    })
     expect(mockFindPosts).toHaveBeenCalledWith(['po1'], 'viewer-1')
     expect(mockFindEvents).toHaveBeenCalledWith(['e1'], 'viewer-1')
     expect(mockFindCommunities).toHaveBeenCalledWith(['c1'], 'viewer-1')
@@ -167,6 +170,31 @@ describe('GET /list', () => {
       },
       { kind: 'community', distanceKm: 2, community: { id: 'c1', mapped: 'community-detail' } },
       { kind: 'post', distanceKm: 3, post: { id: 'po1', mapped: 'post-detail' } },
+    ])
+  })
+
+  it("grants restricted photos to potential matches and the viewer's own card only", async () => {
+    mockGetOrBuildList.mockResolvedValue({
+      refs: [
+        { kind: 'profile', id: 'match', distanceKm: 1, highlighted: true },
+        { kind: 'profile', id: 'other', distanceKm: 2, highlighted: false },
+        { kind: 'profile', id: 'viewer-1', distanceKm: 3, highlighted: false },
+      ],
+      total: 3,
+    })
+    mockGetProfilesPublicByIds.mockResolvedValue([
+      { id: 'match' },
+      { id: 'other' },
+      { id: 'viewer-1' },
+    ])
+
+    await call()
+
+    const calls = vi.mocked(mapProfileToPublic).mock.calls
+    expect(calls.map(([p, dating, , restricted]) => [p.id, dating, restricted])).toEqual([
+      ['match', false, true],
+      ['other', false, false],
+      ['viewer-1', false, true],
     ])
   })
 

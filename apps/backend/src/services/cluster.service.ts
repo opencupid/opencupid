@@ -3,6 +3,7 @@ import type { Feature, Point } from 'geojson'
 import { ProfileMatchService } from './profileMatch.service'
 import { UserContentService } from './userContent.service'
 import { ImageService } from './image.service'
+import { visibleProfileImages } from '@/api/mappers/profile.mappers'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
 import { MAP_CLUSTER_RADIUS, MAP_MAX_ZOOM, haversineKm, type UserContentKind } from '@shared/maps'
@@ -89,27 +90,32 @@ export class ClusterService {
 
     const profileFeatures: Feature<Point, PointProperties>[] = profiles
       .filter((p) => p.lat != null && p.lon != null)
-      .map((p) => ({
-        type: 'Feature' as const,
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [p.lon!, p.lat!],
-        },
-        properties: {
-          kind: 'profile' as const,
-          id: p.id,
-          publicName: p.publicName ?? '',
-          image: p.profileImages?.[0]
-            ? {
-                blurhash: p.profileImages[0].image.blurhash ?? null,
-                url: imageService
-                  .getImageUrls(p.profileImages[0].image)
-                  .find((v) => v.size === 'thumb')?.url,
-              }
-            : null,
-          highlighted: matchSet.has(p.id),
-        },
-      }))
+      .map((p) => {
+        // The viewer's own pin and potential matches show the first photo even
+        // when it is restricted; everyone else the first unrestricted one.
+        const canSeeRestricted = p.id === profileId || matchSet.has(p.id)
+        const primary = visibleProfileImages(p.profileImages ?? [], canSeeRestricted)[0]
+        return {
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [p.lon!, p.lat!],
+          },
+          properties: {
+            kind: 'profile' as const,
+            id: p.id,
+            publicName: p.publicName ?? '',
+            image: primary
+              ? {
+                  blurhash: primary.image.blurhash ?? null,
+                  url: imageService.getImageUrls(primary.image).find((v) => v.size === 'thumb')
+                    ?.url,
+                }
+              : null,
+            highlighted: matchSet.has(p.id),
+          },
+        }
+      })
 
     const profileIndexById = new Map<string, number>()
     profileFeatures.forEach((f, i) => profileIndexById.set(f.properties.id, i))

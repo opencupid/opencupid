@@ -43,12 +43,24 @@ export function translationWhereClause(term: string, locale: string) {
   }
 }
 
-export function profileImageInclude() {
+/**
+ * The one way to load a profile gallery, so restricted images stay out of every
+ * response unless a caller opts in with `includeRestricted`. A caller that opts in
+ * must apply the restriction rule itself (see `visibleProfileImages`) before the
+ * images leave the backend. Enforced by the lint rule in eslint.config.mjs.
+ */
+export function profileImagesRelation(opts: { includeRestricted?: boolean; take?: number } = {}) {
   return {
-    profileImages: {
-      include: { image: true },
-      orderBy: { position: 'asc' },
-    },
+    ...(!opts.includeRestricted && { where: { isRestricted: false } }),
+    include: { image: true },
+    orderBy: { position: 'asc' },
+    ...(opts.take !== undefined && { take: opts.take }),
+  } satisfies Prisma.Profile$profileImagesArgs
+}
+
+export function profileImageInclude(opts: { includeRestricted?: boolean } = {}) {
+  return {
+    profileImages: profileImagesRelation(opts),
   } satisfies Prisma.ProfileInclude
 }
 

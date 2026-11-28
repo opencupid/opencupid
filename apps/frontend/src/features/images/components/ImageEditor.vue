@@ -1,15 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { VueDraggableNext } from 'vue-draggable-next'
 import { faXmark } from '@fortawesome/free-solid-svg-icons'
 import { useI18n } from 'vue-i18n'
 
+import type { OwnerImage } from '@zod/image/image.dto'
 import type { GalleryStore } from '@/features/images/stores/galleryStore'
 import { useImageEditor } from '@/features/images/composables/useImageEditor'
 
 import ImageUpload from './ImageUpload.vue'
 import ImageTag from './ImageTag.vue'
 import IconPhoto from '@/assets/icons/interface/photo.svg'
+import IconHeart from '@/assets/icons/interface/heart-filled.svg'
 
 const props = withDefaults(
   defineProps<{
@@ -40,6 +43,13 @@ const {
   minImages: () => props.minImages,
   maxImages: () => props.maxImages,
   autoLoad: () => props.autoLoad,
+})
+
+const isRestricted = (img: OwnerImage) => props.store.restriction?.isRestricted(img) === true
+const restrictedTitle = computed(() => {
+  const restriction = props.store.restriction
+  if (!restriction) return undefined
+  return t(restriction.isActive ? restriction.titleKey : restriction.inactiveTitleKey)
 })
 </script>
 
@@ -76,11 +86,25 @@ const {
               </button>
             </div>
             <div :class="{ removing: isRemoving[img.id] }">
-              <div class="ratio ratio-1x1">
+              <div
+                class="ratio ratio-1x1 rounded"
+                :class="{
+                  restricted: isRestricted(img),
+                  'restricted-inactive': isRestricted(img) && !props.store.restriction?.isActive,
+                }"
+                :title="isRestricted(img) ? restrictedTitle : undefined"
+                :data-testid="isRestricted(img) ? 'restricted-image' : undefined"
+              >
                 <ImageTag
                   :image="img"
                   className="rounded"
                   variant="card"
+                />
+                <IconHeart
+                  v-if="isRestricted(img)"
+                  class="restricted-icon"
+                  role="img"
+                  :aria-label="restrictedTitle"
                 />
               </div>
             </div>
@@ -118,6 +142,23 @@ img {
 
 .removing {
   opacity: 0.2;
+}
+
+/* Restricted photo: the dating red halo and a heart in the corner. */
+.restricted {
+  box-shadow: 0 0 0 3px rgba(var(--bs-dating-rgb), 0.85);
+}
+.restricted .restricted-icon {
+  /* .ratio stretches its children; pin the icon to a corner instead. */
+  inset: auto auto 0.4rem 0.4rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: rgb(var(--bs-dating-rgb));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+/* Nobody can see it right now: also faded. */
+.restricted-inactive :deep(img) {
+  opacity: 0.45;
 }
 
 .thumbnail {

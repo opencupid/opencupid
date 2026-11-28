@@ -279,6 +279,11 @@ model ImageAttachment {
   userContentId String?
   userContent   UserContent? @relation(fields: [userContentId], references: [id], onDelete: Cascade)
   position      Int          @default(autoincrement())
+  /// Shown only to viewers the gallery's owning endpoint deems eligible; what
+  /// qualifies is that endpoint's business rule (profile galleries: mutual
+  /// dating matches). Profile galleries only, enforced by a CHECK constraint
+  /// until a UserContent gallery defines a rule of its own.
+  isRestricted  Boolean      @default(false)
 
   @@unique([profileId, position])
   @@unique([userContentId, position])

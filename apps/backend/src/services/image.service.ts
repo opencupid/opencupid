@@ -14,6 +14,9 @@ import sharp from 'sharp'
 import { ImageProcessor } from './imageprocessor'
 import { syncProfileHasFace } from './profile.service'
 
+/** A Profile gallery member: the ImageAttachment row with its image. */
+export type ProfileGalleryEntry = Prisma.ImageAttachmentGetPayload<{ include: { image: true } }>
+
 type Variant = {
   name: string
   width: number
@@ -167,15 +170,15 @@ export class ImageService {
   }
 
   /**
-   * List the images in a Profile gallery, primary (lowest position) first.
+   * List a Profile gallery for its owner, in stored (lowest position first) order,
+   * restricted images included.
    */
-  async listProfileGallery(profileId: string): Promise<Image[]> {
-    const rows = await prisma.imageAttachment.findMany({
+  async listProfileGallery(profileId: string): Promise<ProfileGalleryEntry[]> {
+    return prisma.imageAttachment.findMany({
       where: { profileId },
       include: { image: true },
       orderBy: { position: 'asc' },
     })
-    return rows.map((r) => r.image)
   }
 
   /**
@@ -238,12 +241,12 @@ export class ImageService {
    * Attach an existing, unattached Image to its owner's Profile gallery. The new
    * attachment draws its position from the sequence, so it lands last.
    */
-  async attachToProfile(imageId: string, profileId: string): Promise<void> {
+  async attachToProfile(imageId: string, profileId: string, isRestricted: boolean): Promise<void> {
     await prisma.$transaction(async (tx) => {
       await lockProfileGallery(tx, profileId)
       const [image] = await lockImages(tx, [imageId])
       assertAttachable(image, profileId)
-      await tx.imageAttachment.create({ data: { imageId, profileId } })
+      await tx.imageAttachment.create({ data: { imageId, profileId, isRestricted } })
       await syncProfileHasFace(tx, profileId)
     })
   }
@@ -505,7 +508,10 @@ export class ImageService {
    * Reorder a Profile gallery to the order of `items` (their `position` values are
    * ignored; array order wins). Re-syncs Profile.hasFace and returns the gallery.
    */
-  async reorderProfileGallery(profileId: string, items: ImagePosition[]): Promise<Image[]> {
+  async reorderProfileGallery(
+    profileId: string,
+    items: ImagePosition[]
+  ): Promise<ProfileGalleryEntry[]> {
     await prisma.$transaction(async (tx) => {
       await lockProfileGallery(tx, profileId)
       await reorderGallery(tx, { profileId }, items)

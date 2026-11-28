@@ -6,6 +6,7 @@ import { blocklistWhereClause } from '@/db/includes/blocklistWhereClause'
 import { appConfig } from '../lib/appconfig'
 import { computeSendOutcome } from './messaging.stateMachine'
 import { ImageService } from './image.service'
+import { profileImagesRelation } from '@/db/includes/profileIncludes'
 
 // Business-error codes raised from the messaging service / route handlers.
 // HTTP status mapping is the route's responsibility — do not bake it in here.
@@ -39,21 +40,13 @@ const conversationSummaryInclude = {
       profileA: {
         include: {
           user: { select: { email: true } },
-          profileImages: {
-            include: { image: true },
-            orderBy: { position: 'asc' as const },
-            take: 1,
-          },
+          profileImages: profileImagesRelation({ take: 1 }),
         },
       },
       profileB: {
         include: {
           user: { select: { email: true } },
-          profileImages: {
-            include: { image: true },
-            orderBy: { position: 'asc' as const },
-            take: 1,
-          },
+          profileImages: profileImagesRelation({ take: 1 }),
         },
       },
       participants: {
@@ -81,11 +74,7 @@ export const messageWithSenderInclude = {
       id: true,
       publicName: true,
       user: { select: { email: true } },
-      profileImages: {
-        include: { image: true },
-        orderBy: { position: 'asc' },
-        take: 1,
-      },
+      profileImages: profileImagesRelation({ take: 1 }),
     },
   },
   attachment: true,

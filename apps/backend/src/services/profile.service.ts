@@ -70,12 +70,18 @@ export class ProfileService {
   // Public profile fetch — only the viewer-facing block check is included as
   // it gates 404 visibility. Viewer-relative interaction state (likes, hides,
   // conversations) lives behind the dedicated /interactions/context endpoint.
-  async getProfilePublicById(profileId: string, myProfileId: string) {
+  // `includeRestricted` loads restricted gallery images too; the caller must then
+  // map them with the viewer's eligibility (mapProfileToPublic) before responding.
+  async getProfilePublicById(
+    profileId: string,
+    myProfileId: string,
+    opts: { includeRestricted?: boolean } = {}
+  ) {
     return prisma.profile.findUnique({
       where: { id: profileId },
       include: {
         ...tagsInclude(),
-        ...profileImageInclude(),
+        ...profileImageInclude(opts),
         ...blockedContextInclude(myProfileId),
       },
     })
@@ -83,13 +89,18 @@ export class ProfileService {
 
   // Batch version of getProfilePublicById for the browse list. Profiles that
   // blocked the viewer are dropped here, matching the 404 on the single fetch.
-  async getProfilesPublicByIds(profileIds: string[], myProfileId: string) {
+  // `includeRestricted`: as for getProfilePublicById.
+  async getProfilesPublicByIds(
+    profileIds: string[],
+    myProfileId: string,
+    opts: { includeRestricted?: boolean } = {}
+  ) {
     if (profileIds.length === 0) return []
     const rows = await prisma.profile.findMany({
       where: { id: { in: profileIds } },
       include: {
         ...tagsInclude(),
-        ...profileImageInclude(),
+        ...profileImageInclude(opts),
         ...blockedContextInclude(myProfileId),
       },
     })
@@ -135,7 +146,7 @@ export class ProfileService {
       where: { userId },
       include: {
         ...tagsInclude(),
-        ...profileImageInclude(),
+        ...profileImageInclude({ includeRestricted: true }),
       },
     })
   }
@@ -145,7 +156,7 @@ export class ProfileService {
       where: { id: profileId },
       include: {
         ...tagsInclude(),
-        ...profileImageInclude(),
+        ...profileImageInclude({ includeRestricted: true }),
       },
     })
   }
@@ -260,7 +271,7 @@ export class ProfileService {
       },
       include: {
         ...tagsInclude(),
-        ...profileImageInclude(),
+        ...profileImageInclude({ includeRestricted: true }),
       },
     })
     return updated
@@ -469,10 +480,7 @@ export class ProfileService {
       include: {
         blockedProfiles: {
           include: {
-            profileImages: {
-              include: { image: true },
-              orderBy: { position: 'asc' },
-            },
+            ...profileImageInclude(),
           },
         },
       },

@@ -17,6 +17,7 @@ import {
   SEARCH_PROFILE_LIMIT,
   SEARCH_TAG_LIMIT,
 } from '@zod/search/search.dto'
+import { profileImagesRelation } from '@/db/includes/profileIncludes'
 
 export interface SearchResults {
   tags: TagWithTranslations[]
@@ -202,10 +203,7 @@ export class SearchService {
           select: {
             id: true,
             publicName: true,
-            profileImages: {
-              include: { image: true },
-              orderBy: { position: 'asc' },
-            },
+            profileImages: profileImagesRelation(),
           },
         },
       },
@@ -252,10 +250,7 @@ export class SearchService {
           select: {
             id: true,
             publicName: true,
-            profileImages: {
-              include: { image: true },
-              orderBy: { position: 'asc' },
-            },
+            profileImages: profileImagesRelation(),
           },
         },
       },
@@ -309,10 +304,7 @@ export class SearchService {
           select: {
             id: true,
             publicName: true,
-            profileImages: {
-              include: { image: true },
-              orderBy: { position: 'asc' },
-            },
+            profileImages: profileImagesRelation(),
           },
         },
       },

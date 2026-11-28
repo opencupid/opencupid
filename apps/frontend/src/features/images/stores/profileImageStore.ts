@@ -1,16 +1,17 @@
 import { defineStore } from 'pinia'
 import { api, safeApiCall } from '@/lib/api'
 import {
-  type ImageApiResponse,
-  ImageApiResponseSchema,
+  type ProfileImageApiResponse,
+  ProfileImageApiResponseSchema,
   type ImageResponse,
   ImageResponseSchema,
   type OwnerImage,
+  type OwnerProfileImage,
   type ImagePosition,
 } from '@zod/image/image.dto'
 import { storeSuccess, storeError } from '@/store/helpers'
 import { bus } from '@/lib/bus'
-import type { GalleryStoreResponse } from './galleryStore'
+import type { GalleryRestriction, GalleryStoreResponse } from './galleryStore'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 
 // Profile.hasFace is derived server-side from the gallery images, so any
@@ -19,12 +20,32 @@ const refreshHasFace = () => useOwnerProfileStore().refreshHasFace()
 
 export const useProfileImageStore = defineStore('profileImage', {
   state: () => ({
-    images: [] as OwnerImage[],
+    images: [] as OwnerProfileImage[],
     isLoading: false,
   }),
 
+  getters: {
+    // Restricted profile photos are shown only to eligible viewers: both dating,
+    // with mutually compatible preferences.
+    restriction(state): GalleryRestriction {
+      return {
+        labelKey: 'profiles.image_upload.restrict_label',
+        hintKey: 'profiles.image_upload.restrict_hint',
+        titleKey: 'profiles.image_editor.restricted_title',
+        inactiveTitleKey: 'profiles.image_editor.restricted_title_inactive',
+        isActive: useOwnerProfileStore().profile?.isDatingActive === true,
+        isRestricted: (image: OwnerImage) =>
+          state.images.find((i) => i.id === image.id)?.isRestricted === true,
+      }
+    },
+  },
+
   actions: {
-    async upload(file: File, captionText: string): Promise<GalleryStoreResponse> {
+    async upload(
+      file: File,
+      captionText: string,
+      opts: { isRestricted: boolean } = { isRestricted: false }
+    ): Promise<GalleryStoreResponse> {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('captionText', captionText)
@@ -38,9 +59,12 @@ export const useProfileImageStore = defineStore('profileImage', {
         createdId = created.id
 
         const { data: attachData } = await safeApiCall(() =>
-          api.post<ImageApiResponse>('/image/me/attach', { imageId: created.id })
+          api.post<ProfileImageApiResponse>('/image/me/attach', {
+            imageId: created.id,
+            isRestricted: opts.isRestricted,
+          })
         )
-        const { images } = ImageApiResponseSchema.parse(attachData)
+        const { images } = ProfileImageApiResponseSchema.parse(attachData)
         this.images = images
         await refreshHasFace()
         return storeSuccess()
@@ -63,8 +87,10 @@ export const useProfileImageStore = defineStore('profileImage', {
     async remove(image: OwnerImage): Promise<GalleryStoreResponse> {
       try {
         this.isLoading = true
-        const { data } = await safeApiCall(() => api.delete<ImageApiResponse>(`/image/${image.id}`))
-        const { images } = ImageApiResponseSchema.parse(data)
+        const { data } = await safeApiCall(() =>
+          api.delete<ProfileImageApiResponse>(`/image/${image.id}`)
+        )
+        const { images } = ProfileImageApiResponseSchema.parse(data)
         this.images = images
         await refreshHasFace()
         return storeSuccess()
@@ -79,9 +105,9 @@ export const useProfileImageStore = defineStore('profileImage', {
       try {
         this.isLoading = true
         const { data } = await safeApiCall(() =>
-          api.patch<ImageApiResponse>('/image/order', { images: items })
+          api.patch<ProfileImageApiResponse>('/image/order', { images: items })
         )
-        const { images } = ImageApiResponseSchema.parse(data)
+        const { images } = ProfileImageApiResponseSchema.parse(data)
         this.images = images
         await refreshHasFace()
         return storeSuccess()
@@ -96,8 +122,8 @@ export const useProfileImageStore = defineStore('profileImage', {
     async load(): Promise<GalleryStoreResponse> {
       try {
         this.isLoading = true
-        const { data } = await safeApiCall(() => api.get<ImageApiResponse>('/image/me'))
-        const { images } = ImageApiResponseSchema.parse(data)
+        const { data } = await safeApiCall(() => api.get<ProfileImageApiResponse>('/image/me'))
+        const { images } = ProfileImageApiResponseSchema.parse(data)
         this.images = images
         return storeSuccess()
       } catch (err) {

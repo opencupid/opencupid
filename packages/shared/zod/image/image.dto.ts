@@ -38,6 +38,18 @@ export const OwnerImageSchema = ImageSchema.pick(ownerFields).extend({
 })
 export type OwnerImage = z.infer<typeof OwnerImageSchema>
 
+/** A profile gallery image as its owner sees it: the whole gallery, restricted or not. */
+export const OwnerProfileImageSchema = OwnerImageSchema.extend({
+  isRestricted: z.boolean(),
+})
+export type OwnerProfileImage = z.infer<typeof OwnerProfileImageSchema>
+
+export const AttachProfileImagePayloadSchema = z.object({
+  imageId: z.string().cuid(),
+  isRestricted: z.boolean(),
+})
+export type AttachProfileImagePayload = z.infer<typeof AttachProfileImagePayloadSchema>
+
 const ImagePositionSchema = z.object({
   id: z.string().cuid(),
   position: z.number().int().min(0),
@@ -63,6 +75,11 @@ export const ImageApiResponseSchema = ApiSuccessSchema.merge(ImagesResponseSchem
 export type ImageApiResponse = z.infer<typeof ImageApiResponseSchema>
 
 export type ImagesResponse = z.infer<typeof ImagesResponseSchema>
+
+export const ProfileImageApiResponseSchema = ApiSuccessSchema.extend({
+  images: z.array(OwnerProfileImageSchema).default([]),
+})
+export type ProfileImageApiResponse = z.infer<typeof ProfileImageApiResponseSchema>
 
 export const ImageResponseSchema = ApiSuccessSchema.extend({
   image: OwnerImageSchema,

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import profileRoutes from '../../api/routes/profile.route'
 import { MockFastify, MockReply } from '../../test-utils/fastify'
+import { mapProfileToPublic } from '../../api/mappers/profile.mappers'
 
 let fastify: MockFastify
 let reply: MockReply
@@ -306,6 +307,86 @@ describe('GET /:id', () => {
     })
     await handler(req, reply as any)
     expect(reply.statusCode).toBe(403)
+  })
+})
+
+describe('GET /:id restricted images', () => {
+  const target = {
+    id: 'p2',
+    userId: 'u2',
+    publicName: 'Bob',
+    blockedProfiles: [],
+    isDatingActive: true,
+  }
+  const req = (viewerDating: boolean) =>
+    makeReq({
+      params: { id: 'cm000000000000000000000p2' },
+      session: {
+        lang: 'en',
+        profileId: 'p1',
+        hasActiveProfile: true,
+        profile: { isDatingActive: viewerDating },
+      },
+    })
+
+  it('loads restricted images so the mapper can apply the viewer rule', async () => {
+    mockProfileService.getProfilePublicById.mockResolvedValue(target)
+    await fastify.routes['GET /:id'](req(true), reply as any)
+    expect(mockProfileService.getProfilePublicById).toHaveBeenCalledWith(
+      'cm000000000000000000000p2',
+      'p1',
+      { includeRestricted: true }
+    )
+  })
+
+  it('grants them only to a mutually compatible dating viewer', async () => {
+    mockProfileService.getProfilePublicById.mockResolvedValue(target)
+    mockProfileMatchService.areProfilesMutuallyCompatible.mockResolvedValue(true)
+    await fastify.routes['GET /:id'](req(true), reply as any)
+    expect(mapProfileToPublic).toHaveBeenLastCalledWith(target, true, 'en', true)
+  })
+
+  it('withholds them when preferences do not match', async () => {
+    mockProfileService.getProfilePublicById.mockResolvedValue(target)
+    mockProfileMatchService.areProfilesMutuallyCompatible.mockResolvedValue(false)
+    await fastify.routes['GET /:id'](req(true), reply as any)
+    expect(mapProfileToPublic).toHaveBeenLastCalledWith(target, false, 'en', false)
+  })
+
+  it('withholds them from a viewer who is not dating', async () => {
+    mockProfileService.getProfilePublicById.mockResolvedValue(target)
+    mockProfileMatchService.areProfilesMutuallyCompatible.mockResolvedValue(true)
+    await fastify.routes['GET /:id'](req(false), reply as any)
+    expect(mapProfileToPublic).toHaveBeenLastCalledWith(target, false, 'en', false)
+    expect(mockProfileMatchService.areProfilesMutuallyCompatible).not.toHaveBeenCalled()
+  })
+})
+
+describe('GET /preview/:locale/:id', () => {
+  const ownId = 'cm000000000000000000000p1'
+  const own = { id: ownId, publicName: 'Alice' }
+  const req = (scope?: string) =>
+    makeReq({
+      params: { id: ownId, locale: 'hu' },
+      query: scope ? { scope } : {},
+      session: { lang: 'en', profileId: ownId, hasActiveProfile: true, profile: {} },
+    })
+
+  it.each([
+    ['dating', true],
+    ['social', false],
+  ])('renders the %s scope with the matching image rule', async (scope, dating) => {
+    mockProfileService.getProfileCompleteById.mockResolvedValue(own)
+    await fastify.routes['GET /preview/:locale/:id'](req(scope), reply as any)
+    expect(reply.statusCode).toBe(200)
+    expect(mapProfileToPublic).toHaveBeenLastCalledWith(own, dating, 'hu', dating)
+  })
+
+  it.each([[undefined], ['everyone']])('rejects scope %s with 400', async (scope) => {
+    mockProfileService.getProfileCompleteById.mockResolvedValue(own)
+    await fastify.routes['GET /preview/:locale/:id'](req(scope), reply as any)
+    expect(reply.statusCode).toBe(400)
+    expect(mockProfileService.getProfileCompleteById).not.toHaveBeenCalled()
   })
 })
 

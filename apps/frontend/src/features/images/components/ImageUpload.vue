@@ -26,6 +26,7 @@ const { t } = useI18n()
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref<string | null>(null)
 const captionText = ref<string>('')
+const isRestricted = ref(false)
 
 const isLoading = ref(false)
 const error = ref<string | null>(null)
@@ -55,7 +56,9 @@ const handleUpload = async () => {
   isLoading.value = true
   error.value = null
 
-  const res = await imageStore.upload(selectedFile.value, captionText.value)
+  const res = await imageStore.upload(selectedFile.value, captionText.value, {
+    isRestricted: isRestricted.value,
+  })
   if (!res.success) {
     const code = res.message ?? 'unknown'
     const key = `profiles.image_upload.errors.${code}`
@@ -111,6 +114,7 @@ function onModalHidden() {
   selectedFile.value = null
   previewUrl.value = null
   captionText.value = ''
+  isRestricted.value = false
   error.value = null
   isLoading.value = false
   uploadButtonKey.value++
@@ -198,6 +202,22 @@ function onModalHidden() {
             />
           </div>
         </BOverlay>
+      </div>
+
+      <div
+        v-if="imageStore.restriction && !error"
+        class="mb-3 restrict-option"
+      >
+        <BFormCheckbox
+          v-model="isRestricted"
+          data-testid="image-upload-restrict"
+          :disabled="isLoading"
+        >
+          {{ t(imageStore.restriction.labelKey) }}
+        </BFormCheckbox>
+        <div class="form-text">
+          {{ t(imageStore.restriction.hintKey) }}
+        </div>
       </div>
 
       <div class="mb-3 justify-content-center d-flex flex-column gap-2 align-items-center">
@@ -303,6 +323,11 @@ img {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+}
+
+.restrict-option {
+  max-width: 32rem;
+  margin-inline: auto;
 }
 
 .preview-image {

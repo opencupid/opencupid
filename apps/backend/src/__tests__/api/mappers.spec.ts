@@ -1,5 +1,6 @@
 import { vi, describe, it, expect } from 'vitest'
 import {
+  mapDbProfileToOwnerProfile,
   mapProfileImagesToOwner,
   mapToLocalizedUpserts,
   mapProfileToPublic,
@@ -37,7 +38,7 @@ const image: any = {
 
 describe('mappers', () => {
   it('adds signed variants to profile images', () => {
-    const res = mapProfileImagesToOwner([image])
+    const res = mapProfileImagesToOwner([{ image, isRestricted: false }])
     expect(res[0]).toHaveProperty('variants')
     expect(res[0].variants[0]).toEqual({ size: 'thumb', url: 'http://img/signed' })
   })
@@ -45,10 +46,21 @@ describe('mappers', () => {
   it('exposes the sorted index as position, not the stored Image.position', () => {
     // Callers pass gallery images already ordered by ImageAttachment.position.
     const res = mapProfileImagesToOwner([
-      { ...image, id: 'ckaaaaaaaaaaaaaac', position: 9 },
-      { ...image, id: 'ckaaaaaaaaaaaaaad', position: 9 },
+      { image: { ...image, id: 'ckaaaaaaaaaaaaaac', position: 9 }, isRestricted: false },
+      { image: { ...image, id: 'ckaaaaaaaaaaaaaad', position: 9 }, isRestricted: false },
     ])
     expect(res.map((i) => i.position)).toEqual([0, 1])
+  })
+
+  it('gives the owner the whole gallery in stored order with the restriction flag', () => {
+    const res = mapProfileImagesToOwner([
+      { image: { ...image, id: 'ckaaaaaaaaaaaaaac' }, isRestricted: true },
+      { image: { ...image, id: 'ckaaaaaaaaaaaaaad' }, isRestricted: false },
+    ])
+    expect(res.map((i) => [i.id, i.isRestricted, i.position])).toEqual([
+      ['ckaaaaaaaaaaaaaac', true, 0],
+      ['ckaaaaaaaaaaaaaad', false, 1],
+    ])
   })
 
   it('keeps Image.position when no index is given (message images)', () => {
@@ -135,7 +147,7 @@ describe('mappers', () => {
         ],
       }
 
-      const result = mapProfileToPublic(profileWithEmptyPreferredLocale, true, 'de')
+      const result = mapProfileToPublic(profileWithEmptyPreferredLocale, true, 'de', true)
 
       // Should fallback to English values since German values are empty
       expect(result.introSocial).toBe('Hello world')
@@ -177,11 +189,85 @@ describe('mappers', () => {
         ],
       }
 
-      const result = mapProfileToPublic(profileWithNonEmptyPreferredLocale, true, 'de')
+      const result = mapProfileToPublic(profileWithNonEmptyPreferredLocale, true, 'de', true)
 
       // Should use German values since they are not empty
       expect(result.introSocial).toBe('Hallo Welt')
       expect(result.introDating).toBe('Suche nach Liebe')
+    })
+
+    describe('restricted images', () => {
+      const gallery = [
+        { image: { ...image, blurhash: 'restricted' }, isRestricted: true },
+        { image: { ...image, blurhash: 'public' }, isRestricted: false },
+      ]
+
+      it('leaves restricted images out without the dating context', () => {
+        const result = mapProfileToPublic(
+          { ...baseProfile, profileImages: gallery },
+          false,
+          'en',
+          false
+        )
+        expect(result.profileImages.map((i) => i.blurhash)).toEqual(['public'])
+        expect(result.profileImages.map((i) => i.position)).toEqual([0])
+      })
+
+      it('leaves an all-restricted gallery empty without the dating context', () => {
+        const allRestricted = gallery.filter((g) => g.isRestricted)
+        const result = mapProfileToPublic(
+          { ...baseProfile, profileImages: allRestricted },
+          false,
+          'en',
+          false
+        )
+        expect(result.profileImages).toEqual([])
+      })
+
+      it("includes them in the owner's order with the dating context", () => {
+        const result = mapProfileToPublic(
+          { ...baseProfile, profileImages: gallery },
+          true,
+          'en',
+          true
+        )
+        expect(result.profileImages.map((i) => i.blurhash)).toEqual(['restricted', 'public'])
+        expect(result.profileImages.map((i) => i.position)).toEqual([0, 1])
+      })
+
+      it("gives the owner's profile the first photo, without the restriction flag", () => {
+        const result = mapDbProfileToOwnerProfile('en', {
+          ...baseProfile,
+          isCallable: true,
+          hasFace: true,
+          profileImages: gallery,
+        })
+        expect(result.profileImages.map((i) => i.blurhash)).toEqual(['restricted', 'public'])
+        for (const img of result.profileImages) expect(img).not.toHaveProperty('isRestricted')
+      })
+
+      it('grants restricted photos independently of the dating context', () => {
+        const result = mapProfileToPublic(
+          { ...baseProfile, profileImages: gallery },
+          false,
+          'en',
+          true
+        )
+        expect(result.isDatingActive).toBe(false)
+        expect(result.profileImages.map((i) => i.blurhash)).toEqual(['restricted', 'public'])
+      })
+
+      it('does not tell any viewer which images are restricted', () => {
+        for (const dating of [true, false]) {
+          const result = mapProfileToPublic(
+            { ...baseProfile, profileImages: gallery },
+            dating,
+            'en',
+            dating
+          )
+          for (const img of result.profileImages) expect(img).not.toHaveProperty('isRestricted')
+        }
+      })
     })
 
     it('should return empty string when all values are empty', () => {
@@ -219,7 +305,7 @@ describe('mappers', () => {
         ],
       }
 
-      const result = mapProfileToPublic(profileWithAllEmptyValues, true, 'de')
+      const result = mapProfileToPublic(profileWithAllEmptyValues, true, 'de', true)
 
       expect(result.introSocial).toBe('')
       expect(result.introDating).toBe('')
@@ -260,7 +346,7 @@ describe('mappers', () => {
         ],
       }
 
-      const result = mapProfileToPublic(profileWithWhitespaceValues, true, 'de')
+      const result = mapProfileToPublic(profileWithWhitespaceValues, true, 'de', true)
 
       // Should fallback to English values since German values are only whitespace
       expect(result.introSocial).toBe('Hello world')
@@ -273,7 +359,7 @@ describe('mappers', () => {
         localized: [],
       }
 
-      const result = mapProfileToPublic(profileWithNoLocalizedEntries, true, 'de')
+      const result = mapProfileToPublic(profileWithNoLocalizedEntries, true, 'de', true)
 
       expect(result.introSocial).toBe('')
       expect(result.introDating).toBe('')

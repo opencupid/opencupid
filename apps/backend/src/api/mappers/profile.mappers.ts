@@ -9,16 +9,20 @@ import { type DbProfileSummary, type DbProfileWithImages } from '@zod/profile/pr
 import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
-import { type OwnerImage, type PublicImage } from '@zod/image/image.dto'
+import { type OwnerProfileImage, type PublicImage } from '@zod/image/image.dto'
 import { mapTagsTranslated } from './tag.mappers'
 import { Image } from '@zod/generated'
-import { toOwnerImage, toPublicImage } from './image.mappers'
+import { toOwnerImage, toOwnerProfileImage, toPublicImage } from './image.mappers'
+
+/** A profile gallery entry: the ImageAttachment row with its image. */
+type ProfileGalleryEntry = { image: Image; isRestricted: boolean }
 
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
   const tags = mapTagsTranslated(db.tags, locale)
+  // In the owner's order; the restriction flag is served by the gallery API only.
   const images = db.profileImages
-    ? mapProfileImagesToOwner(db.profileImages.map((g) => g.image))
+    ? db.profileImages.map((g, position) => toOwnerImage(g.image, position))
     : []
   const location = LocationSchema.parse(db)
 
@@ -41,10 +45,17 @@ export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImag
   }
 }
 
+/**
+ * `includeDatingContext` exposes the dating fields; `canSeeRestricted` keeps the
+ * restricted photos. The detail view grants both to the same viewers, the
+ * browse list grants only the photos (to the viewer's own profile and its
+ * potential matches).
+ */
 export function mapProfileToPublic(
   dbProfile: DbProfileWithImages,
   includeDatingContext: boolean,
-  locale: string
+  locale: string,
+  canSeeRestricted: boolean
 ): PublicProfile {
   // map localized fields with fallback to first available locale
   const get = (field: string): string => {
@@ -68,7 +79,7 @@ export function mapProfileToPublic(
   }
   const scalars = ProfileUnionSchema.parse(dProf)
   const publicImages = dbProfile.profileImages
-    ? mapProfileImagesToPublic(dbProfile.profileImages.map((g) => g.image))
+    ? mapProfileImagesToPublic(dbProfile.profileImages, canSeeRestricted)
     : []
   const publicTags = dbProfile.tags ? mapTagsTranslated(dbProfile.tags, locale) : []
 
@@ -82,12 +93,30 @@ export function mapProfileToPublic(
   } as PublicProfile
 }
 
-export function mapProfileImagesToOwner(images: Image[]): OwnerImage[] {
-  return images.map((img, position) => toOwnerImage(img, position))
+/** The whole gallery in its stored order, as only its owner sees it. */
+export function mapProfileImagesToOwner(entries: ProfileGalleryEntry[]): OwnerProfileImage[] {
+  return entries.map((entry, position) => toOwnerProfileImage(entry, position))
 }
 
-export function mapProfileImagesToPublic(images: Image[]): PublicImage[] {
-  return images.map((img, position) => toPublicImage(img, position))
+/**
+ * The gallery as another viewer sees it, in the owner's order. Restricted images
+ * are dropped unless `canSeeRestricted`; `[0]` is the primary either way.
+ * Positions are the indexes after filtering.
+ */
+export function visibleProfileImages<T extends { isRestricted: boolean }>(
+  entries: T[],
+  canSeeRestricted: boolean
+): T[] {
+  return canSeeRestricted ? entries : entries.filter((e) => !e.isRestricted)
+}
+
+export function mapProfileImagesToPublic(
+  entries: ProfileGalleryEntry[],
+  canSeeRestricted: boolean
+): PublicImage[] {
+  return visibleProfileImages(entries, canSeeRestricted).map((entry, position) =>
+    toPublicImage(entry.image, position)
+  )
 }
 
 export function mapProfileSummary(profile: DbProfileSummary): ProfileSummary {

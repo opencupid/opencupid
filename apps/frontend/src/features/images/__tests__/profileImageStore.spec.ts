@@ -25,6 +25,7 @@ const CREATED = {
   blurhash: 'L0',
   variants: [{ size: 'original', url: '/x' }],
 }
+const ATTACHED = { ...CREATED, isRestricted: false }
 
 describe('useProfileImageStore', () => {
   beforeEach(() => {
@@ -35,7 +36,7 @@ describe('useProfileImageStore', () => {
   it('upload() calls POST /image then POST /image/me/attach', async () => {
     ;(api.post as any)
       .mockResolvedValueOnce({ data: { success: true, image: CREATED } })
-      .mockResolvedValueOnce({ data: { success: true, images: [CREATED] } })
+      .mockResolvedValueOnce({ data: { success: true, images: [ATTACHED] } })
 
     const store = useProfileImageStore()
     const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' })
@@ -44,14 +45,45 @@ describe('useProfileImageStore', () => {
     expect(res.success).toBe(true)
     expect((api.post as any).mock.calls[0][0]).toBe('/image')
     expect((api.post as any).mock.calls[0][1]).toBeInstanceOf(FormData)
-    expect((api.post as any).mock.calls[1]).toEqual(['/image/me/attach', { imageId: CREATED.id }])
+    expect((api.post as any).mock.calls[1]).toEqual([
+      '/image/me/attach',
+      { imageId: CREATED.id, isRestricted: false },
+    ])
     expect(store.images).toHaveLength(1)
+  })
+
+  it('upload() attaches a restricted image when asked to', async () => {
+    ;(api.post as any)
+      .mockResolvedValueOnce({ data: { success: true, image: CREATED } })
+      .mockResolvedValueOnce({
+        data: { success: true, images: [{ ...CREATED, isRestricted: true }] },
+      })
+
+    const store = useProfileImageStore()
+    await store.upload(new File(['x'], 'x.jpg', { type: 'image/jpeg' }), 'cap', {
+      isRestricted: true,
+    })
+
+    expect((api.post as any).mock.calls[1]).toEqual([
+      '/image/me/attach',
+      { imageId: CREATED.id, isRestricted: true },
+    ])
+    expect(store.restriction.isRestricted(store.images[0]!)).toBe(true)
+  })
+
+  it('restriction is active only while the owner is dating', () => {
+    const owner = useOwnerProfileStore()
+    const store = useProfileImageStore()
+    owner.profile = { isDatingActive: false } as any
+    expect(store.restriction.isActive).toBe(false)
+    owner.profile = { isDatingActive: true } as any
+    expect(store.restriction.isActive).toBe(true)
   })
 
   it('upload() refreshes the owner profile hasFace flag', async () => {
     ;(api.post as any)
       .mockResolvedValueOnce({ data: { success: true, image: CREATED } })
-      .mockResolvedValueOnce({ data: { success: true, images: [CREATED] } })
+      .mockResolvedValueOnce({ data: { success: true, images: [ATTACHED] } })
     const ownerStore = useOwnerProfileStore()
     const refresh = vi.spyOn(ownerStore, 'refreshHasFace').mockResolvedValue({ success: true })
 

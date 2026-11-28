@@ -1,6 +1,13 @@
 import { Image } from '@prisma/client'
 import { ImageService } from '@/services/image.service'
-import { PublicImage, PublicImageSchema, OwnerImage, OwnerImageSchema } from '@zod/image/image.dto'
+import {
+  PublicImage,
+  PublicImageSchema,
+  OwnerImage,
+  OwnerImageSchema,
+  OwnerProfileImage,
+  OwnerProfileImageSchema,
+} from '@zod/image/image.dto'
 
 export interface MinimalImage {
   storagePath: string
@@ -36,4 +43,17 @@ export function toPublicImage(image: MinimalImage, position?: number): PublicIma
 export function toOwnerImage(image: Image, position?: number): OwnerImage {
   const variants = getImageVariants(image)
   return OwnerImageSchema.parse({ ...image, ...(position !== undefined && { position }), variants })
+}
+
+/**
+ * A profile gallery entry (ImageAttachment row) for its owner, restriction flag included.
+ */
+export function toOwnerProfileImage(
+  entry: { image: Image; isRestricted: boolean },
+  position: number
+): OwnerProfileImage {
+  return OwnerProfileImageSchema.parse({
+    ...toOwnerImage(entry.image, position),
+    isRestricted: entry.isRestricted,
+  })
 }

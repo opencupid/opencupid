@@ -261,11 +261,17 @@ describe('image.route', () => {
       mockImageService.listProfileGallery.mockResolvedValue(galleryAfter)
 
       const handler = fastify.routes['POST /me/attach']
-      await handler(makeReq({ body: { imageId } }), reply as any)
+      await handler(makeReq({ body: { imageId, isRestricted: true } }), reply as any)
 
-      expect(mockImageService.attachToProfile).toHaveBeenCalledWith(imageId, 'p-1')
+      expect(mockImageService.attachToProfile).toHaveBeenCalledWith(imageId, 'p-1', true)
       expect(reply.statusCode).toBe(200)
       expect(reply.payload).toEqual({ success: true, images: galleryAfter })
+    })
+
+    it('rejects a body without isRestricted', async () => {
+      const handler = fastify.routes['POST /me/attach']
+      await expect(handler(makeReq({ body: { imageId } }), reply as any)).rejects.toThrow()
+      expect(mockImageService.attachToProfile).not.toHaveBeenCalled()
     })
 
     it('owner mismatch → 403', async () => {
@@ -273,7 +279,7 @@ describe('image.route', () => {
         new ImageServiceError('OWNER_MISMATCH', 'Image owner mismatch')
       )
       const handler = fastify.routes['POST /me/attach']
-      await handler(makeReq({ body: { imageId } }), reply as any)
+      await handler(makeReq({ body: { imageId, isRestricted: false } }), reply as any)
       expect(reply.statusCode).toBe(403)
     })
 
@@ -282,7 +288,7 @@ describe('image.route', () => {
         new ImageServiceError('NOT_FOUND', 'Image not found')
       )
       const handler = fastify.routes['POST /me/attach']
-      await handler(makeReq({ body: { imageId } }), reply as any)
+      await handler(makeReq({ body: { imageId, isRestricted: false } }), reply as any)
       expect(reply.statusCode).toBe(404)
     })
 
@@ -291,7 +297,7 @@ describe('image.route', () => {
         new ImageServiceError('ALREADY_ATTACHED', 'Image already attached')
       )
       const handler = fastify.routes['POST /me/attach']
-      await handler(makeReq({ body: { imageId } }), reply as any)
+      await handler(makeReq({ body: { imageId, isRestricted: false } }), reply as any)
       expect(reply.statusCode).toBe(409)
     })
   })
