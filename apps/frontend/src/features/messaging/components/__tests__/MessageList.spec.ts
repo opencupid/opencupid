@@ -198,7 +198,8 @@ describe('MessageList', () => {
       await newMessagesButton().trigger('click')
 
       expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
-      await scrollUserTo(0)
+      // Hidden on the click itself, not once the smooth scroll reaches the
+      // bottom: the reader may interrupt it halfway.
       expect(newMessagesButton().exists()).toBe(false)
     })
 

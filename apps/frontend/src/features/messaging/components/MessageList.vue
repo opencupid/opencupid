@@ -36,6 +36,7 @@ const isAtBottom = shallowRef(true)
 const hasNewMessages = shallowRef(false)
 
 const scrollToBottom = (behavior: ScrollBehavior = 'auto') => {
+  hasNewMessages.value = false
   messageListRef.value?.scrollTo({ top: 0, behavior })
 }
 
@@ -47,7 +48,6 @@ watch(
   (latest, previous) => {
     if (latest?.id === previous?.id) return
     if (!latest || !previous || latest.isMine || isAtBottom.value) {
-      hasNewMessages.value = false
       scrollToBottom()
     } else {
       hasNewMessages.value = true
