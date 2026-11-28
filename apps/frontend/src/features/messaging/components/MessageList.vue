@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { type MessageDTO } from '@zod/messaging/messaging.dto'
 import { type PublicImage } from '@zod/image/image.dto'
-import { nextTick, ref, shallowRef, watch } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
 import MessageBubble from './MessageBubble.vue'
 import BlurhashImage from '@/features/images/components/BlurhashImage.vue'
 import FullscreenImageModal from '@/features/images/components/FullscreenImageModal.vue'
@@ -26,64 +26,27 @@ const openFullscreen = (image: PublicImage) => {
   showFullscreen.value = true
 }
 
+// The list scrolls in a column-reverse container, so the browser measures the
+// scroll position from the bottom: it opens at the latest message, and older
+// pages prepended above leave the visible messages where they are.
 const messageListRef = ref<HTMLElement | null>(null)
-const previousMessageCount = ref(0)
-const hasDoneInitialScroll = ref(false)
 
-const scrollToBottom = () => {
-  if (!messageListRef.value) return
-  // Double rAF: first frame lets the browser complete layout after Vue's DOM update,
-  // second frame ensures flex containers have settled their final dimensions.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (messageListRef.value) {
-        messageListRef.value.scrollTop = messageListRef.value.scrollHeight
-      }
-    })
-  })
-}
-
+// Follow the conversation down when a new latest message arrives.
 watch(
-  () => props.messages,
-  async (newMessages, oldMessages) => {
-    const container = messageListRef.value
-    if (!container) return
-
-    const oldLength = oldMessages?.length ?? previousMessageCount.value
-    const newLength = newMessages.length
-    const prependedMessages =
-      newLength > oldLength &&
-      oldMessages &&
-      newMessages[newLength - 1]?.id === oldMessages[oldLength - 1]?.id
-
-    if (!hasDoneInitialScroll.value && newLength === 0) {
-      previousMessageCount.value = newLength
-      return
-    }
-
-    if (prependedMessages) {
-      const previousHeight = container.scrollHeight
-      await nextTick()
-      const nextHeight = container.scrollHeight
-      container.scrollTop += nextHeight - previousHeight
-    } else {
-      await nextTick()
-      scrollToBottom()
-      hasDoneInitialScroll.value = true
-    }
-
-    previousMessageCount.value = newLength
+  () => props.messages[props.messages.length - 1]?.id,
+  () => {
+    if (messageListRef.value) messageListRef.value.scrollTop = 0
   },
-  {
-    deep: true,
-    immediate: true,
-  }
+  { flush: 'post' }
 )
 
 const handleScroll = () => {
-  if (!messageListRef.value || props.isLoadingMore || !props.hasMore) return
+  const container = messageListRef.value
+  if (!container || props.isLoadingMore || !props.hasMore) return
 
-  if (messageListRef.value.scrollTop <= 80) {
+  const distanceFromTop =
+    container.scrollHeight - container.clientHeight - Math.abs(container.scrollTop)
+  if (distanceFromTop <= 80) {
     emit('load-older')
   }
 }
@@ -91,25 +54,28 @@ const handleScroll = () => {
 
 <template>
   <div
-    class="p-2 mb-2 hide-scrollbar overflow-auto d-flex flex-column"
+    class="p-2 mb-2 hide-scrollbar overflow-auto d-flex flex-column-reverse"
     ref="messageListRef"
     @scroll="handleScroll"
   >
-    <div
-      v-if="isLoadingMore"
-      class="text-center text-muted small py-2"
-    >
-      {{ $t('messaging.loading_older_messages') }}
+    <!-- mb-auto keeps a short conversation at the top of the list -->
+    <div class="d-flex flex-column mb-auto">
+      <div
+        v-if="isLoadingMore"
+        class="text-center text-muted small py-2"
+      >
+        {{ $t('messaging.loading_older_messages') }}
+      </div>
+      <MessageBubble
+        v-for="msg in messages"
+        :key="msg.id"
+        :message="msg"
+        :editable="msg.id === editableMessageId"
+        class="mb-2 me-2 animate__animated animate__zoomIn"
+        @image-click="openFullscreen"
+        @edit="emit('edit')"
+      />
     </div>
-    <MessageBubble
-      v-for="msg in messages"
-      :key="msg.id"
-      :message="msg"
-      :editable="msg.id === editableMessageId"
-      class="mb-2 me-2 animate__animated animate__zoomIn"
-      @image-click="openFullscreen"
-      @edit="emit('edit')"
-    />
 
     <FullscreenImageModal v-model="showFullscreen">
       <div
