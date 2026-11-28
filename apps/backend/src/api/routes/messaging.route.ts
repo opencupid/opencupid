@@ -30,6 +30,7 @@ import type {
 import type { ConversationDraftSummary } from '@zod/messaging/messaging.dto'
 import { ProfileService } from '@/services/profile.service'
 import { broadcastToProfile } from '@/utils/wsUtils'
+import { pairEligibility, withVisibleImages } from '@/services/restrictedPhotoGrant'
 import { broadcastNewMessage } from '@/services/messageBroadcast'
 import {
   ArchiveConversationPayloadSchema,
@@ -411,7 +412,10 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const partner = await profileService.getProfilePublicById(partnerId, viewerProfileId)
+        // Restricted photos are cut to the pair's eligibility for the draft below.
+        const partner = await profileService.getProfilePublicById(partnerId, viewerProfileId, {
+          includeRestricted: true,
+        })
         if (!partner || !partner.isActive) return sendError(reply, 404, 'Profile not found')
         // Vague 404 mirrors GET /profile/:id — the partner blocking the viewer
         // is indistinguishable from "no such profile" by design.
@@ -431,10 +435,15 @@ const messageRoutes: FastifyPluginAsync = async (fastify) => {
           return reply.code(200).send(response)
         }
 
-        const viewer = await profileService.getProfileById(viewerProfileId)
+        const [viewer, isEligible] = await Promise.all([
+          profileService.getProfileById(viewerProfileId),
+          pairEligibility([[viewerProfileId, partnerId]]),
+        ])
         const draft: ConversationDraftSummary = {
           isDraft: true,
-          partnerProfile: mapMessageProfileRef(partner),
+          partnerProfile: mapMessageProfileRef(
+            withVisibleImages(partner, isEligible(viewerProfileId, partnerId))
+          ),
           canReply: true,
           isCallable: partner.isCallable !== false,
           myIsCallable: viewer?.isCallable !== false,

@@ -10,6 +10,14 @@ beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
+  vi.doMock('../../services/restrictedPhotoGrant', () => ({
+    pairEligibility: async () => () => false,
+    withVisibleImages: (p: unknown) => p,
+    grantSummaryImages: async (rows: unknown[]) => rows,
+    grantSummaryImage: async (row: unknown) => row,
+    grantMessageImages: async (messages: unknown[]) => messages,
+    grantMessageImage: async (message: unknown) => message,
+  }))
   const module = await import('../../services/call.service')
   ;(module.CallService as any).instance = undefined
   service = module.CallService.getInstance()

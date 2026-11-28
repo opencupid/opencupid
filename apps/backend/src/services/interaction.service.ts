@@ -2,6 +2,7 @@ import { mapProfileSummary } from '@/api/mappers/profile.mappers'
 import { profileImageInclude } from '@/db/includes/profileIncludes'
 import { prisma } from '@/lib/prisma'
 import { MessageService } from './messaging.service'
+import { pairEligibility, withVisibleImages } from './restrictedPhotoGrant'
 
 import { Prisma } from '@prisma/client'
 import {
@@ -63,15 +64,7 @@ export class InteractionService {
       return { like, isNewLike: !existing }
     })
 
-    const likedProfile = await prisma.profile.findUniqueOrThrow({
-      where: { id: toId },
-      include: profileImageInclude(),
-    })
-
-    const initiatorProfile = await prisma.profile.findUniqueOrThrow({
-      where: { id: fromId },
-      include: profileImageInclude(),
-    })
+    const { likedProfile, initiatorProfile } = await this.loadLikePair(fromId, toId)
 
     const isMatch = await prisma.likedProfile.findUnique({
       where: { fromId_toId: { fromId: toId, toId: fromId } },
@@ -103,15 +96,7 @@ export class InteractionService {
       data: { isAnonymous: data.isAnonymous },
     })
 
-    const likedProfile = await prisma.profile.findUniqueOrThrow({
-      where: { id: toId },
-      include: profileImageInclude(),
-    })
-
-    const initiatorProfile = await prisma.profile.findUniqueOrThrow({
-      where: { id: fromId },
-      include: profileImageInclude(),
-    })
+    const { likedProfile, initiatorProfile } = await this.loadLikePair(fromId, toId)
 
     const isMatch = await prisma.likedProfile.findUnique({
       where: { fromId_toId: { fromId: toId, toId: fromId } },
@@ -121,6 +106,30 @@ export class InteractionService {
       isMatch: !!isMatch,
       to: toLikeEdge(likedProfile, like.createdAt, !!isMatch, like.isNew, like.isAnonymous),
       from: toLikeEdge(initiatorProfile, like.createdAt, !!isMatch, like.isNew, like.isAnonymous),
+    }
+  }
+
+  /**
+   * Both ends of a like, for a payload that goes to both: the liker's response
+   * and the target's WebSocket event. Galleries are filtered with the pair's
+   * eligibility, so neither end gets more than the other may see.
+   */
+  private async loadLikePair(fromId: string, toId: string) {
+    const [likedProfile, initiatorProfile, isEligible] = await Promise.all([
+      prisma.profile.findUniqueOrThrow({
+        where: { id: toId },
+        include: profileImageInclude({ includeRestricted: true }),
+      }),
+      prisma.profile.findUniqueOrThrow({
+        where: { id: fromId },
+        include: profileImageInclude({ includeRestricted: true }),
+      }),
+      pairEligibility([[fromId, toId]]),
+    ])
+    const canSee = isEligible(fromId, toId)
+    return {
+      likedProfile: withVisibleImages(likedProfile, canSee),
+      initiatorProfile: withVisibleImages(initiatorProfile, canSee),
     }
   }
 
@@ -161,13 +170,16 @@ export class InteractionService {
       ...(limit ? { take: limit } : {}),
       include: {
         from: {
-          include: profileImageInclude(),
+          include: profileImageInclude({ includeRestricted: true }),
         },
       },
     })
+    const isEligible = await pairEligibility(likes.map((l) => [profileId, l.fromId] as const))
 
     return likes.map((like) => ({
-      profile: like.isAnonymous ? null : mapProfileSummary(like.from),
+      profile: like.isAnonymous
+        ? null
+        : mapProfileSummary(withVisibleImages(like.from, isEligible(profileId, like.fromId))),
       isMatch: false,
       isNew: like.isNew,
       isAnonymous: like.isAnonymous,
@@ -180,13 +192,20 @@ export class InteractionService {
       where: { fromId: profileId },
       include: {
         to: {
-          include: profileImageInclude(),
+          include: profileImageInclude({ includeRestricted: true }),
         },
       },
     })
+    const isEligible = await pairEligibility(likes.map((l) => [profileId, l.toId] as const))
 
     return likes.map((like) =>
-      toLikeEdge(like.to, like.createdAt, false, like.isNew, like.isAnonymous)
+      toLikeEdge(
+        withVisibleImages(like.to, isEligible(profileId, like.toId)),
+        like.createdAt,
+        false,
+        like.isNew,
+        like.isAnonymous
+      )
     )
   }
 
@@ -203,13 +222,20 @@ export class InteractionService {
       },
       include: {
         to: {
-          include: profileImageInclude(),
+          include: profileImageInclude({ includeRestricted: true }),
         },
       },
     })
+    const isEligible = await pairEligibility(matches.map((l) => [profileId, l.toId] as const))
 
     return matches.map((like) =>
-      toLikeEdge(like.to, like.createdAt, true, like.isNew, like.isAnonymous)
+      toLikeEdge(
+        withVisibleImages(like.to, isEligible(profileId, like.toId)),
+        like.createdAt,
+        true,
+        like.isNew,
+        like.isAnonymous
+      )
     )
   }
 

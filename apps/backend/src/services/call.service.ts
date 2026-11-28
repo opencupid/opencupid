@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
+import { grantMessageImage } from './restrictedPhotoGrant'
 import {
   messageWithSenderInclude,
   unarchiveForSender,
@@ -75,7 +76,7 @@ export class CallService {
       },
       include: messageWithSenderInclude,
     })
-    if (existing) return { message: existing, isDuplicate: true }
+    if (existing) return { message: await grantMessageImage(existing), isDuplicate: true }
 
     const message = await tx.message.create({
       data: {
@@ -87,7 +88,7 @@ export class CallService {
       include: messageWithSenderInclude,
     })
     await unarchiveForSender(tx, conversationId, callerProfileId)
-    return { message, isDuplicate: false }
+    return { message: await grantMessageImage(message), isDuplicate: false }
   }
 
   async updateCallableStatus(conversationId: string, profileId: string, isCallable: boolean) {

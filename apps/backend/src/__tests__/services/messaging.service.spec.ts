@@ -11,6 +11,14 @@ beforeEach(async () => {
   vi.resetModules()
   mockPrisma = createMockPrisma()
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
+  vi.doMock('../../services/restrictedPhotoGrant', () => ({
+    pairEligibility: async () => () => false,
+    withVisibleImages: (p: unknown) => p,
+    grantSummaryImages: async (rows: unknown[]) => rows,
+    grantSummaryImage: async (row: unknown) => row,
+    grantMessageImages: async (messages: unknown[]) => messages,
+    grantMessageImage: async (message: unknown) => message,
+  }))
   vi.doMock('../../lib/appconfig', () => ({
     appConfig: {
       ADMIN_PROFILE_ID: 'sys-sender',
@@ -93,6 +101,11 @@ describe('MessageService.getConversationSummary', () => {
     expect(mockPrisma.conversationParticipant.findFirst).toHaveBeenCalled()
     const args = mockPrisma.conversationParticipant.findFirst.mock.calls[0][0]
     expect(args.where).toEqual({ conversationId: 'c1', profileId: 'p1' })
+    for (const side of ['profileA', 'profileB']) {
+      const images = args.include.conversation.include[side].include.profileImages
+      expect(images).not.toHaveProperty('where')
+      expect(images).not.toHaveProperty('take')
+    }
     expect(res.id).toBe('cp')
   })
 })
@@ -111,6 +124,10 @@ describe('MessageService.listMessagesForConversation', () => {
     expect(args.orderBy).toEqual({ createdAt: 'desc' })
     expect(args.take).toBe(11)
     expect(args.include.attachment).toBe(true)
+    // Whole sender galleries and the pair: grantMessageImages picks what each pair may see.
+    expect(args.include.sender.select.profileImages).not.toHaveProperty('where')
+    expect(args.include.sender.select.profileImages).not.toHaveProperty('take')
+    expect(args.include.conversation).toEqual({ select: { profileAId: true, profileBId: true } })
     expect(result.messages.map((m: any) => m.id)).toEqual(['m2', 'm3'])
     expect(result.hasMore).toBe(false)
     expect(result.nextCursor).toBeNull()

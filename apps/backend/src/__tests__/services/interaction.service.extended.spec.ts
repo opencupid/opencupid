@@ -9,6 +9,14 @@ beforeEach(async () => {
   mockPrisma = createMockPrisma()
 
   vi.doMock('../../lib/prisma', () => ({ prisma: mockPrisma }))
+  vi.doMock('../../services/restrictedPhotoGrant', () => ({
+    pairEligibility: async () => () => false,
+    withVisibleImages: (p: unknown) => p,
+    grantSummaryImages: async (rows: unknown[]) => rows,
+    grantSummaryImage: async (row: unknown) => row,
+    grantMessageImages: async (messages: unknown[]) => messages,
+    grantMessageImage: async (message: unknown) => message,
+  }))
   vi.doMock('../../services/messaging.service', () => ({
     MessageService: { getInstance: () => ({ acceptConversationOnMatch: vi.fn() }) },
   }))
