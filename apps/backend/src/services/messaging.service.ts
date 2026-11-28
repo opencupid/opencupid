@@ -7,6 +7,12 @@ import { appConfig } from '../lib/appconfig'
 import { computeSendOutcome } from './messaging.stateMachine'
 import { ImageService } from './image.service'
 import { profileImagesRelation } from '@/db/includes/profileIncludes'
+import {
+  grantMessageImage,
+  grantMessageImages,
+  grantSummaryImage,
+  grantSummaryImages,
+} from './restrictedPhotoGrant'
 
 // Business-error codes raised from the messaging service / route handlers.
 // HTTP status mapping is the route's responsibility — do not bake it in here.
@@ -37,16 +43,18 @@ const conversationSummaryInclude = {
       // the mapper can resolve the partner profile without depending on the
       // participants list — required because PENDING conversations have only the
       // sender as a participant until the trust flag clears.
+      // Whole galleries: which photo comes first depends on the pair's
+      // eligibility (grantSummaryImages), so it can't be cut to one here.
       profileA: {
         include: {
           user: { select: { email: true } },
-          profileImages: profileImagesRelation({ take: 1 }),
+          profileImages: profileImagesRelation({ includeRestricted: true }),
         },
       },
       profileB: {
         include: {
           user: { select: { email: true } },
-          profileImages: profileImagesRelation({ take: 1 }),
+          profileImages: profileImagesRelation({ includeRestricted: true }),
         },
       },
       participants: {
@@ -74,9 +82,11 @@ export const messageWithSenderInclude = {
       id: true,
       publicName: true,
       user: { select: { email: true } },
-      profileImages: profileImagesRelation({ take: 1 }),
+      // Filtered by grantMessageImages (restrictedPhotoGrant) with the conversation's pair.
+      profileImages: profileImagesRelation({ includeRestricted: true }),
     },
   },
+  conversation: { select: { profileAId: true, profileBId: true } },
   attachment: true,
   images: {
     include: { image: true },
@@ -181,13 +191,15 @@ export class MessageService {
     conversationId: string,
     profileId: string
   ): Promise<ConversationParticipantWithConversationSummary | null> {
-    return await prisma.conversationParticipant.findFirst({
-      where: {
-        conversationId,
-        profileId,
-      },
-      include: conversationSummaryInclude,
-    })
+    return await grantSummaryImage(
+      await prisma.conversationParticipant.findFirst({
+        where: {
+          conversationId,
+          profileId,
+        },
+        include: conversationSummaryInclude,
+      })
+    )
   }
 
   /**
@@ -198,14 +210,16 @@ export class MessageService {
     conversationId: string,
     profileId: string
   ): Promise<ConversationParticipantWithConversationSummary | null> {
-    return await prisma.conversationParticipant.findFirst({
-      where: {
-        conversationId,
-        profileId,
-        conversation: inboxVisibleConversationWhere(profileId),
-      },
-      include: conversationSummaryInclude,
-    })
+    return await grantSummaryImage(
+      await prisma.conversationParticipant.findFirst({
+        where: {
+          conversationId,
+          profileId,
+          conversation: inboxVisibleConversationWhere(profileId),
+        },
+        include: conversationSummaryInclude,
+      })
+    )
   }
 
   /**
@@ -252,7 +266,9 @@ export class MessageService {
     })
 
     const hasMore = rows.length > CONVERSATION_PAGE_SIZE
-    const conversations = hasMore ? rows.slice(0, CONVERSATION_PAGE_SIZE) : rows
+    const conversations = await grantSummaryImages(
+      hasMore ? rows.slice(0, CONVERSATION_PAGE_SIZE) : rows
+    )
     const last = conversations[conversations.length - 1]
     const nextCursor: ConversationCursor | null =
       hasMore && last
@@ -337,7 +353,7 @@ export class MessageService {
     const hasMore = messages.length > pageSize
     const page = hasMore ? messages.slice(0, pageSize) : messages
     const nextCursor = hasMore ? (page[page.length - 1]?.id ?? null) : null
-    const orderedPage = [...page].reverse()
+    const orderedPage = await grantMessageImages([...page].reverse())
 
     return {
       messages: orderedPage,
@@ -507,7 +523,7 @@ export class MessageService {
         },
         include: messageWithSenderInclude,
       })
-      if (duplicate) return { message: duplicate, isDuplicate: true }
+      if (duplicate) return { message: await grantMessageImage(duplicate), isDuplicate: true }
     }
 
     const created = await tx.message.create({
@@ -549,7 +565,7 @@ export class MessageService {
       data: { updatedAt: new Date() },
     })
 
-    return { message, isDuplicate: false }
+    return { message: await grantMessageImage(message), isDuplicate: false }
   }
 
   /**
@@ -622,7 +638,7 @@ export class MessageService {
       include: messageWithSenderInclude,
     })
 
-    return { message, conversation: target.conversation }
+    return { message: await grantMessageImage(message), conversation: target.conversation }
   }
 
   async sendWelcomeMessage(recipientProfileId: string, locale: string) {
@@ -681,13 +697,15 @@ export class MessageService {
     partnerProfileId: string
   ): Promise<ConversationParticipantWithConversationSummary | null> {
     const [profileAId, profileBId] = this.sortProfilePair(viewerProfileId, partnerProfileId)
-    return await prisma.conversationParticipant.findFirst({
-      where: {
-        profileId: viewerProfileId,
-        conversation: this.activeConversationWhere(profileAId, profileBId),
-      },
-      include: conversationSummaryInclude,
-    })
+    return await grantSummaryImage(
+      await prisma.conversationParticipant.findFirst({
+        where: {
+          profileId: viewerProfileId,
+          conversation: this.activeConversationWhere(profileAId, profileBId),
+        },
+        include: conversationSummaryInclude,
+      })
+    )
   }
 
   async resolveConversation(

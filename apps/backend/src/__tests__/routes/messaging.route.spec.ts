@@ -85,6 +85,12 @@ vi.mock('../../api/mappers/messaging.mappers', () => ({
   })),
 }))
 
+const mockPairEligibility = vi.fn(async (): Promise<() => boolean> => () => false)
+const mockWithVisibleImages = vi.fn((p: unknown, _canSee: boolean) => p)
+vi.mock('@/services/restrictedPhotoGrant', () => ({
+  pairEligibility: (...args: unknown[]) => (mockPairEligibility as any)(...args),
+  withVisibleImages: (p: unknown, canSee: boolean) => mockWithVisibleImages(p, canSee),
+}))
 vi.mock('@/services/profile.service', () => ({
   ProfileService: { getInstance: () => mockProfileService },
 }))
@@ -1749,6 +1755,32 @@ describe('GET /conversations/by-profile/:profileId', () => {
     expect(reply.payload.conversation.myIsCallable).toBe(true)
     // Drafts are not gated on a mutual like.
     expect(mockMessageService.hasMutualLike).not.toHaveBeenCalled()
+  })
+
+  it("cuts the draft partner's gallery to the pair's eligibility", async () => {
+    const handler = fastify.routes['GET /conversations/by-profile/:profileId']
+    const partner = {
+      id: validProfileId,
+      publicName: 'Partner',
+      blockedProfiles: [],
+      isActive: true,
+    }
+    mockProfileService.getProfilePublicById.mockResolvedValue(partner)
+    mockMessageService.findConversationSummaryByPartner.mockResolvedValue(null)
+    mockProfileService.getProfileById.mockResolvedValue({ id: 'p1' })
+    mockPairEligibility.mockResolvedValueOnce(() => true)
+    await handler(
+      {
+        session: { profileId: 'p1', hasActiveProfile: true },
+        params: { profileId: validProfileId },
+      } as any,
+      reply as any
+    )
+    expect(mockProfileService.getProfilePublicById).toHaveBeenCalledWith(validProfileId, 'p1', {
+      includeRestricted: true,
+    })
+    expect(mockPairEligibility).toHaveBeenCalledWith([['p1', validProfileId]])
+    expect(mockWithVisibleImages).toHaveBeenLastCalledWith(partner, true)
   })
 
   it('reflects per-profile isCallable flags in the draft', async () => {
