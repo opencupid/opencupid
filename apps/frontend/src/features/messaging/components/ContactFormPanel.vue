@@ -16,8 +16,8 @@ defineOptions({ name: 'ContactFormPanel' })
 
 /**
  * Orchestrates the "initial contact" UX — encapsulates SendMessageForm and
- * the send → success-confirmation → reset state machine shared by PostCard,
- * SendMessageDialog, and MatchPopup. Parents own the containing element
+ * the send → success-confirmation → reset state machine shared by PostCard
+ * and MatchPopup. Parents own the containing element
  * (modal, inline wrapper, etc.) and react to the `sent` event to decide
  * what happens next (close modal, emit further, etc.).
  *
@@ -25,14 +25,9 @@ defineOptions({ name: 'ContactFormPanel' })
  * so sizing is dictated by the consumer — no `size` prop.
  */
 
-const props = withDefaults(
-  defineProps<{
-    recipientProfile: MessageRecipient & Partial<ConversationContext>
-    showTags?: boolean
-    noResize?: boolean
-  }>(),
-  { showTags: false, noResize: true }
-)
+const props = defineProps<{
+  recipientProfile: MessageRecipient & Partial<ConversationContext>
+}>()
 
 const isWaitingForReply =
   props.recipientProfile.initiated === true && props.recipientProfile.canMessage === false
@@ -149,8 +144,6 @@ defineExpose({
         ref="messageInput"
         :recipient-profile="recipientProfile"
         :conversation-id="null"
-        :show-tags="showTags"
-        :no-resize="noResize"
         @message:sent="onMessageSent"
       />
     </div>

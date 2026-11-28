@@ -4,12 +4,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, ref } from 'vue'
 import type { PublicProfile } from '@zod/profile/profile.dto'
 
-vi.mock('@/features/shared/profiledisplay/TagList.vue', () => ({
-  default: { template: '<div />' },
-}))
-vi.mock('@/features/shared/profiledisplay/LanguageList.vue', () => ({
-  default: { template: '<div />' },
-}))
 vi.mock('@/assets/icons/interface/call.svg', () => ({
   default: { template: '<span data-testid="icon-call" />' },
 }))
@@ -106,8 +100,6 @@ describe('SendMessageForm', () => {
           BButton: true,
           BDropdown: true,
           BDropdownItem: true,
-          TagList: true,
-          LanguageList: true,
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
@@ -163,8 +155,6 @@ describe('SendMessageForm', () => {
           BButton: true,
           BDropdown: true,
           BDropdownItem: true,
-          TagList: true,
-          LanguageList: true,
           BModal: true,
           VoiceRecorder: VoiceRecorderStub,
           VoiceMessage: true,
@@ -344,8 +334,6 @@ describe('SendMessageForm', () => {
           BButton: true,
           BDropdown: false,
           BDropdownItem: false,
-          TagList: true,
-          LanguageList: true,
           VoiceRecorder: true,
           IconMenuDotsVert: true,
           Mic2Icon: true,
@@ -396,8 +384,6 @@ describe('SendMessageForm', () => {
             BFormTextarea: TextareaStub,
             BButton: true,
             BModal: true,
-            TagList: true,
-            LanguageList: true,
             VoiceRecorder: VoiceRecorderStub,
             VoiceMessage: true,
             SendModeSelector: true,
@@ -481,57 +467,6 @@ describe('SendMessageForm', () => {
     })
   })
 
-  function mountFormWithLanguages(recipientLanguages: string[], viewerLanguages: string[]) {
-    const LanguageListStub = {
-      name: 'LanguageList',
-      template: '<div />',
-      props: ['languages'],
-    }
-    return mount(SendMessageForm, {
-      props: {
-        recipientProfile: { ...mockRecipient, languages: recipientLanguages },
-        conversationId: 'conv-1',
-        showTags: true,
-      },
-      global: {
-        provide: {
-          viewerProfile: ref({ languages: viewerLanguages }),
-        },
-        stubs: {
-          BFormGroup: true,
-          BFormTextarea: true,
-          BButton: true,
-          BDropdown: true,
-          BDropdownItem: true,
-          TagList: true,
-          LanguageList: LanguageListStub,
-          BModal: true,
-          VoiceRecorder: VoiceRecorderStub,
-          VoiceMessage: true,
-          IconMenuDotsVert: true,
-          IconCall: true,
-          Mic2Icon: true,
-          ImageUpload: ImageUploadStub,
-        },
-        mocks: {
-          $t: (key: string) => key,
-        },
-      },
-    })
-  }
-
-  it('passes only common languages to LanguageList when showTags is true', () => {
-    const wrapper = mountFormWithLanguages(['en', 'fr', 'de'], ['en', 'fr', 'es'])
-    const languageList = wrapper.findComponent({ name: 'LanguageList' })
-    expect(languageList.props('languages')).toEqual(['en', 'fr'])
-  })
-
-  it('passes empty array to LanguageList when there are no common languages', () => {
-    const wrapper = mountFormWithLanguages(['de', 'es'], ['en', 'fr'])
-    const languageList = wrapper.findComponent({ name: 'LanguageList' })
-    expect(languageList.props('languages')).toEqual([])
-  })
-
   describe('editing the last message', () => {
     // v-model capable textarea exposing `element` like BFormTextarea does.
     const EditTextareaStub = defineComponent({
@@ -572,8 +507,6 @@ describe('SendMessageForm', () => {
             BFormTextarea: EditTextareaStub,
             BButton: true,
             BModal: true,
-            TagList: true,
-            LanguageList: true,
             VoiceRecorder: VoiceRecorderStub,
             VoiceMessage: true,
             SendModeSelector: true,

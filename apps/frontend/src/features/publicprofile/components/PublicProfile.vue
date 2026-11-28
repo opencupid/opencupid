@@ -12,7 +12,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'intent:back'): void
-  (e: 'intent:message', conversationId: string): void
   (e: 'intent:block'): void
   (e: 'updated'): void
 }>()
@@ -47,7 +46,6 @@ const viewerProfile = inject<Ref<OwnerProfile | null>>('viewerProfile')
     >
       <ProfileInteractions
         :profile="profile"
-        @intent:message="(convoId: string) => emit('intent:message', convoId)"
         @updated="emit('updated')"
       />
     </div>

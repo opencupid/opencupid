@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, watchEffect, computed, inject, nextTick, useId, type Ref } from 'vue'
+import { ref, watch, watchEffect, computed, nextTick, useId } from 'vue'
 import { funnel } from 'remeda'
 import type { BFormTextarea } from 'bootstrap-vue-next'
 import { useI18n } from 'vue-i18n'
@@ -7,10 +7,8 @@ import { useI18n } from 'vue-i18n'
 import { useLocalStore } from '@/store/localStore'
 
 import { type MessageDTO, type MessageAttachmentDTO } from '@zod/messaging/messaging.dto'
-import { type MessageRecipient, type OwnerProfile } from '@zod/profile/profile.dto'
+import { type MessageRecipient } from '@zod/profile/profile.dto'
 
-import TagList from '@/features/shared/profiledisplay/TagList.vue'
-import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 // Video call button temporarily hidden, see template.
 // import IconCall from '@/assets/icons/interface/call.svg'
 import IconSend from '@/assets/icons/interface/send.svg'
@@ -34,28 +32,16 @@ const props = withDefaults(
   defineProps<{
     recipientProfile: MessageRecipient
     conversationId: string | null
-    showTags?: boolean
     canCall?: boolean
     // False while the partner hasn't replied to the viewer's first message.
     canReply?: boolean
-    noResize?: boolean
   }>(),
-  { noResize: true, canReply: true }
+  { canReply: true }
 )
 const emit = defineEmits<{
   (e: 'message:sent', message: MessageDTO | null): void
   (e: 'call:start'): void
 }>()
-
-const viewerProfile = inject<Ref<OwnerProfile>>('viewerProfile')
-
-const senderLanguages = computed<string[]>(() => viewerProfile?.value?.languages ?? [])
-
-const commonLanguages = computed<string[]>(() =>
-  senderLanguages.value.filter((lang) => (props.recipientProfile.languages ?? []).includes(lang))
-)
-
-const shouldShowLanguageList = computed(() => senderLanguages.value.length > 1)
 
 const content = ref('')
 const isVoiceActive = ref(false)
@@ -314,25 +300,6 @@ function handleVoiceRecordingError(error: string) {
 <template>
   <div class="w-100">
     <div class="mb-2">
-      <div
-        v-if="showTags"
-        class="mb-2 opacity-75"
-      >
-        <div class="d-inline-block">
-          <TagList
-            :tags="props.recipientProfile.tags"
-            class="d-inline-block"
-          />
-        </div>
-        <div class="d-inline-block">
-          <LanguageList
-            v-if="shouldShowLanguageList"
-            :languages="commonLanguages"
-            class="d-inline-block"
-          />
-        </div>
-      </div>
-
       <!-- TODO(#1109): Elevate VoiceRecorder over the dimmed textarea as
            a focused overlay when recording. Current sibling-in-flow layout
            causes jumps with translateY/margin approaches. -->
@@ -369,7 +336,7 @@ function handleVoiceRecordingError(error: string) {
           v-model="content"
           rows="1"
           max-rows="5"
-          :no-resize="noResize"
+          no-resize
           class="mb-2"
           :class="{ 'opacity-25': isVoiceActive }"
           @keydown="handleKeyPress"
