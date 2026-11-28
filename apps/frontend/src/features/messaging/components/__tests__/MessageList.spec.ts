@@ -112,6 +112,89 @@ describe('MessageList', () => {
     expect(wrapper.text()).toContain('messaging.loading_older_messages')
   })
 
+  describe('scrolling', () => {
+    // jsdom has no layout: stub the geometry of the column-reverse scroller,
+    // whose scrollTop is 0 at the bottom and negative above it.
+    const setGeometry = (
+      el: HTMLElement,
+      { scrollHeight, clientHeight, scrollTop }: Record<string, number>
+    ) => {
+      Object.defineProperty(el, 'scrollHeight', { configurable: true, value: scrollHeight })
+      Object.defineProperty(el, 'clientHeight', { configurable: true, value: clientHeight })
+      el.scrollTop = scrollTop!
+    }
+
+    const mountList = (props: Partial<InstanceType<typeof MessageList>['$props']> = {}) =>
+      mount(MessageList, {
+        props: {
+          messages: [makeMessage({ id: 'a' }), makeMessage({ id: 'b' })],
+          hasMore: true,
+          isLoadingMore: false,
+          ...props,
+        },
+        global: { mocks: { $t: (k: string) => k } },
+      })
+
+    it('requests older messages when scrolled near the top', async () => {
+      const wrapper = mountList()
+      setGeometry(wrapper.element as HTMLElement, {
+        scrollHeight: 2000,
+        clientHeight: 600,
+        scrollTop: -1350,
+      })
+      await wrapper.trigger('scroll')
+      expect(wrapper.emitted('load-older')).toHaveLength(1)
+    })
+
+    it('does not request older messages away from the top', async () => {
+      const wrapper = mountList()
+      setGeometry(wrapper.element as HTMLElement, {
+        scrollHeight: 2000,
+        clientHeight: 600,
+        scrollTop: -1000,
+      })
+      await wrapper.trigger('scroll')
+      expect(wrapper.emitted('load-older')).toBeUndefined()
+    })
+
+    it('does not request older messages while a page is loading or none are left', async () => {
+      for (const props of [{ isLoadingMore: true }, { hasMore: false }]) {
+        const wrapper = mountList(props)
+        setGeometry(wrapper.element as HTMLElement, {
+          scrollHeight: 2000,
+          clientHeight: 600,
+          scrollTop: -1400,
+        })
+        await wrapper.trigger('scroll')
+        expect(wrapper.emitted('load-older')).toBeUndefined()
+      }
+    })
+
+    it('scrolls to the bottom when a new latest message arrives', async () => {
+      const wrapper = mountList()
+      const el = wrapper.element as HTMLElement
+      el.scrollTop = -500
+      await wrapper.setProps({
+        messages: [makeMessage({ id: 'a' }), makeMessage({ id: 'b' }), makeMessage({ id: 'c' })],
+      })
+      expect(el.scrollTop).toBe(0)
+    })
+
+    it('keeps the position when older messages are prepended or a message is edited', async () => {
+      const wrapper = mountList()
+      const el = wrapper.element as HTMLElement
+      el.scrollTop = -500
+      await wrapper.setProps({
+        messages: [
+          makeMessage({ id: 'older' }),
+          makeMessage({ id: 'a' }),
+          makeMessage({ id: 'b', content: 'edited' }),
+        ],
+      })
+      expect(el.scrollTop).toBe(-500)
+    })
+  })
+
   describe('fullscreen photo viewer', () => {
     const image = {
       mimeType: 'image/jpeg',
