@@ -5,13 +5,12 @@
 import { computed } from 'vue'
 import type { ImageVariant } from '@zod/image/image.dto'
 import { useProfilePhotoAccess } from '@/features/images/composables/useProfilePhotoAccess'
-import { primaryProfileImage } from '@/features/images/primaryProfileImage'
 import { renderHiddenProfileMarkerHtml, renderProfileMarkerHtml } from './profileMarkerIcon'
 
 const props = defineProps<{
   profile: {
     id: string
-    profileImages: { variants: ImageVariant[]; blurhash?: string | null; isRestricted?: boolean }[]
+    profileImages: { variants: ImageVariant[]; blurhash?: string | null }[]
   }
   highlighted?: boolean
 }>()
@@ -19,7 +18,7 @@ const props = defineProps<{
 const { canSeePhotosOf } = useProfilePhotoAccess()
 
 const html = computed(() => {
-  const photo = primaryProfileImage(props.profile.profileImages)
+  const photo = props.profile.profileImages[0]
   const image = photo
     ? { blurhash: photo.blurhash, url: photo.variants.find((v) => v.size === 'thumb')?.url }
     : undefined

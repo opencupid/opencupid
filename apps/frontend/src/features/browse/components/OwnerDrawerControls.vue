@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { primaryProfileImage } from '@/features/images/primaryProfileImage'
 import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
 import { useNotificationState } from '@/features/app/composables/useNotificationState'
 import ProfileImage from '@/features/images/components/ProfileImage.vue'
@@ -54,9 +53,7 @@ function openCreateCommunity() {
       @click="$emit('open:profile')"
     >
       <ProfileImage
-        v-if="
-          ownerProfileStore.profile && primaryProfileImage(ownerProfileStore.profile.profileImages)
-        "
+        v-if="ownerProfileStore.profile?.profileImages?.length"
         :profile="ownerProfileStore.profile"
         variant="thumb"
         class="img-fluid w-100 h-100"

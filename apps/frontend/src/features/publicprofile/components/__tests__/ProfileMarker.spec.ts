@@ -47,15 +47,6 @@ describe('ProfileMarker', () => {
     expect(wrapper.find('.match-indicator .icon-heart').exists()).toBe(true)
   })
 
-  it('never uses a restricted photo as the avatar', () => {
-    const restricted = { ...profile.profileImages[0]!, isRestricted: true }
-    const wrapper = mount(ProfileMarker, {
-      props: { profile: { id: 'p1', profileImages: [restricted] } },
-    })
-    expect(wrapper.html()).not.toContain('/thumb.jpg')
-    expect(wrapper.html()).not.toContain('data:blur/abc')
-  })
-
   it('renders the hidden marker when the viewer may not see the photo', () => {
     canSee.value = false
     const wrapper = mount(ProfileMarker, { props: { profile } })
