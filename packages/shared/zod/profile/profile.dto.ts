@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { ProfileSchema, UserSchema } from '../generated'
 
 import { PublicTagSchema, type PublicTag } from '../tag/tag.dto'
-import { OwnerProfileImageSchema, PublicImageSchema } from '@zod/image/image.dto'
+import { PublicImageSchema } from '@zod/image/image.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { EmailPreferencesSchema, UpdateEmailPreferencesSchema } from '@zod/user/emailPreference.dto'
 import {
@@ -68,7 +68,7 @@ export const OwnerProfileSchema = OwnerScalarsSchema.extend({
   introSocialLocalized: LocalizedStringSchema,
   introDatingLocalized: LocalizedStringSchema,
 
-  profileImages: z.array(OwnerProfileImageSchema).default([]),
+  profileImages: z.array(PublicImageSchema).default([]),
   tags: z.array(PublicTagSchema).default([]),
   location: LocationSchema,
 })

@@ -12,7 +12,7 @@ import { DbLocationToLocationDTO } from './location.mappers'
 import { type OwnerProfileImage, type PublicImage } from '@zod/image/image.dto'
 import { mapTagsTranslated } from './tag.mappers'
 import { Image } from '@zod/generated'
-import { toOwnerProfileImage, toPublicImage } from './image.mappers'
+import { toOwnerImage, toOwnerProfileImage, toPublicImage } from './image.mappers'
 
 /** A profile gallery entry: the ImageAttachment row with its image. */
 type ProfileGalleryEntry = { image: Image; isRestricted: boolean }
@@ -20,7 +20,10 @@ type ProfileGalleryEntry = { image: Image; isRestricted: boolean }
 export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImages): OwnerProfile {
   const scalars = OwnerScalarsSchema.parse(db)
   const tags = mapTagsTranslated(db.tags, locale)
-  const images = db.profileImages ? mapProfileImagesToOwner(db.profileImages) : []
+  // In the owner's order; the restriction flag is served by the gallery API only.
+  const images = db.profileImages
+    ? db.profileImages.map((g, position) => toOwnerImage(g.image, position))
+    : []
   const location = LocationSchema.parse(db)
 
   const localizedMap = db.localized.reduce(

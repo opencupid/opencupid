@@ -1,5 +1,6 @@
 import { vi, describe, it, expect } from 'vitest'
 import {
+  mapDbProfileToOwnerProfile,
   mapProfileImagesToOwner,
   mapProfileImagesToPublic,
   mapToLocalizedUpserts,
@@ -255,6 +256,17 @@ describe('mappers', () => {
         )
         expect(result.profileImages.map((i) => i.blurhash)).toEqual(['restricted', 'public'])
         expect(result.profileImages.map((i) => i.position)).toEqual([0, 1])
+      })
+
+      it("gives the owner's profile the first photo, without the restriction flag", () => {
+        const result = mapDbProfileToOwnerProfile('en', {
+          ...baseProfile,
+          isCallable: true,
+          hasFace: true,
+          profileImages: gallery,
+        })
+        expect(result.profileImages.map((i) => i.blurhash)).toEqual(['restricted', 'public'])
+        for (const img of result.profileImages) expect(img).not.toHaveProperty('isRestricted')
       })
 
       it('grants restricted photos independently of the dating context', () => {
