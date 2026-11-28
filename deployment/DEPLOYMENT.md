@@ -104,7 +104,7 @@ pnpm --filter backend redis:sessions             # List all keys
 ### Prisma (migrations)
 
 ```bash
-pnpm --filter backend prisma:deploy              # Run pending migrations (production)
+pnpm --filter backend prisma:deploy              # Run pending migrations (production runs this via the backend pre_start hook)
 pnpm --filter backend prisma:generate            # Regenerate Prisma client
 ```
 
