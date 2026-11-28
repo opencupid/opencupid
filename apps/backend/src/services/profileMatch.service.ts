@@ -110,7 +110,8 @@ export class ProfileMatchService {
       },
       include: {
         ...tagsInclude(),
-        ...profileImageInclude(),
+        // ClusterService.buildIndex applies the restriction rule per profile.
+        ...profileImageInclude({ includeRestricted: true }),
       },
       take: 500,
       orderBy,

@@ -141,15 +141,24 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
       const idsOf = (kind: ListRef['kind']) => refs.filter((r) => r.kind === kind).map((r) => r.id)
       const [profiles, posts, events, communities] = await Promise.all([
-        profileService.getProfilesPublicByIds(idsOf('profile'), viewerId),
+        profileService.getProfilesPublicByIds(idsOf('profile'), viewerId, {
+          includeRestricted: true,
+        }),
         postService.findManyByIdsHydrated(idsOf('post'), viewerId),
         eventService.findManyByIdsHydrated(idsOf('event'), viewerId),
         communityService.findManyByIdsHydrated(idsOf('community'), viewerId),
       ])
 
+      // Restricted photos go to the viewer's own card and to potential matches
+      // (the same set the map highlights and gives restricted avatars to).
+      const canSeeRestricted = new Set([
+        viewerId,
+        ...refs.filter((r) => r.kind === 'profile' && r.highlighted).map((r) => r.id),
+      ])
+
       const byId = new Map<string, (ref: ListRef) => BrowseListItem>()
       for (const p of profiles) {
-        const profile = mapProfileToPublic(p, false, req.session.lang)
+        const profile = mapProfileToPublic(p, false, req.session.lang, canSeeRestricted.has(p.id))
         byId.set(p.id, ({ distanceKm, highlighted }) => ({
           kind: 'profile',
           distanceKm,

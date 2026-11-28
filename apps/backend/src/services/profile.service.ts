@@ -89,13 +89,18 @@ export class ProfileService {
 
   // Batch version of getProfilePublicById for the browse list. Profiles that
   // blocked the viewer are dropped here, matching the 404 on the single fetch.
-  async getProfilesPublicByIds(profileIds: string[], myProfileId: string) {
+  // `includeRestricted`: as for getProfilePublicById.
+  async getProfilesPublicByIds(
+    profileIds: string[],
+    myProfileId: string,
+    opts: { includeRestricted?: boolean } = {}
+  ) {
     if (profileIds.length === 0) return []
     const rows = await prisma.profile.findMany({
       where: { id: { in: profileIds } },
       include: {
         ...tagsInclude(),
-        ...profileImageInclude(),
+        ...profileImageInclude(opts),
         ...blockedContextInclude(myProfileId),
       },
     })

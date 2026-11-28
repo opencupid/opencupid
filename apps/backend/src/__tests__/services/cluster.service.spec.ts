@@ -192,6 +192,30 @@ describe('ClusterService', () => {
       expect(alice!.highlighted).toBe(false)
     })
 
+    it('gives restricted first photos only to potential matches and the viewer', async () => {
+      const withRestrictedFirst = (id: string, lat: number, lon: number) => ({
+        ...makeProfile(id, lat, lon),
+        profileImages: [
+          { isRestricted: true, image: { id: 'r', blurhash: 'R', storagePath: `r/${id}` } },
+          { isRestricted: false, image: { id: 'u', blurhash: 'U', storagePath: `u/${id}` } },
+        ],
+      })
+      mockFindSocialProfilesWithLocation.mockResolvedValue([
+        withRestrictedFirst('match', 47.0, 16.0),
+        withRestrictedFirst('other', 48.0, 18.0),
+        withRestrictedFirst('viewer-1', 49.0, 20.0),
+      ])
+      mockFindMutualMatchIds.mockResolvedValue(['match'])
+
+      await service.buildIndex('viewer-1', [], ['profile'])
+
+      const { features } = service.getClusters('viewer-1', [15, 46, 21, 50], 12, [], ['profile'])
+      const blurhashById = Object.fromEntries(
+        (features as PointFeature[]).map((f) => [f.id, f.image?.blurhash])
+      )
+      expect(blurhashById).toEqual({ match: 'R', other: 'U', 'viewer-1': 'R' })
+    })
+
     it('derives tags from profiles and returns them', async () => {
       const profiles = [makeProfile('p1', 47.5, 19.0), makeProfile('p2', 48.2, 16.3)]
       mockFindSocialProfilesWithLocation.mockResolvedValue(profiles)

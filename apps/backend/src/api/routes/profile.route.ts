@@ -247,7 +247,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
 
-      const profile = mapProfileToPublic(raw, includeDatingContext, locale)
+      // The viewers who get the dating context are the ones restricted photos are for.
+      const profile = mapProfileToPublic(raw, includeDatingContext, locale, includeDatingContext)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {
@@ -284,7 +285,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
       const raw = await profileService.getProfileCompleteById(id)
       if (!raw) return sendError(reply, 404, 'Profile not found')
 
-      const profile = mapProfileToPublic(raw, scope === 'dating', locale)
+      const asMatch = scope === 'dating'
+      const profile = mapProfileToPublic(raw, asMatch, locale, asMatch)
       const response: GetPublicProfileResponse = { success: true, profile }
       return reply.code(200).send(response)
     } catch (err) {

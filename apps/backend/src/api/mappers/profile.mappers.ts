@@ -42,10 +42,17 @@ export function mapDbProfileToOwnerProfile(locale: string, db: DbProfileWithImag
   }
 }
 
+/**
+ * `includeDatingContext` exposes the dating fields; `canSeeRestricted` keeps the
+ * restricted photos. The detail view grants both to the same viewers, the
+ * browse list grants only the photos (to the viewer's own profile and its
+ * potential matches).
+ */
 export function mapProfileToPublic(
   dbProfile: DbProfileWithImages,
   includeDatingContext: boolean,
-  locale: string
+  locale: string,
+  canSeeRestricted: boolean
 ): PublicProfile {
   // map localized fields with fallback to first available locale
   const get = (field: string): string => {
@@ -68,10 +75,8 @@ export function mapProfileToPublic(
     isDatingActive: includeDatingContext,
   }
   const scalars = ProfileUnionSchema.parse(dProf)
-  // A viewer who gets the dating context (both dating, mutually compatible) is
-  // the one the restricted photos are meant for.
   const publicImages = dbProfile.profileImages
-    ? mapProfileImagesToPublic(dbProfile.profileImages, includeDatingContext)
+    ? mapProfileImagesToPublic(dbProfile.profileImages, canSeeRestricted)
     : []
   const publicTags = dbProfile.tags ? mapTagsTranslated(dbProfile.tags, locale) : []
 
