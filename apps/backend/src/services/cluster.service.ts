@@ -6,7 +6,7 @@ import { ImageService } from './image.service'
 import { visibleProfileImages } from '@/api/mappers/profile.mappers'
 import type { ClusterFeature, PointFeature, MapFeature } from '@shared/zod/map/cluster.dto'
 import type { TagWithTranslations } from '@shared/zod/tag/tag.db'
-import { MAP_CLUSTER_RADIUS, MAP_MAX_ZOOM, haversineKm, type UserContentKind } from '@shared/maps'
+import { MAP_CLUSTER_RADIUS, MAP_MAX_ZOOM, type UserContentKind } from '@shared/maps'
 import type { ContentKind } from '@shared/zod/userContent/userContent.dto'
 const INDEX_TTL_MS = 30 * 60 * 1000 // 30 minutes
 const INDEX_MAX_SIZE = 200
@@ -29,11 +29,12 @@ interface CachedIndex {
   updatedAt: Date
 }
 
-/** A located item in the browse list, before hydration. */
-export interface ListRef {
+/** A cached point inside a bbox, unordered. */
+export interface BoundedPoint {
   kind: UserContentKind
   id: string
-  distanceKm: number
+  lat: number
+  lon: number
   /** A potential dating match of the viewer (the map pin's halo). */
   highlighted: boolean
 }
@@ -215,37 +216,39 @@ export class ClusterService {
   }
 
   /**
-   * Returns one page of the points inside `bbox`, nearest first, measured from
-   * the bbox centre. Reads the same cached index as the map clusters, so the
-   * list and the map always agree on what is in an area.
+   * Returns the cached points inside `bbox`, in no particular order. Reads the
+   * same cached index as the map clusters, so the browse list and the map
+   * always agree on what is in an area. Ordering and paging belong to
+   * BrowseListService.
+   *
+   * `indexVersion` identifies this build of the index: it changes whenever the
+   * index is rebuilt (TTL expiry, eviction), and only then.
    */
-  async getOrBuildList(
+  async getOrBuildPointsInBounds(
     profileId: string,
     bbox: [number, number, number, number],
     tagIds: string[],
-    kinds: UserContentKind[],
-    page: { limit: number; offset: number }
-  ): Promise<{ refs: ListRef[]; total: number }> {
+    kinds: UserContentKind[]
+  ): Promise<{ points: BoundedPoint[]; indexVersion: string }> {
     const cached = await this.ensureIndex(profileId, tagIds, kinds)
     const [west, south, east, north] = bbox
-    const center = { lat: (south + north) / 2, lon: (west + east) / 2 }
 
-    const inBounds: ListRef[] = []
+    const points: BoundedPoint[] = []
     for (const f of cached.points) {
       const [lon, lat] = f.geometry.coordinates
       if (lat < south || lat > north || lon < west || lon > east) continue
-      inBounds.push({
+      points.push({
         kind: f.properties.kind,
         id: f.properties.id,
-        distanceKm: haversineKm(center, { lat, lon }),
+        lat,
+        lon,
         highlighted: f.properties.highlighted,
       })
     }
-    inBounds.sort((a, b) => a.distanceKm - b.distanceKm || a.id.localeCompare(b.id))
 
     return {
-      refs: inBounds.slice(page.offset, page.offset + page.limit),
-      total: inBounds.length,
+      points,
+      indexVersion: `${buildCacheKey(profileId, tagIds, kinds)}@${cached.updatedAt.getTime()}`,
     }
   }
 
