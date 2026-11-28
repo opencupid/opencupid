@@ -2,10 +2,8 @@ import { vi, describe, it, expect } from 'vitest'
 import {
   mapDbProfileToOwnerProfile,
   mapProfileImagesToOwner,
-  mapProfileImagesToPublic,
   mapToLocalizedUpserts,
   mapProfileToPublic,
-  visibleProfileImages,
 } from '../../api/mappers/profile.mappers'
 import { DbTagToPublicTagTransform } from '../../api/mappers/tag.mappers'
 import { toPublicImage } from '../../api/mappers/image.mappers'
@@ -63,39 +61,6 @@ describe('mappers', () => {
       ['ckaaaaaaaaaaaaaac', true, 0],
       ['ckaaaaaaaaaaaaaad', false, 1],
     ])
-  })
-
-  describe('visibleProfileImages', () => {
-    const e = (id: string, isRestricted: boolean) => ({ id, isRestricted })
-    const ids = (list: { id: string }[]) => list.map((x) => x.id)
-
-    it('drops restricted images for a viewer who may not see them', () => {
-      expect(
-        ids(visibleProfileImages([e('r1', true), e('a', false), e('b', false)], false))
-      ).toEqual(['a', 'b'])
-    })
-
-    it("keeps the owner's order for an eligible viewer, restricted first photo included", () => {
-      const gallery = [e('r1', true), e('a', false), e('r2', true), e('b', false)]
-      expect(ids(visibleProfileImages(gallery, true))).toEqual(['r1', 'a', 'r2', 'b'])
-    })
-
-    it('returns nothing to an ineligible viewer when every image is restricted', () => {
-      expect(visibleProfileImages([e('r1', true), e('r2', true)], false)).toEqual([])
-      expect(ids(visibleProfileImages([e('r1', true), e('r2', true)], true))).toEqual(['r1', 'r2'])
-    })
-  })
-
-  it('mapProfileImagesToPublic re-indexes positions after filtering', () => {
-    const res = mapProfileImagesToPublic(
-      [
-        { image: { ...image, storagePath: 'restricted' }, isRestricted: true },
-        { image: { ...image, storagePath: 'public' }, isRestricted: false },
-      ],
-      false
-    )
-    expect(res).toHaveLength(1)
-    expect(res[0].position).toBe(0)
   })
 
   it('keeps Image.position when no index is given (message images)', () => {
@@ -245,6 +210,18 @@ describe('mappers', () => {
           false
         )
         expect(result.profileImages.map((i) => i.blurhash)).toEqual(['public'])
+        expect(result.profileImages.map((i) => i.position)).toEqual([0])
+      })
+
+      it('leaves an all-restricted gallery empty without the dating context', () => {
+        const allRestricted = gallery.filter((g) => g.isRestricted)
+        const result = mapProfileToPublic(
+          { ...baseProfile, profileImages: allRestricted },
+          false,
+          'en',
+          false
+        )
+        expect(result.profileImages).toEqual([])
       })
 
       it("includes them in the owner's order with the dating context", () => {
