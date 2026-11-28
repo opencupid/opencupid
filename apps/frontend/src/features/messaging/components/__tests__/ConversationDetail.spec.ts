@@ -1,6 +1,6 @@
-import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { computed, ref } from 'vue'
+import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { afterEach, describe, expect, it, vi, beforeEach } from 'vitest'
+import { computed, nextTick, ref } from 'vue'
 
 const mockRouterReplace = vi.fn()
 vi.mock('vue-router', () => ({ useRouter: () => ({ replace: mockRouterReplace }) }))
@@ -16,9 +16,20 @@ vi.mock('@/features/publicprofile/components/ProfileContentPanel.vue', () => ({
 
 // Child components are replaced at the module level: their real imports pull
 // in the voice recorder, which needs browser APIs jsdom lacks.
-vi.mock('../SendMessageForm.vue', () => ({
-  default: { name: 'SendMessageForm', props: ['canReply'], template: '<div />' },
+const { mockFocusTextarea, isMdUp } = vi.hoisted(() => ({
+  mockFocusTextarea: vi.fn(),
+  isMdUp: { value: true },
 }))
+vi.mock('../SendMessageForm.vue', () => ({
+  default: {
+    name: 'SendMessageForm',
+    props: ['canReply'],
+    setup: (_: unknown, { expose }: { expose: (exposed: object) => void }) =>
+      expose({ focusTextarea: mockFocusTextarea }),
+    template: '<div />',
+  },
+}))
+vi.mock('@/lib/responsive', () => ({ isMdUp }))
 vi.mock('../ConversationLoadError.vue', () => ({
   default: {
     name: 'ConversationLoadError',
@@ -78,6 +89,8 @@ function mountDetail() {
 }
 
 describe('ConversationDetail', () => {
+  enableAutoUnmount(afterEach)
+
   beforeEach(() => {
     vi.clearAllMocks()
     vm.loadError.value = null
@@ -86,6 +99,7 @@ describe('ConversationDetail', () => {
     vm.partnerContext.value = undefined
     vm.viewer.value = { id: 'me' }
     vm.isDraft.value = false
+    isMdUp.value = true
   })
 
   it('shows the load error instead of the conversation, with its reason', () => {
@@ -115,6 +129,24 @@ describe('ConversationDetail', () => {
 
     expect(wrapper.findComponent(LoadErrorStub).exists()).toBe(false)
     expect(wrapper.findComponent(SendMessageStub).props('canReply')).toBe(false)
+  })
+
+  it('focuses the message box on larger screens as each conversation opens', async () => {
+    mountDetail()
+    await nextTick()
+    expect(mockFocusTextarea).toHaveBeenCalledTimes(1)
+
+    vm.partner.value = { id: 'p2' }
+    await nextTick()
+    expect(mockFocusTextarea).toHaveBeenCalledTimes(2)
+  })
+
+  it('leaves the message box unfocused on phones', async () => {
+    isMdUp.value = false
+    mountDetail()
+    await nextTick()
+
+    expect(mockFocusTextarea).not.toHaveBeenCalled()
   })
 
   it('shows the conversation starter instead of the message list in a draft', () => {
