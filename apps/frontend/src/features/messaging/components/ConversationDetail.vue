@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import ProfileContentPanel from '@/features/publicprofile/components/ProfileContentPanel.vue'
 
 import { useMessageStore } from '@/features/messaging/stores/messageStore'
 import { useDetailPanel } from '@/features/app/composables/useDetailPanel'
+import { isMdUp } from '@/lib/responsive'
 import { useConversationDetailViewModel } from '../composables/useConversationDetailViewModel'
 import BlockProfileDialog from '@/features/publicprofile/components/BlockProfileDialog.vue'
 
@@ -24,6 +25,14 @@ const panel = useDetailPanel()
 const vm = useConversationDetailViewModel()
 
 const showModal = ref(false)
+
+// On larger screens the message box takes focus as each conversation opens, so
+// typing can start at once. Phones skip it: focus would pop up the keyboard
+// over the conversation.
+const messageForm = ref<InstanceType<typeof SendMessage> | null>(null)
+watch([messageForm, () => vm.partner.value?.id], ([form]) => {
+  if (isMdUp.value) form?.focusTextarea()
+})
 
 function onProfileSelect() {
   if (vm.partner.value) {
@@ -81,6 +90,7 @@ async function handleBlockProfile() {
 
       <div class="send-message-wrapper d-flex flex-column align-items-center w-100 py-3 px-2">
         <SendMessage
+          ref="messageForm"
           v-if="vm.partner.value && vm.conversation.value"
           :recipientProfile="vm.partner.value"
           :conversationId="vm.persistedConversation.value?.conversationId ?? null"
