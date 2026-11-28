@@ -203,6 +203,7 @@
     "its_a_match": "Kölcsönös!",
     "like_error": "Hoppá, ez nem működött. Kérjük, próbáld meg újra.",
     "like_them_back": "Visszamosolygok",
+    "name_smiled_at_you": "{name} rádmosolygott!",
     "pass_button_title": "Passzolok",
     "revealed_like_explanation": "Látni fogja, hogy Te küldted.",
     "send_a_like": "Rámosolygok",
@@ -211,7 +212,8 @@
     "they_liked_you": "Rád mosolygott!",
     "you_liked_them": "Rámosolygok",
     "you_messaged_them": "Üzenetet küldtél neki",
-    "you_smiled_at": "Rámosolyogtál!"
+    "you_smiled_at": "Rámosolyogtál!",
+    "you_smiled_at_each_other": "{name} és Te egymásra mosolyogtatok"
   },
   "map": {
     "layer_control": {
@@ -252,6 +254,7 @@
     "edit_no_longer_possible": "Közben válasz érkezett, ezért az üzenet már nem szerkeszthető. A szöveged az üzenetmezőben maradt.",
     "edited": "szerkesztve",
     "editing_message": "Üzenet szerkesztése",
+    "first_message_rule": "Ez lesz az első üzeneted {name} részére. Az ő magánszférája védelmében először csak 1 üzenetet küldhetsz – miután válaszol, bármennyit írhatsz majd.",
     "hide": "Elrejtés",
     "hide_hint": "Beszélgetés elrejtése",
     "loading_older_messages": "Régebbi üzenetek betöltése…",
@@ -264,6 +267,8 @@
     "no_messages_placeholder": "Itt találod majd a beszélgetéseidet.",
     "open_photo": "Fotó megnyitása",
     "page_title": "Üzenetek",
+    "partner_interests": "{name} érdeklődési körei",
+    "partner_languages": "Ezeken a nyelveken beszél:",
     "save_edit_button": "Mentés",
     "send_message_button": "Küldés",
     "send_message_to_user": "Üzenet {name} részére",
