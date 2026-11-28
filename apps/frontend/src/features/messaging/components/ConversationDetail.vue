@@ -11,6 +11,7 @@ import BlockProfileDialog from '@/features/publicprofile/components/BlockProfile
 
 import SendMessage from './SendMessageForm.vue'
 import MessageList from './MessageList.vue'
+import ConversationStarter from './ConversationStarter.vue'
 import MessagingNav from './MessagingNav.vue'
 import ConversationLoadError from './ConversationLoadError.vue'
 
@@ -50,6 +51,7 @@ async function handleBlockProfile() {
         class="messaging-nav w-100"
         v-if="vm.partner.value"
         :recipient="vm.partner.value"
+        :highlighted="vm.partnerContext.value?.canDate"
         :allowCalls="vm.myIsCallable.value"
         :callableDisabled="vm.isDraft.value"
         @deselect:convo="vm.deselect"
@@ -60,7 +62,14 @@ async function handleBlockProfile() {
       />
 
       <div class="flex-grow-1 overflow-hidden d-flex flex-column">
+        <ConversationStarter
+          v-if="vm.isDraft.value && vm.partner.value"
+          :partner="vm.partner.value"
+          :viewer="vm.viewer.value"
+          :context="vm.partnerContext.value"
+        />
         <MessageList
+          v-else
           :messages="messageStore.messages"
           :has-more="messageStore.hasMoreMessages"
           :is-loading-more="messageStore.isLoadingMoreMessages"

@@ -11,6 +11,8 @@ import type { PublicProfile } from '@zod/profile/profile.dto'
 import type { StoreError } from '@/store/helpers'
 import { useMessageStore } from '../stores/messageStore'
 import { usePublicProfileStore } from '@/features/publicprofile/stores/publicProfileStore'
+import { useOwnerProfileStore } from '@/features/myprofile/stores/ownerProfileStore'
+import { useInteractionStore } from '@/features/interaction/stores/useInteractionStore'
 import { useCallStore } from '@/features/videocall/stores/callStore'
 import * as callsApi from '@/features/videocall/api/calls.api'
 import { useInboxRouteState } from './useInboxRouteState'
@@ -37,6 +39,8 @@ export function useConversationDetailViewModel() {
   const messageStore = useMessageStore()
   const profileStore = usePublicProfileStore()
   const callStore = useCallStore()
+  const ownerProfileStore = useOwnerProfileStore()
+  const interactionStore = useInteractionStore()
   const { mode, conversationId, partnerProfileId } = useInboxRouteState()
 
   // Local-only — drafts never enter messageStore (which is persisted-only).
@@ -127,8 +131,9 @@ export function useConversationDetailViewModel() {
     messageStore.resetActiveConversation()
   })
 
-  // Partner PublicProfile drives the header (avatar, name, callable toggle).
-  // Fetched whenever the conversation we're viewing changes partner identity.
+  // Partner PublicProfile drives the header (avatar, name, callable toggle);
+  // the interaction context decorates it and feeds the conversation starter.
+  // Both are fetched whenever the conversation we're viewing changes partner identity.
   watch(
     () => conversation.value?.partnerProfile?.id ?? null,
     async (partnerId) => {
@@ -136,11 +141,19 @@ export function useConversationDetailViewModel() {
         conversationPartner.value = null
         return
       }
+      interactionStore.fetchContext(partnerId)
       const res = await profileStore.getPublicProfile(partnerId)
       conversationPartner.value = res.success ? (res.data ?? null) : null
     },
     { immediate: true }
   )
+
+  // The pair's interaction context (match, smiles, dating eligibility), cached
+  // in the interaction store by fetchContext above.
+  const partnerContext = computed(() => {
+    const partnerId = conversation.value?.partnerProfile?.id
+    return partnerId ? interactionStore.contextByProfileId[partnerId] : undefined
+  })
 
   // First message in a draft persists the conversation server-side. The send
   // response goes through messageStore.handleSendResponse → bumpConversation,
@@ -191,6 +204,8 @@ export function useConversationDetailViewModel() {
     conversation,
     persistedConversation,
     partner: conversationPartner,
+    partnerContext,
+    viewer: computed(() => ownerProfileStore.profile),
     loadError,
     isDraft,
     isLoading: computed(() => messageStore.isLoading),

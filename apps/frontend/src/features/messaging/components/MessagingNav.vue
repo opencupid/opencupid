@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { type ProfileSummary } from '@zod/profile/profile.dto'
-import ProfileThumbnail from '@/features/images/components/ProfileThumbnail.vue'
+import ProfileMarker from '@/features/publicprofile/components/ProfileMarker.vue'
 
 import IconArrowSingleLeft from '@/assets/icons/arrows/arrow-single-left.svg'
 import IconMenuDotsVert from '@/assets/icons/interface/menu-dots-vert.svg'
 
 defineProps<{
   recipient: ProfileSummary
+  // Lights the avatar's dating-eligibility ring and heart.
+  highlighted?: boolean
   allowCalls?: boolean
   // Disables the allow-calls toggle when there's no persisted conversation
   // to write the setting against (e.g. draft conversations).
@@ -23,7 +25,7 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="d-flex align-items-center justify-content-between p-2">
+  <div class="d-flex align-items-center justify-content-between px-2 pb-2 pt-3">
     <div class="back-button">
       <a
         class="btn btn-secondary-outline fs-1"
@@ -39,9 +41,11 @@ defineEmits<{
       @click="$emit('profile:select', recipient)"
       class="d-flex flex-column align-items-center justify-content-center cursor-pointer user-select-none"
     >
-      <div class="thumbnail">
-        <ProfileThumbnail :profile="recipient" />
-      </div>
+      <ProfileMarker
+        class="mb-1"
+        :profile="recipient"
+        :highlighted="highlighted"
+      />
       <div class="">
         <div class="fs-6">{{ recipient.publicName }}</div>
       </div>

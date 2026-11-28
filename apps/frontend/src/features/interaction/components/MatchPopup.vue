@@ -2,7 +2,7 @@
 import { type InteractionEdgePair } from '@zod/interaction/interaction.dto'
 import { type PublicProfile } from '@zod/profile/profile.dto'
 
-import ProfileImage from '@/features/images/components/ProfileImage.vue'
+import MatchPair from './MatchPair.vue'
 import ContactFormPanel from '@/features/messaging/components/ContactFormPanel.vue'
 import { ref } from 'vue'
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
@@ -55,21 +55,11 @@ const handleSubmitted = () => {
         <!-- It's a match! -->
         {{ $t('interactions.its_a_match') }}
       </h6>
-      <div class="d-flex flex-row align-items-center justify-content-center mb-4">
-        <div class="image-wrapper">
-          <ProfileImage
-            :profile="match.from.profile"
-            variant="thumb"
-          />
-        </div>
-
-        <div class="image-wrapper right">
-          <ProfileImage
-            :profile="match.to.profile"
-            variant="thumb"
-          />
-        </div>
-      </div>
+      <MatchPair
+        class="mb-4"
+        :left="match.from.profile"
+        :right="match.to.profile"
+      />
       <div
         v-if="context?.canMessage"
         class="text-center"
@@ -96,20 +86,6 @@ const handleSubmitted = () => {
     </div>
   </BModal>
 </template>
-
-<style scoped lang="scss">
-.image-wrapper {
-  width: 5rem;
-  height: 5rem;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
-}
-.right {
-  margin-left: -1.5rem;
-  margin-right: 0;
-}
-</style>
 
 <!--
   Unscoped: BModal teleports content-class target to <body>, so a scoped

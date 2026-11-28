@@ -27,8 +27,19 @@ vi.mock('../ConversationLoadError.vue', () => ({
     template: '<div data-testid="load-error" />',
   },
 }))
-vi.mock('../MessageList.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('../MessagingNav.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('../MessageList.vue', () => ({
+  default: { name: 'MessageList', template: '<div />' },
+}))
+vi.mock('../ConversationStarter.vue', () => ({
+  default: {
+    name: 'ConversationStarter',
+    props: ['partner', 'viewer', 'context'],
+    template: '<div />',
+  },
+}))
+vi.mock('../MessagingNav.vue', () => ({
+  default: { name: 'MessagingNav', props: ['recipient', 'highlighted'], template: '<div />' },
+}))
 vi.mock('@/features/publicprofile/components/BlockProfileDialog.vue', () => ({
   default: { template: '<div />' },
 }))
@@ -36,9 +47,11 @@ vi.mock('@/features/publicprofile/components/BlockProfileDialog.vue', () => ({
 const vm = {
   loadError: ref<'not_found' | 'failed' | null>(null),
   partner: ref<{ id: string } | null>(null),
+  partnerContext: ref<{ canDate: boolean } | undefined>(undefined),
+  viewer: ref<{ id: string } | null>(null),
   conversation: ref<{ canReply: boolean } | null>(null),
   persistedConversation: computed(() => null),
-  isDraft: computed(() => false),
+  isDraft: ref(false),
   canCall: computed(() => false),
   myIsCallable: computed(() => true),
   profileStoreLoading: computed(() => false),
@@ -56,6 +69,9 @@ import ConversationDetail from '../ConversationDetail.vue'
 
 const SendMessageStub = { name: 'SendMessageForm' }
 const LoadErrorStub = { name: 'ConversationLoadError' }
+const StarterStub = { name: 'ConversationStarter' }
+const MessageListStub = { name: 'MessageList' }
+const NavStub = { name: 'MessagingNav' }
 
 function mountDetail() {
   return mount(ConversationDetail)
@@ -67,6 +83,9 @@ describe('ConversationDetail', () => {
     vm.loadError.value = null
     vm.partner.value = { id: 'p1' }
     vm.conversation.value = { canReply: true }
+    vm.partnerContext.value = undefined
+    vm.viewer.value = { id: 'me' }
+    vm.isDraft.value = false
   })
 
   it('shows the load error instead of the conversation, with its reason', () => {
@@ -96,5 +115,36 @@ describe('ConversationDetail', () => {
 
     expect(wrapper.findComponent(LoadErrorStub).exists()).toBe(false)
     expect(wrapper.findComponent(SendMessageStub).props('canReply')).toBe(false)
+  })
+
+  it('shows the conversation starter instead of the message list in a draft', () => {
+    vm.isDraft.value = true
+    vm.partnerContext.value = { canDate: true }
+    const wrapper = mountDetail()
+
+    const starter = wrapper.findComponent(StarterStub)
+    expect(starter.props()).toEqual({
+      partner: { id: 'p1' },
+      viewer: { id: 'me' },
+      context: { canDate: true },
+    })
+    expect(wrapper.findComponent(MessageListStub).exists()).toBe(false)
+  })
+
+  it('shows the message list in a persisted conversation', () => {
+    const wrapper = mountDetail()
+
+    expect(wrapper.findComponent(MessageListStub).exists()).toBe(true)
+    expect(wrapper.findComponent(StarterStub).exists()).toBe(false)
+  })
+
+  it("highlights the partner's avatar when the pair is dating-eligible", async () => {
+    const wrapper = mountDetail()
+    const nav = wrapper.findComponent(NavStub)
+    expect(nav.props('highlighted')).toBeUndefined()
+
+    vm.partnerContext.value = { canDate: true }
+    await wrapper.vm.$nextTick()
+    expect(nav.props('highlighted')).toBe(true)
   })
 })

@@ -51,6 +51,19 @@ vi.mock('@/features/publicprofile/stores/publicProfileStore', () => ({
   usePublicProfileStore: () => mockProfileStore,
 }))
 
+const mockInteractionStore = {
+  contextByProfileId: {} as Record<string, { canDate: boolean }>,
+  fetchContext: vi.fn(),
+}
+vi.mock('@/features/interaction/stores/useInteractionStore', () => ({
+  useInteractionStore: () => mockInteractionStore,
+}))
+
+const mockOwnerProfileStore = { profile: { id: 'me' } }
+vi.mock('@/features/myprofile/stores/ownerProfileStore', () => ({
+  useOwnerProfileStore: () => mockOwnerProfileStore,
+}))
+
 const mockCallStore = { initiateCall: vi.fn() }
 vi.mock('@/features/videocall/stores/callStore', () => ({
   useCallStore: () => mockCallStore,
@@ -134,6 +147,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockMessageStore.activeConversation = null
   mockMessageStore.conversations = []
+  mockInteractionStore.contextByProfileId = {}
   mockMessageStore.setActiveConversationById.mockResolvedValue({ success: true, data: {} })
   // Like the real router, a replace switches the route the view model watches.
   mockRouterReplace.mockImplementation(({ name, params }) => {
@@ -165,6 +179,19 @@ describe('useConversationDetailViewModel — detail mode', () => {
     expect(vm.isDraft.value).toBe(false)
     expect(vm.partner.value).toEqual(partner)
     expect(vm.loadError.value).toBeNull()
+  })
+
+  it("fetches the pair's interaction context and exposes it with the viewer", async () => {
+    mockRouteName.value = 'Conversation'
+    mockRouteParams.value = { conversationId: 'c1' }
+    mockMessageStore.activeConversation = makePersistedSummary('c1', 'p1')
+    mockInteractionStore.contextByProfileId = { p1: { canDate: true } }
+
+    const vm = mountVm()
+
+    await vi.waitFor(() => expect(mockInteractionStore.fetchContext).toHaveBeenCalledWith('p1'))
+    expect(vm.partnerContext.value).toEqual({ canDate: true })
+    expect(vm.viewer.value).toEqual({ id: 'me' })
   })
 
   it('reports not_found when the conversation does not exist', async () => {

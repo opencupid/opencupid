@@ -199,6 +199,7 @@
     "its_a_match": "It's a match!",
     "like_error": "Oops, this didn't work. Please try again.",
     "like_them_back": "Smile back",
+    "name_smiled_at_you": "{name} smiled at you!",
     "pass_button_title": "Pass",
     "revealed_like_explanation": "They will see who sent it.",
     "send_a_like": "Smile at them",
@@ -207,7 +208,8 @@
     "they_liked_you": "They smiled at you!",
     "you_liked_them": "You smiled at them",
     "you_messaged_them": "You messaged them",
-    "you_smiled_at": "You smiled at {name}"
+    "you_smiled_at": "You smiled at {name}",
+    "you_smiled_at_each_other": "You and {name} smiled at each other"
   },
   "map": {
     "layer_control": {
@@ -248,6 +250,7 @@
     "edit_no_longer_possible": "They replied in the meantime, so the message can no longer be edited. Your text is kept in the message box.",
     "edited": "edited",
     "editing_message": "Editing message",
+    "first_message_rule": "You are contacting {name} for the first time. For their privacy, you can only send one message first - after they reply, you can then send any number of messages.",
     "hide": "Hide",
     "hide_hint": "Hide this conversation",
     "loading_older_messages": "Loading older messages…",
@@ -260,6 +263,7 @@
     "no_messages_placeholder": "Your conversations will take place here.",
     "open_photo": "Open photo",
     "page_title": "Messages",
+    "partner_interests": "{name}'s interests",
     "save_edit_button": "Save",
     "send_message_button": "Send",
     "send_message_to_user": "Send a message to {name}",

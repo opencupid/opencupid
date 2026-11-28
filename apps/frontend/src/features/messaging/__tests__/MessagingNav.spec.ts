@@ -2,8 +2,12 @@ import { mount } from '@vue/test-utils'
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/features/shared/icons/DoodleIcons.vue', () => ({ default: { template: '<div />' } }))
-vi.mock('@/features/images/components/ProfileThumbnail.vue', () => ({
-  default: { template: '<div />' },
+vi.mock('@/features/publicprofile/components/ProfileMarker.vue', () => ({
+  default: {
+    name: 'ProfileMarker',
+    props: ['profile', 'highlighted'],
+    template: '<div class="marker" :data-hl="highlighted" />',
+  },
 }))
 vi.mock('@/assets/icons/arrows/arrow-single-left.svg', () => ({ default: { template: '<div />' } }))
 vi.mock('@/assets/icons/interface/menu-dots-vert.svg', () => ({ default: { template: '<div />' } }))
@@ -16,7 +20,6 @@ const stubs = {
   BDropdownItem: { template: '<div class="dropdown-item"><slot /></div>' },
   BDropdownDivider: { template: '<hr />' },
   BDropdownForm: { template: '<div class="dropdown-form"><slot /></div>' },
-  ProfileThumbnail: true,
 }
 
 describe('MessagingNav', () => {
@@ -68,5 +71,17 @@ describe('MessagingNav', () => {
     })
     const checkbox = wrapper.find('#allow-calls-check')
     expect((checkbox.element as HTMLInputElement).disabled).toBe(true)
+  })
+
+  it("passes the highlight on to the recipient's avatar", () => {
+    const recipient = { id: '1', publicName: 'B', profileImages: [], location: { country: '' } }
+    const mountNav = (highlighted?: boolean) =>
+      mount(MessagingNav, {
+        props: { recipient, highlighted },
+        global: { stubs, mocks: { $t: (key: string) => key } },
+      })
+
+    expect(mountNav(true).find('.marker').attributes('data-hl')).toBe('true')
+    expect(mountNav(false).find('.marker').attributes('data-hl')).toBe('false')
   })
 })
