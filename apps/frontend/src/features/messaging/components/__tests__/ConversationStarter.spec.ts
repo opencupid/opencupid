@@ -14,6 +14,7 @@ const partner = {
     { id: 't1', name: 'Népzene', slug: 'nepzene' },
     { id: 't2', name: 'Táncház', slug: 'tanchaz' },
   ],
+  languages: ['hu', 'en'],
 } as unknown as PublicProfile
 const viewer = { id: 'me', publicName: 'Me', profileImages: [] } as unknown as OwnerProfile
 
@@ -36,6 +37,11 @@ function mountStarter(contextOverrides?: Record<string, boolean>, profile = part
           template: '<div class="pair" />',
         },
         RevealedLikeCard: { props: ['profile'], template: '<div class="like" />' },
+        LanguageList: {
+          name: 'LanguageList',
+          props: ['languages'],
+          template: '<ul class="langs" />',
+        },
         TagList: {
           props: ['tags'],
           template: '<ul><li v-for="t in tags" :key="t.id">{{ t.name }}</li></ul>',
@@ -93,6 +99,23 @@ describe('ConversationStarter', () => {
     const wrapper = mountStarter(undefined, { ...partner, tags: [] } as PublicProfile)
 
     expect(wrapper.find('[data-testid="starter-tags"]').exists()).toBe(false)
+  })
+
+  it("lists the partner's languages under a label", () => {
+    const languages = mountStarter().find('[data-testid="starter-languages"]')
+
+    expect(languages.text()).toContain('messaging.partner_languages')
+    expect(languages.findComponent({ name: 'LanguageList' }).props('languages')).toEqual([
+      'hu',
+      'en',
+    ])
+  })
+
+  it('leaves out the languages when the partner has none', () => {
+    const wrapper = mountStarter(undefined, { ...partner, languages: [] } as PublicProfile)
+
+    expect(wrapper.find('[data-testid="starter-languages"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="starter-tags"]').exists()).toBe(true)
   })
 
   it('explains the one-first-message rule outside a match', () => {

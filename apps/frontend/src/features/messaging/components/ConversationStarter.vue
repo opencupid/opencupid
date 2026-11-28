@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Shown in place of the message list while a conversation has no messages:
 // what the two members already share — a match or a smile — and the
-// partner's interests, as something to start talking about. Outside a match
+// partner's interests and languages, as something to start talking about. Outside a match
 // the first message waits for a reply before more can be sent (a match opens
 // the conversation as accepted), so the starter explains that limit.
 import type { InteractionContext } from '@zod/interaction/interactionContext.dto'
@@ -10,6 +10,7 @@ import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 import MatchPair from '@/features/interaction/components/MatchPair.vue'
 import RevealedLikeCard from '@/features/interaction/components/RevealedLikeCard.vue'
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
+import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 
 defineProps<{
   partner: PublicProfile
@@ -53,17 +54,29 @@ defineProps<{
     </div>
 
     <div
-      v-if="partner.tags.length"
-      data-testid="starter-tags"
-      class="w-100 text-center"
+      v-if="partner.tags.length || partner.languages.length"
+      class="w-100 d-flex flex-column align-items-center gap-3 text-center"
     >
-      <h6 class="mb-3">
-        {{ $t('messaging.partner_interests', { name: partner.publicName }) }}
-      </h6>
-      <TagList
-        class="justify-content-center row-gap-2"
-        :tags="partner.tags"
-      />
+      <div
+        v-if="partner.tags.length"
+        data-testid="starter-tags"
+      >
+        <h6 class="mb-3">
+          {{ $t('messaging.partner_interests', { name: partner.publicName }) }}
+        </h6>
+        <TagList
+          class="justify-content-center row-gap-2"
+          :tags="partner.tags"
+        />
+      </div>
+      <div
+        v-if="partner.languages.length"
+        data-testid="starter-languages"
+        class="d-flex flex-wrap justify-content-center align-items-center row-gap-2"
+      >
+        <span class="small text-muted me-2">{{ $t('messaging.partner_languages') }}</span>
+        <LanguageList :languages="partner.languages" />
+      </div>
     </div>
 
     <p
