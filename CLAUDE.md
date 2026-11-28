@@ -289,16 +289,16 @@ gh run watch --exit-status
    # BACKEND_VERSION=1.0.1  FRONTEND_VERSION=1.0.2  etc.
    docker compose -f docker-compose.production.yml pull backend frontend admin
    docker compose -f docker-compose.production.yml up -d --no-deps frontend admin
-   docker compose -f docker-compose.production.yml up -d --no-deps backend
+   docker compose -f docker-compose.production.yml up -d --no-deps backend worker
    ```
 
-5. **Run migrations** (if schema changes were included):
+5. **Migrations** run automatically: the backend service's `pre_start` hook applies `prisma migrate deploy` in a one-shot container before the API starts, and the worker waits for the backend. If a migration fails, `up` exits non-zero and backend/worker stay in `Created` (not running). Inspect and recover with a one-off container, e.g.:
 
-```bash
-docker compose -f docker-compose.production.yml exec backend npx prisma migrate deploy
-```
+   ```bash
+   docker compose -f docker-compose.production.yml run --rm --no-deps backend ./node_modules/.bin/prisma migrate status
+   ```
 
-1. **Verify**:
+6. **Verify**:
 
    ```bash
    docker compose -f docker-compose.production.yml ps

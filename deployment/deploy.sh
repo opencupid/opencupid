@@ -84,10 +84,7 @@ $SSH "cd ~/opencupid && docker compose  pull --quiet"
 # ── Start services ────────────────────────────────────────────────────────
 $SSH "cd ~/opencupid && docker compose  up -d"
 
-# ── Run database migrations ───────────────────────────────────────────────────
-
-echo "Running database migrations..."
-$SSH "cd ~/opencupid && docker compose exec backend npx prisma migrate deploy"
+# Database migrations run in the backend service's pre_start hook during `up`.
 
 echo "Running database seeds..."
 $SSH "cd ~/opencupid && docker compose exec backend npx prisma db seed"

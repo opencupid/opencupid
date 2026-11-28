@@ -59,6 +59,14 @@ services:
       - .env
     volumes:
       - '${MEDIA_UPLOAD_DIR}:${MEDIA_UPLOAD_DIR}'
+    # Apply pending migrations in a one-shot container from this image before
+    # the API starts. Runs whenever the container is recreated (new image tag,
+    # config change), not on restart-policy restarts. If it fails, backend and
+    # worker stay in "Created" and `docker compose up` exits non-zero.
+    # TODO(prisma-8): `prisma migrate deploy` is replaced by
+    # `prisma db migrate --no-advance-ref` in Prisma ORM 8.
+    pre_start:
+      - command: ["./node_modules/.bin/prisma", "migrate", "deploy"]
     labels:
       traefik.enable: "true"
       traefik.docker.allownonrunning: "true"
@@ -93,6 +101,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      # Start only after backend's pre_start migrations have succeeded.
+      backend:
+        condition: service_started
     env_file:
       - .env
     volumes:
