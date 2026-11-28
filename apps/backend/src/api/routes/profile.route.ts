@@ -263,7 +263,8 @@ const profileRoutes: FastifyPluginAsync = async (fastify) => {
    * Only accessible for the viewer's own profile.
    * @param {string} locale - Locale code for tag/field translations
    * @param {string} id - Profile ID (must match the authenticated user's profile)
-   * @query {'dating' | 'social'} scope - As a mutual dating match, or anyone else, sees it
+   * @query {'dating' | 'social'} scope - As an eligible viewer (both dating, mutually
+   *   compatible), or anyone else, sees it
    * @returns {GetPublicProfileResponse}
    */
   fastify.get('/preview/:locale/:id', { onRequest: [fastify.authenticate] }, async (req, reply) => {

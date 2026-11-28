@@ -25,7 +25,8 @@ export const useProfileImageStore = defineStore('profileImage', {
   }),
 
   getters: {
-    // Restricted profile photos are shown only to mutual dating matches.
+    // Restricted profile photos are shown only to eligible viewers: both dating,
+    // with mutually compatible preferences.
     restriction(state): GalleryRestriction {
       return {
         labelKey: 'profiles.image_upload.restrict_label',

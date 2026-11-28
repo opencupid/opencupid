@@ -116,7 +116,8 @@ const imageRoutes: FastifyPluginAsync = async (fastify) => {
   /**
    * POST /me/attach
    * Attach an existing image (already owned by the caller) to the profile gallery.
-   * `isRestricted` limits it to viewers who are mutual dating matches.
+   * `isRestricted` limits it to eligible viewers: both dating, with mutually
+   * compatible preferences.
    */
   fastify.post('/me/attach', { onRequest: [fastify.authenticate] }, async (req, reply) => {
     const { imageId, isRestricted } = AttachProfileImagePayloadSchema.parse(req.body)
