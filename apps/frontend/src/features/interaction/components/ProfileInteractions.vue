@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { type PublicProfile } from '@zod/profile/profile.dto'
 
 import InteractionButtons from './InteractionButtons.vue'
-import SendMessageDialog from '@/features/publicprofile/components/SendMessageDialog.vue'
 import MatchPopup from './MatchPopup.vue'
 
 import { useInteractionsViewModel } from '../composables/useInteractionsViewModel'
@@ -20,13 +20,12 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'intent:message', conversationId: string): void
   (e: 'liked'): void
   (e: 'passed'): void
   (e: 'updated'): void
 }>()
 
-const showMessageModal = ref(false)
+const router = useRouter()
 const showMatchModal = ref(false)
 const match = ref<InteractionEdgePair>()
 
@@ -62,15 +61,15 @@ const handleAnonymousUpdate = async (isAnonymous: boolean) => {
   }
 }
 
+// Opens the conversation in the drawer: the existing one, or the draft, which
+// shows the conversation starter until the first message is sent.
 const handleMessageIntent = () => {
   const ctx = context.value
   if (!ctx) return
   if (ctx.haveConversation && ctx.conversationId) {
-    emit('intent:message', ctx.conversationId)
-    return
-  }
-  if (ctx.canMessage) {
-    showMessageModal.value = true
+    router.push({ name: 'Conversation', params: { conversationId: ctx.conversationId } })
+  } else if (ctx.canMessage) {
+    router.push({ name: 'ConversationNew', params: { profileId: props.profile.id } })
   }
 }
 
@@ -98,11 +97,6 @@ onMounted(async () => {
       @like="handleLike"
       @update:anonymous="handleAnonymousUpdate"
       :context="context"
-    />
-    <SendMessageDialog
-      v-model="showMessageModal"
-      :profile="props.profile"
-      @sent="emit('updated')"
     />
     <MatchPopup
       v-if="match"

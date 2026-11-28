@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { ProfileSchema, UserSchema } from '../generated'
 
-import { PublicTagSchema, type PublicTag } from '../tag/tag.dto'
+import { PublicTagSchema } from '../tag/tag.dto'
 import { PublicImageSchema } from '@zod/image/image.dto'
 import { LocationSchema } from '@zod/dto/location.dto'
 import { EmailPreferencesSchema, UpdateEmailPreferencesSchema } from '@zod/user/emailPreference.dto'
@@ -145,11 +145,8 @@ export const ProfileSummarySchema = z.object({
 
 export type ProfileSummary = z.infer<typeof ProfileSummarySchema>
 
-// Lightweight recipient type for messaging — only needs id, optionally tags/languages for display
-export type MessageRecipient = Pick<ProfileSummary, 'id'> & {
-  tags?: PublicTag[]
-  languages?: string[]
-}
+// Lightweight recipient type for messaging — only needs id
+export type MessageRecipient = Pick<ProfileSummary, 'id'>
 
 export const ProfileScopeSchema = z.enum(['social', 'dating'])
 

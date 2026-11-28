@@ -46,10 +46,6 @@ const handleBack = () => {
   else router.replace({ name: 'Browse' })
 }
 
-const handleMessage = (conversationId: string) => {
-  router.push({ name: 'Conversation', params: { conversationId } })
-}
-
 const handleRefresh = async () => {
   await publicProfileStore.getPublicProfile(props.profileId)
 }
@@ -76,12 +72,14 @@ const handleBlock = async () => {
       />
     </template>
 
-    <div v-if="isLoaded" class="h-100">
+    <div
+      v-if="isLoaded"
+      class="h-100"
+    >
       <PublicProfileComponent
         v-if="publicProfileStore.profile"
         :profile="publicProfileStore.profile"
         @intent:back="handleBack"
-        @intent:message="handleMessage"
         @intent:block="showBlockModal = true"
         @updated="handleRefresh"
       />

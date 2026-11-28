@@ -8,9 +8,6 @@ vi.mock('vue-i18n', () => ({
 vi.mock('@/features/auth/stores/authStore', () => ({
   useAuthStore: () => ({ profileId: 'profile-1' }),
 }))
-vi.mock('@/features/publicprofile/components/SendMessageDialog.vue', () => ({
-  default: { template: '<div />' },
-}))
 vi.mock('@/features/messaging/components/SendMessageForm.vue', () => ({
   default: { template: '<div />' },
 }))
