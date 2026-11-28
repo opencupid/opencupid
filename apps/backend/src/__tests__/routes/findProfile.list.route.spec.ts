@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-const mockGetOrBuildList = vi.fn()
+const mockGetList = vi.fn()
+vi.mock('@/services/browseList.service', () => ({
+  BrowseListService: { getInstance: () => ({ getList: mockGetList }) },
+}))
+
 vi.mock('@/services/cluster.service', () => ({
-  ClusterService: { getInstance: () => ({ getOrBuildList: mockGetOrBuildList }) },
+  ClusterService: { getInstance: () => ({}) },
 }))
 
 const mockGetProfilesPublicByIds = vi.fn()
@@ -106,7 +110,7 @@ describe('GET /list', () => {
     await call(query, { ...session, profile: { isSocialActive: false } })
 
     expect(reply.statusCode).toBe(403)
-    expect(mockGetOrBuildList).not.toHaveBeenCalled()
+    expect(mockGetList).not.toHaveBeenCalled()
   })
 
   it('returns 400 when bounds or kinds are missing', async () => {
@@ -121,12 +125,12 @@ describe('GET /list', () => {
     expect(reply.statusCode).toBe(400)
   })
 
-  it('passes bbox, filters and default paging to the cluster service', async () => {
-    mockGetOrBuildList.mockResolvedValue({ refs: [], total: 0 })
+  it('passes bbox, filters and default paging to the browse list service', async () => {
+    mockGetList.mockResolvedValue({ refs: [], total: 0 })
 
     await call({ ...query, tagIds: 'cabcdef01' })
 
-    expect(mockGetOrBuildList).toHaveBeenCalledWith(
+    expect(mockGetList).toHaveBeenCalledWith(
       'viewer-1',
       [18.5, 47.0, 19.5, 48.0],
       ['cabcdef01'],
@@ -136,8 +140,8 @@ describe('GET /list', () => {
     expect(reply.payload).toEqual({ success: true, total: 0, hasMore: false, items: [] })
   })
 
-  it('hydrates each kind and keeps the nearest-first order of the refs', async () => {
-    mockGetOrBuildList.mockResolvedValue({
+  it('hydrates each kind and keeps the ranked order of the refs', async () => {
+    mockGetList.mockResolvedValue({
       refs: [
         { kind: 'event', id: 'e1', distanceKm: 0.5, highlighted: false },
         { kind: 'profile', id: 'p1', distanceKm: 1, highlighted: true },
@@ -174,7 +178,7 @@ describe('GET /list', () => {
   })
 
   it("grants restricted photos to potential matches and the viewer's own card only", async () => {
-    mockGetOrBuildList.mockResolvedValue({
+    mockGetList.mockResolvedValue({
       refs: [
         { kind: 'profile', id: 'match', distanceKm: 1, highlighted: true },
         { kind: 'profile', id: 'other', distanceKm: 2, highlighted: false },
@@ -199,7 +203,7 @@ describe('GET /list', () => {
   })
 
   it("uses the owner shape for the viewer's own content", async () => {
-    mockGetOrBuildList.mockResolvedValue({
+    mockGetList.mockResolvedValue({
       refs: [
         { kind: 'post', id: 'po1', distanceKm: 1 },
         { kind: 'event', id: 'e1', distanceKm: 2 },
@@ -221,7 +225,7 @@ describe('GET /list', () => {
   })
 
   it('drops refs that no longer hydrate', async () => {
-    mockGetOrBuildList.mockResolvedValue({
+    mockGetList.mockResolvedValue({
       refs: [
         { kind: 'profile', id: 'p1', distanceKm: 1 },
         { kind: 'profile', id: 'gone', distanceKm: 2 },
@@ -237,7 +241,7 @@ describe('GET /list', () => {
   })
 
   it('reports hasMore from offset, page size and total', async () => {
-    mockGetOrBuildList.mockResolvedValue({
+    mockGetList.mockResolvedValue({
       refs: [{ kind: 'profile', id: 'p3', distanceKm: 3 }],
       total: 5,
     })
@@ -245,12 +249,12 @@ describe('GET /list', () => {
 
     await call({ ...query, limit: '1', offset: '2' })
 
-    expect(mockGetOrBuildList.mock.calls[0]![4]).toEqual({ limit: 1, offset: 2 })
+    expect(mockGetList.mock.calls[0]![4]).toEqual({ limit: 1, offset: 2 })
     expect(reply.payload.hasMore).toBe(true)
   })
 
   it('returns hasMore false on the last page', async () => {
-    mockGetOrBuildList.mockResolvedValue({
+    mockGetList.mockResolvedValue({
       refs: [{ kind: 'profile', id: 'p5', distanceKm: 5 }],
       total: 5,
     })
@@ -261,7 +265,7 @@ describe('GET /list', () => {
   })
 
   it('returns 500 when the lookup fails', async () => {
-    mockGetOrBuildList.mockRejectedValue(new Error('boom'))
+    mockGetList.mockRejectedValue(new Error('boom'))
 
     await call()
 

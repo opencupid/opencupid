@@ -6,7 +6,8 @@ import { KindsSchema } from '@shared/zod/map/cluster.dto'
 
 import { sendError, sendForbiddenError } from '../helpers'
 
-import { ClusterService, type ListRef } from '@/services/cluster.service'
+import { ClusterService } from '@/services/cluster.service'
+import { BrowseListService, type ListRef } from '@/services/browseList.service'
 import { ProfileService } from '@/services/profile.service'
 import { PostService } from '@/services/post.service'
 import { EventService } from '@/services/event.service'
@@ -54,6 +55,7 @@ const LeavesQuerySchema = z.object({
 
 const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
   const clusterService = ClusterService.getInstance()
+  const browseListService = BrowseListService.getInstance()
   const profileService = ProfileService.getInstance()
   const postService = PostService.getInstance()
   const eventService = EventService.getInstance()
@@ -103,9 +105,10 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
   /**
    * GET /list
-   * Returns one page of the items inside the viewport, nearest first (from the
-   * bbox centre), hydrated for the browse grid. Uses the same cached index as
-   * /clusters, so the list and the map show the same items.
+   * Returns one page of the items inside the viewport, hydrated for the browse
+   * grid and ranked by activity, distance from the viewer's home, dating
+   * compatibility and a per-index shuffle (see BrowseListService). Uses the
+   * same cached index as /clusters, so the list and the map show the same items.
    * @query {number} south - Bounding box south latitude
    * @query {number} north - Bounding box north latitude
    * @query {number} west - Bounding box west longitude
@@ -131,7 +134,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
     const ctx = mapperContext(req)
 
     try {
-      const { refs, total } = await clusterService.getOrBuildList(
+      const { refs, total } = await browseListService.getList(
         viewerId,
         [west, south, east, north],
         tagIds,
@@ -184,7 +187,7 @@ const findProfileRoutes: FastifyPluginAsync = async (fastify) => {
         byId.set(row.id, ({ distanceKm }) => ({ kind: 'community', distanceKm, community }))
       }
 
-      // Keep the nearest-first order; drop refs that no longer hydrate
+      // Keep the ranked order; drop refs that no longer hydrate
       // (deleted or hidden since the index was built).
       const items = refs.flatMap((r) => {
         const build = byId.get(r.id)

@@ -25,7 +25,7 @@ function querySignature(q: BrowseGridQuery): string {
 }
 
 /**
- * Paged, nearest-first list behind the browse grid (GET /find/list). The grid
+ * Paged, ranked list behind the browse grid (GET /find/list). The grid
  * mirrors the map, so `load()` is called with the map's current bounds and
  * filters; `loadMore()` appends the next page.
  */
