@@ -1,5 +1,12 @@
 # @opencupid/ingress
 
+## 0.100.0
+
+### Patch Changes
+
+- a70c152: Reject encoded path characters (`%2F`, `%5C`, `%00`, `%3B`, `%25`, `%3F`, `%23`) at the entry points
+- abd58a2: Update Traefik base image from v3.7 to v3.8
+
 ## 0.99.0
 
 ## 0.98.0

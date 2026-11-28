@@ -1,5 +1,20 @@
 # backend
 
+## 0.100.0
+
+### Minor Changes
+
+- 632c8a8: Restricted profile photos now follow the pair's eligibility in likes and messaging: both people get the first photo when they are eligible for each other, and the first unrestricted one otherwise. This covers like responses and events, the interactions lists, conversations, messages, message drafts and missed calls.
+- 0f83329: Profile photos can be restricted to eligible viewers (both dating, mutually compatible): a checkbox in the upload dialog keeps a photo out of every response except the profile detail view, the browse map and the browse list of such a viewer. The first photo a viewer gets is the primary, for the owner and eligible viewers too, even when it is restricted. Restricted photos are marked in the owner's gallery, and the "view as" dating toggle previews each audience's gallery.
+
+### Patch Changes
+
+- 405666a: Reject conversations and messages addressed to yourself (SELF_CONVERSATION) and show "This conversation does not exist." instead of a blank drawer when a conversation can't be opened
+- b6e4714: Keep the session cookie as long as the refresh token, so users idle for more than 30 days can be refreshed instead of logging in again (#1723)
+- 405666a: Open a blank conversation for any reachable profile on /inbox/new/:profileId instead of an empty drawer when the pair is not matched
+- 405666a: Messaging hardening: only active profiles can open a draft conversation, the self-conversation rule is enforced where conversations are created, stale conversation loads no longer replace the open one, load failures are told apart from missing conversations, and the awaiting-reply hint stays visible over a saved draft
+- 1730902: Remove a stray quote from the Hungarian new-like email text
+
 ## 0.99.0
 
 ### Minor Changes

@@ -1,5 +1,26 @@
 # frontend
 
+## 0.100.0
+
+### Minor Changes
+
+- 6c0295f: Show a "New messages" button instead of jumping to the bottom when a message arrives while reading the conversation history
+- 29602cc: The "Send a message" button on a profile opens the conversation in the drawer (the draft with its conversation starter, or the existing conversation) instead of the message modal.
+- 405666a: Conversations awaiting the partner's reply to the first message open from the conversation list, with the message input locked and a hint explaining the wait
+- 0f83329: Profile photos can be restricted to eligible viewers (both dating, mutually compatible): a checkbox in the upload dialog keeps a photo out of every response except the profile detail view, the browse map and the browse list of such a viewer. The first photo a viewer gets is the primary, for the owner and eligible viewers too, even when it is restricted. Restricted photos are marked in the owner's gallery, and the "view as" dating toggle previews each audience's gallery.
+- 96dbad4: Show a conversation starter in an empty message draft: the match or smile between the pair, the partner's interests and languages, and the one-first-message rule. The conversation header avatar shows the dating-eligibility ring.
+
+### Patch Changes
+
+- 405666a: Reject conversations and messages addressed to yourself (SELF_CONVERSATION) and show "This conversation does not exist." instead of a blank drawer when a conversation can't be opened
+- d5732ce: Add missing translation for the interests placeholder on My profile (#1741)
+- 5deaf72: Count each page once in Umami: pageviews now come from the router, so a back navigation is counted and the next page is no longer counted twice; events are recorded against the page the user is actually on
+- bb1ddd5: Load a conversation once when a draft turns into a saved conversation, instead of fetching its first page twice
+- 405666a: Messaging hardening: only active profiles can open a draft conversation, the self-conversation rule is enforced where conversations are created, stale conversation loads no longer replace the open one, load failures are told apart from missing conversations, and the awaiting-reply hint stays visible over a saved draft
+- a56aea1: Keep the reading position in a conversation when older messages load, instead of jumping down the list
+- df792e3: The message box shows no "Type your message here..." placeholder while it is locked waiting for the partner's reply.
+  On larger screens the message box takes focus as a conversation opens; phones keep the keyboard closed.
+
 ## 0.99.0
 
 ### Minor Changes
