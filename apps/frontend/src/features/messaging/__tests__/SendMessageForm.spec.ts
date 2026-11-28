@@ -255,6 +255,7 @@ describe('SendMessageForm', () => {
 
     const textarea = wrapper.find('b-form-textarea-stub')
     expect(textarea.attributes('disabled')).toBe('true')
+    expect(textarea.attributes('placeholder')).toBe('')
     expect(wrapper.find('[data-testid="awaiting-reply-hint"]').text()).toBe(
       'messaging.already_sent_waiting'
     )
@@ -265,7 +266,9 @@ describe('SendMessageForm', () => {
 
   it('leaves the composer open by default', () => {
     const wrapper = mountForm()
-    expect(wrapper.find('b-form-textarea-stub').attributes('disabled')).toBe('false')
+    const textarea = wrapper.find('b-form-textarea-stub')
+    expect(textarea.attributes('disabled')).toBe('false')
+    expect(textarea.attributes('placeholder')).toBe('messaging.message_input_placeholder')
     expect(wrapper.find('[data-testid="awaiting-reply-hint"]').exists()).toBe(false)
   })
 

@@ -341,7 +341,7 @@ function handleVoiceRecordingError(error: string) {
           :class="{ 'opacity-25': isVoiceActive }"
           @keydown="handleKeyPress"
           @paste="handlePaste"
-          :placeholder="$t('messaging.message_input_placeholder')"
+          :placeholder="isLocked ? '' : $t('messaging.message_input_placeholder')"
           :disabled="messageStore.isSending || isVoiceActive || isLocked"
         />
         <div
