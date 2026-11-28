@@ -1,5 +1,11 @@
 # backend
 
+## 0.101.0
+
+### Minor Changes
+
+- 8763489: Browse grid ranks profiles by activity, distance from home and dating compatibility instead of a fixed nearest-first order. The order is shuffled once per visit and stays stable while scrolling. The viewer's own card is no longer listed.
+
 ## 0.100.0
 
 ### Minor Changes
