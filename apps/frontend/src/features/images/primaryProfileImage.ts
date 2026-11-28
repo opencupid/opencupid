@@ -1,8 +1,9 @@
 /**
- * A profile's primary photo: the first one that is not restricted, or none when
- * every photo is. The owner's gallery and the galleries served to eligible
- * viewers flag restricted photos; this gives the photo everyone sees as the
- * primary in each case, so a restricted photo is never an avatar.
+ * A profile's primary photo. Only the owner's own gallery flags restricted
+ * photos, and the owner's avatar skips them (none when every photo is
+ * restricted). Galleries served to other viewers carry no flag; the backend has
+ * already dropped what that viewer may not see, so their first photo is the
+ * primary, restricted or not.
  */
 export function primaryProfileImage<T extends { isRestricted?: boolean }>(
   images: readonly T[] | undefined

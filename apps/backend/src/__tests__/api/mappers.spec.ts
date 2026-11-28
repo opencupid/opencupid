@@ -74,14 +74,9 @@ describe('mappers', () => {
       ).toEqual(['a', 'b'])
     })
 
-    it('moves the first unrestricted image to the front for an eligible viewer', () => {
-      const gallery = [e('r1', true), e('r2', true), e('a', false), e('b', false)]
-      expect(ids(visibleProfileImages(gallery, true))).toEqual(['a', 'r1', 'r2', 'b'])
-    })
-
-    it('keeps the stored order when the primary is already first', () => {
-      const gallery = [e('a', false), e('r1', true), e('b', false)]
-      expect(ids(visibleProfileImages(gallery, true))).toEqual(['a', 'r1', 'b'])
+    it("keeps the owner's order for an eligible viewer, restricted first photo included", () => {
+      const gallery = [e('r1', true), e('a', false), e('r2', true), e('b', false)]
+      expect(ids(visibleProfileImages(gallery, true))).toEqual(['r1', 'a', 'r2', 'b'])
     })
 
     it('returns nothing to an ineligible viewer when every image is restricted', () => {
@@ -246,25 +241,21 @@ describe('mappers', () => {
         expect(result.profileImages.map((i) => i.blurhash)).toEqual(['public'])
       })
 
-      it('includes them, primary first, with the dating context', () => {
+      it("includes them in the owner's order with the dating context", () => {
         const result = mapProfileToPublic({ ...baseProfile, profileImages: gallery }, true, 'en')
-        expect(result.profileImages.map((i) => i.blurhash)).toEqual(['public', 'restricted'])
+        expect(result.profileImages.map((i) => i.blurhash)).toEqual(['restricted', 'public'])
         expect(result.profileImages.map((i) => i.position)).toEqual([0, 1])
       })
 
-      it('flags the restricted images an eligible viewer gets', () => {
-        const result = mapProfileToPublic({ ...baseProfile, profileImages: gallery }, true, 'en')
-        expect(result.profileImages.map((i) => i.isRestricted)).toEqual([false, true])
-      })
-
-      it('keeps the flag on a gallery with no unrestricted image', () => {
-        const allRestricted = gallery.filter((g) => g.isRestricted)
-        const result = mapProfileToPublic(
-          { ...baseProfile, profileImages: allRestricted },
-          true,
-          'en'
-        )
-        expect(result.profileImages.map((i) => i.isRestricted)).toEqual([true])
+      it('does not tell any viewer which images are restricted', () => {
+        for (const dating of [true, false]) {
+          const result = mapProfileToPublic(
+            { ...baseProfile, profileImages: gallery },
+            dating,
+            'en'
+          )
+          for (const img of result.profileImages) expect(img).not.toHaveProperty('isRestricted')
+        }
       })
     })
 

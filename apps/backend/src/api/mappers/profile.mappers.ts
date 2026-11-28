@@ -9,10 +9,10 @@ import { type DbProfileSummary, type DbProfileWithImages } from '@zod/profile/pr
 import { LocationSchema } from '@zod/dto/location.dto'
 import { DbLocationToLocationDTO } from './location.mappers'
 
-import { type OwnerProfileImage, type PublicProfileImage } from '@zod/image/image.dto'
+import { type OwnerProfileImage, type PublicImage } from '@zod/image/image.dto'
 import { mapTagsTranslated } from './tag.mappers'
 import { Image } from '@zod/generated'
-import { toOwnerProfileImage, toPublicImage, toPublicProfileImage } from './image.mappers'
+import { toOwnerProfileImage, toPublicImage } from './image.mappers'
 
 /** A profile gallery entry: the ImageAttachment row with its image. */
 type ProfileGalleryEntry = { image: Image; isRestricted: boolean }
@@ -91,27 +91,23 @@ export function mapProfileImagesToOwner(entries: ProfileGalleryEntry[]): OwnerPr
 }
 
 /**
- * The gallery as another viewer sees it. Restricted images are dropped unless
- * `canSeeRestricted`. The primary image is the first unrestricted one; it is moved
- * to the front so that `[0]` is the primary for every consumer, and the rest keep
- * the owner's order. Positions are the indexes after that.
+ * The gallery as another viewer sees it, in the owner's order. Restricted images
+ * are dropped unless `canSeeRestricted`; `[0]` is the primary either way.
+ * Positions are the indexes after filtering.
  */
 export function visibleProfileImages<T extends { isRestricted: boolean }>(
   entries: T[],
   canSeeRestricted: boolean
 ): T[] {
-  const visible = canSeeRestricted ? entries : entries.filter((e) => !e.isRestricted)
-  const primary = visible.findIndex((e) => !e.isRestricted)
-  if (primary <= 0) return visible
-  return [visible[primary], ...visible.slice(0, primary), ...visible.slice(primary + 1)]
+  return canSeeRestricted ? entries : entries.filter((e) => !e.isRestricted)
 }
 
 export function mapProfileImagesToPublic(
   entries: ProfileGalleryEntry[],
   canSeeRestricted: boolean
-): PublicProfileImage[] {
+): PublicImage[] {
   return visibleProfileImages(entries, canSeeRestricted).map((entry, position) =>
-    toPublicProfileImage(entry, position)
+    toPublicImage(entry.image, position)
   )
 }
 

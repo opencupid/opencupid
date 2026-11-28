@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { primaryProfileImage } from '../primaryProfileImage'
 
 describe('primaryProfileImage', () => {
-  it('is the first image of a gallery served to other viewers', () => {
+  it('is the first image of a gallery served to other viewers, which carries no flag', () => {
     const gallery: { id: string; isRestricted?: boolean }[] = [{ id: 'a' }, { id: 'b' }]
     expect(primaryProfileImage(gallery)).toEqual({ id: 'a' })
   })

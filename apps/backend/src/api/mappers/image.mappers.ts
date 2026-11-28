@@ -3,7 +3,6 @@ import { ImageService } from '@/services/image.service'
 import {
   PublicImage,
   PublicImageSchema,
-  PublicProfileImage,
   OwnerImage,
   OwnerImageSchema,
   OwnerProfileImage,
@@ -57,15 +56,4 @@ export function toOwnerProfileImage(
     ...toOwnerImage(entry.image, position),
     isRestricted: entry.isRestricted,
   })
-}
-
-/**
- * A profile gallery entry for another viewer. The caller has already dropped the
- * restricted entries this viewer may not see.
- */
-export function toPublicProfileImage(
-  entry: { image: Image; isRestricted: boolean },
-  position: number
-): PublicProfileImage {
-  return { ...toPublicImage(entry.image, position), isRestricted: entry.isRestricted }
 }
