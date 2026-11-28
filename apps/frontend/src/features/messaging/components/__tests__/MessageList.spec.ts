@@ -9,6 +9,10 @@ vi.mock('@/features/shared/components/LocalizedTimeAgo.vue', () => ({
   },
 }))
 
+vi.mock('@/assets/icons/interface/arrow-down.svg', () => ({
+  default: { name: 'IconArrowDown', template: '<svg />' },
+}))
+
 vi.mock('@/features/images/components/BlurhashImage.vue', () => ({
   default: {
     name: 'BlurhashImage',
@@ -117,73 +121,109 @@ describe('MessageList', () => {
     // whose scrollTop is 0 at the bottom and negative above it.
     const setGeometry = (
       el: HTMLElement,
-      { scrollHeight, clientHeight, scrollTop }: Record<string, number>
+      { scrollHeight = 2000, clientHeight = 600, scrollTop }: Record<string, number>
     ) => {
       Object.defineProperty(el, 'scrollHeight', { configurable: true, value: scrollHeight })
       Object.defineProperty(el, 'clientHeight', { configurable: true, value: clientHeight })
       el.scrollTop = scrollTop!
     }
 
-    const mountList = (props: Partial<InstanceType<typeof MessageList>['$props']> = {}) =>
-      mount(MessageList, {
-        props: {
-          messages: [makeMessage({ id: 'a' }), makeMessage({ id: 'b' })],
-          hasMore: true,
-          isLoadingMore: false,
-          ...props,
-        },
+    const initialMessages = [makeMessage({ id: 'a' }), makeMessage({ id: 'b' })]
+
+    const mountList = (props: Partial<InstanceType<typeof MessageList>['$props']> = {}) => {
+      const wrapper = mount(MessageList, {
+        props: { messages: initialMessages, hasMore: true, isLoadingMore: false, ...props },
         global: { mocks: { $t: (k: string) => k } },
       })
+      const scroller = wrapper.find('.flex-column-reverse')
+      const el = scroller.element as HTMLElement
+      // jsdom has no Element.scrollTo: apply it to scrollTop and record the call.
+      const scrollTo = vi.fn(({ top }: ScrollToOptions) => {
+        el.scrollTop = top!
+      })
+      el.scrollTo = scrollTo as unknown as HTMLElement['scrollTo']
+      // The user scrolls to a position: the scroll handler sees it.
+      const scrollUserTo = (scrollTop: number) => {
+        setGeometry(el, { scrollTop })
+        return scroller.trigger('scroll')
+      }
+      const receive = (message: MessageDTO) =>
+        wrapper.setProps({ messages: [...wrapper.props('messages'), message] })
+      const newMessagesButton = () => wrapper.find('.new-messages-button')
+      return { wrapper, el, scrollTo, scrollUserTo, receive, newMessagesButton }
+    }
 
     it('requests older messages when scrolled near the top', async () => {
-      const wrapper = mountList()
-      setGeometry(wrapper.element as HTMLElement, {
-        scrollHeight: 2000,
-        clientHeight: 600,
-        scrollTop: -1350,
-      })
-      await wrapper.trigger('scroll')
+      const { wrapper, scrollUserTo } = mountList()
+      await scrollUserTo(-1350)
       expect(wrapper.emitted('load-older')).toHaveLength(1)
     })
 
     it('does not request older messages away from the top', async () => {
-      const wrapper = mountList()
-      setGeometry(wrapper.element as HTMLElement, {
-        scrollHeight: 2000,
-        clientHeight: 600,
-        scrollTop: -1000,
-      })
-      await wrapper.trigger('scroll')
+      const { wrapper, scrollUserTo } = mountList()
+      await scrollUserTo(-1000)
       expect(wrapper.emitted('load-older')).toBeUndefined()
     })
 
     it('does not request older messages while a page is loading or none are left', async () => {
       for (const props of [{ isLoadingMore: true }, { hasMore: false }]) {
-        const wrapper = mountList(props)
-        setGeometry(wrapper.element as HTMLElement, {
-          scrollHeight: 2000,
-          clientHeight: 600,
-          scrollTop: -1400,
-        })
-        await wrapper.trigger('scroll')
+        const { wrapper, scrollUserTo } = mountList(props)
+        await scrollUserTo(-1400)
         expect(wrapper.emitted('load-older')).toBeUndefined()
       }
     })
 
-    it('scrolls to the bottom when a new latest message arrives', async () => {
-      const wrapper = mountList()
-      const el = wrapper.element as HTMLElement
-      el.scrollTop = -500
-      await wrapper.setProps({
-        messages: [makeMessage({ id: 'a' }), makeMessage({ id: 'b' }), makeMessage({ id: 'c' })],
-      })
+    it('follows a new message when the reader is at the bottom', async () => {
+      const { el, scrollUserTo, receive, newMessagesButton } = mountList()
+      await scrollUserTo(0)
+      await receive(makeMessage({ id: 'c' }))
       expect(el.scrollTop).toBe(0)
+      expect(newMessagesButton().exists()).toBe(false)
     })
 
-    it('keeps the position when older messages are prepended or a message is edited', async () => {
-      const wrapper = mountList()
-      const el = wrapper.element as HTMLElement
-      el.scrollTop = -500
+    it('keeps the place of a reader scrolled up and offers a new messages button', async () => {
+      const { el, scrollTo, scrollUserTo, receive, newMessagesButton } = mountList()
+      await scrollUserTo(-500)
+      await receive(makeMessage({ id: 'c' }))
+
+      expect(scrollTo).not.toHaveBeenCalled()
+      expect(el.scrollTop).toBe(-500)
+      expect(newMessagesButton().text()).toContain('messaging.new_messages')
+    })
+
+    it('scrolls to the bottom and hides the button when it is clicked', async () => {
+      const { scrollTo, scrollUserTo, receive, newMessagesButton } = mountList()
+      await scrollUserTo(-500)
+      await receive(makeMessage({ id: 'c' }))
+      await newMessagesButton().trigger('click')
+
+      expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' })
+      // Hidden on the click itself, not once the smooth scroll reaches the
+      // bottom: the reader may interrupt it halfway.
+      expect(newMessagesButton().exists()).toBe(false)
+    })
+
+    it('hides the button when the reader scrolls down to the bottom', async () => {
+      const { scrollUserTo, receive, newMessagesButton } = mountList()
+      await scrollUserTo(-500)
+      await receive(makeMessage({ id: 'c' }))
+      expect(newMessagesButton().exists()).toBe(true)
+
+      await scrollUserTo(-20)
+      expect(newMessagesButton().exists()).toBe(false)
+    })
+
+    it('takes the reader to the bottom when they send a message', async () => {
+      const { el, scrollUserTo, receive, newMessagesButton } = mountList()
+      await scrollUserTo(-500)
+      await receive(makeMessage({ id: 'c', isMine: true }))
+      expect(el.scrollTop).toBe(0)
+      expect(newMessagesButton().exists()).toBe(false)
+    })
+
+    it('keeps the position without a button when older messages load or a message is edited', async () => {
+      const { wrapper, el, scrollUserTo, newMessagesButton } = mountList()
+      await scrollUserTo(-500)
       await wrapper.setProps({
         messages: [
           makeMessage({ id: 'older' }),
@@ -192,6 +232,16 @@ describe('MessageList', () => {
         ],
       })
       expect(el.scrollTop).toBe(-500)
+      expect(newMessagesButton().exists()).toBe(false)
+    })
+
+    it('opens another conversation at the bottom without a button', async () => {
+      const { wrapper, el, scrollUserTo, newMessagesButton } = mountList()
+      await scrollUserTo(-500)
+      await wrapper.setProps({ messages: [] })
+      await wrapper.setProps({ messages: [makeMessage({ id: 'x' }), makeMessage({ id: 'y' })] })
+      expect(el.scrollTop).toBe(0)
+      expect(newMessagesButton().exists()).toBe(false)
     })
   })
 
