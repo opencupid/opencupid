@@ -16,13 +16,22 @@ const partner = {
   ],
   languages: ['hu', 'en'],
 } as unknown as PublicProfile
-const viewer = { id: 'me', publicName: 'Me', profileImages: [] } as unknown as OwnerProfile
+const viewer = {
+  id: 'me',
+  publicName: 'Me',
+  profileImages: [],
+  languages: ['hu', 'de'],
+} as unknown as OwnerProfile
 
-function mountStarter(contextOverrides?: Record<string, boolean>, profile = partner) {
+function mountStarter(
+  contextOverrides?: Record<string, boolean>,
+  profile = partner,
+  viewerProfile: OwnerProfile | null = viewer
+) {
   return mount(ConversationStarter, {
     props: {
       partner: profile,
-      viewer,
+      viewer: viewerProfile,
       context: contextOverrides ? InteractionContextSchema.parse(contextOverrides) : undefined,
     },
     global: {
@@ -116,6 +125,28 @@ describe('ConversationStarter', () => {
 
     expect(wrapper.find('[data-testid="starter-languages"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="starter-tags"]').exists()).toBe(true)
+  })
+
+  it('leaves out the languages when the viewer speaks only one, which the partner shares', () => {
+    const monolingual = { ...viewer, languages: ['hu'] } as OwnerProfile
+    const wrapper = mountStarter(undefined, partner, monolingual)
+
+    expect(wrapper.find('[data-testid="starter-languages"]').exists()).toBe(false)
+  })
+
+  it("lists all the partner's languages in every other case", () => {
+    const viewers = [
+      { ...viewer, languages: ['de'] },
+      { ...viewer, languages: ['hu', 'en'] },
+      { ...viewer, languages: [] },
+      null,
+    ] as (OwnerProfile | null)[]
+    for (const v of viewers) {
+      const list = mountStarter(undefined, partner, v)
+        .find('[data-testid="starter-languages"]')
+        .findComponent({ name: 'LanguageList' })
+      expect(list.props('languages')).toEqual(['hu', 'en'])
+    }
   })
 
   it('explains the one-first-message rule outside a match', () => {

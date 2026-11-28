@@ -4,6 +4,8 @@
 // partner's interests and languages, as something to start talking about. Outside a match
 // the first message waits for a reply before more can be sent (a match opens
 // the conversation as accepted), so the starter explains that limit.
+import { computed } from 'vue'
+
 import type { InteractionContext } from '@zod/interaction/interactionContext.dto'
 import type { OwnerProfile, PublicProfile } from '@zod/profile/profile.dto'
 
@@ -12,11 +14,20 @@ import RevealedLikeCard from '@/features/interaction/components/RevealedLikeCard
 import TagList from '@/features/shared/profiledisplay/TagList.vue'
 import LanguageList from '@/features/shared/profiledisplay/LanguageList.vue'
 
-defineProps<{
+const props = defineProps<{
   partner: PublicProfile
   viewer: OwnerProfile | null
   context: InteractionContext | undefined
 }>()
+
+// The partner's languages tell nothing new to a viewer who speaks a single
+// language the partner also speaks: there's only one language to write in.
+const showLanguages = computed(() => {
+  const viewerLanguages = props.viewer?.languages ?? []
+  const onlySharedLanguage =
+    viewerLanguages.length === 1 && props.partner.languages.includes(viewerLanguages[0]!)
+  return props.partner.languages.length > 0 && !onlySharedLanguage
+})
 </script>
 
 <template>
@@ -54,7 +65,7 @@ defineProps<{
     </div>
 
     <div
-      v-if="partner.tags.length || partner.languages.length"
+      v-if="partner.tags.length || showLanguages"
       class="w-100 d-flex flex-column align-items-center gap-3 text-center"
     >
       <div
@@ -70,7 +81,7 @@ defineProps<{
         />
       </div>
       <div
-        v-if="partner.languages.length"
+        v-if="showLanguages"
         data-testid="starter-languages"
         class="d-flex flex-wrap justify-content-center align-items-center row-gap-2"
       >
